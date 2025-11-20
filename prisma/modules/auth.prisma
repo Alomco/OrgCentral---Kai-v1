@@ -1,0 +1,119 @@
+/// Authentication + invitation models with enhanced security
+
+enum InvitationStatus {
+  pending
+  accepted
+  expired
+  declined
+  revoked  // Added for security
+}
+
+enum SessionStatus {
+  active
+  inactive
+  expired
+  revoked  // Added for security
+}
+
+model Invitation {
+  token            String           @id
+  orgId            String           @db.Uuid
+  organizationName String
+  targetEmail      String           @db.Citext
+  status           InvitationStatus @default(pending)
+  invitedByUserId  String?          @db.Uuid
+  // UK compliance fields
+  onboardingData   Json             @db.JsonB
+  metadata         Json?            @db.JsonB
+  // Security fields
+  securityContext  Json?            @db.JsonB // For audit trail
+  ipAddress        String?          // For security monitoring
+  userAgent        String?          // For security monitoring
+  // Time-based fields
+  expiresAt        DateTime?
+  acceptedAt       DateTime?
+  acceptedByUserId String?          @db.Uuid
+  revokedAt        DateTime?        // Added for security
+  revokedByUserId  String?          @db.Uuid // Added for security
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  invitedBy  User?        @relation("InvitationInvitedBy", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  acceptedBy User?        @relation("InvitationAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+  revokedBy  User?        @relation("InvitationRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, status])
+  @@index([targetEmail])
+  @@index([expiresAt]) // For cleanup jobs
+  @@map("auth.invitations")
+}
+
+model WaitlistEntry {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @db.Citext
+  industry     String
+  // UK compliance fields
+  organizationSize Json?  @db.JsonB // For service planning
+  region       String?  // For regional service planning
+  // Security fields
+  ipAddress    String?  // For security monitoring
+  userAgent    String?  // For security monitoring
+  // For audit trail
+  metadata     Json?    @db.JsonB
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+  @@map("auth.waitlist_entries")
+}
+
+// UK-specific model for security monitoring
+model SecurityEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  orgId          String?  @db.Uuid
+  userId         String?  @db.Uuid
+  eventType      String   // "failed_login", "account_lockout", "suspicious_activity", etc.
+  severity       String   // "low", "medium", "high", "critical"
+  description    String
+  ipAddress      String?
+  userAgent      String?
+  additionalInfo Json?    @db.JsonB
+  resolved       Boolean  @default(false)
+  resolvedAt     DateTime?
+  resolvedBy     String?  @db.Uuid
+  createdAt      DateTime @default(now())
+
+  org      Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  resolver User?         @relation("SecurityEventResolver", fields: [resolvedBy], references: [id], onDelete: SetNull)
+
+  @@index([eventType])
+  @@index([severity])
+  @@index([resolved])
+  @@map("auth.security_events")
+}
+
+// Model for managing session information
+model UserSession {
+  id         String        @id @default(uuid()) @db.Uuid
+  userId     String        @db.Uuid
+  sessionId  String        // Better Auth session ID
+  status     SessionStatus @default(active)
+  ipAddress  String?
+  userAgent  String?
+  // For audit trail
+  startedAt  DateTime      @default(now())
+  expiresAt  DateTime
+  lastAccess DateTime      @default(now())
+  revokedAt  DateTime?
+  // For security monitoring
+  metadata   Json?         @db.JsonB
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("auth.user_sessions")
+}

@@ -1,0 +1,1180 @@
+{
+  "functions": [
+    {
+      "name": "rejectLeaveRequest",
+      "file": "hr-leave.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Rejects a submitted leave request, updates leave balances accordingly",
+      "firestore_paths": [
+        "organizations/{orgId}/leaveRequests/{requestId}",
+        "organizations/{orgId}/leaveBalances/{balanceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getLeaveEntitlements",
+      "file": "hr-leave.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Fetches leave entitlements for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getOrgAvailablePermissions",
+      "file": "hr-leave.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves available permissions for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}",
+        "appPermissions/{permissionId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation",
+        "role_based_access"
+      ]
+    },
+    {
+      "name": "addCustomLeaveType",
+      "file": "hr-leave.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Adds a new custom leave type to an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "submitLeaveRequestV2",
+      "file": "hr-leave.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Submits a new leave request, creates employee record if needed",
+      "firestore_paths": [
+        "users/{uid}",
+        "organizations/{orgId}/employees/{employeeId}",
+        "organizations/{orgId}/leaveRequests/{requestId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "approveLeaveRequest",
+      "file": "hr-leave.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Approves a submitted leave request, updates leave balances",
+      "firestore_paths": [
+        "organizations/{orgId}/leaveRequests/{requestId}",
+        "organizations/{orgId}/leaveBalances/{balanceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "adminCancelLeaveRequest",
+      "file": "hr-leave.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Cancels a leave request by admin, updates balances accordingly",
+      "firestore_paths": [
+        "organizations/{orgId}/leaveRequests/{requestId}",
+        "organizations/{orgId}/leaveBalances/{balanceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getOrCreateEmployeeLeaveBalances",
+      "file": "hr-leave.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves or creates leave balances for an employee",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{employeeId}",
+        "organizations/{orgId}",
+        "organizations/{orgId}/leaveBalances/{balanceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getInvitationDetails",
+      "file": "auth.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves details about an invitation token",
+      "firestore_paths": [
+        "invitations/{token}",
+        "users/{email}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "acceptInvitation",
+      "file": "auth.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Accepts an invitation to join an organization",
+      "firestore_paths": [
+        "invitations/{token}",
+        "users/{uid}",
+        "organizations/{orgId}/employees/{employeeId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "addToWaitlist",
+      "file": "auth.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Adds a user to the waitlist",
+      "firestore_paths": [
+        "waitlist"
+      ],
+      "tenant_aware": false,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging"
+      ]
+    },
+    {
+      "name": "setInitialClaimsOnUserCreate",
+      "file": "auth.ts",
+      "trigger": "onDocumentCreated",
+      "region": "europe-west2",
+      "responsibilities": "Sets initial custom claims when a user document is created",
+      "firestore_paths": [
+        "users/{userId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access"
+      ]
+    },
+    {
+      "name": "syncUserRolesToCustomClaims",
+      "file": "auth.ts",
+      "trigger": "onDocumentUpdated",
+      "region": "europe-west2",
+      "responsibilities": "Syncs user roles to custom claims on document update",
+      "firestore_paths": [
+        "users/{userId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access"
+      ]
+    },
+    {
+      "name": "updateUserRoles",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates roles for a specific user in an organization",
+      "firestore_paths": [
+        "users/{targetUserId}",
+        "organizations/{orgId}/employees/{employeeId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "createOrganizationCustomRole",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a new custom role in an organization",
+      "firestore_paths": [
+        "organizations/{orgId}/customRoles"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getOrganizationCustomRoles",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves all custom roles in an organization",
+      "firestore_paths": [
+        "organizations/{orgId}/customRoles"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateOrganizationCustomRole",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates a custom role in an organization",
+      "firestore_paths": [
+        "organizations/{orgId}/customRoles/{roleId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "deleteOrganizationCustomRole",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Deletes a custom role in an organization",
+      "firestore_paths": [
+        "organizations/{orgId}/customRoles/{roleId}",
+        "users/{userId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "renameCustomLeaveType",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Renames an existing custom leave type in an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "removeLeaveType",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Removes a leave type from an organization",
+      "firestore_paths": [
+        "organizations/{orgId}",
+        "organizations/{orgId}/employees"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateOrganizationLeaveSettings",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates leave settings for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getOrganizationUsers",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves all users in an organization",
+      "firestore_paths": [
+        "organizations/{orgId}/employees",
+        "users/{userId}",
+        "invitations"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getOrganizationAvailablePermissions",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves all available permissions in an organization",
+      "firestore_paths": [
+        "organizations/{orgId}",
+        "appPermissions/{permissionId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateMultipleUserRoles",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates roles for multiple users in an organization",
+      "firestore_paths": [
+        "users/{userId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "removeUserFromOrganization",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Removes a user from an organization by archiving their employee record",
+      "firestore_paths": [
+        "users/{targetUserId}",
+        "organizations/{orgId}/employees/{employeeId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "cancelInvitation",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Cancels a pending invitation",
+      "firestore_paths": [
+        "invitations/{token}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "resendInvitationEmail",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Resends an invitation email using Resend service",
+      "firestore_paths": [
+        "invitations/{token}",
+        "users/{adminUid}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "reactivateEmployee",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Reactivates an archived employee",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{employeeId}",
+        "users/{userId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "role_based_access",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getUsersForTenant",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves all users for a specific tenant (global admin function)",
+      "firestore_paths": [
+        "organizations/{orgId}/employees",
+        "users/{userId}",
+        "invitations"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation",
+        "global_admin_access"
+      ]
+    },
+    {
+      "name": "getRolesForTenant",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves all roles for a specific tenant (global admin function)",
+      "firestore_paths": [
+        "organizations/{orgId}/customRoles"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation",
+        "global_admin_access"
+      ]
+    },
+    {
+      "name": "getTemplatesForTenant",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves templates for a specific tenant (placeholder)",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation",
+        "global_admin_access"
+      ]
+    },
+    {
+      "name": "updateOrganizationDetails",
+      "file": "org-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates organization details, with name change fan-out to user documents",
+      "firestore_paths": [
+        "organizations/{orgId}",
+        "users/{userId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "reportAbsence",
+      "file": "hr-absences.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Reports a new unplanned absence, handles file attachments",
+      "firestore_paths": [
+        "users/{uid}",
+        "organizations/{orgId}/employees/{employeeId}",
+        "organizations/{orgId}/unplannedAbsences",
+        "organizations/{orgId}/leaveBalances/{balanceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "submitReturnToWork",
+      "file": "hr-absences.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Submits return to work documentation after an absence",
+      "firestore_paths": [
+        "organizations/{orgId}/unplannedAbsences/{absenceId}",
+        "organizations/{orgId}",
+        "organizations/{orgId}/leaveBalances/{balanceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "analyzeAbsenceDocument",
+      "file": "hr-absences.ts",
+      "trigger": "onObjectFinalized",
+      "region": "europe-west2",
+      "responsibilities": "Analyzes absence documents using Google Vision and Vertex AI",
+      "firestore_paths": [
+        "organizations/{orgId}/unplannedAbsences/{absenceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation",
+        "ai_validation"
+      ]
+    },
+    {
+      "name": "acknowledgeAbsence",
+      "file": "hr-absences.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Acknowledges an absence for HR admin purposes",
+      "firestore_paths": [
+        "organizations/{orgId}/unplannedAbsences/{absenceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "adminCancelAbsence",
+      "file": "hr-absences.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Cancels an absence by admin, updates balances if needed",
+      "firestore_paths": [
+        "organizations/{orgId}/unplannedAbsences/{absenceId}",
+        "organizations/{orgId}",
+        "organizations/{orgId}/leaveBalances/{balanceId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getAbsenceTypes",
+      "file": "hr-absences.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves available absence types for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateAbsenceSettings",
+      "file": "hr-absences.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates absence settings and types for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "addAbsenceType",
+      "file": "hr-absences.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Adds a new custom absence type to an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "removeAbsenceType",
+      "file": "hr-absences.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Removes a custom absence type from an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "checkExistingEmployee",
+      "file": "hr-onboarding.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Checks if an employee already exists in the system",
+      "firestore_paths": [
+        "users/{email}",
+        "organizations/{orgId}/employees/{employeeId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "onboardEmployee",
+      "file": "hr-onboarding.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Onboards a new employee to an organization",
+      "firestore_paths": [
+        "users",
+        "invitations",
+        "organizations/{orgId}",
+        "organizations/{orgId}/employees/{employeeId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getAppPermissions",
+      "file": "platform-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves all application permissions (platform admin function)",
+      "firestore_paths": [
+        "appPermissions"
+      ],
+      "tenant_aware": false,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "global_admin_access"
+      ]
+    },
+    {
+      "name": "createAppPermission",
+      "file": "platform-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a new application permission (platform admin function)",
+      "firestore_paths": [
+        "appPermissions"
+      ],
+      "tenant_aware": false,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "global_admin_access"
+      ]
+    },
+    {
+      "name": "createOrganization",
+      "file": "platform-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a new organization (platform admin function)",
+      "firestore_paths": [
+        "organizations",
+        "users/{ownerUid}"
+      ],
+      "tenant_aware": false,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "global_admin_access",
+        "audit_logging"
+      ]
+    },
+    {
+      "name": "createOrganizationWithOwner",
+      "file": "platform-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a new organization with an owner (for self-signup)",
+      "firestore_paths": [
+        "users/{ownerUid}",
+        "organizations",
+        "organizations/{orgId}/employees/{employeeId}"
+      ],
+      "tenant_aware": false,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging"
+      ]
+    },
+    {
+      "name": "createChecklistTemplate",
+      "file": "workflow-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a new checklist template",
+      "firestore_paths": [
+        "organizations/{orgId}/checklistTemplates"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getChecklistTemplates",
+      "file": "workflow-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves all checklist templates for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}/checklistTemplates"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateChecklistTemplate",
+      "file": "workflow-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates an existing checklist template",
+      "firestore_paths": [
+        "organizations/{orgId}/checklistTemplates/{templateId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "deleteChecklistTemplate",
+      "file": "workflow-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Deletes a checklist template",
+      "firestore_paths": [
+        "organizations/{orgId}/checklistTemplates/{templateId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getEmployeeChecklists",
+      "file": "workflow-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves checklists for a specific employee",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{employeeId}/checklists"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateEmployeeChecklist",
+      "file": "workflow-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates an employee's checklist",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{employeeId}/checklists/{checklistId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "createNotification",
+      "file": "notifications-test.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a notification for a user in their organization",
+      "firestore_paths": [
+        "organizations/{orgId}/notifications"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "createLeaveApprovalNotification",
+      "file": "notifications-test.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a leave approval notification",
+      "firestore_paths": [
+        "organizations/{orgId}/notifications"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "createLeaveRejectionNotification",
+      "file": "notifications-test.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a leave rejection notification",
+      "firestore_paths": [
+        "organizations/{orgId}/notifications"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "createSystemAnnouncementNotification",
+      "file": "notifications-test.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a system announcement notification",
+      "firestore_paths": [
+        "organizations/{orgId}/notifications"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "createDocumentExpiryNotification",
+      "file": "notifications-test.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a document expiry notification",
+      "firestore_paths": [
+        "organizations/{orgId}/notifications"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "createBulkNotifications",
+      "file": "notifications-test.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates multiple notifications in bulk",
+      "firestore_paths": [
+        "organizations/{orgId}/notifications"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "createBranding",
+      "file": "branding-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates or updates branding for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getBranding",
+      "file": "branding-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves branding for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateEnterpriseSettings",
+      "file": "enterprise-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates enterprise settings (enterprise admin function)",
+      "firestore_paths": [
+        "enterpriseSettings"
+      ],
+      "tenant_aware": false,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "enterprise_admin_access"
+      ]
+    },
+    {
+      "name": "getEnterpriseSettings",
+      "file": "enterprise-admin.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves enterprise settings (enterprise admin function)",
+      "firestore_paths": [
+        "enterpriseSettings"
+      ],
+      "tenant_aware": false,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "enterprise_admin_access"
+      ]
+    },
+    {
+      "name": "createComplianceCheck",
+      "file": "hr-compliance.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Creates a new compliance check",
+      "firestore_paths": [
+        "organizations/{orgId}/complianceChecks"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "getComplianceChecks",
+      "file": "hr-compliance.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Retrieves compliance checks for an organization",
+      "firestore_paths": [
+        "organizations/{orgId}/complianceChecks"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateComplianceCheck",
+      "file": "hr-compliance.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates a compliance check",
+      "firestore_paths": [
+        "organizations/{orgId}/complianceChecks/{checkId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "deleteComplianceCheck",
+      "file": "hr-compliance.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Deletes a compliance check",
+      "firestore_paths": [
+        "organizations/{orgId}/complianceChecks/{checkId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    }
+  ],
+  "libraries": [
+    {
+      "name": "guards.ts",
+      "responsibilities": "Provides utility functions for role-based access control",
+      "gov_controls": [
+        "role_based_access"
+      ]
+    },
+    {
+      "name": "notifications.ts",
+      "responsibilities": "Provides utilities for creating and managing notifications",
+      "gov_controls": [
+        "tenant_isolation"
+      ]
+    }
+  ],
+  "data_models": [
+    {
+      "name": "types.ts",
+      "responsibilities": "Defines all shared data models and interfaces for the backend",
+      "models": [
+        "Membership",
+        "InvitationData",
+        "OrganizationData",
+        "UserData",
+        "LeaveRequest",
+        "LeaveBalance",
+        "CustomRole",
+        "AppPermission",
+        "PlatformBranding",
+        "OnboardingData",
+        "AbsenceTypeConfig",
+        "AbsenceSettings",
+        "UnplannedAbsence",
+        "ChecklistTemplate",
+        "ChecklistItem",
+        "ChecklistInstance"
+      ]
+    }
+  ]
+}

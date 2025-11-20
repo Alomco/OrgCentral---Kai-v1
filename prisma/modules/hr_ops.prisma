@@ -1,0 +1,223 @@
+// HR operational models: absences, time tracking, policies, notifications, settings
+
+enum AbsenceStatus {
+  REPORTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  CLOSED
+}
+
+enum TimeEntryStatus {
+  ACTIVE
+  COMPLETED
+  APPROVED
+  REJECTED
+}
+
+enum PolicyCategory {
+  HR_POLICIES
+  CODE_OF_CONDUCT
+  HEALTH_SAFETY
+  IT_SECURITY
+  BENEFITS
+  PROCEDURES
+  COMPLIANCE
+  OTHER
+}
+
+enum HRNotificationType {
+  LEAVE_APPROVAL
+  LEAVE_REJECTION
+  DOCUMENT_EXPIRY
+  POLICY_UPDATE
+  PERFORMANCE_REVIEW
+  SYSTEM_ANNOUNCEMENT
+  COMPLIANCE_REMINDER
+  OTHER
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model AbsenceTypeConfig {
+  id            String   @id @default(uuid()) @db.Uuid
+  orgId         String   @db.Uuid
+  key           String
+  label         String
+  tracksBalance Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  metadata      Json?    @db.JsonB
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  org       Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  absences  UnplannedAbsence[]
+
+  @@unique([orgId, key])
+  @@map("hr.absence_type_configs")
+}
+
+model AbsenceSettings {
+  orgId          String   @id @db.Uuid
+  hoursInWorkDay Decimal  @db.Decimal(5, 2) @default(8)
+  roundingRule   String?
+  metadata       Json?    @db.JsonB
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@map("hr.absence_settings")
+}
+
+model HRSettings {
+  orgId             String   @id @db.Uuid
+  leaveTypes        Json?    @db.JsonB // Array of { type, displayName, entitlement, maxCarryOver, requiresApproval, autoApprovalThreshold }
+  workingHours      Json?    @db.JsonB // { standardHoursPerDay, standardDaysPerWeek, overtimeThreshold }
+  approvalWorkflows Json?    @db.JsonB // { leaveRequests: {...}, documents: {...}, policies: {...} }
+  overtimePolicy    Json?    @db.JsonB // { enableOvertime, roundingRule, approvalRequired }
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  metadata          Json?    @db.JsonB
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@map("hr.hr_settings")
+}
+
+model UnplannedAbsence {
+  id             String         @id @default(uuid()) @db.Uuid
+  orgId          String         @db.Uuid
+  userId         String         @db.Uuid
+  typeId         String         @db.Uuid
+  startDate      DateTime
+  endDate        DateTime
+  hours          Decimal        @db.Decimal(6, 2)
+  reason         String?
+  status         AbsenceStatus  @default(REPORTED)
+  healthStatus   HealthStatus?
+  approverOrgId  String?        @db.Uuid
+  approverUserId String?        @db.Uuid
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  metadata       Json?          @db.JsonB
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  org      Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  member   Membership        @relation("MemberAbsences", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+  type     AbsenceTypeConfig @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  approver Membership?       @relation("AbsenceApprover", fields: [approverOrgId, approverUserId], references: [orgId, userId], onDelete: SetNull)
+
+  @@index([orgId, userId])
+  @@index([orgId, status])
+  @@map("hr.unplanned_absences")
+}
+
+model TimeEntry {
+  id               String          @id @default(uuid()) @db.Uuid
+  orgId            String          @db.Uuid
+  userId           String          @db.Uuid
+  date             DateTime
+  clockIn          DateTime
+  clockOut         DateTime?
+  totalHours       Decimal?        @db.Decimal(6, 2)
+  breakDuration    Decimal?        @db.Decimal(5, 2)
+  project          String?
+  tasks            Json?           @db.JsonB
+  notes            String?
+  status           TimeEntryStatus @default(ACTIVE)
+  approvedByOrgId  String?         @db.Uuid
+  approvedByUserId String?         @db.Uuid
+  approvedAt       DateTime?
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  metadata         Json?           @db.JsonB
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  org        Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  membership Membership      @relation("MemberTimeEntries", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+  approver   Membership?     @relation("TimeEntryApprover", fields: [approvedByOrgId, approvedByUserId], references: [orgId, userId], onDelete: SetNull)
+
+  @@index([orgId, userId])
+  @@index([orgId, status])
+  @@map("hr.time_entries")
+}
+
+model HRPolicy {
+  id                     String          @id @default(uuid()) @db.Uuid
+  orgId                  String          @db.Uuid
+  title                  String
+  content                String
+  category               PolicyCategory  @default(HR_POLICIES)
+  version                String          @default("v1")
+  effectiveDate          DateTime
+  expiryDate             DateTime?
+  applicableRoles        Json?           @db.JsonB
+  applicableDepartments  Json?           @db.JsonB
+  requiresAcknowledgment Boolean         @default(false)
+  status                 String          @default("draft")
+  dataClassification     DataClassificationLevel @default(OFFICIAL)
+  residencyTag           DataResidencyZone       @default(UK_ONLY)
+  metadata               Json?           @db.JsonB
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  org             Organization          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  acknowledgments PolicyAcknowledgment[]
+
+  @@index([orgId, status])
+  @@map("hr.policies")
+}
+
+model PolicyAcknowledgment {
+  id             String   @id @default(uuid()) @db.Uuid
+  orgId          String   @db.Uuid
+  userId         String   @db.Uuid
+  policyId       String   @db.Uuid
+  version        String
+  acknowledgedAt DateTime @default(now())
+  ipAddress      String?
+  metadata       Json?    @db.JsonB
+
+  policy     HRPolicy    @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  membership Membership  @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+
+  @@unique([policyId, orgId, userId, version])
+  @@map("hr.policy_acknowledgments")
+}
+
+model HRNotification {
+  id          String               @id @default(uuid()) @db.Uuid
+  orgId       String               @db.Uuid
+  userId      String               @db.Uuid
+  title       String
+  message     String
+  type        HRNotificationType   @default(OTHER)
+  priority    NotificationPriority @default(MEDIUM)
+  isRead      Boolean              @default(false)
+  readAt      DateTime?
+  actionUrl   String?
+  actionLabel String?
+  scheduledFor DateTime?
+  expiresAt   DateTime?
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  metadata    Json?                @db.JsonB
+  createdAt   DateTime             @default(now())
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  membership Membership @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+
+  @@index([orgId, userId, isRead])
+  @@index([orgId, scheduledFor])
+  @@map("hr.notifications")
+}

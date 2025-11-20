@@ -1,0 +1,218 @@
+// Records, documents, auditing models with UK government compliance
+
+enum DocumentType {
+  ONBOARDING
+  POLICY
+  CONTRACT
+  EVIDENCE
+  TRAINING
+  PERFORMANCE
+  COMPLIANCE
+  MEDICAL
+  FINANCIAL
+  SECURITY
+  OTHER
+}
+
+enum AuditEventType {
+  ACCESS
+  DATA_CHANGE
+  POLICY_CHANGE
+  AUTH
+  SYSTEM
+  COMPLIANCE
+  SECURITY
+  DOCUMENT
+  LEAVE_REQUEST
+  PAYROLL
+}
+
+enum RetentionPolicy {
+  IMMEDIATE
+  ONE_YEAR
+  THREE_YEARS
+  SEVEN_YEARS
+  PERMANENT
+  LEGAL_HOLD
+}
+
+enum SecurityClassification {
+  UNCLASSIFIED
+  OFFICIAL
+  OFFICIAL_SENSITIVE
+  SECRET
+  TOP_SECRET
+}
+
+model DocumentVault {
+  id                String              @id @default(uuid()) @db.Uuid
+  orgId             String              @db.Uuid
+  ownerOrgId        String?             @db.Uuid
+  ownerUserId       String?             @db.Uuid
+  type              DocumentType        @default(OTHER)
+  classification    SecurityClassification @default(UNCLASSIFIED)
+  retentionPolicy   RetentionPolicy     @default(THREE_YEARS)
+  retentionExpires  DateTime?           // Calculated based on retention policy
+  blobPointer       String
+  checksum          String
+  mimeType          String?
+  sizeBytes         Int?
+  fileName          String              // Original filename for audit trail
+  version           Int                 @default(1)
+  latestVersionId   String?             @db.Uuid // For version chains
+  encrypted         Boolean             @default(false) // Field-level encryption
+  encryptedKeyRef   String?             // Reference to KMS key
+  // UK compliance fields
+  sensitivityLevel  Int                 @default(0) // 0-4 scale for sensitivity
+  dataCategory      String?             // Personal, financial, health, etc.
+  lawfulBasis       String?             // For GDPR compliance
+  dataSubject       Json?               @db.JsonB   // For data subject rights
+  // Audit trail
+  metadata          Json?               @db.JsonB
+  createdAt         DateTime            @default(now())
+
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  owner       Membership?  @relation("DocumentOwner", fields: [ownerOrgId, ownerUserId], references: [orgId, userId])
+
+  @@index([orgId])
+  @@index([classification])
+  @@index([retentionPolicy, retentionExpires])
+  @@map("compliance.document_vault")
+}
+
+model AuditLog {
+  id         String         @id @default(uuid()) @db.Uuid
+  orgId      String         @db.Uuid
+  userId     String?        @db.Uuid
+  eventType  AuditEventType
+  action     String
+  resource   String
+  resourceId String?
+  ipAddress  String?
+  userAgent  String?
+  // UK compliance fields
+  sessionTokenHash String?  // For audit verification
+  securityLevel      Int?   // For security event classification
+  // For GDPR compliance
+  dataSubjectId String?     // Reference to the data owner
+  // Payload for audit trail
+  payload    Json?          @db.JsonB
+  createdAt  DateTime       @default(now())
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  membership Membership?  @relation(fields: [orgId, userId], references: [orgId, userId])
+
+  @@index([orgId, createdAt])
+  @@index([orgId, eventType])
+  @@index([dataSubjectId])
+  @@map("compliance.audit_logs")
+}
+
+model EventOutbox {
+  id          String   @id @default(uuid()) @db.Uuid
+  orgId       String   @db.Uuid
+  eventType   String
+  payload     Json     @db.JsonB
+  status      String   @default("pending")
+  error       Json?    @db.JsonB
+  availableAt DateTime @default(now())
+  processedAt DateTime?
+  maxRetries  Int      @default(3)
+  retryCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([status, availableAt])
+  @@index([orgId, eventType])
+  @@map("compliance.event_outbox")
+}
+
+// UK-specific compliance model
+model ComplianceRecord {
+  id               String   @id @default(uuid()) @db.Uuid
+  orgId            String   @db.Uuid
+  complianceType   String   // e.g., "SAR", "GDPR", "FOI", "DSEAR"
+  referenceNumber  String   // For tracking
+  status           String   @default("open")
+  title            String
+  description      String
+  assignedToOrgId  String?  @db.Uuid
+  assignedToUserId String?  @db.Uuid
+  priority         Int      @default(2) // 1-5 scale
+  dueDate          DateTime?
+  completedAt      DateTime?
+  // UK compliance fields
+  submittedByOrgId  String?  @db.Uuid
+  submittedByUserId String?  @db.Uuid
+  submittedAt      DateTime?
+  responseDate     DateTime?
+  escalationDate   DateTime?
+  metadata         Json?    @db.JsonB
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  assignee Membership? @relation("ComplianceAssignee", fields: [assignedToOrgId, assignedToUserId], references: [orgId, userId])
+  submitter Membership? @relation("ComplianceSubmitter", fields: [submittedByOrgId, submittedByUserId], references: [orgId, userId])
+
+  @@unique([orgId, referenceNumber])
+  @@index([orgId, status])
+  @@map("compliance.records")
+}
+
+// UK-specific statutory reporting model
+model StatutoryReport {
+  id               String   @id @default(uuid()) @db.Uuid
+  orgId            String   @db.Uuid
+  reportType       String   // "PAYE", "NI", "P60", "P11D", "AutoEnrolment", etc.
+  period           String   // e.g., "2023-04", "2023-Q1"
+  dueDate          DateTime
+  submittedAt      DateTime?
+  submittedByOrgId  String?  @db.Uuid
+  submittedByUserId String?  @db.Uuid
+  status           String   @default("pending")
+  fileName         String?  // Generated report filename
+  fileSize         Int?     // Size in bytes
+  checksum         String?  // For data integrity
+  metadata         Json?    @db.JsonB
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  submitter Membership? @relation("ReportSubmitter", fields: [submittedByOrgId, submittedByUserId], references: [orgId, userId])
+
+  @@index([orgId, reportType, period])
+  @@index([dueDate])
+  @@map("compliance.statutory_reports")
+}
+
+// For GDPR data subject rights
+model DataSubjectRight {
+  id            String   @id @default(uuid()) @db.Uuid
+  orgId         String   @db.Uuid
+  userId        String?  @db.Uuid // Nullable for non-user data subjects
+  rightType     String   // "access", "rectification", "erasure", "portability", "objection", "restriction"
+  status        String   @default("pending")
+  requestDate   DateTime @default(now())
+  dueDate       DateTime // Deadline based on regulation
+  completedAt   DateTime?
+  responseDate  DateTime?
+  // For non-user data subjects
+  dataSubjectInfo Json? @db.JsonB
+  response      String?
+  responseFrom  String?  @db.Uuid
+  notes         String?
+  metadata      Json?    @db.JsonB
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  requestor   User?  @relation("DSRRequestor", fields: [userId], references: [id])
+  responder   User?  @relation("DSRResponder", fields: [responseFrom], references: [id])
+
+  @@index([orgId, rightType])
+  @@index([status])
+  @@map("compliance.data_subject_rights")
+}

@@ -1,0 +1,126 @@
+generator mongoClient {
+  provider = "prisma-client-js"
+  binaryTargets = ["native"]
+  previewFeatures = ["mongoDb"]
+}
+
+datasource mongo {
+  provider = "mongodb"
+  url      = env("MONGODB_URL")
+}
+
+model DocumentPacket {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  orgId            String
+  classification   String
+  retentionPolicy  String?
+  docType          String
+  version          Int      @default(1)
+  blobPointer      String
+  checksum         String
+  metadata         Json?
+  createdBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  // For document versioning
+  previousVersionId String? @db.ObjectId
+  isCurrentVersion Boolean  @default(true)
+  // For compliance
+  lawfulBasis      String? // For GDPR compliance
+  dataSubject      Json?   // For data subject rights
+}
+
+model EventJournal {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  orgId        String
+  eventType    String
+  payload      Json
+  causationId  String?
+  correlationId String?
+  recordedAt   DateTime @default(now())
+  dispatchedAt DateTime?
+  status       String   @default("pending")
+  // For event sourcing
+  sequenceNumber Int?   // For ordering events
+  aggregateId  String?  // For event sourcing patterns
+  aggregateType String? // For event sourcing patterns
+  // For audit trail
+  actorId      String?  // Who initiated this event
+  context      Json?    // Additional context for the event
+}
+
+model AiSession {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  orgId        String
+  userId       String?
+  promptHash   String   // For deduplication
+  prompt       Json     // Store the full prompt structure
+  response     Json?
+  redaction    Json?    // Information about redacted content
+  reviewerId   String?
+  status       String   @default("draft")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  // For billing and monitoring
+  tokensUsed   Int?     // Number of tokens consumed
+  executionTime Int?    // In milliseconds
+  cost         Decimal? @db.Decimal(10, 4) // Cost of the AI operation
+  // For quality assurance
+  rating       Int?     // 1-5 rating from user
+  feedback     String?  // User feedback on the response
+}
+
+model AuditDocument {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  orgId       String
+  action      String
+  payload     Json
+  actorId     String?
+  createdAt   DateTime @default(now())
+  // For compliance and investigation
+  sessionInfo Json?    // Details about the user session
+  ipAddress   String?  // IP address for security tracking
+  userAgent   String?  // User agent for security tracking
+  // For data retention
+  retentionExpires DateTime? // When this audit log expires
+}
+
+// Additional document models for AI and analytics
+model AnalyticsSnapshot {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  orgId         String
+  snapshotType  String   // "daily", "weekly", "monthly", "custom"
+  periodStart   DateTime
+  periodEnd     DateTime
+  data          Json     // The actual analytics data
+  createdById   String?
+  createdAt     DateTime @default(now())
+  // For data management
+  retentionExpires DateTime? // When this snapshot expires
+}
+
+// For storing large file metadata that is referenced from PostgreSQL
+model FileMetadata {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  orgId         String
+  fileName      String
+  originalName  String
+  mimeType      String
+  sizeBytes     Int
+  bucketPath    String   // Path in the storage system
+  encryptionKey String?  // Reference to encryption key if encrypted
+  metadata      Json?
+  uploadedById  String?
+  verified      Boolean  @default(false) // For compliance verification
+  verifiedAt    DateTime?
+  verifiedBy    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  // For compliance
+  retentionPolicy String?
+  retentionExpires DateTime?
+  // For security
+  checksum       String   // For data integrity verification
+  virusScanned   Boolean  @default(false) // For security scanning
+  virusStatus    String?  // "clean", "infected", "quarantined", "scan_failed"
+}

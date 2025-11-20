@@ -1,0 +1,139 @@
+
+import type { LeaveBalance, LeaveRequest } from '@/server/types/leave-types';
+import type { LeaveBalance as PrismaLeaveBalance, LeaveRequest as PrismaLeaveRequest, Prisma } from '@prisma/client';
+
+interface LeaveRequestMetadata {
+    employeeId?: string;
+    employeeName?: string;
+    leaveType?: string;
+    coveringEmployee?: string | null;
+    totalDays?: number;
+    isHalfDay?: boolean;
+    managerComments?: string | null;
+}
+
+interface LeaveBalanceMetadata {
+    employeeId?: string;
+    leaveType?: string;
+    year?: number;
+    totalEntitlement?: number;
+    used?: number;
+    pending?: number;
+    available?: number;
+    // Compliance fields per DSPT requirements
+    informationClass?: string;
+    residencyRegion?: string;
+    createdBy?: string;
+    updatedBy?: string;
+}
+
+const STATUS_FROM_DOMAIN: Record<LeaveRequest['status'], PrismaLeaveRequest['status']> = {
+    submitted: 'SUBMITTED',
+    approved: 'APPROVED',
+    rejected: 'REJECTED',
+    cancelled: 'CANCELLED',
+};
+
+const STATUS_TO_DOMAIN: Record<PrismaLeaveRequest['status'], LeaveRequest['status']> = {
+    DRAFT: 'submitted',
+    SUBMITTED: 'submitted',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    CANCELLED: 'cancelled',
+    PENDING_APPROVAL: 'submitted',
+    AWAITING_MANAGER: 'submitted',
+};
+
+export function mapPrismaLeaveRequestToDomain(record: PrismaLeaveRequest): LeaveRequest {
+    const metadata = (record.metadata as LeaveRequestMetadata | null) ?? {};
+
+    return {
+        id: record.id,
+        orgId: record.orgId,
+        employeeId: metadata.employeeId ?? record.userId,
+        userId: record.userId,
+        employeeName: metadata.employeeName ?? '',
+        leaveType: metadata.leaveType ?? record.policyId,
+        startDate: record.startDate.toISOString(),
+        endDate: record.endDate.toISOString(),
+        reason: record.reason ?? undefined,
+        totalDays: metadata.totalDays ?? Number(record.hours) / 8,
+        isHalfDay: metadata.isHalfDay ?? false,
+        coveringEmployeeId: metadata.coveringEmployee ?? undefined,
+        coveringEmployeeName: metadata.coveringEmployee ?? undefined,
+        status: STATUS_TO_DOMAIN[record.status],
+        createdAt: record.createdAt.toISOString(),
+        createdBy: record.userId,
+        submittedAt: record.submittedAt?.toISOString(),
+        approvedBy: record.approverUserId ?? undefined,
+        approvedAt: record.decidedAt?.toISOString(),
+        rejectedBy: record.approverUserId ?? undefined,
+        rejectedAt: record.decidedAt?.toISOString(),
+        rejectionReason: record.reason ?? undefined,
+        cancelledBy: undefined,
+        cancelledAt: undefined,
+        cancellationReason: undefined,
+        managerComments: metadata.managerComments ?? undefined,
+    };
+}
+
+export function mapPrismaLeaveBalanceToDomain(record: PrismaLeaveBalance): LeaveBalance {
+    const metadata = (record.metadata as LeaveBalanceMetadata | null) ?? {};
+
+    return {
+        id: record.id,
+        orgId: record.orgId,
+        employeeId: metadata.employeeId ?? record.userId,
+        leaveType: metadata.leaveType ?? record.policyId,
+        year: metadata.year ?? record.periodStart.getUTCFullYear(),
+        totalEntitlement: metadata.totalEntitlement ?? Number(record.accruedHours),
+        used: metadata.used ?? Number(record.usedHours),
+        pending: metadata.pending ?? Number(record.carriedHours),
+        available: metadata.available ?? metadata.totalEntitlement ?? Number(record.accruedHours),
+        createdAt: record.periodStart.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+    };
+}
+
+export function buildLeaveRequestMetadata(input: {
+    employeeId: string;
+    employeeName: string;
+    coveringEmployee?: string;
+    totalDays: number;
+    isHalfDay: boolean;
+    managerComments?: string;
+    leaveType: string;
+}): LeaveRequestMetadata & { leaveType: string } {
+    return {
+        leaveType: input.leaveType,
+        employeeId: input.employeeId,
+        employeeName: input.employeeName,
+        coveringEmployee: input.coveringEmployee,
+        totalDays: input.totalDays,
+        isHalfDay: input.isHalfDay,
+        managerComments: input.managerComments,
+    };
+}
+
+export function buildLeaveBalanceMetadata(
+    input: Omit<LeaveBalance, 'id' | 'orgId' | 'createdAt' | 'updatedAt'>,
+    auditContext?: { createdBy?: string; informationClass?: string; residencyRegion?: string }
+): LeaveBalanceMetadata {
+    return {
+        employeeId: input.employeeId,
+        leaveType: input.leaveType,
+        year: input.year,
+        totalEntitlement: input.totalEntitlement,
+        used: input.used,
+        pending: input.pending,
+        available: input.available,
+        // Compliance metadata (from audit context or defaults)
+        informationClass: auditContext?.informationClass ?? 'OFFICIAL_SENSITIVE',
+        residencyRegion: auditContext?.residencyRegion ?? 'UK',
+        createdBy: auditContext?.createdBy,
+    };
+}
+
+export function mapDomainStatusToPrisma(status: LeaveRequest['status']): PrismaLeaveRequest['status'] {
+    return STATUS_FROM_DOMAIN[status];
+}

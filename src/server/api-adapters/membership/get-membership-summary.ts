@@ -1,0 +1,1 @@
+// API adapter: Use-case: read a userâ€™s membership summary for an organization through membership repositories.

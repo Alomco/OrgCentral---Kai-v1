@@ -1,0 +1,236 @@
+// Tenant domain models with UK government compliance
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  DECOMMISSIONED
+}
+
+enum ComplianceTier {
+  STANDARD
+  REGULATED
+  GOV_SECURE
+}
+
+enum DataResidencyZone {
+  UK_ONLY
+  UK_AND_EEA
+  GLOBAL_RESTRICTED
+}
+
+enum DataClassificationLevel {
+  OFFICIAL
+  OFFICIAL_SENSITIVE
+  SECRET
+  TOP_SECRET
+}
+
+enum RoleScope {
+  ORG
+  DEPARTMENT
+  GLOBAL
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+  SMS
+}
+
+model Organization {
+  id                   String                  @id @default(uuid()) @db.Uuid
+  slug                 String                  @unique @db.Citext
+  name                 String
+  status               OrganizationStatus      @default(ACTIVE)
+  complianceTier       ComplianceTier          @default(STANDARD)
+  dataResidency        DataResidencyZone       @default(UK_ONLY)
+  dataClassification   DataClassificationLevel @default(OFFICIAL)
+  regionCode           String
+  settings             Json                    @default("{}") @db.JsonB
+  governanceTags       Json?                   @db.JsonB
+  securityControls     Json?                   @db.JsonB // Security configuration per UK standards
+  encryptionKey        String?                 @db.Text // For field-level encryption
+  tenantId             String                  // For multi-tenancy isolation
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  memberships             Membership[]
+  roles                   Role[]
+  departments             Department[]
+  leavePolicies           LeavePolicy[]
+  documents               DocumentVault[]
+  auditLogs               AuditLog[]
+  notificationPreferences NotificationPreference[]
+  integrations            IntegrationConfig[]
+  outboxEvents            EventOutbox[]
+  invitations             Invitation[]
+  securityEvents          SecurityEvent[]
+  complianceRecords      ComplianceRecord[]
+  statutoryReports       StatutoryReport[]
+  dataSubjectRights      DataSubjectRight[]
+  absenceTypes           AbsenceTypeConfig[]
+  absenceSettings        AbsenceSettings?
+  unplannedAbsences      UnplannedAbsence[]
+  timeEntries            TimeEntry[]
+  hrPolicies             HRPolicy[]
+  hrNotifications        HRNotification[]
+  hrSettings             HRSettings?
+
+  @@index([tenantId]) // For tenant isolation
+  @@map("hr.organizations") // PostgreSQL schema mapping
+}
+
+model User {
+  id               String           @id @default(uuid()) @db.Uuid
+  email            String           @unique @db.Citext
+  displayName      String?
+  status           MembershipStatus @default(INVITED)
+  authProvider     String           @default("better-auth")
+  lastLoginAt      DateTime?
+  failedLoginCount Int              @default(0) // For security monitoring
+  lockedUntil      DateTime?        // Account lockout for security
+  lastPasswordChange DateTime       @default(now()) // For password policy compliance
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  memberships         Membership[]
+  invitationsSent     Invitation[] @relation("InvitationInvitedBy")
+  invitationsAccepted Invitation[] @relation("InvitationAcceptedBy")
+  invitationsRevoked  Invitation[] @relation("InvitationRevokedBy")
+  securityEvents      SecurityEvent[]
+  resolvedSecurityEvents SecurityEvent[] @relation("SecurityEventResolver")
+  sessions            UserSession[]
+  // submitter relationships are modelled as Membership -> ComplianceRecord/StatutoryReport
+  dsrRequests          DataSubjectRight[] @relation("DSRRequestor")
+  dsrResponses         DataSubjectRight[] @relation("DSRResponder")
+
+  @@index([email])
+}
+
+model Role {
+  id          String    @id @default(uuid()) @db.Uuid
+  orgId       String    @db.Uuid
+  name        String
+  description String?
+  scope       RoleScope @default(ORG)
+  permissions Json      @default("{}") @db.JsonB
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+
+  @@unique([orgId, name])
+  @@map("hr.roles")
+}
+
+model Department {
+  id           String   @id @default(uuid()) @db.Uuid
+  orgId        String   @db.Uuid
+  name         String
+  path         String?  // For hierarchical department structures
+  leaderOrgId  String?  @db.Uuid
+  leaderUserId String?  @db.Uuid
+  businessUnit String?  // For organizational hierarchy
+  costCenter   String?  // For financial tracking
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  org           Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  leader        Membership?   @relation("DepartmentLead", fields: [leaderOrgId, leaderUserId], references: [orgId, userId])
+  memberships   Membership[]
+  leavePolicies LeavePolicy[]
+  employmentContracts EmploymentContract[]
+
+  @@unique([orgId, name])
+  @@map("hr.departments")
+}
+
+model Membership {
+  orgId         String           @db.Uuid
+  userId        String           @db.Uuid
+  roleId        String?          @db.Uuid
+  departmentId  String?          @db.Uuid
+  status        MembershipStatus @default(INVITED)
+  invitedBy     String?          @db.Uuid
+  invitedAt     DateTime?
+  activatedAt   DateTime?
+  deactivatedAt DateTime?
+  lastAccessedAt DateTime?        // For access compliance tracking
+  metadata      Json?            @db.JsonB
+  // Required for UK compliance audit trails
+  createdBy     String           @db.Uuid
+  updatedBy     String?          @db.Uuid
+
+  org                     Organization             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role                    Role?                    @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  department              Department?              @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  profile                 EmployeeProfile?
+  balances                LeaveBalance[]           @relation("MembershipLeaveBalances")
+  leaveRequests           LeaveRequest[]
+  auditLogs               AuditLog[]
+  ledDepartments          Department[]             @relation("DepartmentLead")
+  leaveApprovals          LeaveRequest[]           @relation("LeaveApprover")
+  documentsOwned          DocumentVault[]          @relation("DocumentOwner")
+  notificationPreferences NotificationPreference[]
+  employmentContracts     EmploymentContract[]
+  reviewsAsReviewee       PerformanceReview[] @relation("RevieweeMembership")
+  reviewsAsReviewer      PerformanceReview[] @relation("ReviewerMembership")
+  trainingRecords        TrainingRecord[]
+  reportedAbsences       UnplannedAbsence[] @relation("MemberAbsences")
+  approvedAbsences       UnplannedAbsence[] @relation("AbsenceApprover")
+  timeEntries            TimeEntry[] @relation("MemberTimeEntries")
+  approvedTimeEntries    TimeEntry[] @relation("TimeEntryApprover")
+  policyAcknowledgments  PolicyAcknowledgment[]
+  notifications          HRNotification[]
+  assignedComplianceRecords ComplianceRecord[] @relation("ComplianceAssignee")
+  submittedComplianceRecords  ComplianceRecord[] @relation("ComplianceSubmitter")
+  submittedStatutoryReports   StatutoryReport[]  @relation("ReportSubmitter")
+
+  @@id([orgId, userId])
+  @@index([userId])
+  @@index([orgId, status])
+  @@map("hr.memberships")
+}
+
+model NotificationPreference {
+  id         String              @id @default(uuid()) @db.Uuid
+  orgId      String              @db.Uuid
+  userId     String              @db.Uuid
+  channel    NotificationChannel
+  enabled    Boolean             @default(true)
+  quietHours Json?               @db.JsonB
+  metadata   Json?               @db.JsonB
+  updatedAt  DateTime            @updatedAt
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  membership Membership   @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+
+  @@unique([orgId, userId, channel])
+  @@map("hr.notification_preferences")
+}
+
+model IntegrationConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  orgId       String   @db.Uuid
+  provider    String
+  credentials Json     @db.JsonB // Encrypted at application layer
+  settings    Json     @db.JsonB
+  active      Boolean  @default(true)
+  compliance  Json?    @db.JsonB // Integration compliance settings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, provider])
+  @@map("hr.integration_configs")
+}

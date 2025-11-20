@@ -1,0 +1,276 @@
+// HR domain models with UK employment law compliance
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACTOR
+  INTERN
+  APPRENTICE
+  FIXED_TERM
+  CASUAL
+}
+
+enum LeavePolicyType {
+  ANNUAL
+  SICK
+  MATERNITY
+  PATERNITY
+  ADOPTION
+  UNPAID
+  SPECIAL
+  EMERGENCY
+}
+
+enum LeaveAccrualFrequency {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  NONE
+}
+
+enum LeaveRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  PENDING_APPROVAL
+  AWAITING_MANAGER
+}
+
+enum HealthStatus {
+  UNDEFINED
+  FIT_FOR_WORK
+  PARTIALLY_FIT
+  UNFIT_FOR_WORK
+  RECOVERY_PLAN
+}
+
+enum ContractType {
+  PERMANENT
+  FIXED_TERM
+  AGENCY
+  CONSULTANT
+  INTERNSHIP
+  APPRENTICESHIP
+}
+
+model EmployeeProfile {
+  id               String           @id @default(uuid()) @db.Uuid
+  orgId            String           @db.Uuid
+  userId           String           @db.Uuid
+  employeeNumber   String           @unique
+  jobTitle         String?
+  employmentType   EmploymentType   @default(FULL_TIME)
+  startDate        DateTime?
+  endDate          DateTime?
+  managerOrgId     String?          @db.Uuid
+  managerUserId    String?          @db.Uuid
+  annualSalary     Int?
+  hourlyRate       Decimal?         @db.Decimal(8, 2) // For part-time/contract workers
+  costCenter       String?
+  location         Json?            @db.JsonB
+  // UK-specific fields
+  niNumber         String?          @db.Text // National Insurance number (encrypted at app layer)
+  emergencyContact Json?            @db.JsonB
+  nextOfKin        Json?            @db.JsonB
+  healthStatus     HealthStatus     @default(UNDEFINED)
+  workPermit       Json?            @db.JsonB // For visa/immigration compliance
+  bankDetails      Json?            @db.JsonB // Encrypted at application layer
+  metadata         Json?            @db.JsonB
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  membership    Membership        @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+  manager       EmployeeProfile?  @relation("EmployeeManager", fields: [managerOrgId, managerUserId], references: [orgId, userId])
+  reports       EmployeeProfile[] @relation("EmployeeManager")
+  leaveBalances LeaveBalance[]    @relation("ProfileLeaveBalances")
+
+  @@unique([orgId, userId])
+  @@index([managerOrgId, managerUserId])
+  @@map("hr.employee_profiles")
+}
+
+model EmploymentContract {
+  id               String        @id @default(uuid()) @db.Uuid
+  orgId            String        @db.Uuid
+  userId           String        @db.Uuid
+  contractType     ContractType  @default(PERMANENT)
+  startDate        DateTime
+  endDate          DateTime?
+  jobTitle         String
+  departmentId     String?       @db.Uuid
+  location         String?
+  probationEndDate DateTime?
+  // UK-specific fields
+  furloughStartDate DateTime?    // For UK furlough schemes
+  furloughEndDate   DateTime?
+  workingPattern    Json?        @db.JsonB // Hours, flexible work arrangements
+  benefits          Json?        @db.JsonB
+  terminationReason String?
+  terminationNotes  String?
+  archivedAt        DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  membership  Membership     @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+  department  Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, userId])
+  @@map("hr.employment_contracts")
+}
+
+model LeavePolicy {
+  id               String                @id @default(uuid()) @db.Uuid
+  orgId            String                @db.Uuid
+  departmentId     String?               @db.Uuid
+  name             String
+  policyType       LeavePolicyType
+  accrualFrequency LeaveAccrualFrequency @default(NONE)
+  accrualAmount    Decimal?              @db.Decimal(5, 2)
+  carryOverLimit   Int?
+  requiresApproval Boolean               @default(true)
+  isDefault        Boolean               @default(false)
+  activeFrom       DateTime              @default(now())
+  activeTo         DateTime?
+  // UK-specific compliance fields
+  statutoryCompliance Boolean             @default(false) // For statutory leave (sick, maternity, etc.)
+  maxConsecutiveDays Int?                 // For policy enforcement
+  allowNegativeBalance Boolean           @default(false) // For emergency leave
+  metadata         Json?                 @db.JsonB
+
+  org          Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  department   Department?          @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  accrualRules LeavePolicyAccrual[]
+  balances     LeaveBalance[]
+  requests     LeaveRequest[]
+
+  @@unique([orgId, name])
+  @@map("hr.leave_policies")
+}
+
+model LeavePolicyAccrual {
+  id               String  @id @default(uuid()) @db.Uuid
+  policyId         String  @db.Uuid
+  tenureMonths     Int     @default(0)
+  accrualPerPeriod Decimal @db.Decimal(5, 2)
+  carryOverLimit   Int?
+
+  policy LeavePolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@unique([policyId, tenureMonths])
+  @@map("hr.leave_policy_accruals")
+}
+
+model LeaveBalance {
+  id           String   @id @default(uuid()) @db.Uuid
+  orgId        String   @db.Uuid
+  userId       String   @db.Uuid
+  policyId     String   @db.Uuid
+  periodStart  DateTime
+  periodEnd    DateTime
+  accruedHours Decimal  @db.Decimal(6, 2) @default(0)
+  usedHours    Decimal  @db.Decimal(6, 2) @default(0)
+  carriedHours Decimal  @db.Decimal(6, 2) @default(0)
+  // For UK compliance tracking
+  approvedAt   DateTime? // When the balance was last approved
+  approvedBy   String?   @db.Uuid
+  // For audit trail
+  metadata     Json?    @db.JsonB
+  updatedAt    DateTime @updatedAt
+
+  membership Membership      @relation("MembershipLeaveBalances", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade, map: "leave_balance_membership_fk")
+  profile    EmployeeProfile @relation("ProfileLeaveBalances", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade, map: "leave_balance_profile_fk")
+  policy     LeavePolicy     @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId, policyId, periodStart])
+  @@index([policyId])
+  @@map("hr.leave_balances")
+}
+
+model LeaveRequest {
+  id             String             @id @default(uuid()) @db.Uuid
+  orgId          String             @db.Uuid
+  userId         String             @db.Uuid
+  policyId       String             @db.Uuid
+  status         LeaveRequestStatus @default(DRAFT)
+  startDate      DateTime
+  endDate        DateTime
+  hours          Decimal            @db.Decimal(6, 2)
+  reason         String?
+  approverOrgId  String?            @db.Uuid
+  approverUserId String?            @db.Uuid
+  submittedAt    DateTime?
+  decidedAt      DateTime?
+  // UK-specific fields
+  approvedByLineManager Boolean @default(false) // For statutory requirements
+  sickNoteRequired  Boolean   @default(false) // For sick leave
+  sickNoteReceived  Boolean   @default(false)
+  returnToWorkDate  DateTime? // For health monitoring
+  // For audit trail
+  metadata       Json?              @db.JsonB
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  membership Membership  @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+  policy     LeavePolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  approver   Membership? @relation("LeaveApprover", fields: [approverOrgId, approverUserId], references: [orgId, userId], onDelete: SetNull)
+
+  @@index([orgId, status])
+  @@index([policyId])
+  @@map("hr.leave_requests")
+}
+
+// UK-specific performance and appraisal model
+model PerformanceReview {
+  id               String   @id @default(uuid()) @db.Uuid
+  orgId            String   @db.Uuid
+  userId           String   @db.Uuid
+  reviewerOrgId    String   @db.Uuid
+  reviewerUserId   String   @db.Uuid
+  reviewPeriod     String   // e.g., "2023-Q1"
+  scheduledDate    DateTime
+  completedDate    DateTime?
+  status           String   @default("scheduled")
+  overallRating    Int?     // 1-5 scale
+  goalsMet         Json?    @db.JsonB
+  developmentPlan  Json?    @db.JsonB
+  reviewerNotes    String?
+  employeeResponse String?
+  metadata         Json?    @db.JsonB
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  reviewedMembership   Membership @relation("RevieweeMembership", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+  reviewerMembership   Membership @relation("ReviewerMembership", fields: [reviewerOrgId, reviewerUserId], references: [orgId, userId], onDelete: Cascade)
+
+  @@index([orgId, userId])
+  @@index([reviewPeriod])
+  @@map("hr.performance_reviews")
+}
+
+// UK-specific training and development model
+model TrainingRecord {
+  id            String   @id @default(uuid()) @db.Uuid
+  orgId         String   @db.Uuid
+  userId        String   @db.Uuid
+  courseName    String
+  provider      String
+  startDate     DateTime
+  endDate       DateTime?
+  status        String   @default("in_progress")
+  certificate   String?  // Path to certificate document
+  competency    Json?    @db.JsonB // Skills gained
+  cost          Decimal? @db.Decimal(10, 2)
+  approved      Boolean  @default(false)
+  approvedAt    DateTime?
+  approvedBy    String?  @db.Uuid
+  metadata      Json?    @db.JsonB
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  membership    Membership @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+
+  @@index([orgId, userId])
+  @@map("hr.training_records")
+}

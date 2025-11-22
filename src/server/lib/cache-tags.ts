@@ -38,7 +38,7 @@ export function registerCacheTag(payload: CacheTagPayload): void {
     cacheTag(buildCacheTag(payload));
 
     if (payload.classification !== 'OFFICIAL') {
-        cacheLife('seconds', 30);
+        cacheLife('seconds');
     }
 }
 

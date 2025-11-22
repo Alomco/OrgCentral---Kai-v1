@@ -3,12 +3,16 @@
  * Example contract template for new repositories.
  * Copy and rename this file to the appropriate domain/subdomain and implement it.
  */
-import type { SomeDomainType } from '@/server/types/some-types';
+
+// Replace with your domain type
+export interface ExampleDomainType {
+    id: string;
+}
 
 export interface IExampleRepository {
-    findById(id: string): Promise<SomeDomainType | null>;
-    findAll(filters?: { orgId?: string }): Promise<SomeDomainType[]>;
-    create(data: Partial<SomeDomainType>): Promise<void>;
-    update(id: string, data: Partial<SomeDomainType>): Promise<void>;
+    findById(id: string): Promise<ExampleDomainType | null>;
+    findAll(filters?: { orgId?: string }): Promise<ExampleDomainType[]>;
+    create(data: Partial<ExampleDomainType>): Promise<void>;
+    update(id: string, data: Partial<ExampleDomainType>): Promise<void>;
     delete(id: string): Promise<void>;
 }

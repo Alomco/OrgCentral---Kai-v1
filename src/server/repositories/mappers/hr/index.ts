@@ -8,3 +8,5 @@ export * from './time-tracking';
 export * from './policies';
 export * from './notifications';
 export * from './settings';
+export * from './onboarding';
+export * from './compliance';

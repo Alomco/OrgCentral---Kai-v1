@@ -4,9 +4,10 @@ import type { IAuditLogRepository } from '@/server/repositories/contracts/record
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { AuditLogFilters, AuditLogCreationData, AuditLogUpdateData } from './prisma-audit-log-repository.types';
+import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
 
 export class PrismaAuditLogRepository extends BasePrismaRepository implements IAuditLogRepository {
-  constructor(prisma: PrismaClient) {
+  constructor(prisma: PrismaClient = defaultPrismaClient) {
     super(prisma);
   }
 

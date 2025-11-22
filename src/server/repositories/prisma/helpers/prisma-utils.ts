@@ -26,6 +26,7 @@ export function isJsonObject(value: Prisma.JsonValue | null | undefined): value 
 }
 
 export type JsonLike = Prisma.InputJsonValue | Prisma.JsonValue | Record<string, Prisma.JsonValue> | Record<string, Prisma.InputJsonValue> | null | undefined;
+export type JsonValue = Prisma.JsonValue;
 
 export function toPrismaInputJson(value: JsonLike): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
     if (value === undefined) {

@@ -3,4 +3,5 @@ export * from './hr';
 export * from './org';
 export * from './records';
 export * from './security';
+export * from './platform';
 export { BasePrismaRepository } from './base-prisma-repository';

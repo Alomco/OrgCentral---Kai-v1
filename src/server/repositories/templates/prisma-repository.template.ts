@@ -5,37 +5,55 @@
  */
 import type { PrismaClient } from '@prisma/client';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
-import type { IExampleRepository } from '@/server/repositories/contracts/example/example-repository-contract';
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
-import { mapPrismaToDomain, mapDomainToPrisma } from '@/server/repositories/mappers/example/example-mapper';
+
+// Replace with your contract and mapper imports
+export interface ExampleDomainType { id: string; orgId?: string }
+export interface IExampleRepository {
+    findById(id: string): Promise<ExampleDomainType | null>;
+    findAll(filters?: { orgId?: string }): Promise<ExampleDomainType[]>;
+    create(data: Partial<ExampleDomainType>): Promise<void>;
+    update(id: string, data: Partial<ExampleDomainType>): Promise<void>;
+    delete(id: string): Promise<void>;
+}
+
+type ExampleDelegate = {
+    findUnique(args: { where: { id: string } }): Promise<ExamplePrismaModel | null>;
+    findMany(args: { where?: { orgId?: string } }): Promise<ExamplePrismaModel[]>;
+    create(args: { data: Record<string, unknown> }): Promise<ExamplePrismaModel>;
+    update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<ExamplePrismaModel>;
+    delete(args: { where: { id: string } }): Promise<void>;
+};
 
 export class PrismaExampleRepository extends BasePrismaRepository implements IExampleRepository {
     constructor(prisma: PrismaClient) { super(prisma); }
 
-    async findById(id: string) {
-        const rec = await getModelDelegate(this.prisma, 'example').findUnique({ where: { id } });
+    private delegate(): ExampleDelegate {
+        return (this.prisma as { example: ExampleDelegate }).example;
+    }
+
+    async findById(id: string): Promise<ExampleDomainType | null> {
+        const rec = await this.delegate().findUnique({ where: { id } });
         if (!rec) { return null; }
-        return mapPrismaToDomain(rec);
+        return rec as ExampleDomainType;
     }
 
-    async findAll(filters?: { orgId?: string }) {
-        const where: any = {};
+    async findAll(filters?: { orgId?: string }): Promise<ExampleDomainType[]> {
+        const where: { orgId?: string } = {};
         if (filters?.orgId) { where.orgId = filters.orgId; }
-        const recs = await getModelDelegate(this.prisma, 'example').findMany({ where });
-        return recs.map(mapPrismaToDomain);
+        const recs = await this.delegate().findMany({ where });
+        return recs as ExampleDomainType[];
     }
 
-    async create(data: Partial<Record<string, unknown>>) {
-        const payload = mapDomainToPrisma(data as any);
-        await getModelDelegate(this.prisma, 'example').create({ data: payload as any });
+    async create(data: Partial<ExampleDomainType>): Promise<void> {
+        await this.delegate().create({ data: data as Record<string, unknown> });
     }
 
-    async update(id: string, data: Partial<Record<string, unknown>>) {
-        const payload = mapDomainToPrisma(data as any);
-        await getModelDelegate(this.prisma, 'example').update({ where: { id }, data: payload as any });
+    async update(id: string, data: Partial<ExampleDomainType>): Promise<void> {
+        await this.delegate().update({ where: { id }, data: data as Record<string, unknown> });
     }
 
-    async delete(id: string) {
-        await getModelDelegate(this.prisma, 'example').delete({ where: { id } });
+    async delete(id: string): Promise<void> {
+        await this.delegate().delete({ where: { id } });
     }
 }

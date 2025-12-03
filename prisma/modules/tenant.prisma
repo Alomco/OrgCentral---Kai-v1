@@ -4,18 +4,21 @@ enum OrganizationStatus {
   ACTIVE
   SUSPENDED
   DECOMMISSIONED
+  @@schema("hr")
 }
 
 enum ComplianceTier {
   STANDARD
   REGULATED
   GOV_SECURE
+  @@schema("hr")
 }
 
 enum DataResidencyZone {
   UK_ONLY
   UK_AND_EEA
   GLOBAL_RESTRICTED
+  @@schema("hr")
 }
 
 enum DataClassificationLevel {
@@ -23,12 +26,14 @@ enum DataClassificationLevel {
   OFFICIAL_SENSITIVE
   SECRET
   TOP_SECRET
+  @@schema("hr")
 }
 
 enum RoleScope {
   ORG
   DEPARTMENT
   GLOBAL
+  @@schema("hr")
 }
 
 enum MembershipStatus {
@@ -36,12 +41,14 @@ enum MembershipStatus {
   ACTIVE
   SUSPENDED
   DEACTIVATED
+  @@schema("hr")
 }
 
 enum NotificationChannel {
   EMAIL
   IN_APP
   SMS
+  @@schema("hr")
 }
 
 model Organization {
@@ -82,9 +89,15 @@ model Organization {
   hrPolicies             HRPolicy[]
   hrNotifications        HRNotification[]
   hrSettings             HRSettings?
+  checklistTemplates     ChecklistTemplate[] @relation("OrgChecklistTemplates")
+  checklistInstances     ChecklistInstance[] @relation("OrgChecklistInstances")
+  complianceTemplates    ComplianceTemplate[] @relation("OrgComplianceTemplates")
+  complianceLogItems     ComplianceLogItem[] @relation("OrgComplianceLogItems")
+  managedOrganizations   ManagedOrganization[] @relation("ManagedOrgOrganization")
 
   @@index([tenantId]) // For tenant isolation
-  @@map("hr.organizations") // PostgreSQL schema mapping
+  @@map("organizations") // PostgreSQL schema mapping
+  @@schema("hr")
 }
 
 model User {
@@ -110,8 +123,10 @@ model User {
   // submitter relationships are modelled as Membership -> ComplianceRecord/StatutoryReport
   dsrRequests          DataSubjectRight[] @relation("DSRRequestor")
   dsrResponses         DataSubjectRight[] @relation("DSRResponder")
+  managedOrganizations ManagedOrganization[] @relation("ManagedAdmin")
 
   @@index([email])
+  @@schema("hr")
 }
 
 model Role {
@@ -128,7 +143,8 @@ model Role {
   memberships Membership[]
 
   @@unique([orgId, name])
-  @@map("hr.roles")
+  @@map("roles")
+  @@schema("hr")
 }
 
 model Department {
@@ -148,9 +164,11 @@ model Department {
   memberships   Membership[]
   leavePolicies LeavePolicy[]
   employmentContracts EmploymentContract[]
+  employeeProfiles EmployeeProfile[] @relation("DepartmentProfiles")
 
   @@unique([orgId, name])
-  @@map("hr.departments")
+  @@map("departments")
+  @@schema("hr")
 }
 
 model Membership {
@@ -194,11 +212,13 @@ model Membership {
   assignedComplianceRecords ComplianceRecord[] @relation("ComplianceAssignee")
   submittedComplianceRecords  ComplianceRecord[] @relation("ComplianceSubmitter")
   submittedStatutoryReports   StatutoryReport[]  @relation("ReportSubmitter")
+  complianceLogItems     ComplianceLogItem[] @relation("MembershipComplianceLogItems")
 
   @@id([orgId, userId])
   @@index([userId])
   @@index([orgId, status])
-  @@map("hr.memberships")
+  @@map("memberships")
+  @@schema("hr")
 }
 
 model NotificationPreference {
@@ -215,7 +235,8 @@ model NotificationPreference {
   membership Membership   @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
 
   @@unique([orgId, userId, channel])
-  @@map("hr.notification_preferences")
+  @@map("notification_preferences")
+  @@schema("hr")
 }
 
 model IntegrationConfig {
@@ -232,5 +253,53 @@ model IntegrationConfig {
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@unique([orgId, provider])
-  @@map("hr.integration_configs")
+  @@map("integration_configs")
+  @@schema("hr")
+}
+
+model PlatformSetting {
+  id        String   @id
+  branding  Json?    @db.JsonB
+  metadata  Json?    @db.JsonB
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+  @@schema("platform")
+}
+
+model AppPermission {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  description String?
+  category   String
+  isGlobal   Boolean  @default(false)
+  metadata   Json?    @db.JsonB
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([category])
+  @@map("app_permissions")
+  @@schema("platform")
+}
+
+model ManagedOrganization {
+  id           String   @id @default(uuid()) @db.Uuid
+  adminUserId  String   @db.Uuid
+  orgId        String   @db.Uuid
+  orgName      String
+  ownerEmail   String
+  planId       String
+  moduleAccess Json     @db.JsonB
+  metadata     Json?    @db.JsonB
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  admin User          @relation("ManagedAdmin", fields: [adminUserId], references: [id], onDelete: Cascade)
+  organization Organization @relation("ManagedOrgOrganization", fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId])
+  @@index([orgId])
+  @@map("managed_organizations")
+  @@schema("org")
 }

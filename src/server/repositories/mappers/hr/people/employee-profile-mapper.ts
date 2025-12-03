@@ -1,133 +1,281 @@
-import type { EmployeeProfile } from '@/server/types/hr-types';
-import { Prisma, type EmployeeProfile as PrismaEmployeeProfile, type $Enums } from '@prisma/client';
+import type { Prisma, EmployeeProfile as PrismaEmployeeProfile } from '@prisma/client';
+import type {
+    EmployeeProfileDTO,
+    EmploymentTypeCode,
+    EmploymentStatusCode,
+    HealthStatusCode,
+    PayScheduleCode,
+    PeopleListFilters,
+    SalaryBasisCode,
+    SalaryFrequencyCode,
+} from '@/server/types/hr/people';
+import {
+    buildDomainProfileFields,
+    decimalToNumber,
+    extractLegacyProfileFields,
+    hasLegacyProfileUpdates,
+    mergeLegacyMetadata,
+    toDateValue,
+    toJsonInput,
+    toJsonValue,
+    validateEmployeeProfileDto,
+} from './employee-profile-mapper.helpers';
 
-export type EmployeeProfileFilters = {
+export type EmployeeProfileFilters = PeopleListFilters & {
     orgId?: string;
     userId?: string;
     jobTitle?: string;
-    employmentType?: $Enums.EmploymentType;
+    employmentType?: EmploymentTypeCode;
+    employmentStatus?: EmploymentStatusCode;
     managerOrgId?: string;
     managerUserId?: string;
-    startDate?: Date;
-    endDate?: Date;
 };
 
-function decimalToNumber(value: Prisma.Decimal | number | null | undefined): number | null {
-    if (value === null || value === undefined) { return null; }
-    if (typeof value === 'number') { return value; }
-    try {
-        return (value as Prisma.Decimal).toNumber();
-    } catch {
-        return null;
-    }
+type ExtendedPrismaEmployeeProfile = PrismaEmployeeProfile & EmployeeProfileDTO;
+
+export function mapPrismaEmployeeProfileToDomain(record: PrismaEmployeeProfile): EmployeeProfileDTO {
+    const extendedRecord = record as ExtendedPrismaEmployeeProfile;
+    const legacyFields = extractLegacyProfileFields(record.metadata);
+    const mergedFields = buildDomainProfileFields(extendedRecord, legacyFields);
+
+    return validateEmployeeProfileDto({
+        id: extendedRecord.id,
+        orgId: extendedRecord.orgId,
+        userId: extendedRecord.userId,
+        ...mergedFields,
+        employeeNumber: extendedRecord.employeeNumber,
+        jobTitle: extendedRecord.jobTitle ?? null,
+        employmentType: extendedRecord.employmentType as EmploymentTypeCode,
+        employmentStatus: extendedRecord.employmentStatus as EmploymentStatusCode,
+        departmentId: extendedRecord.departmentId ?? null,
+        startDate: extendedRecord.startDate ?? null,
+        endDate: extendedRecord.endDate ?? null,
+        managerOrgId: extendedRecord.managerOrgId ?? null,
+        managerUserId: extendedRecord.managerUserId ?? null,
+        annualSalary: extendedRecord.annualSalary ?? null,
+        hourlyRate: decimalToNumber(extendedRecord.hourlyRate),
+        salaryAmount: decimalToNumber(extendedRecord.salaryAmount),
+        salaryCurrency: extendedRecord.salaryCurrency ?? null,
+        salaryFrequency: extendedRecord.salaryFrequency as SalaryFrequencyCode | null,
+        salaryBasis: extendedRecord.salaryBasis as SalaryBasisCode | null,
+        paySchedule: extendedRecord.paySchedule as PayScheduleCode | null,
+        costCenter: extendedRecord.costCenter ?? null,
+        location: toJsonValue(extendedRecord.location) as EmployeeProfileDTO['location'],
+        niNumber: extendedRecord.niNumber ?? null,
+        emergencyContact: toJsonValue(extendedRecord.emergencyContact) as EmployeeProfileDTO['emergencyContact'],
+        nextOfKin: toJsonValue(extendedRecord.nextOfKin) as EmployeeProfileDTO['nextOfKin'],
+        healthStatus: extendedRecord.healthStatus as HealthStatusCode,
+        workPermit: toJsonValue(extendedRecord.workPermit) as EmployeeProfileDTO['workPermit'],
+        bankDetails: toJsonValue(extendedRecord.bankDetails) as EmployeeProfileDTO['bankDetails'],
+        metadata: (toJsonValue(extendedRecord.metadata) ?? null) as EmployeeProfileDTO['metadata'],
+        dataClassification: extendedRecord.dataClassification,
+        dataResidency: extendedRecord.dataResidency,
+        auditSource: extendedRecord.auditSource ?? null,
+        correlationId: extendedRecord.correlationId ?? null,
+        schemaVersion: extendedRecord.schemaVersion ?? undefined,
+        createdBy: extendedRecord.createdBy ?? null,
+        updatedBy: extendedRecord.updatedBy ?? null,
+        retentionPolicy: extendedRecord.retentionPolicy ?? null,
+        retentionExpiresAt: extendedRecord.retentionExpiresAt ?? null,
+        erasureRequestedAt: extendedRecord.erasureRequestedAt ?? null,
+        erasureCompletedAt: extendedRecord.erasureCompletedAt ?? null,
+        erasureReason: extendedRecord.erasureReason ?? null,
+        erasureActorOrgId: extendedRecord.erasureActorOrgId ?? null,
+        erasureActorUserId: extendedRecord.erasureActorUserId ?? null,
+        archivedAt: extendedRecord.archivedAt ?? null,
+        deletedAt: extendedRecord.deletedAt ?? null,
+        createdAt: extendedRecord.createdAt,
+        updatedAt: extendedRecord.updatedAt,
+    });
 }
 
-export function mapPrismaEmployeeProfileToDomain(record: PrismaEmployeeProfile): EmployeeProfile {
-    return {
-        id: record.id,
-        orgId: record.orgId,
-        userId: record.userId,
-        employeeNumber: record.employeeNumber,
-        jobTitle: record.jobTitle ?? null,
-        employmentType: record.employmentType,
-        startDate: record.startDate ?? null,
-        endDate: record.endDate ?? null,
-        managerOrgId: record.managerOrgId ?? null,
-        managerUserId: record.managerUserId ?? null,
-        annualSalary: record.annualSalary ?? null,
-        hourlyRate: decimalToNumber(record.hourlyRate),
-        costCenter: record.costCenter ?? null,
-        location: record.location as Prisma.JsonValue | null,
-        niNumber: record.niNumber ?? null,
-        emergencyContact: record.emergencyContact as Prisma.JsonValue | null,
-        nextOfKin: record.nextOfKin as Prisma.JsonValue | null,
-        healthStatus: record.healthStatus,
-        workPermit: record.workPermit as Prisma.JsonValue | null,
-        bankDetails: record.bankDetails as Prisma.JsonValue | null,
-        metadata: record.metadata as Prisma.JsonValue | null,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-    };
-}
+export function mapDomainEmployeeProfileToPrisma(input: EmployeeProfileDTO): Prisma.EmployeeProfileUncheckedCreateInput {
+    const mergedMetadata = mergeLegacyMetadata(input.metadata as Prisma.JsonValue | null | undefined, input);
+    const employmentStatus = input.employmentStatus ?? 'ACTIVE';
 
-function toJsonInput(value?: Prisma.JsonValue | null): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-    if (value === null) { return Prisma.JsonNull; }
-    if (value === undefined) { return undefined; }
-    return value as Prisma.InputJsonValue;
-}
-
-export function mapDomainEmployeeProfileToPrisma(input: EmployeeProfile): Prisma.EmployeeProfileUncheckedCreateInput {
-    return {
+    const data: Record<string, unknown> = {
         orgId: input.orgId,
         userId: input.userId,
+        email: input.email ?? null,
+        personalEmail: input.personalEmail ?? null,
+        firstName: input.firstName ?? null,
+        lastName: input.lastName ?? null,
+        displayName: input.displayName ?? null,
+        photoUrl: input.photoUrl ?? null,
+        phone: toJsonInput(input.phone as Prisma.JsonValue | null | undefined),
+        address: toJsonInput(input.address as Prisma.JsonValue | null | undefined),
+        roles: input.roles ?? [],
+        eligibleLeaveTypes: input.eligibleLeaveTypes ?? [],
+        employmentStatus,
+        employmentPeriods: toJsonInput(input.employmentPeriods as Prisma.JsonValue | null | undefined),
+        salaryDetails: toJsonInput(input.salaryDetails as Prisma.JsonValue | null | undefined),
+        skills: input.skills ?? [],
+        certifications: toJsonInput(input.certifications as Prisma.JsonValue | null | undefined),
         employeeNumber: input.employeeNumber,
         jobTitle: input.jobTitle ?? null,
         employmentType: input.employmentType,
-        startDate: input.startDate ?? null,
-        endDate: input.endDate ?? null,
+        departmentId: input.departmentId ?? null,
+        startDate: toDateValue(input.startDate) ?? null,
+        endDate: toDateValue(input.endDate) ?? null,
         managerOrgId: input.managerOrgId ?? null,
         managerUserId: input.managerUserId ?? null,
         annualSalary: input.annualSalary ?? null,
         hourlyRate: input.hourlyRate ?? null,
+        salaryAmount: input.salaryAmount ?? null,
+        salaryCurrency: input.salaryCurrency ?? null,
+        salaryFrequency: input.salaryFrequency ?? null,
+        salaryBasis: input.salaryBasis ?? null,
+        paySchedule: input.paySchedule ?? null,
         costCenter: input.costCenter ?? null,
-        location: toJsonInput(input.location),
+        location: toJsonInput(input.location as Prisma.JsonValue | null | undefined),
         niNumber: input.niNumber ?? null,
-        emergencyContact: toJsonInput(input.emergencyContact),
-        nextOfKin: toJsonInput(input.nextOfKin),
+        emergencyContact: toJsonInput(input.emergencyContact as Prisma.JsonValue | null | undefined),
+        nextOfKin: toJsonInput(input.nextOfKin as Prisma.JsonValue | null | undefined),
         healthStatus: input.healthStatus,
-        workPermit: toJsonInput(input.workPermit),
-        bankDetails: toJsonInput(input.bankDetails),
-        metadata: toJsonInput(input.metadata),
-        createdAt: input.createdAt ?? undefined,
-        updatedAt: input.updatedAt ?? undefined,
+        workPermit: toJsonInput(input.workPermit as Prisma.JsonValue | null | undefined),
+        bankDetails: toJsonInput(input.bankDetails as Prisma.JsonValue | null | undefined),
+        metadata: mergedMetadata ?? toJsonInput(input.metadata as Prisma.JsonValue | null | undefined),
+        dataClassification: input.dataClassification,
+        residencyTag: input.dataResidency,
+        auditSource: input.auditSource ?? null,
+        correlationId: input.correlationId ?? null,
+        schemaVersion: input.schemaVersion ?? undefined,
+        createdBy: input.createdBy ?? null,
+        updatedBy: input.updatedBy ?? null,
+        retentionPolicy: input.retentionPolicy ?? null,
+        retentionExpiresAt: toDateValue(input.retentionExpiresAt) ?? null,
+        erasureRequestedAt: toDateValue(input.erasureRequestedAt) ?? null,
+        erasureCompletedAt: toDateValue(input.erasureCompletedAt) ?? null,
+        erasureReason: input.erasureReason ?? null,
+        erasureActorOrgId: input.erasureActorOrgId ?? null,
+        erasureActorUserId: input.erasureActorUserId ?? null,
+        archivedAt: toDateValue(input.archivedAt) ?? null,
+        deletedAt: toDateValue(input.deletedAt) ?? null,
+        createdAt: toDateValue(input.createdAt) ?? new Date(),
+        updatedAt: toDateValue(input.updatedAt) ?? new Date(),
     };
+
+    return data as Prisma.EmployeeProfileUncheckedCreateInput;
 }
 
-export function buildPrismaCreateFromDomain(input: Omit<EmployeeProfile, 'id' | 'createdAt' | 'updatedAt'>): Prisma.EmployeeProfileUncheckedCreateInput {
-    return mapDomainEmployeeProfileToPrisma(input as EmployeeProfile);
+export function buildPrismaCreateFromDomain(input: Omit<EmployeeProfileDTO, 'id' | 'createdAt' | 'updatedAt'>): Prisma.EmployeeProfileUncheckedCreateInput {
+    return mapDomainEmployeeProfileToPrisma(input as EmployeeProfileDTO);
 }
 
-export function buildPrismaUpdateFromDomain(updates: Partial<Omit<EmployeeProfile, 'id' | 'orgId' | 'userId' | 'createdAt' | 'employeeNumber'>>): Prisma.EmployeeProfileUncheckedUpdateInput {
-    const out: Prisma.EmployeeProfileUncheckedUpdateInput = {};
-    if (updates.jobTitle !== undefined) out.jobTitle = updates.jobTitle;
-    if (updates.employmentType !== undefined) out.employmentType = updates.employmentType as $Enums.EmploymentType;
-    if (updates.startDate !== undefined) out.startDate = updates.startDate ?? null;
-    if (updates.endDate !== undefined) out.endDate = updates.endDate ?? null;
-    if (updates.managerOrgId !== undefined) out.managerOrgId = updates.managerOrgId ?? null;
-    if (updates.managerUserId !== undefined) out.managerUserId = updates.managerUserId ?? null;
-    if (updates.annualSalary !== undefined) out.annualSalary = updates.annualSalary ?? null;
-    if (updates.hourlyRate !== undefined) out.hourlyRate = updates.hourlyRate ?? null;
-    if (updates.costCenter !== undefined) out.costCenter = updates.costCenter ?? null;
-    if (updates.location !== undefined) out.location = toJsonInput(updates.location);
-    if (updates.niNumber !== undefined) out.niNumber = updates.niNumber ?? null;
-    if (updates.emergencyContact !== undefined) out.emergencyContact = toJsonInput(updates.emergencyContact);
-    if (updates.nextOfKin !== undefined) out.nextOfKin = toJsonInput(updates.nextOfKin);
-    if (updates.healthStatus !== undefined) out.healthStatus = updates.healthStatus as $Enums.HealthStatus;
-    if (updates.workPermit !== undefined) out.workPermit = toJsonInput(updates.workPermit);
-    if (updates.bankDetails !== undefined) out.bankDetails = toJsonInput(updates.bankDetails);
-    if (updates.metadata !== undefined) out.metadata = toJsonInput(updates.metadata);
-    return out;
+export function buildPrismaUpdateFromDomain(
+    updates: Partial<Omit<EmployeeProfileDTO, 'id' | 'orgId' | 'userId' | 'createdAt' | 'employeeNumber'>>,
+): Prisma.EmployeeProfileUncheckedUpdateInput {
+    const out: Record<string, unknown> = {};
+
+    const setWithTransform = (
+        key: string,
+        value: unknown,
+        transform?: (value: unknown) => Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | null | undefined | string | number | Date,
+    ): void => {
+        if (value === undefined) {
+            return;
+        }
+        const nextValue = transform ? transform(value) : value;
+        out[key] = nextValue;
+    };
+
+    if (updates.jobTitle !== undefined) { setWithTransform('jobTitle', updates.jobTitle); }
+    if (updates.employmentType !== undefined) {
+        setWithTransform('employmentType', updates.employmentType);
+    }
+    if (updates.employmentStatus !== undefined) {
+        setWithTransform('employmentStatus', updates.employmentStatus);
+    }
+    setWithTransform('departmentId', updates.departmentId ?? null);
+    setWithTransform('startDate', updates.startDate, (value) => toDateValue(value as Date | string | null | undefined) ?? null);
+    setWithTransform('endDate', updates.endDate, (value) => toDateValue(value as Date | string | null | undefined) ?? null);
+    setWithTransform('managerOrgId', updates.managerOrgId ?? null);
+    setWithTransform('managerUserId', updates.managerUserId ?? null);
+    setWithTransform('email', updates.email ?? null);
+    setWithTransform('personalEmail', updates.personalEmail ?? null);
+    setWithTransform('firstName', updates.firstName ?? null);
+    setWithTransform('lastName', updates.lastName ?? null);
+    setWithTransform('displayName', updates.displayName ?? null);
+    setWithTransform('photoUrl', updates.photoUrl ?? null);
+    setWithTransform('phone', updates.phone, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('address', updates.address, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('roles', updates.roles, (value) => value ?? []);
+    setWithTransform('eligibleLeaveTypes', updates.eligibleLeaveTypes, (value) => value ?? []);
+    setWithTransform('annualSalary', updates.annualSalary ?? null);
+    setWithTransform('hourlyRate', updates.hourlyRate ?? null);
+    setWithTransform('salaryAmount', updates.salaryAmount ?? null);
+    setWithTransform('salaryCurrency', updates.salaryCurrency ?? null);
+    if (updates.salaryFrequency !== undefined) {
+        setWithTransform('salaryFrequency', updates.salaryFrequency);
+    }
+    if (updates.salaryBasis !== undefined) {
+        setWithTransform('salaryBasis', updates.salaryBasis);
+    }
+    if (updates.paySchedule !== undefined) {
+        setWithTransform('paySchedule', updates.paySchedule);
+    }
+    setWithTransform('costCenter', updates.costCenter ?? null);
+    setWithTransform('location', updates.location, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('niNumber', updates.niNumber ?? null);
+    setWithTransform('emergencyContact', updates.emergencyContact, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('nextOfKin', updates.nextOfKin, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    if (updates.healthStatus !== undefined) {
+        setWithTransform('healthStatus', updates.healthStatus);
+    }
+    setWithTransform('workPermit', updates.workPermit, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('bankDetails', updates.bankDetails, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('employmentPeriods', updates.employmentPeriods, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('salaryDetails', updates.salaryDetails, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('skills', updates.skills, (value) => value ?? []);
+    setWithTransform('certifications', updates.certifications, (value) => toJsonInput(value as Prisma.JsonValue | null | undefined));
+    setWithTransform('dataClassification', updates.dataClassification);
+    setWithTransform('residencyTag', updates.dataResidency);
+    setWithTransform('auditSource', updates.auditSource ?? null);
+    setWithTransform('correlationId', updates.correlationId ?? null);
+    setWithTransform('schemaVersion', updates.schemaVersion);
+    setWithTransform('createdBy', updates.createdBy ?? null);
+    setWithTransform('updatedBy', updates.updatedBy ?? null);
+    setWithTransform('retentionPolicy', updates.retentionPolicy ?? null);
+    setWithTransform('retentionExpiresAt', updates.retentionExpiresAt, (value) => toDateValue(value as Date | string | null | undefined));
+    setWithTransform('erasureRequestedAt', updates.erasureRequestedAt, (value) => toDateValue(value as Date | string | null | undefined));
+    setWithTransform('erasureCompletedAt', updates.erasureCompletedAt, (value) => toDateValue(value as Date | string | null | undefined));
+    setWithTransform('erasureReason', updates.erasureReason ?? null);
+    setWithTransform('erasureActorOrgId', updates.erasureActorOrgId ?? null);
+    setWithTransform('erasureActorUserId', updates.erasureActorUserId ?? null);
+    setWithTransform('archivedAt', updates.archivedAt, (value) => toDateValue(value as Date | string | null | undefined));
+    setWithTransform('deletedAt', updates.deletedAt, (value) => toDateValue(value as Date | string | null | undefined));
+
+    if (updates.metadata !== undefined || hasLegacyProfileUpdates(updates)) {
+        out.metadata = mergeLegacyMetadata(
+            updates.metadata as Prisma.JsonValue | null | undefined,
+            updates,
+        );
+    }
+    return out as Prisma.EmployeeProfileUncheckedUpdateInput;
 }
 
 export function buildPrismaWhereFromFilters(filters?: EmployeeProfileFilters): Prisma.EmployeeProfileWhereInput {
-    const where: Prisma.EmployeeProfileWhereInput = {};
-    if (!filters) return where;
-    if (filters.orgId) where.orgId = filters.orgId;
-    if (filters.userId) where.userId = filters.userId;
+    const where: Record<string, unknown> = {};
+    if (!filters) { return where; }
+    if (filters.orgId) { where.orgId = filters.orgId; }
+    if (filters.userId) { where.userId = filters.userId; }
     if (filters.jobTitle) {
         const jobTitleFilter: Prisma.StringFilter = { contains: filters.jobTitle, mode: 'insensitive' };
         where.jobTitle = jobTitleFilter;
     }
-    if (filters.employmentType) where.employmentType = filters.employmentType;
+    if (filters.employmentType) { where.employmentType = filters.employmentType; }
+    if (filters.employmentStatus) { where.employmentStatus = filters.employmentStatus; }
     if (filters.managerOrgId && filters.managerUserId) {
         where.managerOrgId = filters.managerOrgId;
         where.managerUserId = filters.managerUserId;
     }
     if (filters.startDate) {
-        where.startDate = { gte: filters.startDate };
+        const start = toDateValue(filters.startDate);
+        if (start) { where.startDate = { gte: start }; }
     }
     if (filters.endDate) {
-        where.endDate = { lte: filters.endDate };
+        const end = toDateValue(filters.endDate);
+        if (end) { where.endDate = { lte: end }; }
     }
-    return where;
+    return where as Prisma.EmployeeProfileWhereInput;
 }

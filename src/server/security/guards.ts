@@ -23,8 +23,16 @@ const defaultGuardMembershipRepository: IGuardMembershipRepository =
 
 let guardMembershipRepository: IGuardMembershipRepository = defaultGuardMembershipRepository;
 
-export function setGuardMembershipRepository(repository: IGuardMembershipRepository): void {
+/**
+ * Test-only hook for swapping the guard membership repository.
+ * Avoids mutable global state in production paths.
+ */
+export function __setGuardMembershipRepositoryForTests(repository: IGuardMembershipRepository): void {
     guardMembershipRepository = repository;
+}
+
+export function __resetGuardMembershipRepositoryForTests(): void {
+    guardMembershipRepository = defaultGuardMembershipRepository;
 }
 
 export interface OrgAccessInput {

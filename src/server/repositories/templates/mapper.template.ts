@@ -1,4 +1,3 @@
-/* eslint-disable */
 /**
  * Example mapper template for converting between Prisma models and domain models.
  */

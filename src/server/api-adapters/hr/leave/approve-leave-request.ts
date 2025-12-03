@@ -1,1 +1,52 @@
-// API adapter: Use-case: approve a leave request via guard-protected repository mutation.
+import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
+import { requireSessionUser } from '@/server/api-adapters/http/session-helpers';
+import type { ApproveLeaveRequestResult } from '@/server/use-cases/hr/leave/approve-leave-request';
+import {
+    approveLeaveRequestSchema,
+    type ApproveLeaveRequestPayload,
+} from '@/server/types/hr-leave-schemas';
+import {
+    defaultLeaveControllerDependencies,
+    resolveLeaveControllerDependencies,
+    type LeaveControllerDependencies,
+    readJson,
+} from './common';
+
+interface ControllerInput {
+    request: Request;
+    requestId: string;
+}
+
+export interface ApproveLeaveRequestControllerResult extends ApproveLeaveRequestResult {
+    success: true;
+}
+
+export async function approveLeaveRequestController(
+    { request, requestId }: ControllerInput,
+    dependencies: LeaveControllerDependencies = defaultLeaveControllerDependencies,
+): Promise<ApproveLeaveRequestControllerResult> {
+    const payload = approveLeaveRequestSchema.parse(await readJson<ApproveLeaveRequestPayload>(request));
+    const { session, service } = resolveLeaveControllerDependencies(dependencies);
+
+    const { session: authSession, authorization } = await getSessionContext(session, {
+        headers: request.headers,
+        requiredPermissions: { organization: ['update'] },
+        auditSource: 'api:hr:leave:approve',
+        action: 'update',
+        resourceType: 'hr.leave',
+        resourceAttributes: { requestId, decision: 'approved' },
+    });
+
+    const { userId } = requireSessionUser(authSession);
+    const result = await service.approveLeaveRequest({
+        authorization,
+        requestId,
+        approverId: payload.approverId ?? userId,
+        comments: payload.comments,
+    });
+
+    return {
+        ...result,
+        success: true,
+    };
+}

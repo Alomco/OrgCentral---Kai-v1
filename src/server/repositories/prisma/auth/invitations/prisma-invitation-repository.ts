@@ -5,6 +5,7 @@ import type {
     InvitationRecord,
     InvitationStatusUpdate,
 } from '@/server/repositories/contracts/auth/invitations';
+import { resolveIdentityCacheScopes } from '@/server/lib/cache-tags/identity';
 
 type InvitationEntity = PrismaInvitation;
 
@@ -29,6 +30,7 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
     }
 
     async updateStatus(token: string, update: InvitationStatusUpdate): Promise<void> {
+        const existing = await getInvitationDelegate(this.prisma).findUnique({ where: { token } });
         await getInvitationDelegate(this.prisma).update({
             where: { token },
             data: {
@@ -37,6 +39,11 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
                 acceptedAt: update.acceptedAt,
             },
         });
+
+        const orgId = existing?.orgId;
+        if (orgId) {
+            await this.invalidateAfterWrite(orgId, resolveIdentityCacheScopes());
+        }
     }
 }
 

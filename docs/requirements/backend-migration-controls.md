@@ -53,6 +53,7 @@ This document outlines compliance controls that must be implemented during the m
 - [ ] Subject Access Request (SAR) exporter available
 - [ ] Right-to-erasure workflow implemented
 - [ ] Data processing logs maintained for ICO inspections
+- [ ] SAR scope includes HR People data (profiles, contracts, compliance logs, documents) with redaction rules for NI/health data
 - [ ] Functions affected: All data access and modification functions
 
 ## 4. Audit and Compliance Automation
@@ -113,6 +114,13 @@ This document outlines compliance controls that must be implemented during the m
 - [ ] Absence tracking: Ensure proper audit trails
 - [ ] Onboarding: Check regulatory compliance requirements
 - [ ] Functions affected: hr-*.ts functions
+### HR People Controls
+- [ ] Profiles/contracts/documents/compliance log writes carry `orgId`, `dataClassification`, and `residencyTag` fields aligned to tenant metadata
+- [ ] All HR People mutations emit audit events (user, org, classification, residency, correlationId) for profile/contract/document/compliance changes
+- [ ] Employee document uploads and compliance attachments record retention policy IDs and storage paths tagged with residency/classification
+- [ ] Default classification/residency defaults documented and applied in HR People services; cross-region writes blocked unless contract allows
+- [ ] SAR/export coverage includes Prisma HR People tables and related storage records with redaction of NI/health/diversity data
+- [ ] Functions affected: hr-compliance.ts, hr-onboarding.ts, hr-absences.ts, hr-leave.ts people-facing mutations, people APIs/services
 
 ### Organization Admin Controls
 - [ ] User role management: Maintain proper segregation of duties

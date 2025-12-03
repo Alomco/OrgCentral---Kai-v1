@@ -2,14 +2,14 @@ import type { PlatformBranding } from '@/server/types/branding-types';
 import type { JsonValue } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { normalizeMetadata } from '@/server/repositories/mappers/metadata';
 
-export type PlatformBrandingRecord = {
+export interface PlatformBrandingRecord {
     branding: PlatformBranding | null;
     updatedAt?: Date | string | null;
     metadata?: JsonValue | null;
-};
+}
 
 export function mapPlatformBrandingRecordToDomain(record: PlatformBrandingRecord | null): PlatformBranding | null {
-    if (!record) return null;
+    if (!record) {return null;}
     return {
         ...(record.branding ?? {}),
         metadata: normalizeMetadata(record.metadata),

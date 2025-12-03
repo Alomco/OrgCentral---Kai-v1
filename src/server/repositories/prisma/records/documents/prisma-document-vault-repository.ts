@@ -1,15 +1,11 @@
-import type { DocumentVault, DocumentType, SecurityClassification, RetentionPolicy } from '@prisma/client';
-import type { PrismaClient, Prisma } from '@prisma/client';
+import type { DocumentVault, SecurityClassification } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import type { IDocumentVaultRepository } from '@/server/repositories/contracts/records/document-vault-repository-contract';
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { DocumentVaultFilters, DocumentVaultCreationData, DocumentVaultUpdateData } from './prisma-document-vault-repository.types';
 
 export class PrismaDocumentVaultRepository extends BasePrismaRepository implements IDocumentVaultRepository {
-  constructor(prisma: PrismaClient) {
-    super(prisma);
-  }
-
   async findById(id: string): Promise<DocumentVault | null> {
     return getModelDelegate(this.prisma, 'documentVault').findUnique({
       where: { id },

@@ -1,20 +1,20 @@
-import { Prisma, SessionStatus, type UserSession as PrismaUserSession, type SessionStatus as PrismaSessionStatus } from '@prisma/client';
+import { Prisma, SessionStatus, type SessionStatus as PrismaSessionStatus } from '@prisma/client';
 import type { UserSession as DomainUserSession } from '@/server/types/hr-types';
 import { mapPrismaUserSessionToDomain, mapDomainUserSessionToPrisma } from '@/server/repositories/mappers/auth/sessions/user-session-mapper';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { IUserSessionRepository } from '@/server/repositories/contracts/auth/sessions/user-session-repository-contract';
-import type { UserSessionFilters, UserSessionCreationData, UserSessionUpdateData } from './prisma-user-session-repository.types';
+import type { UserSessionFilters } from './prisma-user-session-repository.types';
 
 export class PrismaUserSessionRepository extends BasePrismaRepository implements IUserSessionRepository {
   async findById(id: string): Promise<DomainUserSession | null> {
     const record = await this.prisma.userSession.findUnique({ where: { id } });
-    if (!record) return null;
+    if (!record) {return null;}
     return mapPrismaUserSessionToDomain(record);
   }
 
   async findBySessionId(sessionId: string): Promise<DomainUserSession | null> {
     const record = await this.prisma.userSession.findFirst({ where: { sessionId } });
-    if (!record) return null;
+    if (!record) {return null;}
     return mapPrismaUserSessionToDomain(record);
   }
 
@@ -48,10 +48,12 @@ export class PrismaUserSessionRepository extends BasePrismaRepository implements
       whereClause.ipAddress = { contains: filters.ipAddress, mode: 'insensitive' };
     }
 
-    if (filters?.dateFrom || filters?.dateTo) {
+    const dateFrom = filters?.dateFrom;
+    const dateTo = filters?.dateTo;
+    if (dateFrom || dateTo) {
       whereClause.startedAt = {} as Prisma.DateTimeFilter;
-      if (filters?.dateFrom) whereClause.startedAt.gte = filters.dateFrom;
-      if (filters?.dateTo) whereClause.startedAt.lte = filters.dateTo;
+      if (dateFrom) {whereClause.startedAt.gte = dateFrom;}
+      if (dateTo) {whereClause.startedAt.lte = dateTo;}
     }
 
     const records = await this.prisma.userSession.findMany({ where: whereClause, orderBy: { startedAt: 'desc' } });
@@ -122,17 +124,17 @@ export class PrismaUserSessionRepository extends BasePrismaRepository implements
 
   async updateUserSession(tenantId: string, sessionId: string, updates: Partial<Omit<DomainUserSession, 'id' | 'userId' | 'sessionId'>>): Promise<void> {
     const existing = await this.findBySessionId(sessionId);
-    if (!existing) throw new Error('Session not found');
+    if (!existing) {throw new Error('Session not found');}
     const prismaUpdates: Prisma.UserSessionUncheckedUpdateInput = {};
-    const partial = updates as Partial<Omit<DomainUserSession, 'id' | 'userId' | 'sessionId'>>;
-    if (partial.status !== undefined) prismaUpdates.status = partial.status;
-    if (partial.ipAddress !== undefined) prismaUpdates.ipAddress = partial.ipAddress ?? null;
-    if (partial.userAgent !== undefined) prismaUpdates.userAgent = partial.userAgent ?? null;
-    if (partial.startedAt !== undefined) prismaUpdates.startedAt = partial.startedAt;
-    if (partial.expiresAt !== undefined) prismaUpdates.expiresAt = partial.expiresAt;
-    if (partial.lastAccess !== undefined) prismaUpdates.lastAccess = partial.lastAccess;
-    if (partial.revokedAt !== undefined) prismaUpdates.revokedAt = partial.revokedAt;
-    if (partial.metadata !== undefined) prismaUpdates.metadata = partial.metadata === null ? Prisma.JsonNull : (partial.metadata as Prisma.InputJsonValue | undefined);
+    const partial = updates;
+    if (partial.status !== undefined) {prismaUpdates.status = partial.status;}
+    if (partial.ipAddress !== undefined) {prismaUpdates.ipAddress = partial.ipAddress ?? null;}
+    if (partial.userAgent !== undefined) {prismaUpdates.userAgent = partial.userAgent ?? null;}
+    if (partial.startedAt !== undefined) {prismaUpdates.startedAt = partial.startedAt;}
+    if (partial.expiresAt !== undefined) {prismaUpdates.expiresAt = partial.expiresAt;}
+    if (partial.lastAccess !== undefined) {prismaUpdates.lastAccess = partial.lastAccess;}
+    if (partial.revokedAt !== undefined) {prismaUpdates.revokedAt = partial.revokedAt;}
+    if (partial.metadata !== undefined) {prismaUpdates.metadata = partial.metadata === null ? Prisma.JsonNull : (partial.metadata as Prisma.InputJsonValue | undefined);}
     await this.update(existing.id, prismaUpdates);
   }
 
@@ -162,7 +164,7 @@ export class PrismaUserSessionRepository extends BasePrismaRepository implements
 
   async invalidateUserSession(tenantId: string, sessionId: string): Promise<void> {
     const session = await this.findBySessionId(sessionId);
-    if (!session) return;
+    if (!session) {return;}
     await this.revokeSession(session.id);
   }
 
@@ -170,7 +172,8 @@ export class PrismaUserSessionRepository extends BasePrismaRepository implements
     await this.prisma.userSession.updateMany({ where: { userId, user: { memberships: { some: { orgId: tenantId } } } }, data: { status: SessionStatus.revoked, revokedAt: new Date() } });
   }
 
-  async cleanupExpiredSessions(tenantId: string): Promise<number> {
+  async cleanupExpiredSessions(_tenantId: string): Promise<number> {
+    void _tenantId;
     // Tenant-scoped cleanup currently deletes expired sessions regardless of tenant
     return this.cleanupExpiredSessionsInternal();
   }

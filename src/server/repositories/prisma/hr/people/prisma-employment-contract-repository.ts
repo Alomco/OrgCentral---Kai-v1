@@ -1,12 +1,17 @@
-import { Prisma, type EmploymentContract as PrismaEmploymentContract, type ContractType } from '@prisma/client';
-import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
+import { Prisma, type EmploymentContract as PrismaEmploymentContract } from '@prisma/client';
+import { BasePrismaRepository, type BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import type { IEmploymentContractRepository } from '@/server/repositories/contracts/hr/people/employment-contract-repository-contract';
 import { mapPrismaEmploymentContractToDomain } from '@/server/repositories/mappers/hr/people/employment-contract-mapper';
-import type { EmploymentContract } from '@/server/types/hr-types';
+import type { EmploymentContractDTO, ContractListFilters } from '@/server/types/hr/people';
 import type { EmploymentContractFilters, EmploymentContractCreationData, EmploymentContractUpdateData } from './prisma-employment-contract-repository.types';
+import { EntityNotFoundError } from '@/server/errors';
+import { HR_PEOPLE_CACHE_SCOPES } from '@/server/lib/cache-tags/hr-people';
 
 export class PrismaEmploymentContractRepository extends BasePrismaRepository implements IEmploymentContractRepository {
   // BasePrismaRepository enforced DI
+  constructor(options: BasePrismaRepositoryOptions = {}) {
+    super(options);
+  }
 
   private static toJsonInput(value?: Prisma.JsonValue | null): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
     if (value === null) { return Prisma.JsonNull; }
@@ -20,10 +25,38 @@ export class PrismaEmploymentContractRepository extends BasePrismaRepository imp
     });
   }
 
-  private static serializeLocation(loc?: EmploymentContract['location'] | string): string | undefined {
+  private static serializeLocation(loc?: EmploymentContractDTO['location'] | string): string | undefined {
     if (!loc) { return undefined; }
     if (typeof loc === 'string') { return loc; }
     return JSON.stringify(loc);
+  }
+
+  private static toOptionalDate(value: Date | string | null | undefined): Date | undefined {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+    return value instanceof Date ? value : new Date(value);
+  }
+
+  private static applyDateField(
+    updateData: EmploymentContractUpdateData,
+    key: 'endDate' | 'probationEndDate' | 'furloughStartDate' | 'furloughEndDate' | 'archivedAt',
+    value: Date | string | null | undefined,
+  ): void {
+    if (value === undefined) {
+      return;
+    }
+    updateData[key] = PrismaEmploymentContractRepository.toOptionalDate(value) as EmploymentContractUpdateData[typeof key];
+  }
+
+  private static applyValue<K extends keyof EmploymentContractUpdateData>(
+    updateData: EmploymentContractUpdateData,
+    key: K,
+    value: EmploymentContractUpdateData[K] | undefined,
+  ): void {
+    if (value !== undefined) {
+      updateData[key] = value;
+    }
   }
 
   async findByUserId(orgId: string, userId: string, activeOnly = true): Promise<PrismaEmploymentContract[]> {
@@ -51,7 +84,7 @@ export class PrismaEmploymentContractRepository extends BasePrismaRepository imp
     }
 
     if (filters?.contractType) {
-      whereClause.contractType = filters.contractType;
+      whereClause.contractType = filters.contractType as Prisma.EmploymentContractWhereInput['contractType'];
     }
 
     if (filters?.departmentId) {
@@ -63,6 +96,20 @@ export class PrismaEmploymentContractRepository extends BasePrismaRepository imp
         whereClause.archivedAt = null;
       } else {
         whereClause.NOT = { archivedAt: null };
+      }
+    }
+
+    if (filters?.startDate) {
+      const start = new Date(filters.startDate);
+      if (!Number.isNaN(start.getTime())) {
+        whereClause.startDate = { gte: start };
+      }
+    }
+
+    if (filters?.endDate) {
+      const end = new Date(filters.endDate);
+      if (!Number.isNaN(end.getTime())) {
+        whereClause.endDate = { lte: end };
       }
     }
 
@@ -93,66 +140,84 @@ export class PrismaEmploymentContractRepository extends BasePrismaRepository imp
   }
 
   // Contract wrappers
-  async createEmploymentContract(tenantId: string, contract: Omit<EmploymentContract, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
+  async createEmploymentContract(tenantId: string, contract: Omit<EmploymentContractDTO, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
     const createData: EmploymentContractCreationData = {
       orgId: tenantId,
       userId: contract.userId,
-      contractType: contract.contractType as ContractType,
-      startDate: contract.startDate,
-      endDate: contract.endDate ?? undefined,
+      contractType: contract.contractType as EmploymentContractCreationData['contractType'],
+      startDate: contract.startDate instanceof Date ? contract.startDate : new Date(contract.startDate),
+      endDate: contract.endDate ? (contract.endDate instanceof Date ? contract.endDate : new Date(contract.endDate)) : undefined,
       jobTitle: contract.jobTitle,
       departmentId: contract.departmentId ?? undefined,
       location: PrismaEmploymentContractRepository.serializeLocation(contract.location),
-      probationEndDate: contract.probationEndDate ?? undefined,
-      furloughStartDate: contract.furloughStartDate ?? undefined,
-      furloughEndDate: contract.furloughEndDate ?? undefined,
+      probationEndDate: contract.probationEndDate ? (contract.probationEndDate instanceof Date ? contract.probationEndDate : new Date(contract.probationEndDate)) : undefined,
+      furloughStartDate: contract.furloughStartDate ? (contract.furloughStartDate instanceof Date ? contract.furloughStartDate : new Date(contract.furloughStartDate)) : undefined,
+      furloughEndDate: contract.furloughEndDate ? (contract.furloughEndDate instanceof Date ? contract.furloughEndDate : new Date(contract.furloughEndDate)) : undefined,
       workingPattern: PrismaEmploymentContractRepository.toJsonInput(contract.workingPattern as Prisma.JsonValue | null | undefined),
       benefits: PrismaEmploymentContractRepository.toJsonInput(contract.benefits as Prisma.JsonValue | null | undefined),
       terminationReason: contract.terminationReason ?? undefined,
       terminationNotes: contract.terminationNotes ?? undefined,
     };
     await this.create(createData);
+    await this.invalidateAfterWrite(tenantId, [HR_PEOPLE_CACHE_SCOPES.contracts]);
   }
 
-  async updateEmploymentContract(tenantId: string, contractId: string, updates: Partial<Omit<EmploymentContract, 'id' | 'orgId' | 'employeeId' | 'userId' | 'createdAt'>>): Promise<void> {
+  async updateEmploymentContract(tenantId: string, contractId: string, updates: Partial<Omit<EmploymentContractDTO, 'id' | 'orgId' | 'employeeId' | 'userId' | 'createdAt'>>): Promise<void> {
     const existing = await this.findById(contractId);
-    if (existing?.orgId !== tenantId) { throw new Error('Contract not found'); }
+    if (existing?.orgId !== tenantId) { throw new EntityNotFoundError('Employment contract', { contractId, orgId: tenantId }); }
     const updateData: EmploymentContractUpdateData = {};
-    if (updates.endDate !== undefined) { updateData.endDate = updates.endDate ?? undefined; }
-    if (updates.jobTitle !== undefined) { updateData.jobTitle = updates.jobTitle; }
-    if (updates.departmentId !== undefined) { updateData.departmentId = updates.departmentId ?? undefined; }
-    if (updates.location !== undefined) { updateData.location = PrismaEmploymentContractRepository.serializeLocation(updates.location as EmploymentContract['location'] | string); }
-    if (updates.probationEndDate !== undefined) { updateData.probationEndDate = updates.probationEndDate ?? undefined; }
-    if (updates.furloughStartDate !== undefined) { updateData.furloughStartDate = updates.furloughStartDate ?? undefined; }
-    if (updates.furloughEndDate !== undefined) { updateData.furloughEndDate = updates.furloughEndDate ?? undefined; }
-    if (updates.workingPattern !== undefined) { updateData.workingPattern = PrismaEmploymentContractRepository.toJsonInput(updates.workingPattern as Prisma.JsonValue | null | undefined); }
-    if (updates.benefits !== undefined) { updateData.benefits = PrismaEmploymentContractRepository.toJsonInput(updates.benefits as Prisma.JsonValue | null | undefined); }
-    if (updates.terminationReason !== undefined) { updateData.terminationReason = updates.terminationReason; }
-    if (updates.terminationNotes !== undefined) { updateData.terminationNotes = updates.terminationNotes; }
-    if (updates.archivedAt !== undefined) { updateData.archivedAt = updates.archivedAt ?? undefined; }
+    PrismaEmploymentContractRepository.applyDateField(updateData, 'endDate', updates.endDate);
+    PrismaEmploymentContractRepository.applyDateField(updateData, 'probationEndDate', updates.probationEndDate);
+    PrismaEmploymentContractRepository.applyDateField(updateData, 'furloughStartDate', updates.furloughStartDate);
+    PrismaEmploymentContractRepository.applyDateField(updateData, 'furloughEndDate', updates.furloughEndDate);
+    PrismaEmploymentContractRepository.applyDateField(updateData, 'archivedAt', updates.archivedAt);
+
+    PrismaEmploymentContractRepository.applyValue(updateData, 'jobTitle', updates.jobTitle);
+    PrismaEmploymentContractRepository.applyValue(updateData, 'departmentId', updates.departmentId ?? undefined);
+    if (updates.location !== undefined) {
+      updateData.location = PrismaEmploymentContractRepository.serializeLocation(updates.location as EmploymentContractDTO['location'] | string);
+    }
+    if (updates.workingPattern !== undefined) {
+      updateData.workingPattern = PrismaEmploymentContractRepository.toJsonInput(updates.workingPattern as Prisma.JsonValue | null | undefined);
+    }
+    if (updates.benefits !== undefined) {
+      updateData.benefits = PrismaEmploymentContractRepository.toJsonInput(updates.benefits as Prisma.JsonValue | null | undefined);
+    }
+    PrismaEmploymentContractRepository.applyValue(updateData, 'terminationReason', updates.terminationReason);
+    PrismaEmploymentContractRepository.applyValue(updateData, 'terminationNotes', updates.terminationNotes);
     await this.update(contractId, updateData);
+    await this.invalidateAfterWrite(tenantId, [HR_PEOPLE_CACHE_SCOPES.contracts]);
   }
 
-  async getEmploymentContract(tenantId: string, contractId: string): Promise<EmploymentContract | null> {
+  async getEmploymentContract(tenantId: string, contractId: string): Promise<EmploymentContractDTO | null> {
     const rec = await this.findById(contractId);
-    if (rec?.orgId !== tenantId) { return null; }
+    if (!rec) { return null; }
+    this.assertTenantRecord(rec, tenantId);
     return mapPrismaEmploymentContractToDomain(rec);
   }
 
-  async getEmploymentContractByEmployee(tenantId: string, employeeId: string): Promise<EmploymentContract | null> {
+  async getEmploymentContractByEmployee(tenantId: string, employeeId: string): Promise<EmploymentContractDTO | null> {
     const rec = await this.prisma.employmentContract.findFirst({ where: { orgId: tenantId, userId: employeeId } });
     if (!rec) { return null; }
+    this.assertTenantRecord(rec, tenantId);
     return mapPrismaEmploymentContractToDomain(rec);
   }
 
-  async getEmploymentContractsByOrganization(tenantId: string, filters?: { status?: string; contractType?: ContractType; departmentId?: string; startDate?: Date; endDate?: Date; }): Promise<EmploymentContract[]> {
-    const recs = await this.findAll({ orgId: tenantId, contractType: filters?.contractType, departmentId: filters?.departmentId });
+  async getEmploymentContractsByOrganization(tenantId: string, filters?: ContractListFilters): Promise<EmploymentContractDTO[]> {
+    const recs = await this.findAll({
+      orgId: tenantId,
+      contractType: filters?.contractType,
+      departmentId: filters?.departmentId,
+      startDate: filters?.startDate,
+      endDate: filters?.endDate,
+    });
     return recs.map((r) => mapPrismaEmploymentContractToDomain(r));
   }
 
   async deleteEmploymentContract(tenantId: string, contractId: string): Promise<void> {
     const existing = await this.findById(contractId);
-    if (existing?.orgId !== tenantId) { throw new Error('Contract not found'); }
+    if (existing?.orgId !== tenantId) { throw new EntityNotFoundError('Employment contract', { contractId, orgId: tenantId }); }
     await this.delete(contractId);
+    await this.invalidateAfterWrite(tenantId, [HR_PEOPLE_CACHE_SCOPES.contracts]);
   }
 }

@@ -6,24 +6,28 @@ import type { ManagedOrganizationSummary } from '@/server/types/enterprise-types
 import type { JsonValue } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { normalizeMetadata } from '@/server/repositories/mappers/metadata';
 
-export type ManagedOrganizationRecord = {
+export interface ManagedOrganizationRecord {
     orgId: string;
     orgName: string;
     ownerEmail: string;
     planId: string;
-    moduleAccess: Record<string, boolean>;
+    moduleAccess: Record<string, boolean> | unknown;
     metadata?: JsonValue | null;
     createdAt: Date | string;
     updatedAt: Date | string;
-};
+}
 
 export function mapManagedOrganizationRecordToDomain(record: ManagedOrganizationRecord): ManagedOrganizationSummary {
+    const moduleAccess =
+        record.moduleAccess && typeof record.moduleAccess === 'object' && !Array.isArray(record.moduleAccess)
+            ? (record.moduleAccess as Record<string, boolean>)
+            : {};
     return {
         orgId: record.orgId,
         orgName: record.orgName,
         ownerEmail: record.ownerEmail,
         planId: record.planId,
-        moduleAccess: record.moduleAccess,
+        moduleAccess,
         metadata: normalizeMetadata(record.metadata),
         createdAt: record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt),
         updatedAt: record.updatedAt instanceof Date ? record.updatedAt : new Date(record.updatedAt),

@@ -1,88 +1,107 @@
 import { describe, it, expect } from 'vitest';
-import { mapPrismaEmployeeProfileToDomain, mapDomainEmployeeProfileToPrisma, buildPrismaCreateFromDomain, buildPrismaUpdateFromDomain, buildPrismaWhereFromFilters } from '../employee-profile-mapper';
-import type { EmployeeProfile } from '../../../../../types/hr-types';
-import { Prisma, type $Enums } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+import type { EmployeeProfile as PrismaEmployeeProfile } from '@prisma/client';
+import { mapPrismaEmployeeProfileToDomain, mapDomainEmployeeProfileToPrisma } from '../employee-profile-mapper';
 
-describe('employee-profile mapper', () => {
-    it('maps domain profile to prisma payload for create', () => {
-        const now = new Date();
-        const domain: EmployeeProfile = {
-            id: 'p1',
-            orgId: 'org1',
-            userId: 'u1',
-            employeeNumber: 'EMP-001',
-            jobTitle: 'Engineer',
-            employmentType: 'FULL_TIME' as $Enums.EmploymentType,
-            startDate: now,
-            endDate: null,
-            managerOrgId: null,
-            managerUserId: null,
-            annualSalary: 90000,
-            hourlyRate: null,
-            costCenter: null,
-            location: undefined,
-            niNumber: null,
-            emergencyContact: undefined,
-            nextOfKin: undefined,
-            healthStatus: 'UNDEFINED' as $Enums.HealthStatus,
-            workPermit: undefined,
-            bankDetails: undefined,
-            metadata: undefined,
-            createdAt: now,
-            updatedAt: now,
-        };
+const baseRecord: PrismaEmployeeProfile = {
+  id: 'p1',
+  orgId: 'org-1',
+  userId: 'user-1',
+  firstName: null,
+  lastName: null,
+  displayName: null,
+  photoUrl: null,
+  email: null,
+  personalEmail: null,
+  employeeNumber: 'E-1',
+  jobTitle: null,
+  employmentType: 'FULL_TIME',
+  employmentStatus: 'ACTIVE',
+  startDate: null,
+  endDate: null,
+  managerOrgId: null,
+  managerUserId: null,
+  annualSalary: null,
+  hourlyRate: null,
+  salaryAmount: null,
+  salaryCurrency: null,
+  salaryFrequency: null,
+  salaryBasis: null,
+  paySchedule: null,
+  costCenter: null,
+  location: null,
+  phone: null,
+  address: null,
+  roles: [],
+  eligibleLeaveTypes: [],
+  employmentPeriods: null,
+  salaryDetails: null,
+  skills: [],
+  certifications: null,
+  niNumber: null,
+  emergencyContact: null,
+  nextOfKin: null,
+  healthStatus: 'UNDEFINED',
+  workPermit: null,
+  bankDetails: null,
+  metadata: null,
+  departmentId: null,
+  dataClassification: 'OFFICIAL',
+  residencyTag: 'UK_ONLY',
+  auditSource: null,
+  correlationId: null,
+  schemaVersion: 1,
+  createdBy: null,
+  updatedBy: null,
+  retentionPolicy: null,
+  retentionExpiresAt: null,
+  erasureRequestedAt: null,
+  erasureCompletedAt: null,
+  erasureReason: null,
+  erasureActorOrgId: null,
+  erasureActorUserId: null,
+  archivedAt: null,
+  deletedAt: null,
+  createdAt: new Date('2024-01-01T00:00:00Z'),
+  updatedAt: new Date('2024-01-01T00:00:00Z'),
+};
 
-        const createDto = buildPrismaCreateFromDomain({ ...domain, orgId: domain.orgId });
+const LEGACY_EMAIL = 'u@example.com';
+const LEGACY_FIRST_NAME = 'Jane';
+const LEGACY_ROLE = 'member';
 
-        expect(createDto).toBeDefined();
-        expect(createDto.orgId).toEqual(domain.orgId);
-        expect(createDto.employeeNumber).toEqual(domain.employeeNumber);
-        expect(createDto.employmentType).toEqual('FULL_TIME');
+describe('employee-profile-mapper legacy metadata', () => {
+  it('extracts legacyProfile fields from metadata', () => {
+    const legacyProfile = {
+      email: LEGACY_EMAIL,
+      firstName: LEGACY_FIRST_NAME,
+      lastName: 'Doe',
+      roles: [LEGACY_ROLE],
+    };
+    const record = {
+      ...baseRecord,
+      metadata: {
+        legacyProfile,
+      },
+    } as PrismaEmployeeProfile;
+
+    const domain = mapPrismaEmployeeProfileToDomain(record);
+
+    expect(domain.email).toBe(LEGACY_EMAIL);
+    expect(domain.firstName).toBe(LEGACY_FIRST_NAME);
+    expect(domain.roles).toEqual([LEGACY_ROLE]);
+  });
+
+  it('merges legacy fields back into metadata on write', () => {
+    const baseDomain = mapPrismaEmployeeProfileToDomain(baseRecord);
+    const prismaInput = mapDomainEmployeeProfileToPrisma({
+      ...baseDomain,
+      email: LEGACY_EMAIL,
+      firstName: LEGACY_FIRST_NAME,
+      roles: [LEGACY_ROLE],
     });
 
-    it('builds update payload with only provided fields', () => {
-        const updates: Partial<EmployeeProfile> = { jobTitle: 'Senior Dev', hourlyRate: 60 };
-        const updateDto = buildPrismaUpdateFromDomain(updates);
-        expect(updateDto.jobTitle).toEqual('Senior Dev');
-        expect(updateDto.hourlyRate).toEqual(60);
-    });
-
-    it('maps prisma record to domain', () => {
-        const record: Prisma.EmployeeProfileUncheckedCreateInput & { id: string; createdAt: Date; updatedAt: Date } = {
-            id: 'p1',
-            orgId: 'org1',
-            userId: 'u1',
-            employeeNumber: 'EMP-001',
-            employmentType: 'FULL_TIME',
-            jobTitle: 'Dev',
-            startDate: new Date('2023-01-01'),
-            endDate: null,
-            managerOrgId: null,
-            managerUserId: null,
-            annualSalary: 50000,
-            hourlyRate: 35,
-            costCenter: null,
-            location: Prisma.JsonNull,
-            niNumber: null,
-            emergencyContact: Prisma.JsonNull,
-            nextOfKin: Prisma.JsonNull,
-            healthStatus: 'UNDEFINED',
-            workPermit: Prisma.JsonNull,
-            bankDetails: Prisma.JsonNull,
-            metadata: Prisma.JsonNull,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-
-        const domain = mapPrismaEmployeeProfileToDomain(record as any);
-        expect(domain.employeeNumber).toEqual('EMP-001');
-        expect(domain.hourlyRate).toEqual(35);
-    });
-
-    it('builds where filter from filters', () => {
-        const where = buildPrismaWhereFromFilters({ orgId: 'org1', jobTitle: 'Leader', startDate: new Date('2024-01-01') });
-        expect(where.orgId).toEqual('org1');
-        expect((where.jobTitle as any).contains).toEqual('Leader');
-        expect((where.startDate as any).gte).toBeTruthy();
-    });
+    const metadata = prismaInput.metadata as Prisma.JsonValue | null;
+    expect(metadata && typeof metadata === 'object' && 'legacyProfile' in metadata).toBe(true);
+  });
 });

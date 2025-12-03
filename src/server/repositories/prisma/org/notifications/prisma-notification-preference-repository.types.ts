@@ -1,4 +1,4 @@
-import type { Prisma, NotificationChannel } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 export interface NotificationPreferenceFilters {
     orgId?: string;

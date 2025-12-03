@@ -2,15 +2,15 @@ import type { OrgBranding } from '@/server/types/branding-types';
 import type { JsonValue } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { normalizeMetadata } from '@/server/repositories/mappers/metadata';
 
-export type OrgBrandingRecord = {
+export interface OrgBrandingRecord {
     orgId: string;
     branding: OrgBranding | null;
     updatedAt?: Date | string | null;
     metadata?: JsonValue | null;
-};
+}
 
 export function mapOrgBrandingRecordToDomain(record: OrgBrandingRecord | null): OrgBranding | null {
-    if (!record) return null;
+    if (!record) {return null;}
     return {
         ...(record.branding ?? {}),
         metadata: normalizeMetadata(record.metadata),

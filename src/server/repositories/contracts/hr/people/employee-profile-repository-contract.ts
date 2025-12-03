@@ -2,7 +2,7 @@
  * Repository contract for Employee Profiles
  * Following SOLID principles with clear separation of concerns
  */
-import type { EmployeeProfile } from '@/server/types/hr-types';
+import type { EmployeeProfileDTO, PeopleListFilters } from '@/server/types/hr/people';
 
 export interface IEmployeeProfileRepository {
   /**
@@ -10,7 +10,7 @@ export interface IEmployeeProfileRepository {
    */
   createEmployeeProfile(
     tenantId: string,
-    profile: Omit<EmployeeProfile, 'id' | 'createdAt' | 'updatedAt'>
+    profile: Omit<EmployeeProfileDTO, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<void>;
 
   /**
@@ -19,7 +19,7 @@ export interface IEmployeeProfileRepository {
   updateEmployeeProfile(
     tenantId: string,
     profileId: string,
-    updates: Partial<Omit<EmployeeProfile, 'id' | 'orgId' | 'userId' | 'createdAt' | 'employeeNumber'>>
+    updates: Partial<Omit<EmployeeProfileDTO, 'id' | 'orgId' | 'userId' | 'createdAt' | 'employeeNumber'>>
   ): Promise<void>;
 
   /**
@@ -28,7 +28,7 @@ export interface IEmployeeProfileRepository {
   getEmployeeProfile(
     tenantId: string,
     profileId: string
-  ): Promise<EmployeeProfile | null>;
+  ): Promise<EmployeeProfileDTO | null>;
 
   /**
    * Get employee profile by user ID
@@ -36,18 +36,40 @@ export interface IEmployeeProfileRepository {
   getEmployeeProfileByUser(
     tenantId: string,
     userId: string
-  ): Promise<EmployeeProfile | null>;
+ ): Promise<EmployeeProfileDTO | null>;
 
   /**
    * Get all employee profiles for an organization
    */
   getEmployeeProfilesByOrganization(
     tenantId: string,
-    filters?: {
-      startDate?: Date;
-      endDate?: Date;
-    }
-  ): Promise<EmployeeProfile[]>;
+    filters?: PeopleListFilters
+  ): Promise<EmployeeProfileDTO[]>;
+
+  /**
+   * Find an employee profile by org-scoped employeeNumber
+   */
+  findByEmployeeNumber(
+    tenantId: string,
+    employeeNumber: string
+  ): Promise<EmployeeProfileDTO | null>;
+
+  /**
+   * Find an employee profile by primary email (case-insensitive) within an org
+   */
+  findByEmail(
+    tenantId: string,
+    email: string
+  ): Promise<EmployeeProfileDTO | null>;
+
+  /**
+   * Update compliance status tag for an employee profile (metadata-only until schema adds a column)
+   */
+  updateComplianceStatus(
+    tenantId: string,
+    profileId: string,
+    complianceStatus: string
+  ): Promise<void>;
 
   /**
    * Delete an employee profile

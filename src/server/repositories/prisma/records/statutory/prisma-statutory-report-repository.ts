@@ -1,15 +1,10 @@
 import type { StatutoryReport, Prisma } from '@prisma/client';
-import type { PrismaClient } from '@prisma/client';
 import type { IStatutoryReportRepository } from '@/server/repositories/contracts/records/statutory-report-repository-contract';
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { StatutoryReportFilters, StatutoryReportCreationData, StatutoryReportUpdateData } from './prisma-statutory-report-repository.types';
 
 export class PrismaStatutoryReportRepository extends BasePrismaRepository implements IStatutoryReportRepository {
-  constructor(prisma: PrismaClient) {
-    super(prisma);
-  }
-
   async findById(id: string): Promise<StatutoryReport | null> {
     return getModelDelegate(this.prisma, 'statutoryReport').findUnique({
       where: { id },
@@ -49,12 +44,14 @@ export class PrismaStatutoryReportRepository extends BasePrismaRepository implem
       whereClause.status = filters.status;
     }
 
-    if (filters?.dateFrom && filters?.dateTo) {
-      whereClause.createdAt = { gte: filters.dateFrom, lte: filters.dateTo };
-    } else if (filters?.dateFrom) {
-      whereClause.createdAt = { gte: filters.dateFrom };
-    } else if (filters?.dateTo) {
-      whereClause.createdAt = { lte: filters.dateTo };
+    const dateFrom = filters?.dateFrom;
+    const dateTo = filters?.dateTo;
+    if (dateFrom && dateTo) {
+      whereClause.createdAt = { gte: dateFrom, lte: dateTo };
+    } else if (dateFrom) {
+      whereClause.createdAt = { gte: dateFrom };
+    } else if (dateTo) {
+      whereClause.createdAt = { lte: dateTo };
     }
 
     return getModelDelegate(this.prisma, 'statutoryReport').findMany({

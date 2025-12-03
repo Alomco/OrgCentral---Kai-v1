@@ -6,7 +6,7 @@ import type { AppPermission } from '@/server/types/platform-types';
 import type { JsonValue } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { normalizeMetadata } from '@/server/repositories/mappers/metadata';
 
-export type AppPermissionRecord = {
+export interface AppPermissionRecord {
     id: string;
     name: string;
     description?: string | null;
@@ -15,7 +15,7 @@ export type AppPermissionRecord = {
     metadata?: JsonValue | null;
     createdAt: Date | string;
     updatedAt: Date | string;
-};
+}
 
 export function mapAppPermissionRecordToDomain(record: AppPermissionRecord): AppPermission {
     return {
@@ -46,10 +46,10 @@ export function mapAppPermissionUpdateInputToRecord(
     input: AppPermissionUpdateInput,
 ): Partial<AppPermissionRecord> {
     const payload: Partial<AppPermissionRecord> = {};
-    if (input.name !== undefined) payload.name = input.name;
-    if (input.description !== undefined) payload.description = input.description;
-    if (input.category !== undefined) payload.category = input.category;
-    if (input.isGlobal !== undefined) payload.isGlobal = input.isGlobal;
-    if (input.metadata !== undefined) payload.metadata = input.metadata;
+    if (input.name !== undefined) { payload.name = input.name; }
+    if (input.description !== undefined) { payload.description = input.description; }
+    if (input.category !== undefined) { payload.category = input.category; }
+    if (input.isGlobal !== undefined) { payload.isGlobal = input.isGlobal; }
+    if (input.metadata !== undefined) { payload.metadata = input.metadata; }
     return payload;
 }

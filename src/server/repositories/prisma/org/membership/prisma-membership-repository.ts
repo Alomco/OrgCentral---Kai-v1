@@ -1,5 +1,8 @@
 import type { Prisma, MembershipStatus } from '@prisma/client';
-import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
+import {
+    OrgScopedPrismaRepository,
+    type OrgScopedRepositoryOptions,
+} from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import type {
     EmployeeProfilePayload,
     IMembershipRepository,
@@ -25,8 +28,13 @@ import {
     runTransaction,
     buildMembershipMetadataJson,
 } from '@/server/repositories/prisma/helpers/prisma-utils';
+import { resolveIdentityCacheScopes } from '@/server/lib/cache-tags/identity';
 
 export class PrismaMembershipRepository extends OrgScopedPrismaRepository implements IMembershipRepository {
+    constructor(options?: OrgScopedRepositoryOptions) {
+        super(options);
+    }
+
     async findMembership(context: RepositoryAuthorizationContext, userId: string): Promise<Membership | null> {
         const membership = await getModelDelegate(this.prisma, 'membership').findUnique({
             where: { orgId_userId: { orgId: context.orgId, userId } },
@@ -36,7 +44,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
         if (!membership) {
             return null;
         }
-        this.assertTenantRecord(membership, context);
+        this.assertTenantRecord(membership, context.orgId);
 
         // Prefer optional chain for clarity and to preserve property access safety
         return {
@@ -77,6 +85,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
                 data: input.userUpdate,
             });
         });
+        await this.invalidateAfterWrite(context.orgId, resolveIdentityCacheScopes());
         return {
             organizationId: context.orgId,
             roles: input.roles,
@@ -93,6 +102,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
             where: { orgId_userId: { orgId: context.orgId, userId } },
             data: { status: nextStatus },
         });
+        await this.invalidateAfterWrite(context.orgId, resolveIdentityCacheScopes());
     }
 
     private mapProfilePayload(payload: EmployeeProfilePayload): EmployeeProfilePersistence {

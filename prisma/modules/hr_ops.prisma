@@ -1,4 +1,4 @@
-// HR operational models: absences, time tracking, policies, notifications, settings
+// HR operational models: absences, time tracking, policies, settings, compliance
 
 enum AbsenceStatus {
   REPORTED
@@ -6,6 +6,7 @@ enum AbsenceStatus {
   REJECTED
   CANCELLED
   CLOSED
+  @@schema("hr")
 }
 
 enum TimeEntryStatus {
@@ -13,6 +14,7 @@ enum TimeEntryStatus {
   COMPLETED
   APPROVED
   REJECTED
+  @@schema("hr")
 }
 
 enum PolicyCategory {
@@ -24,24 +26,31 @@ enum PolicyCategory {
   PROCEDURES
   COMPLIANCE
   OTHER
+  @@schema("hr")
 }
 
-enum HRNotificationType {
-  LEAVE_APPROVAL
-  LEAVE_REJECTION
-  DOCUMENT_EXPIRY
-  POLICY_UPDATE
-  PERFORMANCE_REVIEW
-  SYSTEM_ANNOUNCEMENT
-  COMPLIANCE_REMINDER
-  OTHER
+enum ChecklistTemplateType {
+  onboarding
+  offboarding
+  custom
+  @@schema("hr")
 }
 
-enum NotificationPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
+enum ChecklistInstanceStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  @@schema("hr")
+}
+
+enum ComplianceItemStatus {
+  PENDING
+  COMPLETE
+  MISSING
+  PENDING_REVIEW
+  NOT_APPLICABLE
+  EXPIRED
+  @@schema("hr")
 }
 
 model AbsenceTypeConfig {
@@ -59,7 +68,8 @@ model AbsenceTypeConfig {
   absences  UnplannedAbsence[]
 
   @@unique([orgId, key])
-  @@map("hr.absence_type_configs")
+  @@map("absence_type_configs")
+  @@schema("hr")
 }
 
 model AbsenceSettings {
@@ -72,7 +82,8 @@ model AbsenceSettings {
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  @@map("hr.absence_settings")
+  @@map("absence_settings")
+  @@schema("hr")
 }
 
 model HRSettings {
@@ -89,7 +100,8 @@ model HRSettings {
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  @@map("hr.hr_settings")
+  @@map("hr_settings")
+  @@schema("hr")
 }
 
 model UnplannedAbsence {
@@ -108,6 +120,9 @@ model UnplannedAbsence {
   dataClassification DataClassificationLevel @default(OFFICIAL)
   residencyTag       DataResidencyZone       @default(UK_ONLY)
   metadata       Json?          @db.JsonB
+  deletionReason String?
+  deletedAt      DateTime?
+  deletedByUserId String?       @db.Uuid
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -115,10 +130,70 @@ model UnplannedAbsence {
   member   Membership        @relation("MemberAbsences", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
   type     AbsenceTypeConfig @relation(fields: [typeId], references: [id], onDelete: Restrict)
   approver Membership?       @relation("AbsenceApprover", fields: [approverOrgId, approverUserId], references: [orgId, userId], onDelete: SetNull)
+  attachments   AbsenceAttachment[]
+  returnRecord  AbsenceReturnRecord?
+  deletionAudit AbsenceDeletionAudit?
 
   @@index([orgId, userId])
   @@index([orgId, status])
-  @@map("hr.unplanned_absences")
+  @@map("unplanned_absences")
+  @@schema("hr")
+}
+
+model AbsenceAttachment {
+  id               String                 @id @default(uuid()) @db.Uuid
+  orgId            String                 @db.Uuid
+  absenceId        String                 @db.Uuid
+  fileName         String
+  storageKey       String
+  contentType      String
+  fileSize         Int
+  checksum         String?
+  uploadedByUserId String                 @db.Uuid
+  uploadedAt       DateTime               @default(now())
+  metadata         Json?                  @db.JsonB
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+
+  absence  UnplannedAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+  @@index([orgId, absenceId])
+  @@map("unplanned_absence_attachments")
+  @@schema("hr")
+}
+
+model AbsenceReturnRecord {
+  id                String                 @id @default(uuid()) @db.Uuid
+  orgId             String                 @db.Uuid
+  absenceId         String                 @db.Uuid @unique
+  returnDate        DateTime
+  comments          String?
+  submittedByUserId String                 @db.Uuid
+  submittedAt       DateTime               @default(now())
+  metadata          Json?                  @db.JsonB
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+
+  absence  UnplannedAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+  @@index([orgId])
+  @@map("unplanned_absence_returns")
+  @@schema("hr")
+}
+
+model AbsenceDeletionAudit {
+  id               String                 @id @default(uuid()) @db.Uuid
+  orgId            String                 @db.Uuid
+  absenceId        String                 @db.Uuid @unique
+  reason           String
+  deletedByUserId  String                 @db.Uuid
+  deletedAt        DateTime               @default(now())
+  metadata         Json?                  @db.JsonB
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+
+  absence   UnplannedAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+  @@index([orgId])
+  @@map("unplanned_absence_deletions")
+  @@schema("hr")
 }
 
 model TimeEntry {
@@ -149,7 +224,8 @@ model TimeEntry {
 
   @@index([orgId, userId])
   @@index([orgId, status])
-  @@map("hr.time_entries")
+  @@map("time_entries")
+  @@schema("hr")
 }
 
 model HRPolicy {
@@ -175,7 +251,8 @@ model HRPolicy {
   acknowledgments PolicyAcknowledgment[]
 
   @@index([orgId, status])
-  @@map("hr.policies")
+  @@map("policies")
+  @@schema("hr")
 }
 
 model PolicyAcknowledgment {
@@ -192,32 +269,92 @@ model PolicyAcknowledgment {
   membership Membership  @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
 
   @@unique([policyId, orgId, userId, version])
-  @@map("hr.policy_acknowledgments")
+  @@map("policy_acknowledgments")
+  @@schema("hr")
 }
 
-model HRNotification {
-  id          String               @id @default(uuid()) @db.Uuid
-  orgId       String               @db.Uuid
-  userId      String               @db.Uuid
-  title       String
-  message     String
-  type        HRNotificationType   @default(OTHER)
-  priority    NotificationPriority @default(MEDIUM)
-  isRead      Boolean              @default(false)
-  readAt      DateTime?
-  actionUrl   String?
-  actionLabel String?
-  scheduledFor DateTime?
-  expiresAt   DateTime?
-  dataClassification DataClassificationLevel @default(OFFICIAL)
-  residencyTag       DataResidencyZone       @default(UK_ONLY)
-  metadata    Json?                @db.JsonB
-  createdAt   DateTime             @default(now())
+model ChecklistTemplate {
+  id        String                @id @default(uuid()) @db.Uuid
+  orgId     String                @db.Uuid
+  name      String
+  type      ChecklistTemplateType @default(onboarding)
+  items     Json                  @db.JsonB
+  metadata  Json?                 @db.JsonB
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
 
-  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  membership Membership @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+  org Organization @relation("OrgChecklistTemplates", fields: [orgId], references: [id], onDelete: Cascade)
+  instances ChecklistInstance[] @relation("ChecklistTemplateInstances")
 
-  @@index([orgId, userId, isRead])
-  @@index([orgId, scheduledFor])
-  @@map("hr.notifications")
+  @@index([orgId, type])
+  @@map("checklist_templates")
+  @@schema("hr")
+}
+
+model ChecklistInstance {
+  id           String                   @id @default(uuid()) @db.Uuid
+  orgId        String                   @db.Uuid
+  employeeId   String                   @db.Uuid
+  templateId   String                   @db.Uuid
+  templateName String?
+  status       ChecklistInstanceStatus  @default(IN_PROGRESS)
+  items        Json                     @db.JsonB
+  startedAt    DateTime                 @default(now())
+  completedAt  DateTime?
+  metadata     Json?                    @db.JsonB
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+
+  org      Organization       @relation("OrgChecklistInstances", fields: [orgId], references: [id], onDelete: Cascade)
+  template ChecklistTemplate  @relation("ChecklistTemplateInstances", fields: [templateId], references: [id], onDelete: Cascade)
+  employee EmployeeProfile    @relation("EmployeeChecklistInstances", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, employeeId])
+  @@index([templateId])
+  @@map("checklist_instances")
+  @@schema("hr")
+}
+
+model ComplianceTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  orgId       String   @db.Uuid
+  name        String
+  categoryKey String?
+  version     String?
+  items       Json     @db.JsonB
+  metadata    Json?    @db.JsonB
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org Organization @relation("OrgComplianceTemplates", fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, categoryKey])
+  @@map("compliance_templates")
+  @@schema("hr")
+}
+
+model ComplianceLogItem {
+  id            String                @id @default(uuid()) @db.Uuid
+  orgId         String                @db.Uuid
+  userId        String                @db.Uuid
+  templateItemId String
+  categoryKey   String?
+  status        ComplianceItemStatus  @default(PENDING)
+  dueDate       DateTime?
+  completedAt   DateTime?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  notes         String?
+  attachments   Json?                 @db.JsonB
+  metadata      Json?                 @db.JsonB
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  org        Organization @relation("OrgComplianceLogItems", fields: [orgId], references: [id], onDelete: Cascade)
+  membership Membership   @relation("MembershipComplianceLogItems", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+
+  @@index([orgId, userId])
+  @@index([status, dueDate])
+  @@map("compliance_log_items")
+  @@schema("hr")
 }

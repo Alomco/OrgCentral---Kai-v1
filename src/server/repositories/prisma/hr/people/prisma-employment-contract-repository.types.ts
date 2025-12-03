@@ -1,11 +1,14 @@
-import type { Prisma, ContractType } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+import type { ContractTypeCode } from '@/server/types/hr/people';
 
 export interface EmploymentContractFilters {
     orgId?: string;
     userId?: string;
-    contractType?: ContractType;
+    contractType?: ContractTypeCode;
     departmentId?: string;
     active?: boolean;
+    startDate?: string;
+    endDate?: string;
 }
 
 export type EmploymentContractCreationData = Prisma.EmploymentContractUncheckedCreateInput;

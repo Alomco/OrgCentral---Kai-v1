@@ -3,6 +3,7 @@ import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-r
 import type { IAbsenceTypeConfigRepository } from '@/server/repositories/contracts/hr/absences/absence-type-config-repository-contract';
 import { mapDomainAbsenceTypeConfigToPrismaCreate, mapDomainAbsenceTypeConfigToPrismaUpdate, mapPrismaAbsenceTypeConfigToDomain } from '@/server/repositories/mappers/hr/absences/absences-mapper';
 import type { AbsenceTypeConfig } from '@/server/types/hr-ops-types';
+import { AuthorizationError } from '@/server/errors';
 
 export class PrismaAbsenceTypeConfigRepository extends BasePrismaRepository implements IAbsenceTypeConfigRepository {
   async createConfig(orgId: string, input: Omit<AbsenceTypeConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<AbsenceTypeConfig> {
@@ -23,13 +24,18 @@ export class PrismaAbsenceTypeConfigRepository extends BasePrismaRepository impl
     });
     // Optional: ensure orgId matches
     if (updated.orgId !== orgId) {
-      throw new Error('Cross-tenant absence type access denied');
+      throw new AuthorizationError('Cross-tenant absence type access denied', { orgId });
     }
     return mapPrismaAbsenceTypeConfigToDomain(updated);
   }
 
   async getConfig(orgId: string, id: string): Promise<AbsenceTypeConfig | null> {
     const rec = await this.prisma.absenceTypeConfig.findFirst({ where: { id, orgId } });
+    return rec ? mapPrismaAbsenceTypeConfigToDomain(rec) : null;
+  }
+
+  async getConfigByKey(orgId: string, key: string): Promise<AbsenceTypeConfig | null> {
+    const rec = await this.prisma.absenceTypeConfig.findFirst({ where: { orgId, key } });
     return rec ? mapPrismaAbsenceTypeConfigToDomain(rec) : null;
   }
 

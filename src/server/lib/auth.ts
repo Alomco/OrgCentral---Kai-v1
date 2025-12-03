@@ -3,6 +3,8 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
 import { mcp, organization } from 'better-auth/plugins';
 import { prisma } from '@/server/lib/prisma';
+import type { BetterAuthSessionPayload, BetterAuthUserPayload } from '@/server/lib/auth-sync';
+import { syncBetterAuthSessionToPrisma, syncBetterAuthUserToPrisma } from '@/server/lib/auth-sync';
 import { orgAccessControl, orgRoles } from '@/server/security/access-control';
 
 const baseURL =
@@ -32,6 +34,7 @@ export const auth = betterAuth({
                 metadata: {
                     issuer: baseURL,
                 },
+                loginPage: `${baseURL}/auth/login`,
             },
         }),
         nextCookies(),
@@ -40,6 +43,32 @@ export const auth = betterAuth({
         token: {
             accessTokenExpiresIn: '15m',
             refreshTokenExpiresIn: '7d',
+        },
+    },
+    databaseHooks: {
+        user: {
+            create: {
+                after: async (user: BetterAuthUserPayload) => {
+                    await syncBetterAuthUserToPrisma(user);
+                },
+            },
+            update: {
+                after: async (user: BetterAuthUserPayload) => {
+                    await syncBetterAuthUserToPrisma(user);
+                },
+            },
+        },
+        session: {
+            create: {
+                after: async (session: BetterAuthSessionPayload) => {
+                    await syncBetterAuthSessionToPrisma(session);
+                },
+            },
+            update: {
+                after: async (session: BetterAuthSessionPayload) => {
+                    await syncBetterAuthSessionToPrisma(session);
+                },
+            },
         },
     },
 });

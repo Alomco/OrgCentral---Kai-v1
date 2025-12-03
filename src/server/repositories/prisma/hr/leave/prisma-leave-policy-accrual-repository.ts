@@ -1,8 +1,9 @@
-import { Prisma, type LeavePolicyAccrual as PrismaLeavePolicyAccrual, type PrismaClient } from '@prisma/client';
+import { Prisma, type LeavePolicyAccrual as PrismaLeavePolicyAccrual } from '@prisma/client';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { ILeavePolicyAccrualRepository } from '@/server/repositories/contracts/hr/leave/leave-policy-accrual-repository-contract';
 import type { LeavePolicyAccrual } from '@/server/types/leave-types';
 import type { LeavePolicyAccrualFilters, LeavePolicyAccrualCreationData, LeavePolicyAccrualUpdateData } from './prisma-leave-policy-accrual-repository.types';
+import { EntityNotFoundError } from '@/server/errors';
 
 export class PrismaLeavePolicyAccrualRepository extends BasePrismaRepository implements ILeavePolicyAccrualRepository {
   // BasePrismaRepository enforces DI
@@ -11,7 +12,7 @@ export class PrismaLeavePolicyAccrualRepository extends BasePrismaRepository imp
     const rec = await this.prisma.leavePolicyAccrual.findUnique({
       where: { id },
     });
-    if (!rec) return null;
+    if (!rec) {return null;}
     return map(rec);
   }
 
@@ -24,7 +25,7 @@ export class PrismaLeavePolicyAccrualRepository extends BasePrismaRepository imp
         }
       }
     });
-    if (!rec) return null;
+    if (!rec) {return null;}
     return map(rec);
   }
 
@@ -81,7 +82,8 @@ export class PrismaLeavePolicyAccrualRepository extends BasePrismaRepository imp
   }
 
   // Contract wrappers
-  async createLeavePolicyAccrual(tenantId: string, accrual: Omit<LeavePolicyAccrual, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
+  async createLeavePolicyAccrual(_tenantId: string, accrual: Omit<LeavePolicyAccrual, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
+    void _tenantId;
     await this.create({
       policyId: accrual.policyId,
       tenureMonths: accrual.tenureMonths,
@@ -90,9 +92,10 @@ export class PrismaLeavePolicyAccrualRepository extends BasePrismaRepository imp
     });
   }
 
-  async updateLeavePolicyAccrual(tenantId: string, accrualId: string, updates: Partial<Omit<LeavePolicyAccrual, 'id' | 'orgId' | 'createdAt'>>): Promise<void> {
+  async updateLeavePolicyAccrual(_tenantId: string, accrualId: string, updates: Partial<Omit<LeavePolicyAccrual, 'id' | 'orgId' | 'createdAt'>>): Promise<void> {
+    void _tenantId;
     const existing = await this.findById(accrualId);
-    if (!existing) throw new Error('Accrual not found');
+    if (!existing) {throw new EntityNotFoundError('Leave policy accrual', { accrualId });}
     const data: Prisma.LeavePolicyAccrualUpdateInput = {};
     if (updates.tenureMonths !== undefined) { data.tenureMonths = updates.tenureMonths; }
     if (updates.accrualPerPeriod !== undefined) { data.accrualPerPeriod = updates.accrualPerPeriod; }
@@ -100,23 +103,28 @@ export class PrismaLeavePolicyAccrualRepository extends BasePrismaRepository imp
     await this.update(accrualId, data);
   }
 
-  async getLeavePolicyAccrual(tenantId: string, accrualId: string): Promise<LeavePolicyAccrual | null> {
+  async getLeavePolicyAccrual(_tenantId: string, accrualId: string): Promise<LeavePolicyAccrual | null> {
+    void _tenantId;
     const rec = await this.findById(accrualId);
-    if (!rec) return null;
+    if (!rec) {return null;}
     return rec;
   }
 
-  async getLeavePolicyAccrualsByEmployee(tenantId: string, employeeId: string): Promise<LeavePolicyAccrual[]> {
+  async getLeavePolicyAccrualsByEmployee(_tenantId: string, _employeeId: string): Promise<LeavePolicyAccrual[]> {
+    void _tenantId;
+    void _employeeId;
     const recs = await this.findAll({});
     return recs;
   }
 
-  async getLeavePolicyAccrualsByOrganization(tenantId: string): Promise<LeavePolicyAccrual[]> {
+  async getLeavePolicyAccrualsByOrganization(_tenantId: string): Promise<LeavePolicyAccrual[]> {
+    void _tenantId;
     const recs = await this.findAll({});
     return recs;
   }
 
-  async deleteLeavePolicyAccrual(tenantId: string, accrualId: string): Promise<void> {
+  async deleteLeavePolicyAccrual(_tenantId: string, accrualId: string): Promise<void> {
+    void _tenantId;
     await this.delete(accrualId);
   }
 }

@@ -3,6 +3,7 @@ import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import type { IDepartmentRepository } from '@/server/repositories/contracts/org/departments/department-repository-contract';
 import { mapPrismaDepartmentToDomain } from '@/server/repositories/mappers/org/departments/department-mapper';
+import { CACHE_SCOPE_DEPARTMENTS } from '@/server/repositories/cache-scopes';
 import type { Department } from '@/server/types/hr-types';
 import type {
     DepartmentFilters,
@@ -52,22 +53,22 @@ export class PrismaDepartmentRepository extends OrgScopedPrismaRepository implem
 
   // --- Contract-facing methods ---
   async getDepartment(context: RepositoryAuthorizationContext, departmentId: string): Promise<Department | null> {
-    this.tagCache(context, 'departments');
+    this.tagCache(context, CACHE_SCOPE_DEPARTMENTS);
     const rec = await this.findById(departmentId);
     if (!rec) { return null; }
-    this.assertTenantRecord(rec, context);
+    this.assertTenantRecord(rec, context.orgId);
     return mapPrismaDepartmentToDomain(rec);
   }
 
   async getDepartmentByCode(context: RepositoryAuthorizationContext, code: string): Promise<Department | null> {
-    this.tagCache(context, 'departments');
+    this.tagCache(context, CACHE_SCOPE_DEPARTMENTS);
     // Schema does not track department code; fall back to name match
     const rec = await getModelDelegate(this.prisma, 'department').findFirst({ where: { orgId: context.orgId, name: code } });
     return rec ? mapPrismaDepartmentToDomain(rec) : null;
   }
 
   async getDepartmentsByOrganization(context: RepositoryAuthorizationContext, filters?: { status?: string; parentId?: string; }): Promise<Department[]> {
-    this.tagCache(context, 'departments');
+    this.tagCache(context, CACHE_SCOPE_DEPARTMENTS);
     const records = await getModelDelegate(this.prisma, 'department').findMany({ where: { orgId: context.orgId }, orderBy: { name: 'asc' } });
     return records
       .map(mapPrismaDepartmentToDomain)
@@ -85,12 +86,12 @@ export class PrismaDepartmentRepository extends OrgScopedPrismaRepository implem
       costCenter: department.costCenter ?? undefined,
     };
     await this.create(createData);
-    await this.invalidateCache(context, 'departments');
+    await this.invalidateCache(context, CACHE_SCOPE_DEPARTMENTS);
   }
 
   async updateDepartment(context: RepositoryAuthorizationContext, departmentId: string, updates: Partial<Omit<Department, 'id' | 'orgId' | 'createdAt' | 'headcount'>>): Promise<void> {
     const existing = await this.findById(departmentId);
-    this.assertTenantRecord(existing, context);
+    this.assertTenantRecord(existing, context.orgId);
     const updateData: DepartmentUpdateData = {} as DepartmentUpdateData;
     if (updates.name !== undefined) { updateData.name = updates.name; }
     if (typeof updates.path === 'string') { updateData.path = updates.path; }
@@ -99,13 +100,13 @@ export class PrismaDepartmentRepository extends OrgScopedPrismaRepository implem
     if (typeof updates.businessUnit === 'string') { updateData.businessUnit = updates.businessUnit; }
     if (typeof updates.costCenter === 'string') { updateData.costCenter = updates.costCenter; }
     await this.update(departmentId, updateData);
-    await this.invalidateCache(context, 'departments');
+    await this.invalidateCache(context, CACHE_SCOPE_DEPARTMENTS);
   }
 
   async deleteDepartment(context: RepositoryAuthorizationContext, departmentId: string): Promise<void> {
     const existing = await this.findById(departmentId);
-    this.assertTenantRecord(existing, context);
+    this.assertTenantRecord(existing, context.orgId);
     await this.delete(departmentId);
-    await this.invalidateCache(context, 'departments');
+    await this.invalidateCache(context, CACHE_SCOPE_DEPARTMENTS);
   }
 }

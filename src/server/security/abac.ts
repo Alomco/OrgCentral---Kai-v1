@@ -8,7 +8,7 @@ function getAbacPolicyRepository(): IAbacPolicyRepository {
   if (!abacPolicyRepository) {
     abacPolicyRepository = new PrismaAbacPolicyRepository();
   }
-  return abacPolicyRepository;
+  return abacPolicyRepository!;
 }
 
 export function setAbacPolicyRepository(repository: IAbacPolicyRepository): void {

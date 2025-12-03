@@ -1,10 +1,10 @@
 import type { PrismaClient } from '@prisma/client';
-import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
+import { BasePrismaRepository, type BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import type { RepositoryAuthorizationContext, TenantScopedRecord } from '@/server/repositories/security';
 import { RepositoryAuthorizer, RepositoryAuthorizationError } from '@/server/repositories/security';
 import { registerOrgCacheTag, invalidateOrgCache } from '@/server/lib/cache-tags';
 
-interface OrgScopedRepositoryOptions {
+export interface OrgScopedRepositoryOptions extends BasePrismaRepositoryOptions {
     prisma?: PrismaClient;
     authorizer?: RepositoryAuthorizer;
 }
@@ -13,15 +13,18 @@ export abstract class OrgScopedPrismaRepository extends BasePrismaRepository {
     protected readonly repositoryAuthorizer: RepositoryAuthorizer;
 
     protected constructor(options?: OrgScopedRepositoryOptions) {
-        super(options?.prisma);
+        super(options ?? {});
         this.repositoryAuthorizer = options?.authorizer ?? RepositoryAuthorizer.default();
     }
 
     protected assertTenantRecord<TRecord extends TenantScopedRecord>(
         record: TRecord | null | undefined,
-        context: RepositoryAuthorizationContext,
+        orgId: string,
     ): TRecord {
-        return this.repositoryAuthorizer.assertTenantRecord(record, context);
+        if (!record || !record.orgId || record.orgId !== orgId) {
+            throw new RepositoryAuthorizationError('Cross-tenant access detected.');
+        }
+        return record;
     }
 
     protected assertOrgRecord<TRecord extends TenantScopedRecord>(

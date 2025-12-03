@@ -2,7 +2,7 @@
  * Repository contract for Employment Contracts
  * Following SOLID principles with clear separation of concerns
  */
-import type { EmploymentContract } from '@/server/types/hr-types';
+import type { ContractListFilters, EmploymentContractDTO } from '@/server/types/hr/people';
 
 export interface IEmploymentContractRepository {
   /**
@@ -10,7 +10,7 @@ export interface IEmploymentContractRepository {
    */
   createEmploymentContract(
     tenantId: string,
-    contract: Omit<EmploymentContract, 'id' | 'createdAt' | 'updatedAt'>
+    contract: Omit<EmploymentContractDTO, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<void>;
 
   /**
@@ -19,7 +19,7 @@ export interface IEmploymentContractRepository {
   updateEmploymentContract(
     tenantId: string,
     contractId: string,
-    updates: Partial<Omit<EmploymentContract, 'id' | 'orgId' | 'employeeId' | 'userId' | 'createdAt'>>
+    updates: Partial<Omit<EmploymentContractDTO, 'id' | 'orgId' | 'employeeId' | 'userId' | 'createdAt'>>
   ): Promise<void>;
 
   /**
@@ -28,7 +28,7 @@ export interface IEmploymentContractRepository {
   getEmploymentContract(
     tenantId: string,
     contractId: string
-  ): Promise<EmploymentContract | null>;
+  ): Promise<EmploymentContractDTO | null>;
 
   /**
    * Get employment contract by employee ID
@@ -36,21 +36,15 @@ export interface IEmploymentContractRepository {
   getEmploymentContractByEmployee(
     tenantId: string,
     employeeId: string
-  ): Promise<EmploymentContract | null>;
+  ): Promise<EmploymentContractDTO | null>;
 
   /**
    * Get all employment contracts for an organization
    */
   getEmploymentContractsByOrganization(
     tenantId: string,
-    filters?: {
-      status?: string;
-      contractType?: string;
-      departmentId?: string;
-      startDate?: Date;
-      endDate?: Date;
-    }
-  ): Promise<EmploymentContract[]>;
+    filters?: ContractListFilters
+  ): Promise<EmploymentContractDTO[]>;
 
   /**
    * Delete an employment contract

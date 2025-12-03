@@ -1,4 +1,3 @@
-/* eslint-disable */
 /**
  * Example contract template for new repositories.
  * Copy and rename this file to the appropriate domain/subdomain and implement it.

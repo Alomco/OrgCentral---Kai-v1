@@ -6,6 +6,7 @@ enum InvitationStatus {
   expired
   declined
   revoked  // Added for security
+  @@schema("auth")
 }
 
 enum SessionStatus {
@@ -13,6 +14,7 @@ enum SessionStatus {
   inactive
   expired
   revoked  // Added for security
+  @@schema("auth")
 }
 
 model Invitation {
@@ -46,7 +48,8 @@ model Invitation {
   @@index([orgId, status])
   @@index([targetEmail])
   @@index([expiresAt]) // For cleanup jobs
-  @@map("auth.invitations")
+  @@map("invitations")
+  @@schema("auth")
 }
 
 model WaitlistEntry {
@@ -65,7 +68,8 @@ model WaitlistEntry {
   createdAt    DateTime @default(now())
 
   @@index([email])
-  @@map("auth.waitlist_entries")
+  @@map("waitlist_entries")
+  @@schema("auth")
 }
 
 // UK-specific model for security monitoring
@@ -91,7 +95,8 @@ model SecurityEvent {
   @@index([eventType])
   @@index([severity])
   @@index([resolved])
-  @@map("auth.security_events")
+  @@map("security_events")
+  @@schema("auth")
 }
 
 // Model for managing session information
@@ -115,5 +120,6 @@ model UserSession {
   @@index([userId])
   @@index([status])
   @@index([expiresAt])
-  @@map("auth.user_sessions")
+  @@map("user_sessions")
+  @@schema("auth")
 }

@@ -1,6 +1,7 @@
 import { Prisma, type SecurityEvent as PrismaSecurityEvent } from '@prisma/client';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import { invalidateOrgCache, registerOrgCacheTag } from '@/server/lib/cache-tags';
+import { CACHE_SCOPE_SECURITY_EVENTS } from '@/server/repositories/cache-scopes';
 import type { ISecurityEventRepository } from '@/server/repositories/contracts/auth/security/security-event-repository-contract';
 import type { SecurityEvent } from '@/server/types/hr-types';
 import type {
@@ -14,8 +15,6 @@ import {
   toCreationData,
   buildUpdatePayload,
 } from '@/server/repositories/mappers/auth/security/security-event-mapper';
-
-const SECURITY_EVENT_SCOPE = 'security-events';
 
 export class PrismaSecurityEventRepository
   extends BasePrismaRepository
@@ -65,7 +64,7 @@ export class PrismaSecurityEventRepository
   }
 
   async getSecurityEventsCount(orgId: string, daysBack = 7): Promise<number> {
-    registerOrgCacheTag(orgId, SECURITY_EVENT_SCOPE);
+    registerOrgCacheTag(orgId, CACHE_SCOPE_SECURITY_EVENTS);
     const dateThreshold = new Date();
     dateThreshold.setDate(dateThreshold.getDate() - daysBack);
 
@@ -89,7 +88,7 @@ export class PrismaSecurityEventRepository
     eventId: string,
     updates: Partial<Omit<SecurityEvent, 'id' | 'orgId' | 'userId' | 'createdAt' | 'occurredAt'>>,
   ): Promise<void> {
-    const existing = await this.ensureOrgRecord(tenantId, eventId);
+    await this.ensureOrgRecord(tenantId, eventId);
     const payload = buildUpdatePayload(updates);
 
     if (Object.keys(payload).length === 0) {
@@ -100,7 +99,7 @@ export class PrismaSecurityEventRepository
   }
 
   async getSecurityEvent(tenantId: string, eventId: string): Promise<SecurityEvent | null> {
-    registerOrgCacheTag(tenantId, SECURITY_EVENT_SCOPE);
+    registerOrgCacheTag(tenantId, CACHE_SCOPE_SECURITY_EVENTS);
     const record = await this.findById(eventId);
     return record?.orgId === tenantId ? record : null;
   }
@@ -110,7 +109,7 @@ export class PrismaSecurityEventRepository
     userId: string,
     filters?: { eventType?: string; severity?: string; startDate?: Date; endDate?: Date },
   ): Promise<SecurityEvent[]> {
-    registerOrgCacheTag(tenantId, SECURITY_EVENT_SCOPE);
+    registerOrgCacheTag(tenantId, CACHE_SCOPE_SECURITY_EVENTS);
     return this.findAll({
       orgId: tenantId,
       userId,
@@ -125,7 +124,7 @@ export class PrismaSecurityEventRepository
     tenantId: string,
     filters?: { eventType?: string; severity?: string; userId?: string; startDate?: Date; endDate?: Date },
   ): Promise<SecurityEvent[]> {
-    registerOrgCacheTag(tenantId, SECURITY_EVENT_SCOPE);
+    registerOrgCacheTag(tenantId, CACHE_SCOPE_SECURITY_EVENTS);
     return this.findAll({
       orgId: tenantId,
       userId: filters?.userId,
@@ -190,7 +189,7 @@ export class PrismaSecurityEventRepository
 
   private async invalidateScope(orgId?: string | null): Promise<void> {
     if (orgId) {
-      await invalidateOrgCache(orgId, SECURITY_EVENT_SCOPE);
+      await invalidateOrgCache(orgId, CACHE_SCOPE_SECURITY_EVENTS);
     }
   }
 }

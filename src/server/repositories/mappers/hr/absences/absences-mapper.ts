@@ -1,10 +1,20 @@
 import type {
-  AbsenceTypeConfig as PrismaAbsenceTypeConfig,
+  AbsenceAttachment as PrismaAbsenceAttachment,
+  AbsenceDeletionAudit as PrismaAbsenceDeletionAudit,
+  AbsenceReturnRecord as PrismaAbsenceReturnRecord,
   AbsenceSettings as PrismaAbsenceSettings,
+  AbsenceTypeConfig as PrismaAbsenceTypeConfig,
   UnplannedAbsence as PrismaUnplannedAbsence,
 } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
-import type { AbsenceSettings, AbsenceTypeConfig, UnplannedAbsence } from '@/server/types/hr-ops-types';
+import type {
+  AbsenceAttachment,
+  AbsenceDeletionAuditEntry,
+  AbsenceSettings,
+  AbsenceTypeConfig,
+  ReturnToWorkRecord,
+  UnplannedAbsence,
+} from '@/server/types/hr-ops-types';
 
 export function mapPrismaAbsenceTypeConfigToDomain(record: PrismaAbsenceTypeConfig): AbsenceTypeConfig {
   return {
@@ -67,7 +77,15 @@ export function mapDomainAbsenceSettingsToPrismaUpsert(
   };
 }
 
-export function mapPrismaUnplannedAbsenceToDomain(record: PrismaUnplannedAbsence): UnplannedAbsence {
+type PrismaUnplannedAbsenceWithRelations = PrismaUnplannedAbsence & {
+  attachments?: PrismaAbsenceAttachment[];
+  returnRecord?: PrismaAbsenceReturnRecord | null;
+  deletionAudit?: PrismaAbsenceDeletionAudit | null;
+};
+
+export function mapPrismaUnplannedAbsenceToDomain(
+  record: PrismaUnplannedAbsenceWithRelations,
+): UnplannedAbsence {
   return {
     id: record.id,
     orgId: record.orgId,
@@ -86,6 +104,16 @@ export function mapPrismaUnplannedAbsenceToDomain(record: PrismaUnplannedAbsence
     metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
+    attachments: record.attachments?.map(mapPrismaAbsenceAttachmentToDomain) ?? undefined,
+    returnToWork: record.returnRecord
+      ? mapPrismaReturnRecordToDomain(record.returnRecord)
+      : undefined,
+    deletionAudit: record.deletionAudit
+      ? mapPrismaDeletionAuditToDomain(record.deletionAudit)
+      : undefined,
+    deletedAt: record.deletedAt ?? undefined,
+    deletedByUserId: record.deletedByUserId ?? undefined,
+    deletionReason: record.deletionReason ?? undefined,
   };
 }
 
@@ -107,11 +135,32 @@ export function mapDomainUnplannedAbsenceToPrismaCreate(
     dataClassification: input.dataClassification,
     residencyTag: input.residencyTag,
     metadata: input.metadata ?? undefined,
+    deletionReason: input.deletionReason ?? undefined,
+    deletedAt: input.deletedAt ?? undefined,
+    deletedByUserId: input.deletedByUserId ?? undefined,
   };
 }
 
 export function mapDomainUnplannedAbsenceToPrismaUpdate(
-  updates: Partial<Pick<UnplannedAbsence, 'status' | 'reason' | 'healthStatus' | 'approverOrgId' | 'approverUserId' | 'dataClassification' | 'residencyTag' | 'metadata'>>,
+  updates: Partial<
+    Pick<
+      UnplannedAbsence,
+      | 'status'
+      | 'reason'
+      | 'healthStatus'
+      | 'approverOrgId'
+      | 'approverUserId'
+      | 'dataClassification'
+      | 'residencyTag'
+      | 'metadata'
+      | 'startDate'
+      | 'endDate'
+      | 'hours'
+      | 'deletionReason'
+      | 'deletedAt'
+      | 'deletedByUserId'
+    >
+  >,
 ): Prisma.UnplannedAbsenceUncheckedUpdateInput {
   return {
     status: updates.status,
@@ -122,5 +171,58 @@ export function mapDomainUnplannedAbsenceToPrismaUpdate(
     dataClassification: updates.dataClassification,
     residencyTag: updates.residencyTag,
     metadata: updates.metadata ?? undefined,
+    startDate: updates.startDate,
+    endDate: updates.endDate,
+    hours: updates.hours,
+    deletionReason: updates.deletionReason ?? undefined,
+    deletedAt: updates.deletedAt ?? undefined,
+    deletedByUserId: updates.deletedByUserId ?? undefined,
+  };
+}
+
+function mapPrismaAbsenceAttachmentToDomain(record: PrismaAbsenceAttachment): AbsenceAttachment {
+  return {
+    id: record.id,
+    orgId: record.orgId,
+    absenceId: record.absenceId,
+    fileName: record.fileName,
+    storageKey: record.storageKey,
+    contentType: record.contentType,
+    fileSize: record.fileSize,
+    checksum: record.checksum ?? undefined,
+    uploadedByUserId: record.uploadedByUserId,
+    uploadedAt: record.uploadedAt,
+    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    dataClassification: record.dataClassification,
+    residencyTag: record.residencyTag,
+  };
+}
+
+function mapPrismaReturnRecordToDomain(record: PrismaAbsenceReturnRecord): ReturnToWorkRecord {
+  return {
+    orgId: record.orgId,
+    absenceId: record.absenceId,
+    returnDate: record.returnDate,
+    comments: record.comments ?? undefined,
+    submittedByUserId: record.submittedByUserId,
+    submittedAt: record.submittedAt,
+    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    dataClassification: record.dataClassification,
+    residencyTag: record.residencyTag,
+  };
+}
+
+function mapPrismaDeletionAuditToDomain(
+  record: PrismaAbsenceDeletionAudit,
+): AbsenceDeletionAuditEntry {
+  return {
+    orgId: record.orgId,
+    absenceId: record.absenceId,
+    reason: record.reason,
+    deletedByUserId: record.deletedByUserId,
+    deletedAt: record.deletedAt,
+    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    dataClassification: record.dataClassification,
+    residencyTag: record.residencyTag,
   };
 }

@@ -11,4 +11,5 @@ datasource db {
   url        = env("DATABASE_URL")
   directUrl  = env("DATABASE_DIRECT_URL")
   extensions = [citext()]
+  schemas    = ["public", "auth", "hr", "compliance", "platform", "org"]
 }

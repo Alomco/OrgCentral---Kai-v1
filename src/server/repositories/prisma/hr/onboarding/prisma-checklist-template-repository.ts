@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient, type ChecklistTemplate as PrismaChecklistTemplate } from '@prisma/client';
 import type {
     ChecklistTemplateCreateInput,
     ChecklistTemplateUpdateInput,
@@ -10,35 +10,24 @@ import {
     mapChecklistTemplateInputToRecord,
     mapChecklistTemplateRecordToDomain,
 } from '@/server/repositories/mappers/hr/onboarding/checklist-template-mapper';
-import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { stampCreate, stampUpdate } from '@/server/repositories/prisma/helpers/timestamps';
+import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { registerOrgCacheTag, invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_CHECKLIST_TEMPLATES } from '@/server/repositories/cache-scopes';
 import { RepositoryAuthorizationError } from '@/server/repositories/security';
 
-type ChecklistTemplateDelegate = {
-    create: (args: { data: ChecklistTemplateCreateData }) => Promise<ChecklistTemplateRecord>;
-    update: (args: { where: { id: string }; data: ChecklistTemplateUpdateData }) => Promise<ChecklistTemplateRecord>;
-    delete: (args: { where: { id: string } }) => Promise<void>;
-    findUnique: (args: { where: { id: string } }) => Promise<ChecklistTemplateRecord | null>;
-    findMany: (args: { where: { orgId: string } }) => Promise<ChecklistTemplateRecord[]>;
-};
-type ChecklistTemplateRecord = Awaited<ReturnType<ChecklistTemplateDelegate['create']>>;
-type ChecklistTemplateCreateData = Parameters<ChecklistTemplateDelegate['create']>[0]['data'];
-type ChecklistTemplateUpdateData = Parameters<ChecklistTemplateDelegate['update']>[0]['data'];
+type ChecklistTemplateRecord = PrismaChecklistTemplate;
+type ChecklistTemplateCreateData = Prisma.ChecklistTemplateUncheckedCreateInput;
+type ChecklistTemplateUpdateData = Prisma.ChecklistTemplateUncheckedUpdateInput;
 export class PrismaChecklistTemplateRepository
     extends BasePrismaRepository
     implements IChecklistTemplateRepository {
-    constructor(prisma?: PrismaClient) {
-        super(prisma);
-    }
-
-    private delegate(): ChecklistTemplateDelegate {
-        return (this.prisma as { checklistTemplate: ChecklistTemplateDelegate }).checklistTemplate;
+    private get templates(): PrismaClient['checklistTemplate'] {
+        return this.prisma.checklistTemplate;
     }
 
     private async ensureTemplateOrg(templateId: string, orgId: string): Promise<ChecklistTemplateRecord> {
-        const record = await this.delegate().findUnique({ where: { id: templateId } });
+        const record = await this.templates.findUnique({ where: { id: templateId } });
         if (!record || (record as { orgId?: string }).orgId !== orgId) {
             throw new RepositoryAuthorizationError('Checklist template not found for this organization.');
         }
@@ -46,8 +35,14 @@ export class PrismaChecklistTemplateRepository
     }
 
     async createTemplate(input: ChecklistTemplateCreateInput): Promise<ChecklistTemplate> {
-        const data: ChecklistTemplateCreateData = stampCreate(mapChecklistTemplateInputToRecord(input));
-        const record = await this.delegate().create({
+        const mapped = mapChecklistTemplateInputToRecord(input);
+        const data: ChecklistTemplateCreateData = stampCreate({
+            orgId: input.orgId,
+            name: input.name,
+            type: input.type,
+            items: toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
+        });
+        const record = await this.templates.create({
             data,
         });
         registerOrgCacheTag(input.orgId, CACHE_SCOPE_CHECKLIST_TEMPLATES);
@@ -60,11 +55,16 @@ export class PrismaChecklistTemplateRepository
         updates: ChecklistTemplateUpdateInput,
     ): Promise<ChecklistTemplate> {
         await this.ensureTemplateOrg(templateId, orgId);
+        const mapped = mapChecklistTemplateInputToRecord(updates);
         const data: ChecklistTemplateUpdateData = stampUpdate({
-            ...mapChecklistTemplateInputToRecord(updates),
+            ...mapped,
+            items:
+                mapped.items !== undefined
+                    ? toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull
+                    : undefined,
             orgId,
         });
-        const record = await this.delegate().update({
+        const record = await this.templates.update({
             where: { id: templateId },
             data,
         });
@@ -74,12 +74,12 @@ export class PrismaChecklistTemplateRepository
 
     async deleteTemplate(orgId: string, templateId: string): Promise<void> {
         await this.ensureTemplateOrg(templateId, orgId);
-        await this.delegate().delete({ where: { id: templateId } });
+        await this.templates.delete({ where: { id: templateId } });
         await invalidateOrgCache(orgId, CACHE_SCOPE_CHECKLIST_TEMPLATES);
     }
 
     async getTemplate(orgId: string, templateId: string): Promise<ChecklistTemplate | null> {
-        const record = await this.delegate().findUnique({ where: { id: templateId } });
+        const record = await this.templates.findUnique({ where: { id: templateId } });
         if (!record) {
             return null;
         }
@@ -91,7 +91,7 @@ export class PrismaChecklistTemplateRepository
     }
 
     async listTemplates(orgId: string): Promise<ChecklistTemplate[]> {
-        const records = await this.delegate().findMany({ where: { orgId } });
+        const records = await this.templates.findMany({ where: { orgId } });
         registerOrgCacheTag(orgId, CACHE_SCOPE_CHECKLIST_TEMPLATES);
         return records.map(mapChecklistTemplateRecordToDomain);
     }

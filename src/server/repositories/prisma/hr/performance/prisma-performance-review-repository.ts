@@ -4,6 +4,7 @@ import type { IPerformanceReviewRepository } from '@/server/repositories/contrac
 import { mapPrismaPerformanceReviewToDomain, mapDomainPerformanceReviewToPrisma } from '@/server/repositories/mappers/hr/performance/performance-mapper';
 import type { PerformanceReview as DomainPerformanceReview } from '@/server/types/hr-types';
 import type { PerformanceReviewFilters, PerformanceReviewCreationData, PerformanceReviewUpdateData } from './prisma-performance-review-repository.types';
+import { EntityNotFoundError } from '@/server/errors';
 
 export class PrismaPerformanceReviewRepository extends BasePrismaRepository implements IPerformanceReviewRepository {
   // BasePrismaRepository provides prisma client via DI
@@ -75,7 +76,7 @@ export class PrismaPerformanceReviewRepository extends BasePrismaRepository impl
 
   async updatePerformanceReview(tenantId: string, reviewId: string, updates: Partial<Omit<DomainPerformanceReview, 'id' | 'orgId' | 'createdAt' | 'userId'>>): Promise<void> {
     const existing = await this.findById(reviewId);
-    if (existing?.orgId !== tenantId) { throw new Error('Review not found'); }
+    if (existing?.orgId !== tenantId) { throw new EntityNotFoundError('Performance review', { reviewId, orgId: tenantId }); }
     const updateData: PerformanceReviewUpdateData = {} as PerformanceReviewUpdateData;
     if (updates.status !== undefined) { updateData.status = updates.status; }
     if (updates.overallRating !== undefined) { updateData.overallRating = updates.overallRating ?? null; }
@@ -106,7 +107,7 @@ export class PrismaPerformanceReviewRepository extends BasePrismaRepository impl
 
   async deletePerformanceReview(tenantId: string, reviewId: string): Promise<void> {
     const existing = await this.findById(reviewId);
-    if (existing?.orgId !== tenantId) { throw new Error('Review not found'); }
+    if (existing?.orgId !== tenantId) { throw new EntityNotFoundError('Performance review', { reviewId, orgId: tenantId }); }
     await this.delete(reviewId);
   }
 }

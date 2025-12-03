@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient, type ComplianceTemplate as PrismaComplianceTemplate } from '@prisma/client';
 import type {
     ComplianceTemplateCreateInput,
     ComplianceTemplateUpdateInput,
@@ -9,36 +9,27 @@ import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-r
 import {
     mapComplianceTemplateInputToRecord,
     mapComplianceTemplateRecordToDomain,
+    type ComplianceTemplateRecord as ComplianceTemplateMapperRecord,
 } from '@/server/repositories/mappers/hr/compliance/compliance-template-mapper';
-import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { stampCreate, stampUpdate } from '@/server/repositories/prisma/helpers/timestamps';
+import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { registerOrgCacheTag, invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_COMPLIANCE_TEMPLATES } from '@/server/repositories/cache-scopes';
 import { RepositoryAuthorizationError } from '@/server/repositories/security';
 
-type ComplianceTemplateDelegate = {
-    create: (args: { data: ComplianceTemplateCreateData }) => Promise<ComplianceTemplateRecord>;
-    update: (args: { where: { id: string }; data: ComplianceTemplateUpdateData }) => Promise<ComplianceTemplateRecord>;
-    delete: (args: { where: { id: string } }) => Promise<void>;
-    findUnique: (args: { where: { id: string } }) => Promise<ComplianceTemplateRecord | null>;
-    findMany: (args: { where: { orgId: string } }) => Promise<ComplianceTemplateRecord[]>;
-};
-type ComplianceTemplateRecord = Awaited<ReturnType<ComplianceTemplateDelegate['create']>>;
-type ComplianceTemplateCreateData = Parameters<ComplianceTemplateDelegate['create']>[0]['data'];
-type ComplianceTemplateUpdateData = Parameters<ComplianceTemplateDelegate['update']>[0]['data'];
+type ComplianceTemplateRecord = PrismaComplianceTemplate;
+type ComplianceTemplateCreateData = Prisma.ComplianceTemplateUncheckedCreateInput;
+type ComplianceTemplateUpdateData = Prisma.ComplianceTemplateUncheckedUpdateInput;
+
 export class PrismaComplianceTemplateRepository
     extends BasePrismaRepository
     implements IComplianceTemplateRepository {
-    constructor(prisma?: PrismaClient) {
-        super(prisma);
-    }
-
-    private delegate(): ComplianceTemplateDelegate {
-        return (this.prisma as { complianceTemplate: ComplianceTemplateDelegate }).complianceTemplate;
+    private get templates(): PrismaClient['complianceTemplate'] {
+        return this.prisma.complianceTemplate;
     }
 
     private async ensureTemplateOrg(templateId: string, orgId: string): Promise<ComplianceTemplateRecord> {
-        const record = await this.delegate().findUnique({ where: { id: templateId } });
+        const record = await this.templates.findUnique({ where: { id: templateId } });
         if (!record || (record as { orgId?: string }).orgId !== orgId) {
             throw new RepositoryAuthorizationError('Compliance template not found for this organization.');
         }
@@ -46,12 +37,20 @@ export class PrismaComplianceTemplateRepository
     }
 
     async createTemplate(input: ComplianceTemplateCreateInput): Promise<ComplianceTemplate> {
-        const data: ComplianceTemplateCreateData = stampCreate(mapComplianceTemplateInputToRecord(input));
-        const record = await this.delegate().create({
+        const mapped = mapComplianceTemplateInputToRecord(input);
+        const data: ComplianceTemplateCreateData = stampCreate({
+            orgId: input.orgId,
+            name: input.name,
+            categoryKey: input.categoryKey ?? null,
+            version: input.version ?? null,
+            items: toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
+            metadata: toPrismaInputJson(mapped.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
+        });
+        const record = await this.templates.create({
             data,
         });
         registerOrgCacheTag(input.orgId, CACHE_SCOPE_COMPLIANCE_TEMPLATES);
-        return mapComplianceTemplateRecordToDomain(record);
+        return mapComplianceTemplateRecordToDomain(record as unknown as ComplianceTemplateMapperRecord);
     }
 
     async updateTemplate(
@@ -60,26 +59,35 @@ export class PrismaComplianceTemplateRepository
         updates: ComplianceTemplateUpdateInput,
     ): Promise<ComplianceTemplate> {
         await this.ensureTemplateOrg(templateId, orgId);
+        const mapped = mapComplianceTemplateInputToRecord(updates);
         const data: ComplianceTemplateUpdateData = stampUpdate({
-            ...mapComplianceTemplateInputToRecord(updates),
+            ...mapped,
             orgId,
+            items:
+                mapped.items !== undefined
+                    ? toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull
+                    : undefined,
+            metadata:
+                mapped.metadata !== undefined
+                    ? toPrismaInputJson(mapped.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull
+                    : undefined,
         });
-        const record = await this.delegate().update({
+        const record = await this.templates.update({
             where: { id: templateId },
             data,
         });
         await invalidateOrgCache(orgId, CACHE_SCOPE_COMPLIANCE_TEMPLATES);
-        return mapComplianceTemplateRecordToDomain(record);
+        return mapComplianceTemplateRecordToDomain(record as unknown as ComplianceTemplateMapperRecord);
     }
 
     async deleteTemplate(orgId: string, templateId: string): Promise<void> {
         await this.ensureTemplateOrg(templateId, orgId);
-        await this.delegate().delete({ where: { id: templateId } });
+        await this.templates.delete({ where: { id: templateId } });
         await invalidateOrgCache(orgId, CACHE_SCOPE_COMPLIANCE_TEMPLATES);
     }
 
     async getTemplate(orgId: string, templateId: string): Promise<ComplianceTemplate | null> {
-        const record = await this.delegate().findUnique({ where: { id: templateId } });
+        const record = await this.templates.findUnique({ where: { id: templateId } });
         if (!record) {
             return null;
         }
@@ -87,12 +95,12 @@ export class PrismaComplianceTemplateRepository
             throw new RepositoryAuthorizationError('Compliance template access denied for this organization.');
         }
         registerOrgCacheTag(orgId, CACHE_SCOPE_COMPLIANCE_TEMPLATES);
-        return mapComplianceTemplateRecordToDomain(record);
+        return mapComplianceTemplateRecordToDomain(record as unknown as ComplianceTemplateMapperRecord);
     }
 
     async listTemplates(orgId: string): Promise<ComplianceTemplate[]> {
-        const records = await this.delegate().findMany({ where: { orgId } });
+        const records = await this.templates.findMany({ where: { orgId } });
         registerOrgCacheTag(orgId, CACHE_SCOPE_COMPLIANCE_TEMPLATES);
-        return records.map(mapComplianceTemplateRecordToDomain);
+        return records.map((r) => mapComplianceTemplateRecordToDomain(r as unknown as ComplianceTemplateMapperRecord));
     }
 }

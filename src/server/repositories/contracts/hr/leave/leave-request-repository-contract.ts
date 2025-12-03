@@ -4,13 +4,18 @@
  */
 import type { LeaveRequest } from '@/server/types/leave-types';
 
+export type LeaveRequestCreateInput = Omit<LeaveRequest, 'createdAt'> & { policyId: string; hoursPerDay?: number };
+export interface LeaveRequestReadOptions {
+  hoursPerDay?: number;
+}
+
 export interface ILeaveRequestRepository {
   /**
    * Create a new leave request
    */
   createLeaveRequest(
     tenantId: string,
-    request: Omit<LeaveRequest, 'createdAt'>
+    request: LeaveRequestCreateInput
   ): Promise<void>;
 
   /**
@@ -30,7 +35,8 @@ export interface ILeaveRequestRepository {
    */
   getLeaveRequest(
     tenantId: string,
-    requestId: string
+    requestId: string,
+    options?: LeaveRequestReadOptions
   ): Promise<LeaveRequest | null>;
 
   /**
@@ -38,7 +44,8 @@ export interface ILeaveRequestRepository {
    */
   getLeaveRequestsByEmployee(
     tenantId: string,
-    employeeId: string
+    employeeId: string,
+    options?: LeaveRequestReadOptions
   ): Promise<LeaveRequest[]>;
 
   /**
@@ -46,6 +53,7 @@ export interface ILeaveRequestRepository {
    */
   getLeaveRequestsByOrganization(
     tenantId: string,
-    filters?: { status?: string; startDate?: Date; endDate?: Date }
+    filters?: { status?: string; startDate?: Date; endDate?: Date },
+    options?: LeaveRequestReadOptions
   ): Promise<LeaveRequest[]>;
 }

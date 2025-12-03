@@ -1,7 +1,11 @@
-import type { DataClassificationLevel, DataResidencyZone } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
+import type { Prisma, DataClassificationLevel, DataResidencyZone, $Enums } from '@prisma/client';
+import type {
+  HRNotificationDTO,
+  HRNotificationPriorityCode,
+  HRNotificationTypeCode,
+} from './hr/notifications';
 
-export type AbsenceTypeConfig = {
+export interface AbsenceTypeConfig {
   id: string;
   orgId: string;
   key: string;
@@ -11,18 +15,18 @@ export type AbsenceTypeConfig = {
   metadata?: Prisma.JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type AbsenceSettings = {
+export interface AbsenceSettings {
   orgId: string;
   hoursInWorkDay: Prisma.Decimal | number;
   roundingRule?: string | null;
   metadata?: Prisma.JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type UnplannedAbsence = {
+export interface UnplannedAbsence {
   id: string;
   orgId: string;
   userId: string;
@@ -30,19 +34,74 @@ export type UnplannedAbsence = {
   startDate: Date;
   endDate: Date;
   hours: Prisma.Decimal | number;
-  reason?: string;
+  reason?: string | null;
   status: 'REPORTED' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'CLOSED';
-  healthStatus?: Prisma.HealthStatus | null;
+  healthStatus?: $Enums.HealthStatus | null;
   approverOrgId?: string | null;
   approverUserId?: string | null;
+  metadata?: Prisma.JsonValue;
+  attachments?: AbsenceAttachment[] | null;
+  returnToWork?: ReturnToWorkRecord | null;
+  deletionAudit?: AbsenceDeletionAuditEntry | null;
+  deletionReason?: string | null;
+  deletedAt?: Date | null;
+  deletedByUserId?: string | null;
+  dataClassification: DataClassificationLevel;
+  residencyTag: DataResidencyZone;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AbsenceAttachment {
+  id: string;
+  orgId: string;
+  absenceId: string;
+  fileName: string;
+  storageKey: string;
+  contentType: string;
+  fileSize: number;
+  checksum?: string | null;
+  uploadedByUserId: string;
+  uploadedAt: Date;
+  metadata?: Prisma.JsonValue;
+  dataClassification: DataClassificationLevel;
+  residencyTag: DataResidencyZone;
+}
+
+export interface AbsenceAttachmentInput
+  extends Omit<AbsenceAttachment, 'id' | 'uploadedAt'> {
+  uploadedAt?: Date;
+}
+
+export interface ReturnToWorkRecord {
+  orgId: string;
+  absenceId: string;
+  returnDate: Date;
+  comments?: string | null;
+  submittedByUserId: string;
+  submittedAt: Date;
   dataClassification: DataClassificationLevel;
   residencyTag: DataResidencyZone;
   metadata?: Prisma.JsonValue;
-  createdAt: Date;
-  updatedAt: Date;
-};
+}
 
-export type TimeEntry = {
+export interface ReturnToWorkRecordInput
+  extends Omit<ReturnToWorkRecord, 'submittedAt'> {
+  submittedAt?: Date;
+}
+
+export interface AbsenceDeletionAuditEntry {
+  orgId: string;
+  absenceId: string;
+  reason: string;
+  deletedByUserId: string;
+  deletedAt: Date;
+  metadata?: Prisma.JsonValue;
+  dataClassification: DataClassificationLevel;
+  residencyTag: DataResidencyZone;
+}
+
+export interface TimeEntry {
   id: string;
   orgId: string;
   userId: string;
@@ -63,22 +122,22 @@ export type TimeEntry = {
   metadata?: Prisma.JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type HRPolicy = {
+export interface HRPolicy {
   id: string;
   orgId: string;
   title: string;
   content: string;
   category:
-    | 'HR_POLICIES'
-    | 'CODE_OF_CONDUCT'
-    | 'HEALTH_SAFETY'
-    | 'IT_SECURITY'
-    | 'BENEFITS'
-    | 'PROCEDURES'
-    | 'COMPLIANCE'
-    | 'OTHER';
+  | 'HR_POLICIES'
+  | 'CODE_OF_CONDUCT'
+  | 'HEALTH_SAFETY'
+  | 'IT_SECURITY'
+  | 'BENEFITS'
+  | 'PROCEDURES'
+  | 'COMPLIANCE'
+  | 'OTHER';
   version: string;
   effectiveDate: Date;
   expiryDate?: Date | null;
@@ -91,9 +150,9 @@ export type HRPolicy = {
   metadata?: Prisma.JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
-export type PolicyAcknowledgment = {
+export interface PolicyAcknowledgment {
   id: string;
   orgId: string;
   userId: string;
@@ -102,37 +161,13 @@ export type PolicyAcknowledgment = {
   acknowledgedAt: Date;
   ipAddress?: string | null;
   metadata?: Prisma.JsonValue;
-};
+}
 
-export type HRNotification = {
-  id: string;
-  orgId: string;
-  userId: string;
-  title: string;
-  message: string;
-  type:
-    | 'LEAVE_APPROVAL'
-    | 'LEAVE_REJECTION'
-    | 'DOCUMENT_EXPIRY'
-    | 'POLICY_UPDATE'
-    | 'PERFORMANCE_REVIEW'
-    | 'SYSTEM_ANNOUNCEMENT'
-    | 'COMPLIANCE_REMINDER'
-    | 'OTHER';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  isRead: boolean;
-  readAt?: Date | null;
-  actionUrl?: string | null;
-  actionLabel?: string | null;
-  scheduledFor?: Date | null;
-  expiresAt?: Date | null;
-  dataClassification: DataClassificationLevel;
-  residencyTag: DataResidencyZone;
-  metadata?: Prisma.JsonValue;
-  createdAt: Date;
-};
+export type HRNotification = HRNotificationDTO;
+export type NotificationType = HRNotificationTypeCode;
+export type NotificationPriority = HRNotificationPriorityCode;
 
-export type HRSettings = {
+export interface HRSettings {
   orgId: string;
   leaveTypes?: Prisma.JsonValue;
   workingHours?: Prisma.JsonValue;
@@ -143,4 +178,4 @@ export type HRSettings = {
   metadata?: Prisma.JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}

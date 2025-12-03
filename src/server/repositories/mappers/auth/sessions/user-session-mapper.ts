@@ -13,7 +13,7 @@ export function mapPrismaUserSessionToDomain(record: PrismaUserSession): UserSes
         expiresAt: record.expiresAt,
         lastAccess: record.lastAccess,
         revokedAt: record.revokedAt ?? null,
-        metadata: record.metadata as Prisma.JsonValue | null,
+        metadata: record.metadata,
     };
 }
 

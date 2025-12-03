@@ -12,6 +12,7 @@ enum DocumentType {
   FINANCIAL
   SECURITY
   OTHER
+  @@schema("compliance")
 }
 
 enum AuditEventType {
@@ -25,6 +26,7 @@ enum AuditEventType {
   DOCUMENT
   LEAVE_REQUEST
   PAYROLL
+  @@schema("compliance")
 }
 
 enum RetentionPolicy {
@@ -34,6 +36,7 @@ enum RetentionPolicy {
   SEVEN_YEARS
   PERMANENT
   LEGAL_HOLD
+  @@schema("compliance")
 }
 
 enum SecurityClassification {
@@ -42,6 +45,7 @@ enum SecurityClassification {
   OFFICIAL_SENSITIVE
   SECRET
   TOP_SECRET
+  @@schema("compliance")
 }
 
 model DocumentVault {
@@ -77,7 +81,8 @@ model DocumentVault {
   @@index([orgId])
   @@index([classification])
   @@index([retentionPolicy, retentionExpires])
-  @@map("compliance.document_vault")
+  @@map("document_vault")
+  @@schema("compliance")
 }
 
 model AuditLog {
@@ -105,7 +110,8 @@ model AuditLog {
   @@index([orgId, createdAt])
   @@index([orgId, eventType])
   @@index([dataSubjectId])
-  @@map("compliance.audit_logs")
+  @@map("audit_logs")
+  @@schema("compliance")
 }
 
 model EventOutbox {
@@ -126,7 +132,8 @@ model EventOutbox {
 
   @@index([status, availableAt])
   @@index([orgId, eventType])
-  @@map("compliance.event_outbox")
+  @@map("event_outbox")
+  @@schema("compliance")
 }
 
 // UK-specific compliance model
@@ -159,7 +166,8 @@ model ComplianceRecord {
 
   @@unique([orgId, referenceNumber])
   @@index([orgId, status])
-  @@map("compliance.records")
+  @@map("records")
+  @@schema("compliance")
 }
 
 // UK-specific statutory reporting model
@@ -185,7 +193,8 @@ model StatutoryReport {
 
   @@index([orgId, reportType, period])
   @@index([dueDate])
-  @@map("compliance.statutory_reports")
+  @@map("statutory_reports")
+  @@schema("compliance")
 }
 
 // For GDPR data subject rights
@@ -214,5 +223,6 @@ model DataSubjectRight {
 
   @@index([orgId, rightType])
   @@index([status])
-  @@map("compliance.data_subject_rights")
+  @@map("data_subject_rights")
+  @@schema("compliance")
 }

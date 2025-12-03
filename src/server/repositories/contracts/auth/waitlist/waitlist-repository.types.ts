@@ -1,6 +1,3 @@
-export interface WaitlistEntryInput {
-    name: string;
-    email: string;
-    industry: string;
-    metadata?: Record<string, unknown>;
-}
+import type { WaitlistEntry } from '@/server/types/waitlist-types';
+
+export type WaitlistEntryInput = WaitlistEntry;

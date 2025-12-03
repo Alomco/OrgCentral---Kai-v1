@@ -1,14 +1,13 @@
-/* eslint-disable */
 /**
  * Prisma Repository implementation template.
  * Copy and rename to the appropriate domain (prisma/<domain>/...) and adapt to your model.
  */
 import type { PrismaClient } from '@prisma/client';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
-import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
-
+import { getCustomDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 // Replace with your contract and mapper imports
 export interface ExampleDomainType { id: string; orgId?: string }
+export interface ExamplePrismaModel { id: string; orgId?: string }
 export interface IExampleRepository {
     findById(id: string): Promise<ExampleDomainType | null>;
     findAll(filters?: { orgId?: string }): Promise<ExampleDomainType[]>;
@@ -29,7 +28,7 @@ export class PrismaExampleRepository extends BasePrismaRepository implements IEx
     constructor(prisma: PrismaClient) { super(prisma); }
 
     private delegate(): ExampleDelegate {
-        return (this.prisma as { example: ExampleDelegate }).example;
+        return getCustomDelegate<ExampleDelegate>(this.prisma as unknown as Record<string, ExampleDelegate>, 'example');
     }
 
     async findById(id: string): Promise<ExampleDomainType | null> {

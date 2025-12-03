@@ -1,9 +1,9 @@
-import type { AuditLog, Prisma, AuditEventType } from '@prisma/client';
+import type { AuditLog, Prisma } from '@prisma/client';
 import type { PrismaClient } from '@prisma/client';
 import type { IAuditLogRepository } from '@/server/repositories/contracts/records/audit-log-repository-contract';
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
-import type { AuditLogFilters, AuditLogCreationData, AuditLogUpdateData } from './prisma-audit-log-repository.types';
+import type { AuditLogFilters, AuditLogCreationData } from './prisma-audit-log-repository.types';
 import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
 
 export class PrismaAuditLogRepository extends BasePrismaRepository implements IAuditLogRepository {
@@ -29,7 +29,7 @@ export class PrismaAuditLogRepository extends BasePrismaRepository implements IA
     }
 
     if (filters?.eventType) {
-      whereClause.eventType = filters.eventType as AuditEventType;
+      whereClause.eventType = filters.eventType;
     }
 
     if (filters?.action) {
@@ -44,16 +44,14 @@ export class PrismaAuditLogRepository extends BasePrismaRepository implements IA
       whereClause.dataSubjectId = filters.dataSubjectId;
     }
 
-    if (filters?.dateFrom) {
-      whereClause.createdAt = { gte: filters.dateFrom };
-    }
-
-    if (filters?.dateFrom && filters?.dateTo) {
-      whereClause.createdAt = { gte: filters.dateFrom, lte: filters.dateTo };
-    } else if (filters?.dateFrom) {
-      whereClause.createdAt = { gte: filters.dateFrom };
-    } else if (filters?.dateTo) {
-      whereClause.createdAt = { lte: filters.dateTo };
+    const dateFrom = filters?.dateFrom;
+    const dateTo = filters?.dateTo;
+    if (dateFrom && dateTo) {
+      whereClause.createdAt = { gte: dateFrom, lte: dateTo };
+    } else if (dateFrom) {
+      whereClause.createdAt = { gte: dateFrom };
+    } else if (dateTo) {
+      whereClause.createdAt = { lte: dateTo };
     }
 
     return getModelDelegate(this.prisma, 'auditLog').findMany({

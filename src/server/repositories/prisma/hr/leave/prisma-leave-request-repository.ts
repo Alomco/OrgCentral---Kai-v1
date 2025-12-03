@@ -1,18 +1,21 @@
 import { Prisma } from '@prisma/client';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
-import type { ILeaveRequestRepository } from '@/server/repositories/contracts/hr/leave/leave-request-repository-contract';
+import type { ILeaveRequestRepository, LeaveRequestCreateInput, LeaveRequestReadOptions } from '@/server/repositories/contracts/hr/leave/leave-request-repository-contract';
 import type { LeaveRequest } from '@/server/types/leave-types';
 import {
     buildLeaveRequestMetadata,
     mapDomainStatusToPrisma,
     mapPrismaLeaveRequestToDomain,
 } from '@/server/repositories/mappers/hr/leave/leave-mapper';
+import { DEFAULT_WORKING_HOURS_PER_DAY } from '@/server/domain/leave/leave-calculator';
+import { EntityNotFoundError } from '@/server/errors';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
+import { CACHE_SCOPE_LEAVE_REQUESTS } from '@/server/repositories/cache-scopes';
 
 export class PrismaLeaveRequestRepository extends BasePrismaRepository implements ILeaveRequestRepository {
 
-    async createLeaveRequest(tenantId: string, request: Omit<LeaveRequest, 'createdAt'>): Promise<void> {
-        const policyId = await this.ensurePolicyForLeaveType(tenantId, request.leaveType);
+    async createLeaveRequest(tenantId: string, request: LeaveRequestCreateInput): Promise<void> {
+        const hoursPerDay = request.hoursPerDay ?? DEFAULT_WORKING_HOURS_PER_DAY;
         const metadata = buildLeaveRequestMetadata({
             employeeId: request.employeeId,
             employeeName: request.employeeName,
@@ -30,11 +33,11 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
                 id: request.id,
                 orgId: tenantId,
                 userId: request.userId,
-                policyId,
+                policyId: request.policyId,
                 status: mapDomainStatusToPrisma('submitted'),
                 startDate: new Date(request.startDate),
                 endDate: new Date(request.endDate),
-                hours: new Prisma.Decimal(request.totalDays * 8),
+                hours: new Prisma.Decimal(request.totalDays * hoursPerDay),
                 reason: request.reason ?? null,
                 // Cast returned metadata to Prisma's InputJsonValue to satisfy the Prisma client types
                 metadata: metadata as unknown as Prisma.InputJsonValue,
@@ -42,7 +45,7 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
             },
         });
 
-        await invalidateOrgCache(tenantId, 'leave-requests');
+        await invalidateOrgCache(tenantId, CACHE_SCOPE_LEAVE_REQUESTS);
     }
 
     async updateLeaveRequest(
@@ -55,7 +58,7 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
     ): Promise<void> {
         const existing = await this.prisma.leaveRequest.findUnique({ where: { id: requestId } });
         if (existing?.orgId !== tenantId) {
-            throw new Error('Leave request not found');
+            throw new EntityNotFoundError('Leave request', { requestId, orgId: tenantId });
         }
 
         const metadata: Record<string, unknown> = {
@@ -92,18 +95,18 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
             },
         });
 
-        await invalidateOrgCache(tenantId, 'leave-requests');
+        await invalidateOrgCache(tenantId, CACHE_SCOPE_LEAVE_REQUESTS);
     }
 
-    async getLeaveRequest(tenantId: string, requestId: string) {
+    async getLeaveRequest(tenantId: string, requestId: string, options?: LeaveRequestReadOptions) {
         const record = await this.prisma.leaveRequest.findUnique({ where: { id: requestId } });
         if (record?.orgId !== tenantId) {
             return null;
         }
-        return mapPrismaLeaveRequestToDomain(record);
+        return mapPrismaLeaveRequestToDomain(record, { hoursPerDay: options?.hoursPerDay });
     }
 
-    async getLeaveRequestsByEmployee(tenantId: string, employeeId: string) {
+    async getLeaveRequestsByEmployee(tenantId: string, employeeId: string, options?: LeaveRequestReadOptions) {
         const records = await this.prisma.leaveRequest.findMany({
             where: {
                 orgId: tenantId,
@@ -111,12 +114,13 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
             },
             orderBy: { createdAt: 'desc' },
         });
-        return records.map(mapPrismaLeaveRequestToDomain);
+        return records.map((record) => mapPrismaLeaveRequestToDomain(record, { hoursPerDay: options?.hoursPerDay }));
     }
 
     async getLeaveRequestsByOrganization(
         tenantId: string,
         filters?: { status?: string; startDate?: Date; endDate?: Date },
+        options?: LeaveRequestReadOptions,
     ) {
         const records = await this.prisma.leaveRequest.findMany({
             where: {
@@ -127,30 +131,6 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
             },
             orderBy: { createdAt: 'desc' },
         });
-        return records.map(mapPrismaLeaveRequestToDomain);
-    }
-
-    private async ensurePolicyForLeaveType(orgId: string, leaveType: string) {
-        const existing = await this.prisma.leavePolicy.findFirst({
-            where: { orgId, name: leaveType },
-        });
-
-        if (existing) {
-            return existing.id;
-        }
-
-        const policy = await this.prisma.leavePolicy.create({
-            data: {
-                orgId,
-                name: leaveType,
-                policyType: 'SPECIAL',
-                accrualFrequency: 'NONE',
-                accrualAmount: new Prisma.Decimal(0),
-                requiresApproval: true,
-                metadata: { createdFromLeaveService: true },
-            },
-        });
-
-        return policy.id;
+        return records.map((record) => mapPrismaLeaveRequestToDomain(record, { hoursPerDay: options?.hoursPerDay }));
     }
 }

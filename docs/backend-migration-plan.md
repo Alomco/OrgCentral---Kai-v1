@@ -59,7 +59,7 @@ Purpose: lift the mature Firebase + Cloud Functions backend that lives in `old/`
      - `CustomRoleService` (wraps Prisma `Role` + `Permission` models, includes CASL sync).
    - Publish events to BullMQ outbox for cross-domain updates (branding, notifications, entitlements).
 
-## Phase 4 – HR Domain (Leave, Absences, Onboarding)
+## Phase 4 – HR Domain (Leave, Absences, Onboarding, People)
 1. **Leave management**
    - Break `hr-leave.ts` into:
      - `LeaveCalculator` (pure functions for balances, rounding, year boundaries).
@@ -72,6 +72,10 @@ Purpose: lift the mature Firebase + Cloud Functions backend that lives in `old/`
 3. **Onboarding workflows**
    - Translate `hr-onboarding.ts` checklists to `OnboardingChecklistService` backed by Prisma `ChecklistTemplate` + `ChecklistInstance` tables.
    - Use BullMQ to schedule due-date reminders; expose Server Actions for HR to manage steps.
+4. **People directory (profiles + contracts)**
+   - Map `old/src/lib/hr/types.ts` and `old/src/lib/hr/firestore.ts` employees/services into Prisma HR people models, repositories, and services; keep legacy fields in `metadata` until promoted.
+   - Align HR people APIs with cache + residency/classification helpers already noted in `src/server/use-cases/hr/people/README.md` (treat README TODOs as the live gap list).
+   - Ensure HR people flows (profiles, contracts, compliance log, documents) fan out audit writes and register cache tags per residency/classification scope.
 
 ## Phase 5 – Enterprise & Platform Modules
 1. **Branding + enterprise controls**

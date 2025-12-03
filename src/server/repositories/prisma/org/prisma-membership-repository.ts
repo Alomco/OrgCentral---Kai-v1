@@ -1,5 +1,7 @@
 import type { MembershipStatus, Prisma } from '@prisma/client';
-import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
+import {
+    OrgScopedPrismaRepository,
+} from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import type {
     EmployeeProfilePayload,
     IMembershipRepository,
@@ -11,6 +13,7 @@ import type { Membership } from '@/server/types/membership';
 import { mapPrismaMembershipToDomain } from '@/server/repositories/mappers/org/membership/membership-mapper';
 import { buildMembershipMetadataJson, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { resolveIdentityCacheScopes } from '@/server/lib/cache-tags/identity';
 
 const MEMBERSHIP_STATUSES = ['INVITED', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED'] as const;
 type SafeMembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
@@ -21,11 +24,8 @@ type SafeEmploymentType = (typeof EMPLOYMENT_TYPES)[number];
 const ACTIVE_MEMBERSHIP_STATUS: SafeMembershipStatus = 'ACTIVE';
 const DEFAULT_EMPLOYMENT_TYPE: SafeEmploymentType = 'FULL_TIME';
 
-// NOTE: `extractRoles` was intentionally removed from this file to avoid a duplicate implementation
-// and unused function warning; the version under `org/membership` is the canonical implementation.
-
 export class PrismaMembershipRepository extends OrgScopedPrismaRepository implements IMembershipRepository {
-    // No custom constructor required, BasePrismaRepository enforces dependency injection
+
 
     async findMembership(context: RepositoryAuthorizationContext, userId: string): Promise<Membership | null> {
         const membership = await getMembershipDelegate(this.prisma).findUnique({
@@ -73,6 +73,8 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
             });
         });
 
+        await this.invalidateAfterWrite(scope.orgId, resolveIdentityCacheScopes());
+
         return {
             organizationId: scope.orgId,
             roles: input.roles,
@@ -86,6 +88,8 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
             where: { orgId_userId: { orgId: context.orgId, userId } },
             data: { status: nextStatus },
         });
+
+        await this.invalidateAfterWrite(context.orgId, resolveIdentityCacheScopes());
     }
 
     private mapProfilePayload(payload: EmployeeProfilePayload): EmployeeProfilePersistence {

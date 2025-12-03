@@ -13,11 +13,11 @@ export function mapPrismaPerformanceReviewToDomain(record: PrismaPerformanceRevi
         completedDate: record.completedDate ?? null,
         status: record.status,
         overallRating: record.overallRating ?? null,
-        goalsMet: record.goalsMet as Prisma.JsonValue | null,
-        developmentPlan: record.developmentPlan as Prisma.JsonValue | null,
+        goalsMet: record.goalsMet,
+        developmentPlan: record.developmentPlan,
         reviewerNotes: record.reviewerNotes ?? null,
         employeeResponse: record.employeeResponse ?? null,
-        metadata: record.metadata as Prisma.JsonValue | null,
+        metadata: record.metadata,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
     };
@@ -39,7 +39,7 @@ export function mapDomainPerformanceReviewToPrisma(input: PerformanceReview): Pr
         reviewerNotes: input.reviewerNotes ?? null,
         employeeResponse: input.employeeResponse ?? null,
         metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata as Prisma.InputJsonValue | undefined),
-        createdAt: input.createdAt ?? undefined,
-        updatedAt: input.updatedAt ?? undefined,
+        createdAt: input.createdAt,
+        updatedAt: input.updatedAt,
     };
 }

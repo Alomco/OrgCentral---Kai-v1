@@ -1,8 +1,4 @@
-import type {
-    ChecklistInstance,
-    ChecklistInstanceStatus,
-    ChecklistItemProgress,
-} from '@/server/types/onboarding-types';
+import type { ChecklistInstance, ChecklistItemProgress } from '@/server/types/onboarding-types';
 
 export interface ChecklistInstanceCreateInput {
     orgId: string;

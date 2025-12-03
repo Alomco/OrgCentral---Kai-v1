@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import type { AppPermission } from '@/server/types/platform-types';
 
 export interface AppPermissionCreateInput {
@@ -5,7 +6,7 @@ export interface AppPermissionCreateInput {
     description?: string;
     category: string;
     isGlobal?: boolean;
-    metadata?: Record<string, unknown>;
+    metadata?: Prisma.JsonValue;
 }
 
 export interface AppPermissionUpdateInput {
@@ -13,7 +14,7 @@ export interface AppPermissionUpdateInput {
     description?: string;
     category?: string;
     isGlobal?: boolean;
-    metadata?: Record<string, unknown>;
+    metadata?: Prisma.JsonValue;
 }
 
 export interface IAppPermissionRepository {

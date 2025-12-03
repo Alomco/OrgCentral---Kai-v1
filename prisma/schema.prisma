@@ -13,6 +13,7 @@ datasource db {
   url        = env("DATABASE_URL")
   directUrl  = env("DATABASE_DIRECT_URL")
   extensions = [citext()]
+  schemas    = ["public", "auth", "hr", "compliance", "platform", "org"]
 }
 
 /// Authentication + invitation models with enhanced security
@@ -23,6 +24,7 @@ enum InvitationStatus {
   expired
   declined
   revoked  // Added for security
+  @@schema("auth")
 }
 
 enum SessionStatus {
@@ -30,6 +32,7 @@ enum SessionStatus {
   inactive
   expired
   revoked  // Added for security
+  @@schema("auth")
 }
 
 model Invitation {
@@ -63,7 +66,8 @@ model Invitation {
   @@index([orgId, status])
   @@index([targetEmail])
   @@index([expiresAt]) // For cleanup jobs
-  @@map("auth.invitations")
+  @@map("invitations")
+  @@schema("auth")
 }
 
 model WaitlistEntry {
@@ -82,7 +86,8 @@ model WaitlistEntry {
   createdAt    DateTime @default(now())
 
   @@index([email])
-  @@map("auth.waitlist_entries")
+  @@map("waitlist_entries")
+  @@schema("auth")
 }
 
 // UK-specific model for security monitoring
@@ -108,7 +113,8 @@ model SecurityEvent {
   @@index([eventType])
   @@index([severity])
   @@index([resolved])
-  @@map("auth.security_events")
+  @@map("security_events")
+  @@schema("auth")
 }
 
 // Model for managing session information
@@ -132,7 +138,63 @@ model UserSession {
   @@index([userId])
   @@index([status])
   @@index([expiresAt])
-  @@map("auth.user_sessions")
+  @@map("user_sessions")
+  @@schema("auth")
+}
+
+// HR notification models with tenant scoping and compliance metadata
+
+enum HRNotificationType {
+  LEAVE_APPROVAL       @map("leave-approval")
+  LEAVE_REJECTION      @map("leave-rejection")
+  DOCUMENT_EXPIRY      @map("document-expiry")
+  POLICY_UPDATE        @map("policy-update")
+  PERFORMANCE_REVIEW   @map("performance-review")
+  SYSTEM_ANNOUNCEMENT  @map("system-announcement")
+  COMPLIANCE_REMINDER  @map("compliance-reminder")
+  OTHER                @map("other")
+  @@schema("hr")
+}
+
+enum NotificationPriority {
+  LOW    @map("low")
+  MEDIUM @map("medium")
+  HIGH   @map("high")
+  URGENT @map("urgent")
+  @@schema("hr")
+}
+
+model HRNotification {
+  id               String                 @id @default(uuid()) @db.Uuid
+  orgId            String                 @db.Uuid
+  userId           String                 @db.Uuid
+  title            String
+  message          String
+  type             HRNotificationType     @default(OTHER)
+  priority         NotificationPriority   @default(MEDIUM)
+  isRead           Boolean                @default(false)
+  readAt           DateTime?
+  actionUrl        String?
+  actionLabel      String?
+  scheduledFor     DateTime?
+  expiresAt        DateTime?
+  correlationId    String?
+  createdByUserId  String?                @db.Uuid
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  metadata         Json?                  @db.JsonB
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  membership Membership   @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+
+  @@index([orgId, userId, isRead])
+  @@index([orgId, userId, type])
+  @@index([orgId, scheduledFor])
+  @@index([orgId, priority, createdAt])
+  @@map("notifications")
+  @@schema("hr")
 }
 
 // HR domain models with UK employment law compliance
@@ -145,6 +207,7 @@ enum EmploymentType {
   APPRENTICE
   FIXED_TERM
   CASUAL
+  @@schema("hr")
 }
 
 enum LeavePolicyType {
@@ -156,6 +219,7 @@ enum LeavePolicyType {
   UNPAID
   SPECIAL
   EMERGENCY
+  @@schema("hr")
 }
 
 enum LeaveAccrualFrequency {
@@ -163,6 +227,7 @@ enum LeaveAccrualFrequency {
   QUARTERLY
   YEARLY
   NONE
+  @@schema("hr")
 }
 
 enum LeaveRequestStatus {
@@ -173,6 +238,7 @@ enum LeaveRequestStatus {
   CANCELLED
   PENDING_APPROVAL
   AWAITING_MANAGER
+  @@schema("hr")
 }
 
 enum HealthStatus {
@@ -181,6 +247,36 @@ enum HealthStatus {
   PARTIALLY_FIT
   UNFIT_FOR_WORK
   RECOVERY_PLAN
+  @@schema("hr")
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+  ON_LEAVE
+  OFFBOARDING
+  ARCHIVED
+  @@schema("hr")
+}
+
+enum SalaryFrequency {
+  HOURLY
+  MONTHLY
+  ANNUALLY
+  @@schema("hr")
+}
+
+enum SalaryBasis {
+  ANNUAL
+  HOURLY
+  @@schema("hr")
+}
+
+enum PaySchedule {
+  MONTHLY
+  BI_WEEKLY
+  @@schema("hr")
 }
 
 enum ContractType {
@@ -190,23 +286,45 @@ enum ContractType {
   CONSULTANT
   INTERNSHIP
   APPRENTICESHIP
+  @@schema("hr")
 }
 
 model EmployeeProfile {
   id               String           @id @default(uuid()) @db.Uuid
   orgId            String           @db.Uuid
   userId           String           @db.Uuid
-  employeeNumber   String           @unique
+  firstName        String?
+  lastName         String?
+  displayName      String?
+  photoUrl         String?
+  email            String?          @db.Citext
+  personalEmail    String?          @db.Citext
+  employeeNumber   String
   jobTitle         String?
+  departmentId     String?          @db.Uuid
   employmentType   EmploymentType   @default(FULL_TIME)
+  employmentStatus EmploymentStatus @default(ACTIVE)
   startDate        DateTime?
   endDate          DateTime?
   managerOrgId     String?          @db.Uuid
   managerUserId    String?          @db.Uuid
+  phone            Json?            @db.JsonB
+  address          Json?            @db.JsonB
   annualSalary     Int?
   hourlyRate       Decimal?         @db.Decimal(8, 2) // For part-time/contract workers
+  salaryAmount     Decimal?         @db.Decimal(12, 2)
+  salaryCurrency   String?
+  salaryFrequency  SalaryFrequency?
+  salaryBasis      SalaryBasis?
+  paySchedule      PaySchedule?
   costCenter       String?
   location         Json?            @db.JsonB
+  roles            String[]         @db.Text
+  eligibleLeaveTypes String[]       @db.Text
+  employmentPeriods Json?           @db.JsonB
+  salaryDetails    Json?            @db.JsonB
+  skills           String[]         @db.Text
+  certifications   Json?            @db.JsonB
   // UK-specific fields
   niNumber         String?          @db.Text // National Insurance number (encrypted at app layer)
   emergencyContact Json?            @db.JsonB
@@ -215,6 +333,23 @@ model EmployeeProfile {
   workPermit       Json?            @db.JsonB // For visa/immigration compliance
   bankDetails      Json?            @db.JsonB // Encrypted at application layer
   metadata         Json?            @db.JsonB
+  // Compliance, audit, retention
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  auditSource      String?
+  correlationId    String?
+  schemaVersion    Int              @default(1)
+  createdBy        String?          @db.Uuid
+  updatedBy        String?          @db.Uuid
+  retentionPolicy  RetentionPolicy?
+  retentionExpiresAt DateTime?
+  erasureRequestedAt DateTime?
+  erasureCompletedAt DateTime?
+  erasureReason    String?
+  erasureActorOrgId String?         @db.Uuid
+  erasureActorUserId String?        @db.Uuid
+  archivedAt       DateTime?
+  deletedAt        DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
@@ -222,10 +357,18 @@ model EmployeeProfile {
   manager       EmployeeProfile?  @relation("EmployeeManager", fields: [managerOrgId, managerUserId], references: [orgId, userId])
   reports       EmployeeProfile[] @relation("EmployeeManager")
   leaveBalances LeaveBalance[]    @relation("ProfileLeaveBalances")
+  checklistInstances ChecklistInstance[] @relation("EmployeeChecklistInstances")
+  department    Department?       @relation("DepartmentProfiles", fields: [departmentId], references: [id], onDelete: SetNull)
 
   @@unique([orgId, userId])
+  @@unique([orgId, employeeNumber])
+  @@index([orgId, email])
   @@index([managerOrgId, managerUserId])
-  @@map("hr.employee_profiles")
+  @@index([orgId, employmentStatus])
+  @@index([orgId, dataClassification, residencyTag])
+  @@index([departmentId])
+  @@map("employee_profiles")
+  @@schema("hr")
 }
 
 model EmploymentContract {
@@ -247,6 +390,22 @@ model EmploymentContract {
   terminationReason String?
   terminationNotes  String?
   archivedAt        DateTime?
+  deletedAt        DateTime?
+  // Compliance, audit, retention
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  auditSource      String?
+  correlationId    String?
+  schemaVersion    Int              @default(1)
+  createdBy        String?          @db.Uuid
+  updatedBy        String?          @db.Uuid
+  retentionPolicy  RetentionPolicy?
+  retentionExpiresAt DateTime?
+  erasureRequestedAt DateTime?
+  erasureCompletedAt DateTime?
+  erasureReason    String?
+  erasureActorOrgId String?         @db.Uuid
+  erasureActorUserId String?        @db.Uuid
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -254,7 +413,9 @@ model EmploymentContract {
   department  Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
   @@index([orgId, userId])
-  @@map("hr.employment_contracts")
+  @@index([orgId, dataClassification, residencyTag])
+  @@map("employment_contracts")
+  @@schema("hr")
 }
 
 model LeavePolicy {
@@ -283,7 +444,8 @@ model LeavePolicy {
   requests     LeaveRequest[]
 
   @@unique([orgId, name])
-  @@map("hr.leave_policies")
+  @@map("leave_policies")
+  @@schema("hr")
 }
 
 model LeavePolicyAccrual {
@@ -296,7 +458,8 @@ model LeavePolicyAccrual {
   policy LeavePolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
 
   @@unique([policyId, tenureMonths])
-  @@map("hr.leave_policy_accruals")
+  @@map("leave_policy_accruals")
+  @@schema("hr")
 }
 
 model LeaveBalance {
@@ -322,7 +485,8 @@ model LeaveBalance {
 
   @@unique([orgId, userId, policyId, periodStart])
   @@index([policyId])
-  @@map("hr.leave_balances")
+  @@map("leave_balances")
+  @@schema("hr")
 }
 
 model LeaveRequest {
@@ -355,7 +519,8 @@ model LeaveRequest {
 
   @@index([orgId, status])
   @@index([policyId])
-  @@map("hr.leave_requests")
+  @@map("leave_requests")
+  @@schema("hr")
 }
 
 // UK-specific performance and appraisal model
@@ -383,7 +548,8 @@ model PerformanceReview {
 
   @@index([orgId, userId])
   @@index([reviewPeriod])
-  @@map("hr.performance_reviews")
+  @@map("performance_reviews")
+  @@schema("hr")
 }
 
 // UK-specific training and development model
@@ -409,10 +575,11 @@ model TrainingRecord {
   membership    Membership @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
 
   @@index([orgId, userId])
-  @@map("hr.training_records")
+  @@map("training_records")
+  @@schema("hr")
 }
 
-// HR operational models: absences, time tracking, policies, notifications, settings
+// HR operational models: absences, time tracking, policies, settings, compliance
 
 enum AbsenceStatus {
   REPORTED
@@ -420,6 +587,7 @@ enum AbsenceStatus {
   REJECTED
   CANCELLED
   CLOSED
+  @@schema("hr")
 }
 
 enum TimeEntryStatus {
@@ -427,6 +595,7 @@ enum TimeEntryStatus {
   COMPLETED
   APPROVED
   REJECTED
+  @@schema("hr")
 }
 
 enum PolicyCategory {
@@ -438,24 +607,31 @@ enum PolicyCategory {
   PROCEDURES
   COMPLIANCE
   OTHER
+  @@schema("hr")
 }
 
-enum HRNotificationType {
-  LEAVE_APPROVAL
-  LEAVE_REJECTION
-  DOCUMENT_EXPIRY
-  POLICY_UPDATE
-  PERFORMANCE_REVIEW
-  SYSTEM_ANNOUNCEMENT
-  COMPLIANCE_REMINDER
-  OTHER
+enum ChecklistTemplateType {
+  onboarding
+  offboarding
+  custom
+  @@schema("hr")
 }
 
-enum NotificationPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
+enum ChecklistInstanceStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  @@schema("hr")
+}
+
+enum ComplianceItemStatus {
+  PENDING
+  COMPLETE
+  MISSING
+  PENDING_REVIEW
+  NOT_APPLICABLE
+  EXPIRED
+  @@schema("hr")
 }
 
 model AbsenceTypeConfig {
@@ -473,7 +649,8 @@ model AbsenceTypeConfig {
   absences  UnplannedAbsence[]
 
   @@unique([orgId, key])
-  @@map("hr.absence_type_configs")
+  @@map("absence_type_configs")
+  @@schema("hr")
 }
 
 model AbsenceSettings {
@@ -486,7 +663,8 @@ model AbsenceSettings {
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  @@map("hr.absence_settings")
+  @@map("absence_settings")
+  @@schema("hr")
 }
 
 model HRSettings {
@@ -503,7 +681,8 @@ model HRSettings {
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  @@map("hr.hr_settings")
+  @@map("hr_settings")
+  @@schema("hr")
 }
 
 model UnplannedAbsence {
@@ -522,6 +701,9 @@ model UnplannedAbsence {
   dataClassification DataClassificationLevel @default(OFFICIAL)
   residencyTag       DataResidencyZone       @default(UK_ONLY)
   metadata       Json?          @db.JsonB
+  deletionReason String?
+  deletedAt      DateTime?
+  deletedByUserId String?       @db.Uuid
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -529,10 +711,70 @@ model UnplannedAbsence {
   member   Membership        @relation("MemberAbsences", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
   type     AbsenceTypeConfig @relation(fields: [typeId], references: [id], onDelete: Restrict)
   approver Membership?       @relation("AbsenceApprover", fields: [approverOrgId, approverUserId], references: [orgId, userId], onDelete: SetNull)
+  attachments   AbsenceAttachment[]
+  returnRecord  AbsenceReturnRecord?
+  deletionAudit AbsenceDeletionAudit?
 
   @@index([orgId, userId])
   @@index([orgId, status])
-  @@map("hr.unplanned_absences")
+  @@map("unplanned_absences")
+  @@schema("hr")
+}
+
+model AbsenceAttachment {
+  id               String                 @id @default(uuid()) @db.Uuid
+  orgId            String                 @db.Uuid
+  absenceId        String                 @db.Uuid
+  fileName         String
+  storageKey       String
+  contentType      String
+  fileSize         Int
+  checksum         String?
+  uploadedByUserId String                 @db.Uuid
+  uploadedAt       DateTime               @default(now())
+  metadata         Json?                  @db.JsonB
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+
+  absence  UnplannedAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+  @@index([orgId, absenceId])
+  @@map("unplanned_absence_attachments")
+  @@schema("hr")
+}
+
+model AbsenceReturnRecord {
+  id                String                 @id @default(uuid()) @db.Uuid
+  orgId             String                 @db.Uuid
+  absenceId         String                 @db.Uuid @unique
+  returnDate        DateTime
+  comments          String?
+  submittedByUserId String                 @db.Uuid
+  submittedAt       DateTime               @default(now())
+  metadata          Json?                  @db.JsonB
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+
+  absence  UnplannedAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+  @@index([orgId])
+  @@map("unplanned_absence_returns")
+  @@schema("hr")
+}
+
+model AbsenceDeletionAudit {
+  id               String                 @id @default(uuid()) @db.Uuid
+  orgId            String                 @db.Uuid
+  absenceId        String                 @db.Uuid @unique
+  reason           String
+  deletedByUserId  String                 @db.Uuid
+  deletedAt        DateTime               @default(now())
+  metadata         Json?                  @db.JsonB
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+
+  absence   UnplannedAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+  @@index([orgId])
+  @@map("unplanned_absence_deletions")
+  @@schema("hr")
 }
 
 model TimeEntry {
@@ -563,7 +805,8 @@ model TimeEntry {
 
   @@index([orgId, userId])
   @@index([orgId, status])
-  @@map("hr.time_entries")
+  @@map("time_entries")
+  @@schema("hr")
 }
 
 model HRPolicy {
@@ -589,7 +832,8 @@ model HRPolicy {
   acknowledgments PolicyAcknowledgment[]
 
   @@index([orgId, status])
-  @@map("hr.policies")
+  @@map("policies")
+  @@schema("hr")
 }
 
 model PolicyAcknowledgment {
@@ -606,34 +850,94 @@ model PolicyAcknowledgment {
   membership Membership  @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
 
   @@unique([policyId, orgId, userId, version])
-  @@map("hr.policy_acknowledgments")
+  @@map("policy_acknowledgments")
+  @@schema("hr")
 }
 
-model HRNotification {
-  id          String               @id @default(uuid()) @db.Uuid
-  orgId       String               @db.Uuid
-  userId      String               @db.Uuid
-  title       String
-  message     String
-  type        HRNotificationType   @default(OTHER)
-  priority    NotificationPriority @default(MEDIUM)
-  isRead      Boolean              @default(false)
-  readAt      DateTime?
-  actionUrl   String?
-  actionLabel String?
-  scheduledFor DateTime?
-  expiresAt   DateTime?
-  dataClassification DataClassificationLevel @default(OFFICIAL)
-  residencyTag       DataResidencyZone       @default(UK_ONLY)
-  metadata    Json?                @db.JsonB
-  createdAt   DateTime             @default(now())
+model ChecklistTemplate {
+  id        String                @id @default(uuid()) @db.Uuid
+  orgId     String                @db.Uuid
+  name      String
+  type      ChecklistTemplateType @default(onboarding)
+  items     Json                  @db.JsonB
+  metadata  Json?                 @db.JsonB
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
 
-  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  membership Membership @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+  org Organization @relation("OrgChecklistTemplates", fields: [orgId], references: [id], onDelete: Cascade)
+  instances ChecklistInstance[] @relation("ChecklistTemplateInstances")
 
-  @@index([orgId, userId, isRead])
-  @@index([orgId, scheduledFor])
-  @@map("hr.notifications")
+  @@index([orgId, type])
+  @@map("checklist_templates")
+  @@schema("hr")
+}
+
+model ChecklistInstance {
+  id           String                   @id @default(uuid()) @db.Uuid
+  orgId        String                   @db.Uuid
+  employeeId   String                   @db.Uuid
+  templateId   String                   @db.Uuid
+  templateName String?
+  status       ChecklistInstanceStatus  @default(IN_PROGRESS)
+  items        Json                     @db.JsonB
+  startedAt    DateTime                 @default(now())
+  completedAt  DateTime?
+  metadata     Json?                    @db.JsonB
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+
+  org      Organization       @relation("OrgChecklistInstances", fields: [orgId], references: [id], onDelete: Cascade)
+  template ChecklistTemplate  @relation("ChecklistTemplateInstances", fields: [templateId], references: [id], onDelete: Cascade)
+  employee EmployeeProfile    @relation("EmployeeChecklistInstances", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, employeeId])
+  @@index([templateId])
+  @@map("checklist_instances")
+  @@schema("hr")
+}
+
+model ComplianceTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  orgId       String   @db.Uuid
+  name        String
+  categoryKey String?
+  version     String?
+  items       Json     @db.JsonB
+  metadata    Json?    @db.JsonB
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org Organization @relation("OrgComplianceTemplates", fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, categoryKey])
+  @@map("compliance_templates")
+  @@schema("hr")
+}
+
+model ComplianceLogItem {
+  id            String                @id @default(uuid()) @db.Uuid
+  orgId         String                @db.Uuid
+  userId        String                @db.Uuid
+  templateItemId String
+  categoryKey   String?
+  status        ComplianceItemStatus  @default(PENDING)
+  dueDate       DateTime?
+  completedAt   DateTime?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  notes         String?
+  attachments   Json?                 @db.JsonB
+  metadata      Json?                 @db.JsonB
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  org        Organization @relation("OrgComplianceLogItems", fields: [orgId], references: [id], onDelete: Cascade)
+  membership Membership   @relation("MembershipComplianceLogItems", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
+
+  @@index([orgId, userId])
+  @@index([status, dueDate])
+  @@map("compliance_log_items")
+  @@schema("hr")
 }
 
 // Records, documents, auditing models with UK government compliance
@@ -650,6 +954,7 @@ enum DocumentType {
   FINANCIAL
   SECURITY
   OTHER
+  @@schema("compliance")
 }
 
 enum AuditEventType {
@@ -663,6 +968,7 @@ enum AuditEventType {
   DOCUMENT
   LEAVE_REQUEST
   PAYROLL
+  @@schema("compliance")
 }
 
 enum RetentionPolicy {
@@ -672,6 +978,7 @@ enum RetentionPolicy {
   SEVEN_YEARS
   PERMANENT
   LEGAL_HOLD
+  @@schema("compliance")
 }
 
 enum SecurityClassification {
@@ -680,6 +987,7 @@ enum SecurityClassification {
   OFFICIAL_SENSITIVE
   SECRET
   TOP_SECRET
+  @@schema("compliance")
 }
 
 model DocumentVault {
@@ -715,7 +1023,8 @@ model DocumentVault {
   @@index([orgId])
   @@index([classification])
   @@index([retentionPolicy, retentionExpires])
-  @@map("compliance.document_vault")
+  @@map("document_vault")
+  @@schema("compliance")
 }
 
 model AuditLog {
@@ -743,7 +1052,8 @@ model AuditLog {
   @@index([orgId, createdAt])
   @@index([orgId, eventType])
   @@index([dataSubjectId])
-  @@map("compliance.audit_logs")
+  @@map("audit_logs")
+  @@schema("compliance")
 }
 
 model EventOutbox {
@@ -764,7 +1074,8 @@ model EventOutbox {
 
   @@index([status, availableAt])
   @@index([orgId, eventType])
-  @@map("compliance.event_outbox")
+  @@map("event_outbox")
+  @@schema("compliance")
 }
 
 // UK-specific compliance model
@@ -797,7 +1108,8 @@ model ComplianceRecord {
 
   @@unique([orgId, referenceNumber])
   @@index([orgId, status])
-  @@map("compliance.records")
+  @@map("records")
+  @@schema("compliance")
 }
 
 // UK-specific statutory reporting model
@@ -823,7 +1135,8 @@ model StatutoryReport {
 
   @@index([orgId, reportType, period])
   @@index([dueDate])
-  @@map("compliance.statutory_reports")
+  @@map("statutory_reports")
+  @@schema("compliance")
 }
 
 // For GDPR data subject rights
@@ -852,7 +1165,8 @@ model DataSubjectRight {
 
   @@index([orgId, rightType])
   @@index([status])
-  @@map("compliance.data_subject_rights")
+  @@map("data_subject_rights")
+  @@schema("compliance")
 }
 
 // Tenant domain models with UK government compliance
@@ -861,18 +1175,21 @@ enum OrganizationStatus {
   ACTIVE
   SUSPENDED
   DECOMMISSIONED
+  @@schema("hr")
 }
 
 enum ComplianceTier {
   STANDARD
   REGULATED
   GOV_SECURE
+  @@schema("hr")
 }
 
 enum DataResidencyZone {
   UK_ONLY
   UK_AND_EEA
   GLOBAL_RESTRICTED
+  @@schema("hr")
 }
 
 enum DataClassificationLevel {
@@ -880,12 +1197,14 @@ enum DataClassificationLevel {
   OFFICIAL_SENSITIVE
   SECRET
   TOP_SECRET
+  @@schema("hr")
 }
 
 enum RoleScope {
   ORG
   DEPARTMENT
   GLOBAL
+  @@schema("hr")
 }
 
 enum MembershipStatus {
@@ -893,12 +1212,14 @@ enum MembershipStatus {
   ACTIVE
   SUSPENDED
   DEACTIVATED
+  @@schema("hr")
 }
 
 enum NotificationChannel {
   EMAIL
   IN_APP
   SMS
+  @@schema("hr")
 }
 
 model Organization {
@@ -939,9 +1260,15 @@ model Organization {
   hrPolicies             HRPolicy[]
   hrNotifications        HRNotification[]
   hrSettings             HRSettings?
+  checklistTemplates     ChecklistTemplate[] @relation("OrgChecklistTemplates")
+  checklistInstances     ChecklistInstance[] @relation("OrgChecklistInstances")
+  complianceTemplates    ComplianceTemplate[] @relation("OrgComplianceTemplates")
+  complianceLogItems     ComplianceLogItem[] @relation("OrgComplianceLogItems")
+  managedOrganizations   ManagedOrganization[] @relation("ManagedOrgOrganization")
 
   @@index([tenantId]) // For tenant isolation
-  @@map("hr.organizations") // PostgreSQL schema mapping
+  @@map("organizations") // PostgreSQL schema mapping
+  @@schema("hr")
 }
 
 model User {
@@ -967,8 +1294,10 @@ model User {
   // submitter relationships are modelled as Membership -> ComplianceRecord/StatutoryReport
   dsrRequests          DataSubjectRight[] @relation("DSRRequestor")
   dsrResponses         DataSubjectRight[] @relation("DSRResponder")
+  managedOrganizations ManagedOrganization[] @relation("ManagedAdmin")
 
   @@index([email])
+  @@schema("hr")
 }
 
 model Role {
@@ -985,7 +1314,8 @@ model Role {
   memberships Membership[]
 
   @@unique([orgId, name])
-  @@map("hr.roles")
+  @@map("roles")
+  @@schema("hr")
 }
 
 model Department {
@@ -1005,9 +1335,11 @@ model Department {
   memberships   Membership[]
   leavePolicies LeavePolicy[]
   employmentContracts EmploymentContract[]
+  employeeProfiles EmployeeProfile[] @relation("DepartmentProfiles")
 
   @@unique([orgId, name])
-  @@map("hr.departments")
+  @@map("departments")
+  @@schema("hr")
 }
 
 model Membership {
@@ -1051,11 +1383,13 @@ model Membership {
   assignedComplianceRecords ComplianceRecord[] @relation("ComplianceAssignee")
   submittedComplianceRecords  ComplianceRecord[] @relation("ComplianceSubmitter")
   submittedStatutoryReports   StatutoryReport[]  @relation("ReportSubmitter")
+  complianceLogItems     ComplianceLogItem[] @relation("MembershipComplianceLogItems")
 
   @@id([orgId, userId])
   @@index([userId])
   @@index([orgId, status])
-  @@map("hr.memberships")
+  @@map("memberships")
+  @@schema("hr")
 }
 
 model NotificationPreference {
@@ -1072,7 +1406,8 @@ model NotificationPreference {
   membership Membership   @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
 
   @@unique([orgId, userId, channel])
-  @@map("hr.notification_preferences")
+  @@map("notification_preferences")
+  @@schema("hr")
 }
 
 model IntegrationConfig {
@@ -1089,5 +1424,53 @@ model IntegrationConfig {
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@unique([orgId, provider])
-  @@map("hr.integration_configs")
+  @@map("integration_configs")
+  @@schema("hr")
+}
+
+model PlatformSetting {
+  id        String   @id
+  branding  Json?    @db.JsonB
+  metadata  Json?    @db.JsonB
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+  @@schema("platform")
+}
+
+model AppPermission {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  description String?
+  category   String
+  isGlobal   Boolean  @default(false)
+  metadata   Json?    @db.JsonB
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([category])
+  @@map("app_permissions")
+  @@schema("platform")
+}
+
+model ManagedOrganization {
+  id           String   @id @default(uuid()) @db.Uuid
+  adminUserId  String   @db.Uuid
+  orgId        String   @db.Uuid
+  orgName      String
+  ownerEmail   String
+  planId       String
+  moduleAccess Json     @db.JsonB
+  metadata     Json?    @db.JsonB
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  admin User          @relation("ManagedAdmin", fields: [adminUserId], references: [id], onDelete: Cascade)
+  organization Organization @relation("ManagedOrgOrganization", fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId])
+  @@index([orgId])
+  @@map("managed_organizations")
+  @@schema("org")
 }

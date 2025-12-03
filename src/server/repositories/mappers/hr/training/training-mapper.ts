@@ -6,7 +6,7 @@ function decimalToNumber(value: Prisma.Decimal | number | null | undefined): num
     if (value === null || value === undefined) { return null; }
     if (typeof value === 'number') { return value; }
     try {
-        return (value as Prisma.Decimal).toNumber();
+        return (value).toNumber();
     } catch {
         return null;
     }
@@ -23,12 +23,12 @@ export function mapPrismaTrainingRecordToDomain(record: PrismaTrainingRecord): T
         endDate: record.endDate ?? null,
         status: record.status,
         certificate: record.certificate ?? null,
-        competency: record.competency as Prisma.JsonValue | null,
+        competency: record.competency,
         cost: decimalToNumber(record.cost),
         approved: record.approved,
         approvedAt: record.approvedAt ?? null,
         approvedBy: record.approvedBy ?? null,
-        metadata: record.metadata as Prisma.JsonValue | null,
+        metadata: record.metadata,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
     };
@@ -50,8 +50,8 @@ export function mapDomainTrainingRecordToPrisma(input: TrainingRecord): Training
         approvedAt: input.approvedAt ?? null,
         approvedBy: input.approvedBy ?? null,
         metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata as Prisma.InputJsonValue | undefined),
-        createdAt: input.createdAt ?? undefined,
-        updatedAt: input.updatedAt ?? undefined,
+        createdAt: input.createdAt,
+        updatedAt: input.updatedAt,
     };
 }
 

@@ -709,6 +709,126 @@
       ]
     },
     {
+      "name": "assignComplianceItems",
+      "file": "hr-compliance.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Assigns compliance template items to employees from the org task library",
+      "firestore_paths": [
+        "organizations/{orgId}/hrComplianceSettings",
+        "organizations/{orgId}/employees/{userId}/complianceLog"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateUserComplianceItem",
+      "file": "hr-compliance.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates an employee compliance item (evidence, completion, acknowledgements)",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{userId}/complianceLog"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "reviewComplianceItem",
+      "file": "hr-compliance.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Reviews or approves an employee compliance item with audit trail",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{userId}/complianceLog"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "onComplianceLogUpdated",
+      "file": "hr-compliance.ts",
+      "trigger": "onDocumentUpdated",
+      "region": "europe-west2",
+      "responsibilities": "Propagates compliance status changes when employee compliance logs are updated",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{userId}/complianceLog/{categoryKey}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "updateComplianceConfiguration",
+      "file": "hr-compliance.ts",
+      "trigger": "onCall",
+      "region": "europe-west2",
+      "responsibilities": "Updates organization compliance templates/settings",
+      "firestore_paths": [
+        "organizations/{orgId}/hrComplianceSettings"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "checkComplianceExpiries",
+      "file": "hr-compliance.ts",
+      "trigger": "onSchedule",
+      "region": "europe-west2",
+      "responsibilities": "Scheduled job to detect expiring/expired compliance items and flag alerts",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{userId}/complianceLog"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": true,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
+      "name": "onEmployeeCreated",
+      "file": "hr-compliance.ts",
+      "trigger": "onDocumentCreated",
+      "region": "europe-west2",
+      "responsibilities": "Initializes compliance log entries when a new employee document is created",
+      "firestore_paths": [
+        "organizations/{orgId}/employees/{employeeId}"
+      ],
+      "tenant_aware": true,
+      "needs_mongo": false,
+      "async_queue": false,
+      "gov_controls": [
+        "audit_logging",
+        "tenant_isolation"
+      ]
+    },
+    {
       "name": "checkExistingEmployee",
       "file": "hr-onboarding.ts",
       "trigger": "onCall",
@@ -1173,7 +1293,15 @@
         "UnplannedAbsence",
         "ChecklistTemplate",
         "ChecklistItem",
-        "ChecklistInstance"
+        "ChecklistInstance",
+        "EmployeeProfile",
+        "HRDocument",
+        "PerformanceReview",
+        "TimeEntry",
+        "HRPolicy",
+        "PolicyAcknowledgment",
+        "HRNotification",
+        "HRSettings"
       ]
     }
   ]

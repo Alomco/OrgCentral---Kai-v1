@@ -9,15 +9,10 @@ import { registerOrgCacheTag, invalidateOrgCache } from '@/server/lib/cache-tags
 import { CACHE_SCOPE_BRANDING } from '@/server/repositories/cache-scopes';
 
 type OrganizationDelegate = PrismaClient['organization'];
-type OrganizationRecord = Awaited<ReturnType<OrganizationDelegate['update']>>;
 type OrganizationUpdateData = Parameters<OrganizationDelegate['update']>[0]['data'];
 export class PrismaBrandingRepository extends BasePrismaRepository implements IBrandingRepository {
-    constructor(prisma?: PrismaClient) {
-        super(prisma);
-    }
-
     private delegate(): OrganizationDelegate {
-        return getModelDelegate(this.prisma, 'organization') as OrganizationDelegate;
+        return getModelDelegate(this.prisma, 'organization');
     }
 
     async getBranding(orgId: string): Promise<OrgBranding | null> {
@@ -43,12 +38,16 @@ export class PrismaBrandingRepository extends BasePrismaRepository implements IB
             where: { id: orgId },
             data,
         });
-        await invalidateOrgCache(orgId, BRANDING_SCOPE);
-        return mapOrgBrandingRecordToDomain({
+        await invalidateOrgCache(orgId, CACHE_SCOPE_BRANDING);
+        const mapped = mapOrgBrandingRecordToDomain({
             orgId,
             branding: (record as { branding?: OrgBranding | null }).branding ?? null,
             updatedAt: (record as { updatedAt?: Date | string | null }).updatedAt ?? null,
-        }) as OrgBranding;
+        });
+        if (!mapped) {
+            throw new Error('Failed to map branding record');
+        }
+        return mapped;
     }
 
     async resetBranding(orgId: string): Promise<void> {

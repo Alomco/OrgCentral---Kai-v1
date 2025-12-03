@@ -1,5 +1,15 @@
 import type { Prisma } from '@prisma/client';
 
+type PrismaAction = Prisma.PrismaAction;
+
+interface MiddlewareParams {
+    model?: string;
+    action: PrismaAction;
+    args?: Record<string, unknown>;
+}
+
+type PrismaMiddleware = (params: MiddlewareParams, next: (params: MiddlewareParams) => Promise<unknown>) => Promise<unknown>;
+
 type EncryptableValue = Prisma.InputJsonValue | Prisma.JsonValue | null;
 type MaybePromise<T> = T | Promise<T>;
 
@@ -13,13 +23,13 @@ export interface EncryptionTarget {
 export interface EncryptionMiddlewareOptions {
     targets: EncryptionTarget[];
     encrypt: EncryptValue;
-    writableActions?: readonly Prisma.PrismaAction[];
-    shouldEncrypt?: (params: Prisma.MiddlewareParams) => boolean;
+    writableActions?: readonly PrismaAction[];
+    shouldEncrypt?: (params: MiddlewareParams) => boolean;
 }
 
 function isWritableAction(
-    action: Prisma.PrismaAction,
-    allowed: readonly Prisma.PrismaAction[],
+    action: PrismaAction,
+    allowed: readonly PrismaAction[],
 ): boolean {
     return allowed.includes(action);
 }
@@ -38,8 +48,8 @@ function toFieldMap(targets: EncryptionTarget[]): Map<string, Set<string>> {
 
 export function createEncryptionMiddleware(
     options: EncryptionMiddlewareOptions,
-): Prisma.Middleware {
-    const writableActions: readonly Prisma.PrismaAction[] = options.writableActions ?? [
+): PrismaMiddleware {
+    const writableActions: readonly PrismaAction[] = options.writableActions ?? [
         'create',
         'createMany',
         'update',
@@ -49,8 +59,8 @@ export function createEncryptionMiddleware(
     const fieldMap = toFieldMap(options.targets);
 
     return async (
-        params: Prisma.MiddlewareParams,
-        next: (params: Prisma.MiddlewareParams) => Promise<unknown>,
+        params: MiddlewareParams,
+        next: (params: MiddlewareParams) => Promise<unknown>,
     ): Promise<unknown> => {
         if (!params.model || !isWritableAction(params.action, writableActions)) {
             return next(params);

@@ -1,8 +1,5 @@
-import type {
-    ComplianceSubDocumentType,
-    ComplianceTemplate,
-    ComplianceTemplateItem,
-} from '@/server/types/compliance-types';
+import type { ComplianceTemplate, ComplianceTemplateItem } from '@/server/types/compliance-types';
+import type { Prisma } from '@prisma/client';
 
 export interface ComplianceTemplateCreateInput {
     orgId: string;
@@ -10,6 +7,7 @@ export interface ComplianceTemplateCreateInput {
     items: ComplianceTemplateItem[];
     categoryKey?: string;
     version?: string;
+    metadata?: Prisma.JsonValue;
 }
 
 export interface ComplianceTemplateUpdateInput {
@@ -17,6 +15,7 @@ export interface ComplianceTemplateUpdateInput {
     items?: ComplianceTemplateItem[];
     categoryKey?: string;
     version?: string;
+    metadata?: Prisma.JsonValue;
 }
 
 export interface IComplianceTemplateRepository {

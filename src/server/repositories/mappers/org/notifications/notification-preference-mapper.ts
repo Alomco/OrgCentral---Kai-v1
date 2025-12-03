@@ -8,8 +8,8 @@ export function mapPrismaNotificationPreferenceToDomain(record: PrismaNotificati
         userId: record.userId,
         channel: record.channel,
         enabled: record.enabled,
-        quietHours: record.quietHours as Prisma.JsonValue | null,
-        metadata: record.metadata as Prisma.JsonValue | null,
+        quietHours: record.quietHours,
+        metadata: record.metadata,
         updatedAt: record.updatedAt,
     };
 }
@@ -22,6 +22,6 @@ export function mapDomainNotificationPreferenceToPrisma(input: NotificationPrefe
         enabled: input.enabled,
         quietHours: input.quietHours === null ? Prisma.JsonNull : (input.quietHours as Prisma.InputJsonValue | undefined),
         metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata as Prisma.InputJsonValue | undefined),
-        updatedAt: input.updatedAt ?? undefined,
+        updatedAt: input.updatedAt,
     };
 }

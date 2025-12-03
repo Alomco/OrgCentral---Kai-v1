@@ -1,9 +1,8 @@
-import { Prisma, type Role as PrismaRole } from '@prisma/client';
+import { type Prisma, type Role as PrismaRole } from '@prisma/client';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import type { IRoleRepository } from '@/server/repositories/contracts/org/roles/role-repository-contract';
 import type { Role } from '@/server/types/hr-types';
 import { mapPrismaRoleToDomain } from '@/server/repositories/mappers/org/roles/role-mapper';
-import type { RoleFilters, RoleCreationData, RoleUpdateData } from './prisma-role-repository.types';
 
 export class PrismaRoleRepository extends OrgScopedPrismaRepository implements IRoleRepository {
   // No explicit constructor required — BasePrismaRepository enforces injection

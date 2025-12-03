@@ -8,6 +8,7 @@ enum EmploymentType {
   APPRENTICE
   FIXED_TERM
   CASUAL
+  @@schema("hr")
 }
 
 enum LeavePolicyType {
@@ -19,6 +20,7 @@ enum LeavePolicyType {
   UNPAID
   SPECIAL
   EMERGENCY
+  @@schema("hr")
 }
 
 enum LeaveAccrualFrequency {
@@ -26,6 +28,7 @@ enum LeaveAccrualFrequency {
   QUARTERLY
   YEARLY
   NONE
+  @@schema("hr")
 }
 
 enum LeaveRequestStatus {
@@ -36,6 +39,7 @@ enum LeaveRequestStatus {
   CANCELLED
   PENDING_APPROVAL
   AWAITING_MANAGER
+  @@schema("hr")
 }
 
 enum HealthStatus {
@@ -44,6 +48,36 @@ enum HealthStatus {
   PARTIALLY_FIT
   UNFIT_FOR_WORK
   RECOVERY_PLAN
+  @@schema("hr")
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+  ON_LEAVE
+  OFFBOARDING
+  ARCHIVED
+  @@schema("hr")
+}
+
+enum SalaryFrequency {
+  HOURLY
+  MONTHLY
+  ANNUALLY
+  @@schema("hr")
+}
+
+enum SalaryBasis {
+  ANNUAL
+  HOURLY
+  @@schema("hr")
+}
+
+enum PaySchedule {
+  MONTHLY
+  BI_WEEKLY
+  @@schema("hr")
 }
 
 enum ContractType {
@@ -53,23 +87,45 @@ enum ContractType {
   CONSULTANT
   INTERNSHIP
   APPRENTICESHIP
+  @@schema("hr")
 }
 
 model EmployeeProfile {
   id               String           @id @default(uuid()) @db.Uuid
   orgId            String           @db.Uuid
   userId           String           @db.Uuid
-  employeeNumber   String           @unique
+  firstName        String?
+  lastName         String?
+  displayName      String?
+  photoUrl         String?
+  email            String?          @db.Citext
+  personalEmail    String?          @db.Citext
+  employeeNumber   String
   jobTitle         String?
+  departmentId     String?          @db.Uuid
   employmentType   EmploymentType   @default(FULL_TIME)
+  employmentStatus EmploymentStatus @default(ACTIVE)
   startDate        DateTime?
   endDate          DateTime?
   managerOrgId     String?          @db.Uuid
   managerUserId    String?          @db.Uuid
+  phone            Json?            @db.JsonB
+  address          Json?            @db.JsonB
   annualSalary     Int?
   hourlyRate       Decimal?         @db.Decimal(8, 2) // For part-time/contract workers
+  salaryAmount     Decimal?         @db.Decimal(12, 2)
+  salaryCurrency   String?
+  salaryFrequency  SalaryFrequency?
+  salaryBasis      SalaryBasis?
+  paySchedule      PaySchedule?
   costCenter       String?
   location         Json?            @db.JsonB
+  roles            String[]         @db.Text
+  eligibleLeaveTypes String[]       @db.Text
+  employmentPeriods Json?           @db.JsonB
+  salaryDetails    Json?            @db.JsonB
+  skills           String[]         @db.Text
+  certifications   Json?            @db.JsonB
   // UK-specific fields
   niNumber         String?          @db.Text // National Insurance number (encrypted at app layer)
   emergencyContact Json?            @db.JsonB
@@ -78,6 +134,23 @@ model EmployeeProfile {
   workPermit       Json?            @db.JsonB // For visa/immigration compliance
   bankDetails      Json?            @db.JsonB // Encrypted at application layer
   metadata         Json?            @db.JsonB
+  // Compliance, audit, retention
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  auditSource      String?
+  correlationId    String?
+  schemaVersion    Int              @default(1)
+  createdBy        String?          @db.Uuid
+  updatedBy        String?          @db.Uuid
+  retentionPolicy  RetentionPolicy?
+  retentionExpiresAt DateTime?
+  erasureRequestedAt DateTime?
+  erasureCompletedAt DateTime?
+  erasureReason    String?
+  erasureActorOrgId String?         @db.Uuid
+  erasureActorUserId String?        @db.Uuid
+  archivedAt       DateTime?
+  deletedAt        DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
@@ -85,10 +158,18 @@ model EmployeeProfile {
   manager       EmployeeProfile?  @relation("EmployeeManager", fields: [managerOrgId, managerUserId], references: [orgId, userId])
   reports       EmployeeProfile[] @relation("EmployeeManager")
   leaveBalances LeaveBalance[]    @relation("ProfileLeaveBalances")
+  checklistInstances ChecklistInstance[] @relation("EmployeeChecklistInstances")
+  department    Department?       @relation("DepartmentProfiles", fields: [departmentId], references: [id], onDelete: SetNull)
 
   @@unique([orgId, userId])
+  @@unique([orgId, employeeNumber])
+  @@index([orgId, email])
   @@index([managerOrgId, managerUserId])
-  @@map("hr.employee_profiles")
+  @@index([orgId, employmentStatus])
+  @@index([orgId, dataClassification, residencyTag])
+  @@index([departmentId])
+  @@map("employee_profiles")
+  @@schema("hr")
 }
 
 model EmploymentContract {
@@ -110,6 +191,22 @@ model EmploymentContract {
   terminationReason String?
   terminationNotes  String?
   archivedAt        DateTime?
+  deletedAt        DateTime?
+  // Compliance, audit, retention
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  auditSource      String?
+  correlationId    String?
+  schemaVersion    Int              @default(1)
+  createdBy        String?          @db.Uuid
+  updatedBy        String?          @db.Uuid
+  retentionPolicy  RetentionPolicy?
+  retentionExpiresAt DateTime?
+  erasureRequestedAt DateTime?
+  erasureCompletedAt DateTime?
+  erasureReason    String?
+  erasureActorOrgId String?         @db.Uuid
+  erasureActorUserId String?        @db.Uuid
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -117,7 +214,9 @@ model EmploymentContract {
   department  Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
   @@index([orgId, userId])
-  @@map("hr.employment_contracts")
+  @@index([orgId, dataClassification, residencyTag])
+  @@map("employment_contracts")
+  @@schema("hr")
 }
 
 model LeavePolicy {
@@ -146,7 +245,8 @@ model LeavePolicy {
   requests     LeaveRequest[]
 
   @@unique([orgId, name])
-  @@map("hr.leave_policies")
+  @@map("leave_policies")
+  @@schema("hr")
 }
 
 model LeavePolicyAccrual {
@@ -159,7 +259,8 @@ model LeavePolicyAccrual {
   policy LeavePolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
 
   @@unique([policyId, tenureMonths])
-  @@map("hr.leave_policy_accruals")
+  @@map("leave_policy_accruals")
+  @@schema("hr")
 }
 
 model LeaveBalance {
@@ -185,7 +286,8 @@ model LeaveBalance {
 
   @@unique([orgId, userId, policyId, periodStart])
   @@index([policyId])
-  @@map("hr.leave_balances")
+  @@map("leave_balances")
+  @@schema("hr")
 }
 
 model LeaveRequest {
@@ -218,7 +320,8 @@ model LeaveRequest {
 
   @@index([orgId, status])
   @@index([policyId])
-  @@map("hr.leave_requests")
+  @@map("leave_requests")
+  @@schema("hr")
 }
 
 // UK-specific performance and appraisal model
@@ -246,7 +349,8 @@ model PerformanceReview {
 
   @@index([orgId, userId])
   @@index([reviewPeriod])
-  @@map("hr.performance_reviews")
+  @@map("performance_reviews")
+  @@schema("hr")
 }
 
 // UK-specific training and development model
@@ -272,5 +376,6 @@ model TrainingRecord {
   membership    Membership @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
 
   @@index([orgId, userId])
-  @@map("hr.training_records")
+  @@map("training_records")
+  @@schema("hr")
 }

@@ -3,6 +3,7 @@ import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-r
 import type { ITimeEntryRepository } from '@/server/repositories/contracts/hr/time-tracking/time-entry-repository-contract';
 import { mapDomainTimeEntryToPrismaCreate, mapDomainTimeEntryToPrismaUpdate, mapPrismaTimeEntryToDomain } from '@/server/repositories/mappers/hr/time-tracking/time-entry-mapper';
 import type { TimeEntry } from '@/server/types/hr-ops-types';
+import { AuthorizationError } from '@/server/errors';
 
 export class PrismaTimeEntryRepository extends BasePrismaRepository implements ITimeEntryRepository {
   async createTimeEntry(
@@ -12,7 +13,7 @@ export class PrismaTimeEntryRepository extends BasePrismaRepository implements I
     const data = mapDomainTimeEntryToPrismaCreate({ ...input, status: input.status ?? 'ACTIVE' });
     const rec = await this.prisma.timeEntry.create({ data });
     if (rec.orgId !== orgId) {
-      throw new Error('Cross-tenant time entry creation mismatch');
+      throw new AuthorizationError('Cross-tenant time entry creation mismatch', { orgId });
     }
     return mapPrismaTimeEntryToDomain(rec);
   }
@@ -25,7 +26,7 @@ export class PrismaTimeEntryRepository extends BasePrismaRepository implements I
     const data = mapDomainTimeEntryToPrismaUpdate(updates);
     const rec = await this.prisma.timeEntry.update({ where: { id }, data });
     if (rec.orgId !== orgId) {
-      throw new Error('Cross-tenant time entry update mismatch');
+      throw new AuthorizationError('Cross-tenant time entry update mismatch', { orgId });
     }
     return mapPrismaTimeEntryToDomain(rec);
   }

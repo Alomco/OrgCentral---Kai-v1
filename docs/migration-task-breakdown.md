@@ -30,6 +30,10 @@ This document translates the high-level backend/frontend playbooks into assignab
    - Source: scheduled/background logic inside Firebase functions
    - Output: `orgcentral/src/server/queues/**`
    - Steps: model BullMQ queues, cron schedules, shared worker base class.
+6. **HR People ingestion**
+   - Source: `old/src/lib/hr/types.ts`, `old/src/lib/hr/firestore.ts`, `old/firebase/functions/src/functions/hr-compliance.ts`
+   - Output: `orgcentral/src/server/use-cases/hr/people` services/repos/api adapters; reference live gap list in `src/server/use-cases/hr/people/README.md`
+   - Steps: map legacy employee profiles/contracts/compliance log/documents into Prisma + metadata fields, wire cache/residency/classification + audit logging, and align API adapters with guards.
 
 ### 2.2 Frontend Rebuild
 1. **Global Shell & Providers**
@@ -63,6 +67,7 @@ For every numbered task, provide agents with:
 - **Domain routes**: `(app)` and `(auth)` folders are empty compared to the legacy app.
 - **Docs/artifacts**: Function manifest, compliance checklist per domain, and ADRs still missing.
 - **Caching strategy**: Cache tags/life definitions only documented, not implemented.
+- **HR People parity**: Legacy profiles/compliance/documents/onboarding flows identified in `src/server/use-cases/hr/people/README.md` are not yet implemented; migration tasks must reference that gap list.
 
 ## 5. Next Steps
 1. Finalize manifest + compliance checklist.

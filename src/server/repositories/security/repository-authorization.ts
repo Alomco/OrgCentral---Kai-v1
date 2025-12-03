@@ -5,6 +5,7 @@ import {
     type OrgAccessInput,
     toTenantScope,
 } from '@/server/security/guards';
+import { RepositoryAuthorizationError } from './repository-errors';
 import type { TenantScope } from '@/server/types/tenant';
 
 type GuardEvaluator = (input: OrgAccessInput) => Promise<OrgAccessContext>;
@@ -29,13 +30,6 @@ export interface RepositoryAuthorizationContext extends OrgAccessContext {
 export type RepositoryAuthorizationHandler<TResult> = (
     context: RepositoryAuthorizationContext,
 ) => Promise<TResult>;
-
-export class RepositoryAuthorizationError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'RepositoryAuthorizationError';
-    }
-}
 
 export class RepositoryAuthorizer {
     private static singleton: RepositoryAuthorizer | null = null;

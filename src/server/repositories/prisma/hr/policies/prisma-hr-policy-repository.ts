@@ -3,6 +3,7 @@ import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-r
 import type { IHRPolicyRepository } from '@/server/repositories/contracts/hr/policies/hr-policy-repository-contract';
 import { mapDomainHRPolicyToPrismaCreate, mapDomainHRPolicyToPrismaUpdate, mapPrismaHRPolicyToDomain } from '@/server/repositories/mappers/hr/policies/hr-policy-mapper';
 import type { HRPolicy } from '@/server/types/hr-ops-types';
+import { AuthorizationError } from '@/server/errors';
 
 export class PrismaHRPolicyRepository extends BasePrismaRepository implements IHRPolicyRepository {
   async createPolicy(
@@ -12,7 +13,7 @@ export class PrismaHRPolicyRepository extends BasePrismaRepository implements IH
     const data = mapDomainHRPolicyToPrismaCreate({ ...input, status: input.status ?? 'draft' });
     const rec = await this.prisma.hRPolicy.create({ data });
     if (rec.orgId !== orgId) {
-      throw new Error('Cross-tenant policy creation mismatch');
+      throw new AuthorizationError('Cross-tenant policy creation mismatch', { orgId });
     }
     return mapPrismaHRPolicyToDomain(rec);
   }
@@ -25,7 +26,7 @@ export class PrismaHRPolicyRepository extends BasePrismaRepository implements IH
     const data = mapDomainHRPolicyToPrismaUpdate(updates);
     const rec = await this.prisma.hRPolicy.update({ where: { id: policyId }, data });
     if (rec.orgId !== orgId) {
-      throw new Error('Cross-tenant policy update mismatch');
+      throw new AuthorizationError('Cross-tenant policy update mismatch', { orgId });
     }
     return mapPrismaHRPolicyToDomain(rec);
   }

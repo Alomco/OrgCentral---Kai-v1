@@ -31,6 +31,14 @@ export interface ILeavePolicyRepository {
   ): Promise<LeavePolicy | null>;
 
   /**
+   * Get a leave policy by name within an organization
+   */
+  getLeavePolicyByName(
+    tenantId: string,
+    name: string
+  ): Promise<LeavePolicy | null>;
+
+  /**
    * Get all leave policies for an organization
    */
   getLeavePoliciesByOrganization(

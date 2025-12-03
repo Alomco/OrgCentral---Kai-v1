@@ -1,6 +1,5 @@
 export {
     RepositoryAuthorizer,
-    RepositoryAuthorizationError,
     withRepositoryAuthorization,
     hasOrgId,
     type RepositoryAuthorizationContext,
@@ -9,3 +8,4 @@ export {
     type RepositoryAuthorizationHandler,
     type TenantScopedRecord,
 } from './repository-authorization';
+export { RepositoryAuthorizationError } from './repository-errors';

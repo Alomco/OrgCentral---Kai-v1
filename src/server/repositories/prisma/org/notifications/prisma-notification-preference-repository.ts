@@ -71,7 +71,7 @@ export class PrismaNotificationPreferenceRepository
   }
 
   async updateNotificationPreference(tenantId: string, preferenceId: string, updates: Partial<Omit<NotificationPreference, 'id' | 'orgId' | 'userId'>>): Promise<void> {
-    const existing = this.assertOrgRecord(await this.findById(preferenceId), tenantId);
+    this.assertOrgRecord(await this.findById(preferenceId), tenantId);
     await this.update(preferenceId, updates as Prisma.NotificationPreferenceUpdateInput);
   }
 
@@ -92,12 +92,12 @@ export class PrismaNotificationPreferenceRepository
   }
 
   async deleteNotificationPreference(tenantId: string, preferenceId: string): Promise<void> {
-    const existing = this.assertOrgRecord(await this.findById(preferenceId), tenantId);
+    this.assertOrgRecord(await this.findById(preferenceId), tenantId);
     await this.delete(preferenceId);
   }
 
   async setDefaultNotificationPreferences(tenantId: string, userId: string): Promise<void> {
-    const defaultPrefs: Array<{ channel: NotificationPreference['channel']; enabled: boolean }> = [
+    const defaultPrefs: { channel: NotificationPreference['channel']; enabled: boolean }[] = [
       { channel: 'EMAIL' as NotificationPreference['channel'], enabled: true },
       { channel: 'IN_APP' as NotificationPreference['channel'], enabled: true },
     ];

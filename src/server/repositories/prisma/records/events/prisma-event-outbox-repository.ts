@@ -1,15 +1,11 @@
 import { Prisma } from '@prisma/client';
-import type { EventOutbox, PrismaClient } from '@prisma/client';
+import type { EventOutbox } from '@prisma/client';
 import type { IEventOutboxRepository } from '@/server/repositories/contracts/records/event-outbox-repository-contract';
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { EventOutboxFilters, EventOutboxCreationData, EventOutboxUpdateData } from './prisma-event-outbox-repository.types';
 
 export class PrismaEventOutboxRepository extends BasePrismaRepository implements IEventOutboxRepository {
-  constructor(prisma: PrismaClient) {
-    super(prisma);
-  }
-
   async findById(id: string): Promise<EventOutbox | null> {
     return this.prisma.eventOutbox.findUnique({
       where: { id },
@@ -31,16 +27,14 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
       whereClause.status = filters.status;
     }
 
-    if (filters?.dateFrom) {
-      whereClause.createdAt = { gte: filters.dateFrom };
-    }
-
-    if (filters?.dateFrom && filters?.dateTo) {
-      whereClause.createdAt = { gte: filters.dateFrom, lte: filters.dateTo };
-    } else if (filters?.dateFrom) {
-      whereClause.createdAt = { gte: filters.dateFrom };
-    } else if (filters?.dateTo) {
-      whereClause.createdAt = { lte: filters.dateTo };
+    const dateFrom = filters?.dateFrom;
+    const dateTo = filters?.dateTo;
+    if (dateFrom && dateTo) {
+      whereClause.createdAt = { gte: dateFrom, lte: dateTo };
+    } else if (dateFrom) {
+      whereClause.createdAt = { gte: dateFrom };
+    } else if (dateTo) {
+      whereClause.createdAt = { lte: dateTo };
     }
 
     return getModelDelegate(this.prisma, 'eventOutbox').findMany({
@@ -49,7 +43,7 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async findPendingEvents(limit: number = 100): Promise<EventOutbox[]> {
+  async findPendingEvents(limit = 100): Promise<EventOutbox[]> {
     return getModelDelegate(this.prisma, 'eventOutbox').findMany({
       where: {
         status: 'pending',
@@ -60,7 +54,7 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async findFailedEvents(limit: number = 100): Promise<EventOutbox[]> {
+  async findFailedEvents(limit = 100): Promise<EventOutbox[]> {
     return getModelDelegate(this.prisma, 'eventOutbox').findMany({
       where: {
         status: 'failed',
@@ -85,8 +79,12 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     // Ensure `error` nullability maps correctly to Prisma Null types if needed
     const updateData: EventOutboxUpdateData = { ...data };
     if ('error' in updateData) {
-      const err = updateData.error as Prisma.InputJsonValue | null | undefined;
-      updateData.error = err === null ? (Prisma.JsonNull as unknown as Prisma.InputJsonValue) : err as Prisma.InputJsonValue;
+      const errorValue = updateData.error;
+      if (errorValue === null) {
+        updateData.error = Prisma.JsonNull as unknown as Prisma.InputJsonValue;
+      } else if (errorValue !== undefined) {
+        updateData.error = errorValue;
+      }
     }
     return getModelDelegate(this.prisma, 'eventOutbox').update({
       where: { id },
@@ -114,12 +112,12 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
   }
 
   async markAsFailed(id: string, error?: Prisma.InputJsonValue | null): Promise<EventOutbox> {
-    const errorStr = error ?? null;
+    const errorString = error ?? null;
     return getModelDelegate(this.prisma, 'eventOutbox').update({
       where: { id },
       data: {
         status: 'failed',
-        error: errorStr as unknown as Prisma.InputJsonValue | typeof Prisma.JsonNull,
+        error: errorString as unknown as Prisma.InputJsonValue | typeof Prisma.JsonNull,
         retryCount: {
           increment: 1
         }

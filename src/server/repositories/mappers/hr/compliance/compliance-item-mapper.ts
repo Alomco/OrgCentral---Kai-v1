@@ -11,14 +11,14 @@ export interface ComplianceLogItemRecord {
     orgId: string;
     userId: string;
     templateItemId: string;
-    categoryKey?: string;
+    categoryKey?: string | null;
     status: ComplianceItemStatus;
     dueDate?: Date | string | null;
     completedAt?: Date | string | null;
     reviewedBy?: string | null;
     reviewedAt?: Date | string | null;
     notes?: string | null;
-    attachments?: string[] | null;
+    attachments?: JsonValue | string[] | null;
     metadata?: JsonValue | null;
     createdAt: Date | string;
     updatedAt: Date | string;
@@ -30,7 +30,7 @@ export function mapComplianceLogRecordToDomain(record: ComplianceLogItemRecord):
         orgId: record.orgId,
         userId: record.userId,
         templateItemId: record.templateItemId,
-        categoryKey: record.categoryKey,
+        categoryKey: record.categoryKey ?? undefined,
         status: record.status,
         dueDate:
             record.dueDate === undefined || record.dueDate === null
@@ -52,7 +52,7 @@ export function mapComplianceLogRecordToDomain(record: ComplianceLogItemRecord):
                     ? record.reviewedAt
                     : new Date(record.reviewedAt),
         notes: record.notes ?? null,
-        attachments: record.attachments ?? null,
+        attachments: Array.isArray(record.attachments) ? (record.attachments as string[]) : null,
         metadata: normalizeMetadata(record.metadata),
         createdAt: record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt),
         updatedAt: record.updatedAt instanceof Date ? record.updatedAt : new Date(record.updatedAt),

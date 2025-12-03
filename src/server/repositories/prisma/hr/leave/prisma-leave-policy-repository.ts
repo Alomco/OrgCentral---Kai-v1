@@ -4,6 +4,7 @@ import type { ILeavePolicyRepository } from '@/server/repositories/contracts/hr/
 import type { LeavePolicy } from '@/server/types/leave-types';
 import type { LeavePolicyFilters, LeavePolicyCreationData, LeavePolicyUpdateData } from './prisma-leave-policy-repository.types';
 import { mapCreateToPrisma, buildPrismaLeavePolicyUpdate, mapPrismaToDomain } from '@/server/repositories/mappers/hr/leave';
+import { EntityNotFoundError } from '@/server/errors';
 
 export class PrismaLeavePolicyRepository extends BasePrismaRepository implements ILeavePolicyRepository {
   // BasePrismaRepository enforces DI
@@ -83,7 +84,7 @@ export class PrismaLeavePolicyRepository extends BasePrismaRepository implements
 
   private assertPolicyOwnership(existing: PrismaLeavePolicy | null, tenantId: string): void {
     if (existing?.orgId !== tenantId) {
-      throw new Error('Leave policy not found');
+      throw new EntityNotFoundError('Leave policy', { orgId: tenantId, policyId: existing?.id });
     }
   }
 
@@ -171,6 +172,14 @@ export class PrismaLeavePolicyRepository extends BasePrismaRepository implements
     return mapPrismaToDomain(rec);
   }
 
+  async getLeavePolicyByName(tenantId: string, name: string): Promise<LeavePolicy | null> {
+    const rec = await this.findByName(tenantId, name);
+    if (rec?.orgId !== tenantId) {
+      return null;
+    }
+    return mapPrismaToDomain(rec);
+  }
+
   async getLeavePoliciesByOrganization(tenantId: string): Promise<LeavePolicy[]> {
     const recs = await this.findAll({ orgId: tenantId });
     return recs.map(mapPrismaToDomain);
@@ -178,7 +187,7 @@ export class PrismaLeavePolicyRepository extends BasePrismaRepository implements
 
   async deleteLeavePolicy(tenantId: string, policyId: string): Promise<void> {
     const rec = await this.findById(policyId);
-    if (rec?.orgId !== tenantId) { throw new Error('Leave policy not found'); }
+    if (rec?.orgId !== tenantId) { throw new EntityNotFoundError('Leave policy', { orgId: tenantId, policyId }); }
     await this.delete(policyId);
   }
 }

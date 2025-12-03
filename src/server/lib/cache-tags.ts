@@ -15,15 +15,22 @@ export interface CacheTagPayload {
     residency: DataResidencyZone;
 }
 
-let revalidateTagReference: ((tag: string) => Promise<void>) | null = null;
+type RevalidateTagFunction = (tag: string) => Promise<void>;
 
-async function getRevalidateTag(): Promise<(tag: string) => Promise<void>> {
+let revalidateTagReference: RevalidateTagFunction | null = null;
+
+async function getRevalidateTag(): Promise<RevalidateTagFunction> {
     if (!revalidateTagReference) {
         try {
             const cacheModule = await import('next/cache');
-            revalidateTagReference = cacheModule.revalidateTag;
+            const revalidate = cacheModule.revalidateTag;
+            revalidateTagReference = async (tag: string) => {
+                revalidate(tag, 'seconds');
+            };
         } catch {
-            revalidateTagReference = async () => Promise.resolve();
+            revalidateTagReference = async () => {
+                await Promise.resolve();
+            };
         }
     }
 
@@ -55,7 +62,7 @@ export async function invalidateOrgCache(
     orgId: string,
     scope: CacheScope,
     classification: DataClassificationLevel = 'OFFICIAL',
-    residency: DataResidencyZone = 'UK'
+    residency: DataResidencyZone = 'UK_ONLY',
 ): Promise<void> {
     await invalidateCache({ orgId, scope, classification, residency });
 }
@@ -67,7 +74,7 @@ export function registerOrgCacheTag(
     orgId: string,
     scope: CacheScope,
     classification: DataClassificationLevel = 'OFFICIAL',
-    residency: DataResidencyZone = 'UK'
+    residency: DataResidencyZone = 'UK_ONLY',
 ): void {
     registerCacheTag({ orgId, scope, classification, residency });
 }

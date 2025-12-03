@@ -1,6 +1,8 @@
 export * from './auth-types';
 export * from './hr-ops-types';
 export * from './hr-types';
+export * from './hr/people';
+export * from './hr/notifications';
 export * from './leave-types';
 export * from './membership';
 export * from './tenant';
@@ -9,3 +11,5 @@ export * from './compliance-types';
 export * from './branding-types';
 export * from './enterprise-types';
 export * from './platform-types';
+export * from './security-types';
+export * from './waitlist-types';

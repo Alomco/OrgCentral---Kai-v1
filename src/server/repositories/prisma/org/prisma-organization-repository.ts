@@ -1,16 +1,12 @@
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
 import type { OrganizationData } from '@/server/types/leave-types';
-import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
-import type { PrismaClient } from '@prisma/client';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
+
+const ORGANIZATION_NOT_FOUND_MESSAGE = 'Organization not found';
 
 export class PrismaOrganizationRepository
     extends BasePrismaRepository
     implements IOrganizationRepository {
-    constructor(prisma: PrismaClient) {
-        super(prisma);
-    }
-
     async getOrganization(orgId: string): Promise<OrganizationData | null> {
         const organization = await this.prisma.organization.findUnique({ where: { id: orgId } });
         if (!organization) {
@@ -19,21 +15,25 @@ export class PrismaOrganizationRepository
 
         const settings = (organization.settings as Record<string, unknown> | null) ?? {};
         const leaveSettings = (settings.leave as Record<string, unknown> | undefined) ?? {};
+        const entitlements = leaveSettings.entitlements as Record<string, number> | undefined;
+        const primaryLeaveType = leaveSettings.primaryLeaveType as string | undefined;
+        const leaveYearStartDate = leaveSettings.leaveYearStartDate as string | undefined;
+        const leaveRoundingRule = leaveSettings.leaveRoundingRule as OrganizationData['leaveRoundingRule'] | undefined;
 
         const governance = (organization.governanceTags as Record<string, unknown> | null) ?? {};
         const auditSettings = (governance.audit as Record<string, unknown> | undefined) ?? {};
 
         return {
             id: organization.id,
-            dataResidency: organization.dataResidency as DataResidencyZone,
-            dataClassification: organization.dataClassification as DataClassificationLevel,
+            dataResidency: organization.dataResidency,
+            dataClassification: organization.dataClassification,
             auditSource: (auditSettings.source as string | undefined) ?? 'org-repository',
             auditBatchId: auditSettings.batchId as string | undefined,
             name: organization.name,
-            leaveEntitlements: (leaveSettings.entitlements as Record<string, number>) ?? {},
-            primaryLeaveType: (leaveSettings.primaryLeaveType as string) ?? 'annual',
-            leaveYearStartDate: (leaveSettings.leaveYearStartDate as string) ?? '01-01',
-            leaveRoundingRule: (leaveSettings.leaveRoundingRule as OrganizationData['leaveRoundingRule']) ?? 'full_day',
+            leaveEntitlements: entitlements ?? {},
+            primaryLeaveType: primaryLeaveType ?? 'annual',
+            leaveYearStartDate: leaveYearStartDate ?? '01-01',
+            leaveRoundingRule: leaveRoundingRule ?? 'full_day',
             createdAt: organization.createdAt.toISOString(),
             updatedAt: organization.updatedAt.toISOString(),
         } as OrganizationData;
@@ -47,8 +47,9 @@ export class PrismaOrganizationRepository
 
         const settings = (organization.settings as Record<string, unknown> | null) ?? {};
         const leaveSettings = (settings.leave as Record<string, unknown> | undefined) ?? {};
+        const entitlements = leaveSettings.entitlements as Record<string, number> | undefined;
 
-        return (leaveSettings.entitlements as Record<string, number>) ?? {};
+        return entitlements ?? {};
     }
 
     async updateLeaveSettings(
@@ -62,7 +63,7 @@ export class PrismaOrganizationRepository
     ): Promise<void> {
         const organization = await this.prisma.organization.findUnique({ where: { id: orgId } });
         if (!organization) {
-            throw new Error('Organization not found');
+            throw new Error(ORGANIZATION_NOT_FOUND_MESSAGE);
         }
 
         const currentSettings = (organization.settings as Record<string, unknown> | null) ?? {};
@@ -87,7 +88,7 @@ export class PrismaOrganizationRepository
     async addCustomLeaveType(orgId: string, leaveType: string): Promise<void> {
         const organization = await this.prisma.organization.findUnique({ where: { id: orgId } });
         if (!organization) {
-            throw new Error('Organization not found');
+            throw new Error(ORGANIZATION_NOT_FOUND_MESSAGE);
         }
 
         const settings = (organization.settings as Record<string, unknown> | null) ?? {};
@@ -128,7 +129,8 @@ export class PrismaOrganizationRepository
         customTypes.delete(leaveTypeKey);
 
         const entitlements = { ...(leaveSettings.entitlements ?? {}) };
-        delete entitlements[leaveTypeKey];
+        const { [leaveTypeKey]: removed, ...remainingEntitlements } = entitlements;
+        void removed;
 
         await this.prisma.organization.update({
             where: { id: orgId },
@@ -138,7 +140,7 @@ export class PrismaOrganizationRepository
                     leave: {
                         ...leaveSettings,
                         customTypes: Array.from(customTypes),
-                        entitlements,
+                        entitlements: remainingEntitlements,
                     },
                 },
             },

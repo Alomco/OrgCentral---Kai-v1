@@ -4,13 +4,15 @@
  */
 import type { LeaveBalance } from '@/server/types/leave-types';
 
+export type LeaveBalanceCreateInput = Omit<LeaveBalance, 'createdAt' | 'updatedAt'> & { policyId: string };
+
 export interface ILeaveBalanceRepository {
   /**
    * Create a new leave balance record
    */
   createLeaveBalance(
     tenantId: string,
-    balance: Omit<LeaveBalance, 'createdAt' | 'updatedAt'>
+    balance: LeaveBalanceCreateInput
   ): Promise<void>;
 
   /**

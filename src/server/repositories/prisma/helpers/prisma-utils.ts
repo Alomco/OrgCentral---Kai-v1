@@ -58,3 +58,7 @@ export function buildMembershipMetadataJson(scope: TenantScope, roles: string[])
         auditBatchId: scope.auditBatchId ?? null,
     }) as Prisma.InputJsonValue;
 }
+
+export function getCustomDelegate<TDelegate>(client: Record<string, TDelegate>, key: string): TDelegate {
+    return client[key];
+}

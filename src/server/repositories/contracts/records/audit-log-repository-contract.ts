@@ -1,5 +1,5 @@
 import type { AuditLog } from '@prisma/client';
-import type { AuditLogFilters, AuditLogCreationData, AuditLogUpdateData } from '@/server/repositories/prisma/records/audit/prisma-audit-log-repository.types';
+import type { AuditLogCreationData, AuditLogFilters } from '@/server/repositories/prisma/records/audit/prisma-audit-log-repository.types';
 
 export interface IAuditLogRepository {
     findById(id: string): Promise<AuditLog | null>;

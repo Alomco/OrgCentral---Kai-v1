@@ -2,13 +2,14 @@ import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-r
 import type { IPolicyAcknowledgmentRepository } from '@/server/repositories/contracts/hr/policies/policy-acknowledgment-repository-contract';
 import { mapDomainPolicyAckToPrismaCreate, mapPrismaPolicyAckToDomain } from '@/server/repositories/mappers/hr/policies/hr-policy-mapper';
 import type { PolicyAcknowledgment } from '@/server/types/hr-ops-types';
+import { AuthorizationError } from '@/server/errors';
 
 export class PrismaPolicyAcknowledgmentRepository extends BasePrismaRepository implements IPolicyAcknowledgmentRepository {
   async acknowledgePolicy(orgId: string, input: Omit<PolicyAcknowledgment, 'id'>): Promise<PolicyAcknowledgment> {
     const data = mapDomainPolicyAckToPrismaCreate({ ...input, orgId });
     const rec = await this.prisma.policyAcknowledgment.create({ data });
     if (rec.orgId !== orgId) {
-      throw new Error('Cross-tenant policy acknowledgment mismatch');
+      throw new AuthorizationError('Cross-tenant policy acknowledgment mismatch', { orgId });
     }
     return mapPrismaPolicyAckToDomain(rec);
   }

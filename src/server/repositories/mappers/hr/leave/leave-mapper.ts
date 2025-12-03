@@ -1,6 +1,7 @@
 
 import type { LeaveBalance, LeaveRequest } from '@/server/types/leave-types';
-import type { LeaveBalance as PrismaLeaveBalance, LeaveRequest as PrismaLeaveRequest, Prisma } from '@prisma/client';
+import { calculateTotalDaysFromHours } from '@/server/domain/leave/leave-calculator';
+import type { LeaveBalance as PrismaLeaveBalance, LeaveRequest as PrismaLeaveRequest } from '@prisma/client';
 
 interface LeaveRequestMetadata {
     employeeId?: string;
@@ -44,7 +45,14 @@ const STATUS_TO_DOMAIN: Record<PrismaLeaveRequest['status'], LeaveRequest['statu
     AWAITING_MANAGER: 'submitted',
 };
 
-export function mapPrismaLeaveRequestToDomain(record: PrismaLeaveRequest): LeaveRequest {
+interface LeaveMapperConfig {
+    hoursPerDay?: number;
+}
+
+export function mapPrismaLeaveRequestToDomain(
+    record: PrismaLeaveRequest,
+    config?: LeaveMapperConfig,
+): LeaveRequest {
     const metadata = (record.metadata as LeaveRequestMetadata | null) ?? {};
 
     return {
@@ -57,7 +65,7 @@ export function mapPrismaLeaveRequestToDomain(record: PrismaLeaveRequest): Leave
         startDate: record.startDate.toISOString(),
         endDate: record.endDate.toISOString(),
         reason: record.reason ?? undefined,
-        totalDays: metadata.totalDays ?? Number(record.hours) / 8,
+        totalDays: metadata.totalDays ?? calculateTotalDaysFromHours(Number(record.hours), { hoursPerDay: config?.hoursPerDay }),
         isHalfDay: metadata.isHalfDay ?? false,
         coveringEmployeeId: metadata.coveringEmployee ?? undefined,
         coveringEmployeeName: metadata.coveringEmployee ?? undefined,

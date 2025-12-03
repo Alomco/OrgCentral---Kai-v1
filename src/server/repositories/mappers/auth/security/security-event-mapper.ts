@@ -16,7 +16,7 @@ export function mapToDomain(record: PrismaSecurityEvent): SecurityEvent {
         description: record.description,
         ipAddress: record.ipAddress ?? null,
         userAgent: record.userAgent ?? null,
-        additionalInfo: record.additionalInfo as Prisma.JsonValue | null,
+        additionalInfo: record.additionalInfo,
         resolved: record.resolved,
         resolvedAt: record.resolvedAt ?? null,
         resolvedBy: record.resolvedBy ?? null,

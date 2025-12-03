@@ -91,7 +91,9 @@ export class PrismaFooRepository extends BasePrismaRepository implements IFooRep
 - **Org-scoped base class** - Repositories in `prisma/org` (or any module enforcing tenant checks) should extend `OrgScopedPrismaRepository`, which bundles the shared `RepositoryAuthorizer` along with cache tag helpers so implementations avoid duplicating boilerplate.
 - **Helpers** – Use `getModelDelegate`, `runTransaction`, `toPrismaInputJson`, and `extractRoles` for shared concerns.
 - **Mappers** – Keep transformation logic isolated; repositories should not convert raw Prisma objects manually.
+- **Domain utilities** – Business calculations (e.g., converting hours to days for leave) belong in `src/server/domain/**` helpers such as `leave-calculator.ts` and `hours-per-day-resolver.ts`. Pass configuration (like org-specific hoursPerDay) down to mappers rather than hardcoding assumptions in mapping code.
 - **Security utilities** – Reuse the global `RepositoryAuthorizer` singleton rather than re-implementing org ID comparisons in each file.
+- **Guard state** – `guards.ts` exposes test-only setters (`__setGuardMembershipRepositoryForTests`, `__resetGuardMembershipRepositoryForTests`) to swap the membership repository without leaking mutable globals into production. Avoid using mutable singletons in runtime code; prefer passing dependencies through authorization inputs or repository constructors.
 - **Cache helpers** – Always call `registerOrgCacheTag` on read methods and `invalidateOrgCache` on mutating methods if the data is cached downstream.
 - **Error strategy** – Throw `RepositoryAuthorizationError` for policy violations, `NotFoundError` (or plain `Error`) for missing data, and let services map those to API responses.
 

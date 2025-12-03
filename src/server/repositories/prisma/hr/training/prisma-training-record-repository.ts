@@ -4,6 +4,7 @@ import type { ITrainingRecordRepository } from '@/server/repositories/contracts/
 import { mapPrismaTrainingRecordToDomain, mapDomainTrainingRecordToPrisma, mapDomainTrainingUpdateToPrisma } from '@/server/repositories/mappers/hr/training/training-mapper';
 import type { TrainingRecord as DomainTrainingRecord } from '@/server/types/hr-types';
 import type { TrainingRecordFilters, TrainingRecordCreationData, TrainingRecordUpdateData } from './prisma-training-record-repository.types';
+import { EntityNotFoundError } from '@/server/errors';
 
 export class PrismaTrainingRecordRepository extends BasePrismaRepository implements ITrainingRecordRepository {
   async findById(id: string): Promise<PrismaTrainingRecord | null> {
@@ -80,13 +81,13 @@ export class PrismaTrainingRecordRepository extends BasePrismaRepository impleme
 
   async deleteTrainingRecord(tenantId: string, recordId: string): Promise<void> {
     const existing = await this.findById(recordId);
-    if (existing?.orgId !== tenantId) { throw new Error('Training record not found'); }
+    if (existing?.orgId !== tenantId) { throw new EntityNotFoundError('Training record', { recordId, orgId: tenantId }); }
     await this.delete(recordId);
   }
 
   async updateTrainingRecord(tenantId: string, recordId: string, updates: Partial<Omit<DomainTrainingRecord, 'id' | 'orgId' | 'createdAt' | 'userId'>>): Promise<void> {
     const existing = await this.findById(recordId);
-    if (existing?.orgId !== tenantId) { throw new Error('Training record not found'); }
+    if (existing?.orgId !== tenantId) { throw new EntityNotFoundError('Training record', { recordId, orgId: tenantId }); }
     const updateData = mapDomainTrainingUpdateToPrisma(updates);
     await this.update(recordId, updateData);
   }

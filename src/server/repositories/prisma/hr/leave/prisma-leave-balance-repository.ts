@@ -1,35 +1,34 @@
 import { Prisma } from '@prisma/client';
 // No constructor required; use DI via BasePrismaRepository
-import type { ILeaveBalanceRepository } from '@/server/repositories/contracts/hr/leave/leave-balance-repository-contract';
-import type { LeaveBalance } from '@/server/types/leave-types';
+import type { ILeaveBalanceRepository, LeaveBalanceCreateInput } from '@/server/repositories/contracts/hr/leave/leave-balance-repository-contract';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import { buildLeaveBalanceMetadata, mapPrismaLeaveBalanceToDomain } from '@/server/repositories/mappers/hr/leave/leave-mapper';
 import { invalidateOrgCache, registerOrgCacheTag } from '@/server/lib/cache-tags';
-
-const CACHE_TAG = 'leave-balances';
+import { CACHE_SCOPE_LEAVE_BALANCES } from '@/server/repositories/cache-scopes';
+import { EntityNotFoundError } from '@/server/errors';
 
 export class PrismaLeaveBalanceRepository extends BasePrismaRepository implements ILeaveBalanceRepository {
-    async createLeaveBalance(tenantId: string, balance: Omit<LeaveBalance, 'createdAt' | 'updatedAt'>): Promise<void> {
-        const policyId = await this.ensurePolicyForLeaveType(tenantId, balance.leaveType);
-        const periodStart = new Date(Date.UTC(balance.year, 0, 1));
-        const periodEnd = new Date(Date.UTC(balance.year, 11, 31, 23, 59, 59, 999));
+    async createLeaveBalance(tenantId: string, balance: LeaveBalanceCreateInput): Promise<void> {
+        const { policyId, ...balanceData } = balance;
+        const periodStart = new Date(Date.UTC(balanceData.year, 0, 1));
+        const periodEnd = new Date(Date.UTC(balanceData.year, 11, 31, 23, 59, 59, 999));
 
         await this.prisma.leaveBalance.create({
             data: {
-                id: balance.id,
+                id: balanceData.id,
                 orgId: tenantId,
-                userId: balance.employeeId,
+                userId: balanceData.employeeId,
                 policyId,
                 periodStart,
                 periodEnd,
-                accruedHours: new Prisma.Decimal(balance.totalEntitlement),
-                usedHours: new Prisma.Decimal(balance.used),
-                carriedHours: new Prisma.Decimal(balance.pending),
-                metadata: buildLeaveBalanceMetadata(balance) as unknown as Prisma.InputJsonValue,
+                accruedHours: new Prisma.Decimal(balanceData.totalEntitlement),
+                usedHours: new Prisma.Decimal(balanceData.used),
+                carriedHours: new Prisma.Decimal(balanceData.pending),
+                metadata: buildLeaveBalanceMetadata(balanceData) as unknown as Prisma.InputJsonValue,
             },
         });
 
-        await invalidateOrgCache(tenantId, CACHE_TAG);
+        await invalidateOrgCache(tenantId, CACHE_SCOPE_LEAVE_BALANCES);
     }
 
     async updateLeaveBalance(
@@ -39,7 +38,7 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
     ): Promise<void> {
         const existing = await this.prisma.leaveBalance.findUnique({ where: { id: balanceId } });
         if (existing?.orgId !== tenantId) {
-            throw new Error('Leave balance not found');
+            throw new EntityNotFoundError('Leave balance', { id: balanceId, orgId: tenantId });
         }
 
         const metadata: Record<string, unknown> = {
@@ -59,11 +58,11 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
             },
         });
 
-        await invalidateOrgCache(tenantId, CACHE_TAG);
+        await invalidateOrgCache(tenantId, CACHE_SCOPE_LEAVE_BALANCES);
     }
 
     async getLeaveBalance(tenantId: string, balanceId: string) {
-        registerOrgCacheTag(tenantId, CACHE_TAG);
+        registerOrgCacheTag(tenantId, CACHE_SCOPE_LEAVE_BALANCES);
         const record = await this.prisma.leaveBalance.findUnique({ where: { id: balanceId } });
         if (record?.orgId !== tenantId) {
             return null;
@@ -72,7 +71,7 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
     }
 
     async getLeaveBalancesByEmployeeAndYear(tenantId: string, employeeId: string, year: number) {
-        registerOrgCacheTag(tenantId, CACHE_TAG);
+        registerOrgCacheTag(tenantId, CACHE_SCOPE_LEAVE_BALANCES);
         const periodStart = new Date(Date.UTC(year, 0, 1));
         const periodEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
 
@@ -89,7 +88,7 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
     }
 
     async getLeaveBalancesByEmployee(tenantId: string, employeeId: string) {
-        registerOrgCacheTag(tenantId, CACHE_TAG);
+        registerOrgCacheTag(tenantId, CACHE_SCOPE_LEAVE_BALANCES);
         const records = await this.prisma.leaveBalance.findMany({
             where: {
                 orgId: tenantId,
@@ -99,29 +98,5 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
         });
 
         return records.map(mapPrismaLeaveBalanceToDomain);
-    }
-
-    private async ensurePolicyForLeaveType(orgId: string, leaveType: string) {
-        const existing = await this.prisma.leavePolicy.findFirst({ where: { orgId, name: leaveType } });
-        if (existing) {
-            return existing.id;
-        }
-
-        const policy = await this.prisma.leavePolicy.create({
-            data: {
-                orgId,
-                name: leaveType,
-                policyType: 'SPECIAL',
-                accrualFrequency: 'NONE',
-                accrualAmount: new Prisma.Decimal(0),
-                requiresApproval: true,
-                metadata: { createdFromLeaveService: true },
-            },
-        });
-
-        // Invalidate leave policies cache when a new one is created
-        await invalidateOrgCache(orgId, 'leave-policies');
-
-        return policy.id;
     }
 }

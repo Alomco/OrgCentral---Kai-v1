@@ -68,7 +68,7 @@ export class PrismaIntegrationConfigRepository
 
   async updateIntegrationConfig(context: RepositoryAuthorizationContext, configId: string, updates: Partial<Omit<IntegrationConfig, 'id' | 'orgId' | 'createdAt'>>): Promise<void> {
     const existing = await this.findById(configId);
-    this.assertTenantRecord(existing, context);
+    this.assertTenantRecord(existing, context.orgId);
     const prismaUpdates = updates as Prisma.IntegrationConfigUpdateInput;
     await this.update(configId, prismaUpdates);
   }
@@ -76,14 +76,14 @@ export class PrismaIntegrationConfigRepository
   async getIntegrationConfig(context: RepositoryAuthorizationContext, configId: string): Promise<IntegrationConfig | null> {
     const rec = await this.findById(configId);
     if (!rec) { return null; }
-    this.assertTenantRecord(rec, context);
+    this.assertTenantRecord(rec, context.orgId);
     return mapPrismaIntegrationConfigToDomain(rec);
   }
 
   async getIntegrationConfigByProvider(context: RepositoryAuthorizationContext, provider: string): Promise<IntegrationConfig | null> {
     const rec = await this.findByOrgAndProvider(context.orgId, provider);
     if (!rec) { return null; }
-    this.assertTenantRecord(rec, context);
+    this.assertTenantRecord(rec, context.orgId);
     return mapPrismaIntegrationConfigToDomain(rec);
   }
 
@@ -97,7 +97,7 @@ export class PrismaIntegrationConfigRepository
 
   async deleteIntegrationConfig(context: RepositoryAuthorizationContext, configId: string): Promise<void> {
     const existing = await this.findById(configId);
-    this.assertTenantRecord(existing, context);
+    this.assertTenantRecord(existing, context.orgId);
     await this.delete(configId);
   }
 }

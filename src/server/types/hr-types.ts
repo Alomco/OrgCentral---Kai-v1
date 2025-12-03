@@ -1,9 +1,10 @@
 import type { Prisma, $Enums } from '@prisma/client';
+import type { EmployeeProfileDTO, EmploymentContractDTO } from './hr/people';
 
 type JsonValue = Prisma.JsonValue;
 
 // Performance review domain aligned to Prisma schema
-export type PerformanceReview = {
+export interface PerformanceReview {
   id: string;
   orgId: string;
   userId: string;
@@ -21,10 +22,10 @@ export type PerformanceReview = {
   metadata?: JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
 // Training record domain aligned to Prisma schema
-export type TrainingRecord = {
+export interface TrainingRecord {
   id: string;
   orgId: string;
   userId: string;
@@ -42,60 +43,16 @@ export type TrainingRecord = {
   metadata?: JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
 // Employee profile domain aligned to Prisma schema
-export type EmployeeProfile = {
-  id: string;
-  orgId: string;
-  userId: string;
-  employeeNumber: string;
-  jobTitle?: string | null;
-  employmentType: $Enums.EmploymentType;
-  startDate?: Date | null;
-  endDate?: Date | null;
-  managerOrgId?: string | null;
-  managerUserId?: string | null;
-  annualSalary?: number | null;
-  hourlyRate?: number | null;
-  costCenter?: string | null;
-  location?: JsonValue;
-  niNumber?: string | null;
-  emergencyContact?: JsonValue;
-  nextOfKin?: JsonValue;
-  healthStatus: $Enums.HealthStatus;
-  workPermit?: JsonValue;
-  bankDetails?: JsonValue;
-  metadata?: JsonValue;
-  createdAt: Date;
-  updatedAt: Date;
-};
+export type EmployeeProfile = EmployeeProfileDTO;
 
 // Employment contract domain aligned to Prisma schema
-export type EmploymentContract = {
-  id: string;
-  orgId: string;
-  userId: string;
-  contractType: $Enums.ContractType;
-  startDate: Date;
-  endDate?: Date | null;
-  jobTitle: string;
-  departmentId?: string | null;
-  location?: string | null;
-  probationEndDate?: Date | null;
-  furloughStartDate?: Date | null;
-  furloughEndDate?: Date | null;
-  workingPattern?: JsonValue | null;
-  benefits?: JsonValue | null;
-  terminationReason?: string | null;
-  terminationNotes?: string | null;
-  archivedAt?: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+export type EmploymentContract = EmploymentContractDTO;
 
 // Security event domain aligned to Prisma schema
-export type SecurityEvent = {
+export interface SecurityEvent {
   id: string;
   orgId?: string | null;
   userId?: string | null;
@@ -109,10 +66,10 @@ export type SecurityEvent = {
   resolvedAt?: Date | null;
   resolvedBy?: string | null;
   createdAt: Date;
-};
+}
 
 // User session domain aligned to Prisma schema
-export type UserSession = {
+export interface UserSession {
   id: string;
   userId: string;
   sessionId: string;
@@ -124,10 +81,10 @@ export type UserSession = {
   lastAccess: Date;
   revokedAt?: Date | null;
   metadata?: JsonValue;
-};
+}
 
 // Department domain aligned to Prisma schema
-export type Department = {
+export interface Department {
   id: string;
   orgId: string;
   name: string;
@@ -138,10 +95,10 @@ export type Department = {
   costCenter?: string | null;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
 // Integration config domain aligned to Prisma schema
-export type IntegrationConfig = {
+export interface IntegrationConfig {
   id: string;
   orgId: string;
   provider: string;
@@ -151,10 +108,10 @@ export type IntegrationConfig = {
   compliance?: JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
 // Notification preference domain aligned to Prisma schema
-export type NotificationPreference = {
+export interface NotificationPreference {
   id: string;
   orgId: string;
   userId: string;
@@ -163,10 +120,10 @@ export type NotificationPreference = {
   quietHours?: JsonValue;
   metadata?: JsonValue;
   updatedAt: Date;
-};
+}
 
 // Role domain aligned to Prisma schema
-export type Role = {
+export interface Role {
   id: string;
   orgId: string;
   name: string;
@@ -175,10 +132,10 @@ export type Role = {
   permissions: JsonValue;
   createdAt: Date;
   updatedAt: Date;
-};
+}
 
 // User domain aligned to Prisma schema
-export type User = {
+export interface User {
   id: string;
   email: string;
   displayName?: string | null;
@@ -190,4 +147,4 @@ export type User = {
   lastPasswordChange: Date;
   createdAt: Date;
   updatedAt: Date;
-};
+}

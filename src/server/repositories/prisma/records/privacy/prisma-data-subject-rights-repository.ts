@@ -1,15 +1,10 @@
 import type { DataSubjectRight, Prisma } from '@prisma/client';
-import type { PrismaClient } from '@prisma/client';
 import type { IDataSubjectRightsRepository } from '@/server/repositories/contracts/records/data-subject-rights-repository-contract';
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { DataSubjectRightFilters, DataSubjectRightCreationData, DataSubjectRightUpdateData } from './prisma-data-subject-rights-repository.types';
 
 export class PrismaDataSubjectRightsRepository extends BasePrismaRepository implements IDataSubjectRightsRepository {
-  constructor(prisma: PrismaClient) {
-    super(prisma);
-  }
-
   async findById(id: string): Promise<DataSubjectRight | null> {
     return getModelDelegate(this.prisma, 'dataSubjectRight').findUnique({
       where: { id },
@@ -45,12 +40,14 @@ export class PrismaDataSubjectRightsRepository extends BasePrismaRepository impl
       whereClause.status = filters.status;
     }
 
-    if (filters?.dateFrom && filters?.dateTo) {
-      whereClause.requestDate = { gte: filters.dateFrom, lte: filters.dateTo };
-    } else if (filters?.dateFrom) {
-      whereClause.requestDate = { gte: filters.dateFrom };
-    } else if (filters?.dateTo) {
-      whereClause.requestDate = { lte: filters.dateTo };
+    const dateFrom = filters?.dateFrom;
+    const dateTo = filters?.dateTo;
+    if (dateFrom && dateTo) {
+      whereClause.requestDate = { gte: dateFrom, lte: dateTo };
+    } else if (dateFrom) {
+      whereClause.requestDate = { gte: dateFrom };
+    } else if (dateTo) {
+      whereClause.requestDate = { lte: dateTo };
     }
 
     return getModelDelegate(this.prisma, 'dataSubjectRight').findMany({

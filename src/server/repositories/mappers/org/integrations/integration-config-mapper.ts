@@ -6,10 +6,10 @@ export function mapPrismaIntegrationConfigToDomain(record: PrismaIntegrationConf
         id: record.id,
         orgId: record.orgId,
         provider: record.provider,
-        credentials: record.credentials as Prisma.JsonValue,
-        settings: record.settings as Prisma.JsonValue,
+        credentials: record.credentials,
+        settings: record.settings,
         active: record.active,
-        compliance: record.compliance as Prisma.JsonValue | null,
+        compliance: record.compliance,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
     };
@@ -23,7 +23,7 @@ export function mapDomainIntegrationConfigToPrisma(input: IntegrationConfig): Pr
         settings: input.settings as Prisma.InputJsonValue,
         active: input.active,
         compliance: input.compliance === null ? Prisma.JsonNull : (input.compliance as Prisma.InputJsonValue | undefined),
-        createdAt: input.createdAt ?? undefined,
-        updatedAt: input.updatedAt ?? undefined,
+        createdAt: input.createdAt,
+        updatedAt: input.updatedAt,
     };
 }

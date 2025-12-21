@@ -9,6 +9,7 @@ import {
     resolveAbsenceControllerDependencies,
     type AbsenceControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export async function reportUnplannedAbsenceController(
     request: Request,
@@ -20,10 +21,10 @@ export async function reportUnplannedAbsenceController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['member'],
+        requiredPermissions: { employeeProfile: ['read'] },
         auditSource: 'api:hr:absences:report',
-        action: 'create',
-        resourceType: 'hr.absence',
+        action: HR_ACTION.CREATE,
+        resourceType: HR_RESOURCE.HR_ABSENCE,
         resourceAttributes: buildResourceAttributes(payload),
     });
 

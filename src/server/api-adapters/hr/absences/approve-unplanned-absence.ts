@@ -6,6 +6,7 @@ import {
     type AbsenceControllerDependencies,
     resolveAbsenceControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 interface ApproveControllerInput {
     request: Request;
@@ -24,8 +25,8 @@ export async function approveUnplannedAbsenceController(
         headers: request.headers,
         requiredPermissions: { organization: ['update'] },
         auditSource: 'api:hr:absences:approve',
-        action: 'update',
-        resourceType: 'hr.absence',
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_ABSENCE,
         resourceAttributes: {
             scope: 'unplanned',
             absenceId,

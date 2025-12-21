@@ -1,4 +1,9 @@
--- CreateEnum
+
+CREATE SCHEMA IF NOT EXISTS hr;
+CREATE SCHEMA IF NOT EXISTS compliance;
+CREATE SCHEMA IF NOT EXISTS org;
+CREATE SCHEMA IF NOT EXISTS platform;
+
 CREATE TYPE "hr"."EmploymentStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'TERMINATED', 'ON_LEAVE', 'OFFBOARDING', 'ARCHIVED');
 
 -- CreateEnum
@@ -10,8 +15,18 @@ CREATE TYPE "hr"."SalaryBasis" AS ENUM ('ANNUAL', 'HOURLY');
 -- CreateEnum
 CREATE TYPE "hr"."PaySchedule" AS ENUM ('MONTHLY', 'BI_WEEKLY');
 
--- DropIndex
-DROP INDEX "hr"."employee_profiles_employeeNumber_key";
+DO $$
+BEGIN
+	IF EXISTS (
+		SELECT 1
+		FROM pg_indexes
+		WHERE schemaname = 'hr'
+		  AND indexname = 'employee_profiles_employeeNumber_key'
+	) THEN
+		DROP INDEX "hr"."employee_profiles_employeeNumber_key";
+	END IF;
+END
+$$;
 
 -- AlterTable
 ALTER TABLE "hr"."employee_profiles" DROP COLUMN "status",
@@ -79,4 +94,3 @@ CREATE INDEX "employment_contracts_orgId_dataClassification_residencyTag_idx" ON
 
 -- AddForeignKey
 ALTER TABLE "hr"."employee_profiles" ADD CONSTRAINT "employee_profiles_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "hr"."departments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-

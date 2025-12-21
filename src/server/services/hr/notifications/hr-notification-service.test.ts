@@ -29,6 +29,7 @@ const authorization: RepositoryAuthorizationContext = {
     orgId: 'org-1',
     userId: 'user-1',
     roleKey: 'orgAdmin',
+    permissions: {},
     dataResidency: 'UK_ONLY' as DataResidencyZone,
     dataClassification: 'OFFICIAL' as DataClassificationLevel,
     auditSource: 'test',

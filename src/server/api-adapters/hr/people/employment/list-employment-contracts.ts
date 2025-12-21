@@ -4,6 +4,7 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { listEmploymentContractsRequestSchema } from '@/server/types/hr-people-schemas';
 import type { EmploymentContract } from '@/server/types/hr-types';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export type ListEmploymentContractsApiInput = Infer<typeof listEmploymentContractsRequestSchema>;
 
@@ -25,10 +26,10 @@ export async function listEmploymentContractsAdapter(
       {},
       {
         headers: new Headers(req.headers as unknown as HeadersInit),
-        requiredRoles: ['member'],
+        requiredPermissions: { employmentContract: ['list'] },
         auditSource: 'api:hr:people:employment:list-contracts',
-        action: 'read',
-        resourceType: 'employmentContract',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
         resourceAttributes: { filterCount: Object.keys(input.filters ?? {}).length, filters: input.filters },
       },
     );

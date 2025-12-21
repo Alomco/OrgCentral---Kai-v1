@@ -16,3 +16,4 @@ This folder groups security primitives and compliance scaffolding so the backend
 - Rotate and version: centralize TTLs/rotation cadence in `policies.ts` to simplify future updates.
 - Evidence first: produce audit/telemetry records alongside guards so compliance can be proven later.
 - Expose auth safely: Better Auth is configured with the MCP plugin for OAuth-style MCP clients; route requests through guards using `buildOrgAccessInputFromSession`/`withSessionAuthorization` before hitting repositories.
+- ABAC priority model: `AbacService` evaluates policies in priority order and the first matching policy (highest priority first) decides the outcome. There is no deny-override after a match, so ensure policies encode the desired precedence explicitly.

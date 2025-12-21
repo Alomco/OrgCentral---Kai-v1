@@ -19,6 +19,16 @@ export async function addToWaitlist(
     input: AddToWaitlistInput,
 ): Promise<AddToWaitlistResult> {
     const cleaned = normalizeEntry(input);
+    // Early-exit: idempotent write. If the email already exists, do not create a duplicate.
+    // This ensures clients can safely retry without creating duplicates.
+    const existing = await waitlistRepository.findByEmail(cleaned.email);
+    if (existing) {
+        // Optionally we could merge metadata or update fields here, but to keep
+        // the behavior simple and predictable, we return success if a waitlist
+        // entry is already present for the same email.
+        return { success: true };
+    }
+
     await waitlistRepository.createEntry(cleaned);
     return { success: true };
 }

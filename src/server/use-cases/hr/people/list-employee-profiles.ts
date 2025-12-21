@@ -4,6 +4,8 @@ import type { EmployeeProfile } from '@/server/types/hr-types';
 import type { PeopleListFilters } from '@/server/types/hr/people';
 import { registerProfilesCache } from './shared/cache-helpers';
 import { normalizeProfileFilters } from './shared/profile-validators';
+import { assertPeopleProfileReader } from '@/server/security/guards-hr-people';
+import { HR_ACTION } from '@/server/security/authorization/hr-resource-registry';
 
 // Use-case: list employee profiles for an organization via people repositories with RBAC/ABAC filters.
 
@@ -25,6 +27,16 @@ export async function listEmployeeProfiles(
   input: ListEmployeeProfilesInput,
 ): Promise<ListEmployeeProfilesResult> {
   const normalizedFilters = normalizeProfileFilters(input.filters);
+
+  await assertPeopleProfileReader({
+    authorization: input.authorization,
+    action: HR_ACTION.READ,
+    resourceAttributes: {
+      orgId: input.authorization.orgId,
+      filterCount: Object.keys(normalizedFilters ?? {}).length,
+      filters: normalizedFilters,
+    },
+  });
 
   const profiles = await dependencies.employeeProfileRepository.getEmployeeProfilesByOrganization(
     input.authorization.orgId,

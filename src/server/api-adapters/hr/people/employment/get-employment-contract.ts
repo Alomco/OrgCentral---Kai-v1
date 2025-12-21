@@ -4,6 +4,7 @@ import type { PeopleService } from '@/server/services/hr/people/people-service';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getEmploymentContractRequestSchema } from '@/server/types/hr-people-schemas';
 import type { EmploymentContract } from '@/server/types/hr-types';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 // API adapter: get an employment contract by id via contract repositories with RBAC/ABAC guard checks.
 
@@ -29,10 +30,10 @@ export async function getEmploymentContractAdapter(
     // Get session context
     const { authorization } = await getSessionContext({}, {
       headers: new Headers(req.headers as unknown as HeadersInit),
-      requiredRoles: ['member'],
+      requiredPermissions: { employmentContract: ['read'] },
       auditSource: 'api:hr:people:employment:get-contract',
-      action: 'read',
-      resourceType: 'employmentContract',
+      action: HR_ACTION.READ,
+      resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
       resourceAttributes: {
         contractId: input.contractId,
       },

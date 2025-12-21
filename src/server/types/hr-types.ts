@@ -1,28 +1,15 @@
 import type { Prisma, $Enums } from '@prisma/client';
 import type { EmployeeProfileDTO, EmploymentContractDTO } from './hr/people';
 
-type JsonValue = Prisma.JsonValue;
+export type {
+  PerformanceGoal,
+  PerformanceGoalStatus,
+  PerformanceReview,
+  PerformanceReviewStatus,
+  PerformanceReviewWithGoals,
+} from '../domain/hr/performance/types';
 
-// Performance review domain aligned to Prisma schema
-export interface PerformanceReview {
-  id: string;
-  orgId: string;
-  userId: string;
-  reviewerOrgId: string;
-  reviewerUserId: string;
-  reviewPeriod: string;
-  scheduledDate: Date;
-  completedDate?: Date | null;
-  status: string;
-  overallRating?: number | null;
-  goalsMet?: JsonValue;
-  developmentPlan?: JsonValue;
-  reviewerNotes?: string | null;
-  employeeResponse?: string | null;
-  metadata?: JsonValue;
-  createdAt: Date;
-  updatedAt: Date;
-}
+type JsonValue = Prisma.JsonValue;
 
 // Training record domain aligned to Prisma schema
 export interface TrainingRecord {
@@ -33,6 +20,8 @@ export interface TrainingRecord {
   provider: string;
   startDate: Date;
   endDate?: Date | null;
+  expiryDate?: Date | null;
+  renewalDate?: Date | null;
   status: string;
   certificate?: string | null;
   competency?: JsonValue;

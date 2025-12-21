@@ -23,8 +23,8 @@ const baseRecord: NotificationMessage = {
     userId: USER_ID,
     title: 'Title',
     body: 'Body',
-    topic: 'OTHER',
-    priority: 'MEDIUM',
+    topic: 'other',
+    priority: 'medium',
     isRead: false,
     readAt: null,
     actionUrl: null,
@@ -48,6 +48,7 @@ const authorization: RepositoryAuthorizationContext = {
     orgId: ORG_ID,
     userId: USER_ID,
     roleKey: 'custom',
+    permissions: {},
     dataResidency: 'UK_ONLY',
     dataClassification: 'OFFICIAL',
     auditSource: 'tests',
@@ -175,7 +176,7 @@ describe('PrismaNotificationRepository', () => {
 
     it('registers cache tag when listing notifications', async () => {
         const { repo, model } = createRepository();
-        model.findMany.mockResolvedValue([{ ...baseRecord, priority: 'HIGH' }]);
+        model.findMany.mockResolvedValue([{ ...baseRecord, priority: 'high' }]);
 
         const result = await repo.listNotifications(authorization, USER_ID, { priorities: ['high'] });
         const notifications = await result.match(

@@ -7,20 +7,30 @@ import unicorn from "eslint-plugin-unicorn";
 import sonarjs from "eslint-plugin-sonarjs";
 import importPlugin from "eslint-plugin-import";
 import boundaries from "eslint-plugin-boundaries";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const projectRoot = dirname(fileURLToPath(import.meta.url));
+const tsconfigPath = join(projectRoot, "tsconfig.json");
 
 const typescriptConfigs = [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked].map(
-  (config) => ({
-    ...config,
-    files: ["**/*.{ts,tsx}"],
-    languageOptions: {
-      ...(config.languageOptions ?? {}),
-      parserOptions: {
-        ...(config.languageOptions?.parserOptions ?? {}),
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
+  (config) => {
+    const parserOptions = { ...(config.languageOptions?.parserOptions ?? {}) };
+    delete parserOptions.projectService;
+
+    return {
+      ...config,
+      files: ["**/*.{ts,tsx}"],
+      languageOptions: {
+        ...(config.languageOptions ?? {}),
+        parserOptions: {
+          ...parserOptions,
+          project: [tsconfigPath],
+          tsconfigRootDir: projectRoot,
+        },
       },
-    },
-  }),
+    };
+  },
 );
 
 const eslintConfig = defineConfig([
@@ -76,6 +86,11 @@ const eslintConfig = defineConfig([
         { type: "lib", pattern: "src/server/lib/**" },
         { type: "types", pattern: "src/server/types/**" },
       ],
+      "import/resolver": {
+        typescript: {
+          project: [tsconfigPath],
+        },
+      },
     },
     rules: {
       curly: ["error", "all"],
@@ -114,7 +129,17 @@ const eslintConfig = defineConfig([
       "import/no-cycle": ["error", { maxDepth: 1 }],
       "import/no-extraneous-dependencies": [
         "error",
-        { devDependencies: ["**/*.test.{ts,tsx,js,jsx}", "**/*.spec.{ts,tsx,js,jsx}", "scripts/**"] },
+        {
+          devDependencies: [
+            "**/*.test.{ts,tsx,js,jsx}",
+            "**/*.spec.{ts,tsx,js,jsx}",
+            "**/src/test/**/*.{ts,tsx,js,jsx}",
+            "scripts/**",
+          ],
+          packageDir: [projectRoot],
+          optionalDependencies: false,
+          peerDependencies: false,
+        },
       ],
       "import/no-self-import": "error",
       "import/no-unresolved": "error",
@@ -153,8 +178,23 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: ["src/server/workers/config/queue-registry.ts"],
+    rules: {
+      // This worker file is linted from multiple workspace roots where the dependency resolver cannot infer
+      // the orgcentral package.json, so we disable the extraneous dependency rule locally.
+      "import/no-extraneous-dependencies": "off",
+    },
+  },
+  {
+    files: ["scripts/**/*.{ts,tsx,js,jsx}"],
+    rules: {
+      "no-console": "off",
+    },
+  },
   globalIgnores([
     ".next/**",
+    ".tmp/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

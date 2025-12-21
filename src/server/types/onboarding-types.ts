@@ -1,4 +1,5 @@
-export type ChecklistTemplateType = 'onboarding' | 'offboarding' | 'custom';
+export const CHECKLIST_TEMPLATE_TYPES = ['onboarding', 'offboarding', 'custom'] as const;
+export type ChecklistTemplateType = (typeof CHECKLIST_TEMPLATE_TYPES)[number];
 
 export interface ChecklistTemplateItem {
     id?: string;
@@ -7,6 +8,8 @@ export interface ChecklistTemplateItem {
     order?: number;
     metadata?: Record<string, unknown>;
 }
+
+export type ChecklistTemplateItemInput = ChecklistTemplateItem;
 
 export interface ChecklistTemplate {
     id: string;
@@ -38,4 +41,20 @@ export interface ChecklistInstance {
     startedAt: Date;
     completedAt?: Date | null;
     metadata?: Record<string, unknown>;
+}
+
+export interface ChecklistTemplateCreatePayload {
+    name: string;
+    type: ChecklistTemplateType;
+    items: ChecklistTemplateItemInput[];
+}
+
+export interface ChecklistTemplateUpdatePayload {
+    name?: string;
+    type?: ChecklistTemplateType;
+    items?: ChecklistTemplateItemInput[];
+}
+
+export interface ChecklistTemplateListFilters {
+    type?: ChecklistTemplateType;
 }

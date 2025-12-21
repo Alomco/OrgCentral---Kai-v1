@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
+import { combineRoleStatements, type OrgPermissionMap, type OrgRoleKey } from '@/server/security/access-control';
 
 /**
  * Builds a repository authorization context.
@@ -14,7 +15,8 @@ import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/
 export interface BuildAuthContextOptions {
     orgId: string;
     userId: string;
-    roleKey?: 'member' | 'owner' | 'orgAdmin' | 'compliance' | 'custom';
+    roleKey?: OrgRoleKey | 'custom';
+    permissions?: OrgPermissionMap;
     dataResidency: DataResidencyZone;
     dataClassification: DataClassificationLevel;
     auditSource: string;
@@ -32,10 +34,14 @@ export interface BuildAuthContextOptions {
 export function buildAuthorizationContext(
     options: BuildAuthContextOptions,
 ): RepositoryAuthorizationContext {
+    const resolvedRoleKey = options.roleKey ?? 'custom';
+    const permissions = options.permissions ?? (resolvedRoleKey === 'custom' ? {} : combineRoleStatements([resolvedRoleKey]));
+
     return {
         orgId: options.orgId,
         userId: options.userId,
-        roleKey: options.roleKey ?? 'custom',
+        roleKey: resolvedRoleKey,
+        permissions,
         dataResidency: options.dataResidency,
         dataClassification: options.dataClassification,
         auditSource: options.auditSource,

@@ -25,10 +25,11 @@ export function mapPrismaHRPolicyToDomain(record: PrismaHRPolicy): HRPolicy {
 }
 
 export function mapDomainHRPolicyToPrismaCreate(
-  input: Omit<HRPolicy, 'id' | 'createdAt' | 'updatedAt'>,
+  orgId: string,
+  input: Omit<HRPolicy, 'id' | 'createdAt' | 'updatedAt' | 'orgId'>,
 ): Prisma.HRPolicyUncheckedCreateInput {
   return {
-    orgId: input.orgId,
+    orgId,
     title: input.title,
     content: input.content,
     category: input.category,

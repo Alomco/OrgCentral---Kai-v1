@@ -1,7 +1,11 @@
 import type { Prisma, Membership as PrismaMembership, Organization } from '@prisma/client';
 import { MembershipStatus } from '@prisma/client';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
-import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
+import {
+  getModelDelegate,
+  type PrismaClientBase,
+  buildMembershipMetadataJson,
+} from '@/server/repositories/prisma/helpers/prisma-utils';
 import type { IUserRepository } from '@/server/repositories/contracts/org/users/user-repository-contract';
 import { mapPrismaUserToDomain } from '@/server/repositories/mappers/org/users/user-mapper';
 import { mapPrismaMembershipToDomain } from '@/server/repositories/mappers/org/membership/membership-mapper';
@@ -9,6 +13,7 @@ import type { UserData } from '@/server/types/leave-types';
 import type { User } from '@/server/types/hr-types';
 import type { Membership } from '@/server/types/membership';
 import type { UserFilters, UserCreationData, UserUpdateData } from './prisma-user-repository.types';
+import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
 export class PrismaUserRepository extends OrgScopedPrismaRepository implements IUserRepository {
 
@@ -93,7 +98,10 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     if (!user) { return null; }
 
     // Find memberships for the user that belong to the tenant
-    const memberships = await getModelDelegate(this.prisma, 'membership').findMany({ where: { userId, orgId: tenantId }, include: { org: true } });
+    const memberships = await getModelDelegate(this.prisma, 'membership').findMany({
+      where: { userId, orgId: tenantId },
+      include: { org: true, role: { select: { name: true } } },
+    });
 
     const domainUser = mapPrismaUserToDomain(user);
 
@@ -119,30 +127,87 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     };
   }
 
-  async updateUserMemberships(tenantId: string, userId: string, memberships: Membership[]): Promise<void> {
-    // replace existing memberships for the tenant and user
+  async updateUserMemberships(context: RepositoryAuthorizationContext, userId: string, memberships: Membership[]): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      await getModelDelegate(tx, 'membership').deleteMany({ where: { orgId: tenantId, userId } });
       for (const mem of memberships) {
-        await getModelDelegate(tx, 'membership').create({ data: { orgId: mem.organizationId, userId, status: MembershipStatus.ACTIVE, metadata: { roles: mem.roles }, invitedBy: null, invitedAt: new Date(), activatedAt: new Date(), createdBy: '' } });
+        if (mem.organizationId !== context.orgId) {
+          continue;
+        }
+
+        const primaryRoleId = await resolvePrimaryRoleId(tx, context.orgId, mem.roles);
+        const now = new Date();
+
+        await getModelDelegate(tx, 'membership').upsert({
+          where: { orgId_userId: { orgId: context.orgId, userId } as Prisma.MembershipOrgIdUserIdCompoundUniqueInput },
+          update: {
+            roleId: primaryRoleId ?? undefined,
+            metadata: buildMembershipMetadataJson(context.tenantScope),
+            updatedBy: context.userId,
+          },
+          create: {
+            orgId: context.orgId,
+            userId,
+            status: MembershipStatus.ACTIVE,
+            roleId: primaryRoleId ?? undefined,
+            metadata: buildMembershipMetadataJson(context.tenantScope),
+            invitedBy: null,
+            invitedAt: now,
+            activatedAt: now,
+            createdBy: context.userId,
+            updatedBy: context.userId,
+          },
+        });
       }
     });
   }
 
-  async addUserToOrganization(tenantId: string, userId: string, organizationId: string, organizationName: string, roles: string[]): Promise<void> {
+  async addUserToOrganization(
+    context: RepositoryAuthorizationContext,
+    userId: string,
+    organizationId: string,
+    organizationName: string,
+    roles: string[],
+  ): Promise<void> {
+    void organizationName;
+    if (organizationId !== context.orgId) {
+      return;
+    }
+    const primaryRoleId = await resolvePrimaryRoleId(this.prisma, organizationId, roles);
     await getModelDelegate(this.prisma, 'membership').upsert({
       where: { orgId_userId: { orgId: organizationId, userId } as Prisma.MembershipOrgIdUserIdCompoundUniqueInput },
-      create: { orgId: organizationId, userId, status: MembershipStatus.ACTIVE, metadata: { roles }, createdBy: '' },
-      update: { metadata: { roles } as Prisma.InputJsonValue },
+      create: {
+        orgId: organizationId,
+        userId,
+        status: MembershipStatus.ACTIVE,
+        roleId: primaryRoleId ?? undefined,
+        metadata: buildMembershipMetadataJson(context.tenantScope),
+        createdBy: context.userId,
+      },
+      update: {
+        roleId: primaryRoleId ?? undefined,
+        metadata: buildMembershipMetadataJson(context.tenantScope),
+        updatedBy: context.userId,
+      },
     });
   }
 
-  async removeUserFromOrganization(tenantId: string, userId: string, organizationId: string): Promise<void> {
-    await getModelDelegate(this.prisma, 'membership').delete({ where: { orgId_userId: { orgId: organizationId, userId } as Prisma.MembershipOrgIdUserIdCompoundUniqueInput } });
+  async removeUserFromOrganization(context: RepositoryAuthorizationContext, userId: string, organizationId: string): Promise<void> {
+    if (organizationId !== context.orgId) {
+      return;
+    }
+    await getModelDelegate(this.prisma, 'membership').delete({
+      where: { orgId_userId: { orgId: organizationId, userId } as Prisma.MembershipOrgIdUserIdCompoundUniqueInput },
+    });
   }
 
-  async getUsersInOrganization(tenantId: string, organizationId: string): Promise<UserData[]> {
-    const memberships = await getModelDelegate(this.prisma, 'membership').findMany({ where: { orgId: organizationId }, include: { user: true } });
+  async getUsersInOrganization(context: RepositoryAuthorizationContext, organizationId: string): Promise<UserData[]> {
+    if (organizationId !== context.orgId) {
+      return [];
+    }
+    const memberships = await getModelDelegate(this.prisma, 'membership').findMany({
+      where: { orgId: organizationId },
+      include: { user: true, role: { select: { name: true } } },
+    });
     const results: UserData[] = [];
     for (const mem of memberships) {
       const user = mem.user;
@@ -162,4 +227,20 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     }
     return results;
   }
+}
+
+async function resolvePrimaryRoleId(
+  prisma: PrismaClientBase,
+  orgId: string,
+  roles: string[],
+): Promise<string | null> {
+  if (!roles.length) {
+    return null;
+  }
+  const roleName = roles[0];
+  const role = await getModelDelegate(prisma, 'role').findUnique({
+    where: { orgId_name: { orgId, name: roleName } },
+    select: { id: true },
+  });
+  return role?.id ?? null;
 }

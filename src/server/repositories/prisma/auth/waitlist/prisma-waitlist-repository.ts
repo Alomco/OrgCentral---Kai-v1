@@ -10,6 +10,14 @@ interface WaitlistDelegate {
             metadata: Record<string, unknown> | null;
         };
     }): Promise<void>;
+    findFirst(args: { where: { email?: string } }): Promise<{
+        id: string;
+        name: string;
+        email: string;
+        industry: string;
+        metadata: Record<string, unknown> | null;
+        createdAt: Date;
+    } | null>;
 }
 
 export class PrismaWaitlistRepository extends BasePrismaRepository implements IWaitlistRepository {
@@ -22,6 +30,21 @@ export class PrismaWaitlistRepository extends BasePrismaRepository implements IW
                 metadata: entry.metadata ?? null,
             },
         });
+    }
+
+    async findByEmail(email: string): Promise<WaitlistEntryInput | null> {
+        const normalized = email.toLowerCase();
+        const result = await getWaitlistDelegate(this.prisma).findFirst({ where: { email: normalized } });
+        if (!result) {
+            return null;
+        }
+
+        return {
+            name: result.name,
+            email: result.email,
+            industry: result.industry,
+            metadata: result.metadata ?? undefined,
+        } satisfies WaitlistEntryInput;
     }
 }
 

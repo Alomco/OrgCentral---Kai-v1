@@ -114,15 +114,19 @@ export class PrismaComplianceItemRepository
         await this.statusRepository.recalculateForUser(orgId, userId);
     }
 
-    async findExpiringItems(referenceDate: Date, daysUntilExpiry: number): Promise<ComplianceLogItem[]> {
+    async findExpiringItemsForOrg(
+        orgId: string,
+        referenceDate: Date,
+        daysUntilExpiry: number,
+    ): Promise<ComplianceLogItem[]> {
         const cutoff = new Date(referenceDate);
         cutoff.setDate(cutoff.getDate() + daysUntilExpiry);
         const where: ComplianceLogFindManyArguments['where'] = {
+            orgId,
             dueDate: { lte: cutoff },
             status: { in: ['PENDING', 'PENDING_REVIEW'] },
         };
         const records = await this.complianceLog.findMany({ where });
-        // No tag registered here because this is a maintenance query across orgs
         return records.map((r) => mapComplianceLogRecordToDomain(r as unknown as ComplianceLogItemRecord));
     }
 }

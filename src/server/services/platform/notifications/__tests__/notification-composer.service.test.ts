@@ -47,6 +47,7 @@ const authorization: RepositoryAuthorizationContext = {
   orgId: ORG_ID,
   userId: USER_ID,
   roleKey: 'custom',
+  permissions: {},
   dataResidency: 'UK_ONLY',
   dataClassification: 'OFFICIAL',
   auditSource: 'tests',

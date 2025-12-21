@@ -6,6 +6,11 @@ export const HR_NOTIFICATION_TYPE_VALUES = [
   'document-expiry',
   'policy-update',
   'performance-review',
+  'time-entry',
+  'training-assigned',
+  'training-due',
+  'training-completed',
+  'training-overdue',
   'system-announcement',
   'compliance-reminder',
   'other',
@@ -53,4 +58,3 @@ export interface HRNotificationListFilters {
   includeExpired?: boolean;
   limit?: number;
 }
-

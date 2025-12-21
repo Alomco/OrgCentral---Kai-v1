@@ -1,4 +1,4 @@
-import type { Prisma, MembershipStatus } from '@prisma/client';
+import { Prisma, type MembershipStatus } from '@prisma/client';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import type {
     EmployeeProfilePayload,
@@ -21,9 +21,9 @@ const DEFAULT_EMPLOYMENT_TYPE: SafeEmploymentType = 'FULL_TIME';
 import {
     getModelDelegate,
     toPrismaInputJson,
-    extractRoles,
     runTransaction,
     buildMembershipMetadataJson,
+    type PrismaClientBase,
 } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { resolveIdentityCacheScopes } from '@/server/lib/cache-tags/identity';
 
@@ -32,7 +32,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
     async findMembership(context: RepositoryAuthorizationContext, userId: string): Promise<Membership | null> {
         const membership = await getModelDelegate(this.prisma, 'membership').findUnique({
             where: { orgId_userId: { orgId: context.orgId, userId } },
-            include: { org: true },
+            include: { org: true, role: { select: { name: true } } },
         });
 
         if (!membership) {
@@ -44,7 +44,8 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
         return {
             organizationId: membership.orgId,
             organizationName: membership.org.name,
-            roles: extractRoles(membership.metadata),
+            roles: membership.role?.name ? [membership.role.name] : [],
+            status: membership.status,
         };
     }
 
@@ -55,6 +56,17 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
         const tenantOrgWhere = { orgId: context.orgId, userId: input.userId } as const;
         const profileData = this.mapProfilePayload({ ...input.profile, orgId: context.orgId });
         await runTransaction(this.prisma, async (tx: Prisma.TransactionClient) => {
+            const primaryRoleId = await resolvePrimaryRoleId(tx, context.orgId, input.roles);
+            const baseMetadata = buildMembershipMetadataJson(context.tenantScope) as unknown as Record<
+                string,
+                Prisma.InputJsonValue
+            >;
+            const nextMetadata = {
+                ...baseMetadata,
+                ...(input.abacSubjectAttributes
+                    ? { abacSubjectAttributes: input.abacSubjectAttributes as Prisma.InputJsonValue }
+                    : {}),
+            };
             await getModelDelegate(tx, 'membership').create({
                 data: {
                     orgId: context.orgId,
@@ -64,7 +76,8 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
                     invitedAt: new Date(),
                     activatedAt: new Date(),
                     createdBy: input.invitedByUserId ?? '',
-                    metadata: buildMembershipMetadataJson(context.tenantScope, input.roles),
+                    roleId: primaryRoleId ?? undefined,
+                    metadata: toPrismaInputJson(nextMetadata) ?? Prisma.JsonNull,
                 },
             });
 
@@ -92,9 +105,30 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
         status: MembershipStatus,
     ): Promise<void> {
         const nextStatus = coerceMembershipStatus(status);
+        const existing = await getModelDelegate(this.prisma, 'membership').findUnique({
+            where: { orgId_userId: { orgId: context.orgId, userId } },
+            select: { metadata: true },
+        });
+
+        const existingMetadata =
+            existing?.metadata && typeof existing.metadata === 'object' && !Array.isArray(existing.metadata)
+                ? (existing.metadata as Record<string, Prisma.InputJsonValue>)
+                : {};
+        const baseMetadata = buildMembershipMetadataJson(context.tenantScope) as unknown as Record<
+            string,
+            Prisma.InputJsonValue
+        >;
+        const nextMetadata = {
+            ...existingMetadata,
+            ...baseMetadata,
+        };
         await getModelDelegate(this.prisma, 'membership').update({
             where: { orgId_userId: { orgId: context.orgId, userId } },
-            data: { status: nextStatus },
+            data: {
+                status: nextStatus,
+                metadata: toPrismaInputJson(nextMetadata) ?? Prisma.JsonNull,
+                updatedBy: context.userId,
+            },
         });
         await this.invalidateAfterWrite(context.orgId, resolveIdentityCacheScopes());
     }
@@ -142,4 +176,20 @@ function coerceEmploymentType(value: string | null | undefined): SafeEmploymentT
         return value as SafeEmploymentType;
     }
     return DEFAULT_EMPLOYMENT_TYPE;
+}
+
+async function resolvePrimaryRoleId(
+    prisma: PrismaClientBase,
+    orgId: string,
+    roles: string[],
+): Promise<string | null> {
+    if (!roles.length) {
+        return null;
+    }
+    const primaryRoleName = roles[0];
+    const role = await getModelDelegate(prisma, 'role').findUnique({
+        where: { orgId_name: { orgId, name: primaryRoleName } },
+        select: { id: true },
+    });
+    return role?.id ?? null;
 }

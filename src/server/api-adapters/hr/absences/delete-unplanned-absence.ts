@@ -6,6 +6,7 @@ import {
     resolveAbsenceControllerDependencies,
     type AbsenceControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 interface DeleteAbsenceControllerInput {
     request: Request;
@@ -24,8 +25,8 @@ export async function deleteUnplannedAbsenceController(
         headers: request.headers,
         requiredPermissions: { organization: ['delete'] },
         auditSource: 'api:hr:absences:delete',
-        action: 'delete',
-        resourceType: 'hr.absence',
+        action: HR_ACTION.DELETE,
+        resourceType: HR_RESOURCE.HR_ABSENCE,
         resourceAttributes: {
             scope: 'unplanned',
             absenceId,

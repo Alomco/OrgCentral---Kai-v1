@@ -30,6 +30,8 @@ export const listEmployeeProfilesPayloadSchema = z.object({
   filters: peopleListFiltersSchema.optional(),
 });
 
+export const countEmployeeProfilesPayloadSchema = listEmployeeProfilesPayloadSchema;
+
 export const createEmployeeProfilePayloadSchema = z.object({
   profileData: createEmployeeProfileInputSchema.shape.changes.extend({
     userId: z.uuid(),

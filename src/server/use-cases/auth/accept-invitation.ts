@@ -128,6 +128,8 @@ async function ensureMembershipAndOnboarding(
             record.organizationId,
             actor.userId,
         );
+
+        const abacSubjectAttributes = record.onboardingData.abacSubjectAttributes;
         const preboardingProfile = await resolvePreboardingProfilePayload(
             deps.employeeProfileRepository,
             record,
@@ -146,6 +148,7 @@ async function ensureMembershipAndOnboarding(
             userId: actor.userId,
             invitedByUserId: record.invitedByUserId ?? record.invitedByUid,
             roles,
+            abacSubjectAttributes,
             profile: profilePayload,
             userUpdate,
         });
@@ -160,8 +163,25 @@ async function ensureMembershipAndOnboarding(
         return { alreadyMember: false, employeeNumber: profilePayload.employeeNumber };
     }
 
+    const fallbackContext: RepositoryAuthorizationContext = deps.organizationRepository
+        ? await buildMembershipContext(deps.organizationRepository, record.organizationId, actor.userId)
+        : buildAuthorizationContext({
+            orgId: record.organizationId,
+            userId: actor.userId,
+            roleKey: 'custom',
+            dataResidency: 'UK_ONLY',
+            dataClassification: 'OFFICIAL',
+            auditSource: 'accept-invitation:fallback',
+            tenantScope: {
+                orgId: record.organizationId,
+                dataResidency: 'UK_ONLY',
+                dataClassification: 'OFFICIAL',
+                auditSource: 'accept-invitation:fallback',
+            },
+        });
+
     await deps.userRepository.addUserToOrganization(
-        record.organizationId,
+        fallbackContext,
         actor.userId,
         record.organizationId,
         record.organizationName,

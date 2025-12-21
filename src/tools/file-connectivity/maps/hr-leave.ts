@@ -31,34 +31,51 @@ const routeBase = 'src/app/api/hr/leave';
 
 const getFileName = (path: string): string => path.split('/').pop() ?? path;
 
+const UC_SUBMIT_LEAVE_REQUEST = 'submit-leave-request.ts';
+const UC_APPROVE_LEAVE_REQUEST = 'approve-leave-request.ts';
+const UC_REJECT_LEAVE_REQUEST = 'reject-leave-request.ts';
+const UC_CANCEL_LEAVE_REQUEST = 'cancel-leave-request.ts';
+const UC_GET_LEAVE_REQUESTS = 'get-leave-requests.ts';
+const UC_GET_LEAVE_REQUEST = 'get-leave-request.ts';
+const UC_GET_LEAVE_BALANCE = 'get-leave-balance.ts';
+const UC_ENSURE_EMPLOYEE_BALANCES = 'ensure-employee-balances.ts';
+const UC_CREATE_LEAVE_BALANCE = 'create-leave-balance.ts';
+
 const LEAVE_USE_CASE_FILES = [
-    'submit-leave-request.ts',
-    'approve-leave-request.ts',
-    'reject-leave-request.ts',
-    'cancel-leave-request.ts',
-    'get-leave-requests.ts',
-    'get-leave-request.ts',
-    'get-leave-balance.ts',
-    'ensure-employee-balances.ts',
-    'create-leave-balance.ts',
+    UC_SUBMIT_LEAVE_REQUEST,
+    UC_APPROVE_LEAVE_REQUEST,
+    UC_REJECT_LEAVE_REQUEST,
+    UC_CANCEL_LEAVE_REQUEST,
+    UC_GET_LEAVE_REQUESTS,
+    UC_GET_LEAVE_REQUEST,
+    UC_GET_LEAVE_BALANCE,
+    UC_ENSURE_EMPLOYEE_BALANCES,
+    UC_CREATE_LEAVE_BALANCE,
 ];
 
 const ROUTE_TO_CONTROLLER: Record<string, string[]> = {
-    'route.ts': ['get-leave-requests.ts', 'submit-leave-request.ts'],
-    '[requestId]/route.ts': ['get-leave-request.ts'],
-    '[requestId]/approve/route.ts': ['approve-leave-request.ts'],
-    '[requestId]/reject/route.ts': ['reject-leave-request.ts'],
-    '[requestId]/cancel/route.ts': ['cancel-leave-request.ts'],
-    'balances/route.ts': ['get-leave-balance.ts', 'create-leave-balance.ts'],
-    'balances/ensure/route.ts': ['ensure-employee-balances.ts'],
+    'route.ts': [UC_GET_LEAVE_REQUESTS, UC_SUBMIT_LEAVE_REQUEST],
+    '[requestId]/route.ts': [UC_GET_LEAVE_REQUEST],
+    '[requestId]/approve/route.ts': [UC_APPROVE_LEAVE_REQUEST],
+    '[requestId]/reject/route.ts': [UC_REJECT_LEAVE_REQUEST],
+    '[requestId]/cancel/route.ts': [UC_CANCEL_LEAVE_REQUEST],
+    'balances/route.ts': [UC_GET_LEAVE_BALANCE, UC_CREATE_LEAVE_BALANCE],
+    'balances/ensure/route.ts': [UC_ENSURE_EMPLOYEE_BALANCES],
 };
 
 const LEAVE_DOMAIN = 'hr-leave';
 const leaveUseCasePaths = LEAVE_USE_CASE_FILES.map((file) => `${useCaseDirectory}/${file}`);
-const requestUseCases = ['submit-leave-request.ts', 'approve-leave-request.ts', 'reject-leave-request.ts', 'cancel-leave-request.ts', 'get-leave-request.ts', 'get-leave-requests.ts'];
-const balanceUseCases = ['get-leave-balance.ts', 'ensure-employee-balances.ts', 'create-leave-balance.ts'];
-const policyUseCases = ['submit-leave-request.ts', 'ensure-employee-balances.ts', 'create-leave-balance.ts'];
-const policyAccrualUseCases = ['ensure-employee-balances.ts', 'create-leave-balance.ts'];
+const requestUseCases = [
+    UC_SUBMIT_LEAVE_REQUEST,
+    UC_APPROVE_LEAVE_REQUEST,
+    UC_REJECT_LEAVE_REQUEST,
+    UC_CANCEL_LEAVE_REQUEST,
+    UC_GET_LEAVE_REQUEST,
+    UC_GET_LEAVE_REQUESTS,
+];
+const balanceUseCases = [UC_GET_LEAVE_BALANCE, UC_ENSURE_EMPLOYEE_BALANCES, UC_CREATE_LEAVE_BALANCE];
+const policyUseCases = [UC_SUBMIT_LEAVE_REQUEST, UC_ENSURE_EMPLOYEE_BALANCES, UC_CREATE_LEAVE_BALANCE];
+const policyAccrualUseCases = [UC_ENSURE_EMPLOYEE_BALANCES, UC_CREATE_LEAVE_BALANCE];
 
 interface CoreEntry {
     path: string;

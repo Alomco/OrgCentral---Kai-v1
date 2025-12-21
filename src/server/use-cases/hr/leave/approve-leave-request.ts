@@ -3,6 +3,8 @@ import type { ILeaveBalanceRepository } from '@/server/repositories/contracts/hr
 import type { ILeavePolicyRepository } from '@/server/repositories/contracts/hr/leave/leave-policy-repository-contract';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { appLogger } from '@/server/logging/structured-logger';
+import type { NotificationDispatchContract } from '@/server/services/notifications/notification-service.provider';
 import { assertNonEmpty } from '@/server/use-cases/shared';
 import {
     fetchLeaveRequest,
@@ -19,6 +21,7 @@ export interface ApproveLeaveRequestDependencies {
     leaveBalanceRepository: ILeaveBalanceRepository;
     leavePolicyRepository: ILeavePolicyRepository;
     organizationRepository: IOrganizationRepository;
+    notificationDispatchService?: NotificationDispatchContract;
 }
 
 export interface ApproveLeaveRequestInput {
@@ -87,10 +90,67 @@ export async function approveLeaveRequest(
         'balances',
     );
 
+    await queueApprovalNotification(deps.notificationDispatchService, {
+        authorization: input.authorization,
+        request: existingRequest,
+        approverId: input.approverId,
+        approvedAt,
+    });
+
     return {
         success: true,
         requestId: input.requestId,
         approvedAt,
         decisionContext,
     };
+}
+
+interface LeaveRequestSnapshot {
+    id: string;
+    userId?: string | null;
+    employeeId: string;
+    leaveType: string;
+    startDate: string;
+    endDate: string;
+    totalDays: number;
+}
+
+async function queueApprovalNotification(
+    dispatcher: NotificationDispatchContract | undefined,
+    params: {
+        authorization: RepositoryAuthorizationContext;
+        request: LeaveRequestSnapshot;
+        approverId: string;
+        approvedAt: string;
+    },
+): Promise<void> {
+    if (!dispatcher || !params.request.userId) {
+        return;
+    }
+
+    try {
+        await dispatcher.dispatchNotification({
+            authorization: params.authorization,
+            notification: {
+                templateKey: 'hr.leave.approved',
+                channel: 'IN_APP',
+                recipient: { userId: params.request.userId },
+                data: {
+                    requestId: params.request.id,
+                    leaveType: params.request.leaveType,
+                    approverId: params.approverId,
+                    approvedAt: params.approvedAt,
+                    startDate: params.request.startDate,
+                    endDate: params.request.endDate,
+                    totalDays: params.request.totalDays,
+                },
+            },
+        });
+    } catch (error) {
+        appLogger.error('leave.approval.notification.enqueue.failed', {
+            orgId: params.authorization.orgId,
+            requestId: params.request.id,
+            error: error instanceof Error ? error.message : String(error),
+        });
+    }
 }

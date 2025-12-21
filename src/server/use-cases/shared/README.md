@@ -46,7 +46,7 @@ Functions that transform data into standardized formats:
 - **`normalizeHeaders(headers)`** - Converts HeadersInit to Headers instance
 - **`normalizeActor(actor)`** - Validates and normalizes user actor data
 - **`normalizeEmploymentType(value)`** - Standardizes employment type strings
-- **`normalizeRoles(roles)`** - Deduplicates and filters role arrays
+- **`normalizeRoles(roles)`** - Normalizes roles and returns a single primary role
 - **`normalizeEmail(email)`** - Converts email to lowercase
 - **`normalizeString(value)`** - Trims whitespace from strings
 - **`normalizeToken(token)`** - Validates and trims tokens

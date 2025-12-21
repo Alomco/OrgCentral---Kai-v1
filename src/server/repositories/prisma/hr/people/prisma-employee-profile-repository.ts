@@ -70,8 +70,14 @@ export class PrismaEmployeeProfileRepository extends BasePrismaRepository implem
   }
 
   async getEmployeeProfilesByOrganization(tenantId: string, filters?: PeopleListFilters): Promise<EmployeeProfileDTO[]> {
-    const recs = await this.findAll({ orgId: tenantId, startDate: filters?.startDate, endDate: filters?.endDate });
+    const recs = await this.findAll({ orgId: tenantId, ...(filters ?? {}) });
     return recs.map((r) => mapPrismaEmployeeProfileToDomain(r));
+  }
+
+  async countEmployeeProfilesByOrganization(tenantId: string, filters?: PeopleListFilters): Promise<number> {
+    return this.prisma.employeeProfile.count({
+      where: buildPrismaWhereFromFilters({ orgId: tenantId, ...(filters ?? {}) }),
+    });
   }
 
   async findByEmployeeNumber(

@@ -5,10 +5,20 @@ export type AbacEffect = 'allow' | 'deny';
 
 export type AbacOperator = 'eq' | 'in' | 'ne' | 'gt' | 'lt';
 
+export type AbacPrimitive = string | number | boolean | null;
+export type AbacAttribute = AbacPrimitive | AbacPrimitive[];
+
+export interface AbacPredicate {
+  op: AbacOperator;
+  value: AbacAttribute | AbacAttribute[];
+}
+
+export type AbacConditionBlock = Record<string, AbacAttribute | AbacPredicate | undefined>;
+
 export interface AbacCondition {
   // Example: { subject: { roles: ['orgAdmin'] }, resource: { departmentId: 'dept-x' } }
-  subject?: Record<string, unknown>;
-  resource?: Record<string, unknown>;
+  subject?: AbacConditionBlock;
+  resource?: AbacConditionBlock;
 }
 
 export interface AbacPolicy {

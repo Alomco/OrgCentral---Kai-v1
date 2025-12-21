@@ -29,9 +29,17 @@ import type {
 import type { LeaveServiceDependencies } from './leave-service';
 import type { LeaveDecisionContext } from '@/server/use-cases/hr/leave/shared/leave-request-helpers';
 import type { LeaveNotificationLogger } from './leave-service.helpers';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export interface LeaveServiceRuntime {
-    ensureOrgAccess: (authorization: RepositoryAuthorizationContext) => Promise<void>;
+    ensureOrgAccess: (
+        authorization: RepositoryAuthorizationContext,
+        guard?: {
+            action?: string;
+            resourceType?: string;
+            resourceAttributes?: Record<string, unknown>;
+        },
+    ) => Promise<void>;
     coerceAuthorization: (value: unknown) => RepositoryAuthorizationContext;
     coerceDecisionContext: (value: unknown) => LeaveDecisionContext;
     runOperation: <TResult>(
@@ -49,7 +57,11 @@ export async function handleSubmitLeaveRequest(
     input: SubmitLeaveRequestInput,
 ): Promise<SubmitLeaveRequestResult> {
     const authorization = runtime.coerceAuthorization(input.authorization);
-    await runtime.ensureOrgAccess(authorization);
+    await runtime.ensureOrgAccess(authorization, {
+        action: HR_ACTION.CREATE,
+        resourceType: HR_RESOURCE.HR_LEAVE,
+        resourceAttributes: { requestId: input.request.id, targetUserId: input.request.userId },
+    });
     const normalizedRequest = await resolveEmployeeFromProfile(
         runtime.dependencies.profileRepository,
         authorization,
@@ -80,7 +92,11 @@ export async function handleApproveLeaveRequest(
     input: ApproveLeaveRequestInput,
 ): Promise<ApproveLeaveRequestResult> {
     const authorization = runtime.coerceAuthorization(input.authorization);
-    await runtime.ensureOrgAccess(authorization);
+    await runtime.ensureOrgAccess(authorization, {
+        action: HR_ACTION.APPROVE,
+        resourceType: HR_RESOURCE.HR_LEAVE,
+        resourceAttributes: { requestId: input.requestId, approverId: input.approverId },
+    });
     const result = await runtime.runOperation(
         'hr.leave.approve',
         authorization,
@@ -111,7 +127,11 @@ export async function handleRejectLeaveRequest(
     input: RejectLeaveRequestInput,
 ): Promise<RejectLeaveRequestResult> {
     const authorization = runtime.coerceAuthorization(input.authorization);
-    await runtime.ensureOrgAccess(authorization);
+    await runtime.ensureOrgAccess(authorization, {
+        action: HR_ACTION.APPROVE,
+        resourceType: HR_RESOURCE.HR_LEAVE,
+        resourceAttributes: { requestId: input.requestId, rejectedBy: input.rejectedBy },
+    });
     const result = await runtime.runOperation(
         'hr.leave.reject',
         authorization,
@@ -143,7 +163,11 @@ export async function handleCancelLeaveRequest(
     input: CancelLeaveRequestInput,
 ): Promise<CancelLeaveRequestResult> {
     const authorization = runtime.coerceAuthorization(input.authorization);
-    await runtime.ensureOrgAccess(authorization);
+    await runtime.ensureOrgAccess(authorization, {
+        action: HR_ACTION.CANCEL,
+        resourceType: HR_RESOURCE.HR_LEAVE,
+        resourceAttributes: { requestId: input.requestId, cancelledBy: input.cancelledBy },
+    });
     const existingRequest = await runtime.dependencies.leaveRequestRepository.getLeaveRequest(
         authorization.orgId,
         input.requestId,
@@ -189,7 +213,11 @@ export async function handleListLeaveRequests(
     input: GetLeaveRequestsInput,
 ): Promise<GetLeaveRequestsResult> {
     const authorization = runtime.coerceAuthorization(input.authorization);
-    await runtime.ensureOrgAccess(authorization);
+    await runtime.ensureOrgAccess(authorization, {
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE.HR_LEAVE,
+        resourceAttributes: { filters: input.filters },
+    });
     return runtime.runOperation(
         'hr.leave.requests.list',
         authorization,

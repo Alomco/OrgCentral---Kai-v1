@@ -7,26 +7,32 @@ import type { Membership as PrismaMembership } from '@prisma/client';
 import type { Organization } from '@prisma/client';
 
 export interface MembershipMetadata {
-    roles?: string[];
     dataResidency?: string;
     dataClassification?: string;
     auditSource?: string;
     auditBatchId?: string | null;
 }
 
-export function mapPrismaMembershipToDomain(record: PrismaMembership & { org?: Organization | null }): Membership {
-    const metadata = (record.metadata as MembershipMetadata | null) ?? {};
+export function mapPrismaMembershipToDomain(
+    record: PrismaMembership & { org?: Organization | null; role?: { name: string } | null },
+): Membership {
+    const roleName = record.role?.name;
 
     return {
         organizationId: record.orgId,
         organizationName: record.org?.name ?? record.orgId,
-        roles: metadata.roles ?? [],
+        roles: roleName ? [roleName] : [],
+        status: record.status,
     };
 }
 
-export function buildMembershipMetadata(roles: string[], scope?: { dataResidency?: string; dataClassification?: string; auditSource?: string; auditBatchId?: string | null; }) {
+export function buildMembershipMetadata(scope?: {
+    dataResidency?: string;
+    dataClassification?: string;
+    auditSource?: string;
+    auditBatchId?: string | null;
+}) {
     return {
-        roles: [...roles],
         dataResidency: scope?.dataResidency,
         dataClassification: scope?.dataClassification,
         auditSource: scope?.auditSource,

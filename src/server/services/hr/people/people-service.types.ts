@@ -35,6 +35,10 @@ export interface ListEmployeeProfilesPayload extends PeopleServicePayload {
   filters?: PeopleListFilters;
 }
 
+export interface CountEmployeeProfilesPayload extends PeopleServicePayload {
+  filters?: PeopleListFilters;
+}
+
 export interface CreateEmployeeProfilePayload extends PeopleServicePayload {
   profileData: ProfileMutationPayload['changes'] & { userId: string; employeeNumber: string };
 }
@@ -94,6 +98,10 @@ export interface GetEmployeeProfileByUserResult {
 
 export interface ListEmployeeProfilesResult {
   profiles: EmployeeProfile[];
+}
+
+export interface CountEmployeeProfilesResult {
+  count: number;
 }
 
 export interface CreateEmployeeProfileResult {

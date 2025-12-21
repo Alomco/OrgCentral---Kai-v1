@@ -104,4 +104,13 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
 
         return records.map(mapPrismaLeaveBalanceToDomain);
     }
+
+    async countLeaveBalancesByPolicy(tenantId: string, policyId: string): Promise<number> {
+        return this.prisma.leaveBalance.count({
+            where: {
+                orgId: tenantId,
+                policyId,
+            },
+        });
+    }
 }

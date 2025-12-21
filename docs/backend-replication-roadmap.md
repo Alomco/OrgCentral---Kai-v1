@@ -38,6 +38,7 @@ This document gives every contributor (human or agent) a shared understanding of
 ## 3. Phase-Wise Plan (Async & Background Layer)
 
 ### Phase A – Legacy Job Inventory
+> Status: ✅ Completed 2025-12-07 — see `docs/runbooks/legacy-jobs.md` for the full callable/trigger inventory and target mappings.
 1. **Enumerate Firebase jobs**
    - Source: `old/firebase/functions/src/functions/*.ts` and `cron/*.ts`.
    - Output: `docs/runbooks/legacy-jobs.md` with trigger type, schedule, Firestore paths, tenancy notes.

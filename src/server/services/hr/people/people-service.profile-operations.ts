@@ -1,6 +1,7 @@
 import type { RepositoryAuthorizationContext, TenantScopedRecord } from '@/server/repositories/security';
 import {
   createEmployeeProfile,
+  countEmployeeProfiles,
   deleteEmployeeProfile,
   getEmployeeProfile,
   getEmployeeProfileByUser,
@@ -17,6 +18,8 @@ import { registerProfilesCache } from '@/server/use-cases/hr/people/shared/cache
 import type {
   CreateEmployeeProfilePayload,
   CreateEmployeeProfileResult,
+  CountEmployeeProfilesPayload,
+  CountEmployeeProfilesResult,
   DeleteEmployeeProfilePayload,
   DeleteEmployeeProfileResult,
   GetEmployeeProfileByUserPayload,
@@ -159,6 +162,31 @@ export function createPeopleProfileOperations(context: PeopleProfileOperationsCo
           const scopedProfiles = ensureEntitiesAccess(authorization, profiles);
           scopedProfiles.forEach((profile) => registerProfileCaches(authorization, profile));
           return { profiles: scopedProfiles };
+        },
+      );
+    },
+
+    async countEmployeeProfiles(
+      input: PeopleServiceInput<CountEmployeeProfilesPayload>,
+    ): Promise<CountEmployeeProfilesResult> {
+      const filters = input.payload.filters;
+      const correlationId = sanitizeCorrelationId(input.correlationId);
+
+      return runner.runProfileReadOperation(
+        'hr.people.profiles.count',
+        input.authorization,
+        { filterCount: Object.keys(filters ?? {}).length, filters },
+        correlationId,
+        async (authorization: RepositoryAuthorizationContext): Promise<CountEmployeeProfilesResult> => {
+          const countResult: { count: number } = unwrapOrThrow(
+            await countEmployeeProfiles({
+              authorization,
+              filters,
+              repositories: { profileRepo: dependencies.profileRepo },
+            }),
+          );
+
+          return countResult;
         },
       );
     },

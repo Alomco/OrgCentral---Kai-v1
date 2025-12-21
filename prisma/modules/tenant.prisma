@@ -52,6 +52,31 @@ model Organization {
   dataResidency        DataResidencyZone       @default(UK_ONLY)
   dataClassification   DataClassificationLevel @default(OFFICIAL)
   regionCode           String
+
+  // Organization profile + legacy fields (migrated from the old Firebase shape)
+  address               String?
+  phone                 String?
+  website               String?
+  companyType           String?
+  industry              String?
+  employeeCountRange    String?
+  incorporationDate     DateTime?
+  registeredOfficeAddress String?
+  contactDetails        Json?                   @db.JsonB
+
+  // Leave settings legacy columns
+  primaryLeaveType      String?
+  leaveYearStartDate    DateTime?
+
+  // Admin + subscription legacy fields
+  ownerUid              String?                 @db.Uuid
+  ownerEmail            String?                 @db.Citext
+  ownerName             String?
+  subscriptionPlan      String?
+  subscriptionStatus    String?
+  userCount             Int?
+  availablePermissions  Json?                   @db.JsonB
+
   settings             Json                    @default("{}") @db.JsonB
   governanceTags       Json?                   @db.JsonB
   securityControls     Json?                   @db.JsonB // Security configuration per UK standards
@@ -59,6 +84,8 @@ model Organization {
   tenantId             String                  // For multi-tenancy isolation
   createdAt            DateTime                @default(now())
   updatedAt            DateTime                @updatedAt
+
+  locations             Location[]
   memberships             Membership[]
   roles                   Role[]
   departments             Department[]
@@ -88,6 +115,22 @@ model Organization {
   managedOrganizations   ManagedOrganization[] @relation("ManagedOrgOrganization")
   @@index([tenantId]) // For tenant isolation
   @@map("organizations") // PostgreSQL schema mapping
+  @@schema("hr")
+}
+
+model Location {
+  id        String   @id @db.Uuid
+  orgId     String   @db.Uuid
+  name      String
+  address   String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@map("locations")
   @@schema("hr")
 }
 model User {

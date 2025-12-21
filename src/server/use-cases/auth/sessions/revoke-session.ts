@@ -31,8 +31,8 @@ export async function revokeSession(
     const { authorization } = await getSessionContext(deps, {
         headers: input.headers,
         orgId: input.orgId,
-        requiredRoles: input.requiredRoles ?? ['member'],
-        requiredPermissions: input.requiredPermissions,
+        requiredPermissions: input.requiredPermissions ?? { organization: ['read'] },
+        requiredAnyPermissions: input.requiredAnyPermissions,
         expectedClassification: input.expectedClassification,
         expectedResidency: input.expectedResidency,
         auditSource: input.auditSource ?? 'session-revocation',

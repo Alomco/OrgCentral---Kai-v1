@@ -1,0 +1,157 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+
+export interface DevelopmentThemeWidgetProps {
+    orgId: string;
+    enabled: boolean;
+}
+
+type ThemePresetKey = 'server' | 'demo';
+
+const STORAGE_KEY = 'orgcentral:dev-theme-preset';
+const STYLE_ELEMENT_ID = 'orgcentral-dev-theme-overrides';
+
+const DEMO_OVERRIDES: Record<string, string> = {
+    primary: '257 74% 64%',
+    'primary-foreground': '260 100% 98%',
+    'sidebar-background': '258 54% 18%',
+    'sidebar-foreground': '260 40% 96%',
+};
+
+function resolveStoredPreset(value: string | null): ThemePresetKey {
+    return value === 'demo' ? 'demo' : 'server';
+}
+
+function buildCss(overrides: Record<string, string> | null): string {
+    if (!overrides) {
+        return '';
+    }
+
+    const declarations = Object.entries(overrides)
+        .map(([key, token]) => `--${key}: ${token} !important;`)
+        .join(' ');
+
+    return `:root { ${declarations} } .dark { ${declarations} }`;
+}
+
+function applyOverrides(overrides: Record<string, string> | null): void {
+    const css = buildCss(overrides);
+
+    const existing = document.getElementById(STYLE_ELEMENT_ID);
+
+    if (!css) {
+        if (existing) {
+            existing.remove();
+        }
+        return;
+    }
+
+    const style = existing ?? document.createElement('style');
+    style.id = STYLE_ELEMENT_ID;
+    style.textContent = css;
+
+    if (!existing) {
+        document.head.appendChild(style);
+    }
+}
+
+export function DevelopmentThemeWidget({ orgId, enabled }: DevelopmentThemeWidgetProps) {
+    const [open, setOpen] = useState(false);
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const visible = enabled && isDevelopment;
+
+    const [preset, setPreset] = useState<ThemePresetKey>(() => {
+        if (!visible) {
+            return 'server';
+        }
+        if (typeof window === 'undefined') {
+            return 'server';
+        }
+        return resolveStoredPreset(window.localStorage.getItem(STORAGE_KEY));
+    });
+
+    useEffect(() => {
+        if (!visible) {
+            applyOverrides(null);
+            return;
+        }
+
+        if (preset === 'demo') {
+            applyOverrides(DEMO_OVERRIDES);
+        } else {
+            applyOverrides(null);
+        }
+
+        window.localStorage.setItem(STORAGE_KEY, preset);
+    }, [preset, visible]);
+
+    const badge = useMemo(() => {
+        return preset === 'demo' ? <Badge variant="secondary">demo</Badge> : <Badge variant="outline">server</Badge>;
+    }, [preset]);
+
+    const shortOrgId = useMemo(() => {
+        return orgId.length > 12 ? `${orgId.slice(0, 8)}…${orgId.slice(-4)}` : orgId;
+    }, [orgId]);
+
+    const handleReset = useCallback(() => {
+        setPreset('server');
+    }, []);
+
+    if (!visible) {
+        return null;
+    }
+
+    return (
+        <div className="fixed bottom-4 right-4 z-50">
+            {open ? (
+                <div className="w-[320px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border bg-background/95 text-foreground shadow-xl backdrop-blur">
+                    <div className="flex items-start justify-between gap-3 px-4 py-3">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                                <div className="text-sm font-semibold">Dev theme</div>
+                                {badge}
+                            </div>
+                            <div className="mt-1 truncate text-xs text-muted-foreground">org {shortOrgId}</div>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => setOpen(false)} aria-label="Close dev theme widget">
+                            ×
+                        </Button>
+                    </div>
+                    <Separator />
+                    <div className="space-y-3 px-4 py-3 text-sm">
+                        <label className="space-y-1">
+                            <div className="text-xs font-medium text-muted-foreground">Theme preset</div>
+                            <select
+                                className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                                value={preset}
+                                onChange={(event) => {
+                                    const next = event.target.value === 'demo' ? 'demo' : 'server';
+                                    setPreset(next);
+                                }}
+                            >
+                                <option value="server">Server (tenant)</option>
+                                <option value="demo">Demo override</option>
+                            </select>
+                        </label>
+
+                        <div className="flex items-center justify-between gap-2">
+                            <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
+                                Reset
+                            </Button>
+                            <div className="text-xs text-muted-foreground">Dev super admin only</div>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <Button type="button" variant="secondary" onClick={() => setOpen(true)}>
+                    Dev theme
+                </Button>
+            )}
+        </div>
+    );
+}

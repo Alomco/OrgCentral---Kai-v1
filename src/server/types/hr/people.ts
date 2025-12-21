@@ -30,7 +30,8 @@ export type SalaryBasisCode = typeof SALARY_BASIS_VALUES[number];
 export const PAY_SCHEDULE_VALUES = ['MONTHLY', 'BI_WEEKLY'] as const;
 export type PayScheduleCode = typeof PAY_SCHEDULE_VALUES[number];
 
-export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue | undefined };
 
 export const CONTRACT_TYPE_VALUES = [
   'PERMANENT',

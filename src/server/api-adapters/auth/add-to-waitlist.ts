@@ -1,21 +1,19 @@
-import { PrismaWaitlistRepository } from '@/server/repositories/prisma/auth/waitlist';
-import { addToWaitlist, type AddToWaitlistDependencies, type AddToWaitlistResult } from '@/server/use-cases/auth/add-to-waitlist';
+import { getWaitlistService } from '@/server/services/auth/waitlist-service';
+import type { WaitlistService } from '@/server/services/auth/waitlist-service';
+import type { AddToWaitlistResult } from '@/server/use-cases/auth/add-to-waitlist';
+import { submitWaitlistEntry } from '@/server/use-cases/auth/add-to-waitlist-action';
 import { waitlistEntrySchema, type WaitlistEntry } from '@/server/types/waitlist-types';
-
-const waitlistRepository = new PrismaWaitlistRepository();
 
 export const AddToWaitlistSchema = waitlistEntrySchema;
 
-const defaultDependencies: AddToWaitlistDependencies = {
-    waitlistRepository,
-};
-
 export type AddToWaitlistPayload = WaitlistEntry;
+
+const waitlistService = getWaitlistService();
 
 export async function addToWaitlistController(
     payload: unknown,
-    dependencies: AddToWaitlistDependencies = defaultDependencies,
+    service: WaitlistService = waitlistService,
 ): Promise<AddToWaitlistResult> {
     const input = AddToWaitlistSchema.parse(payload);
-    return addToWaitlist(dependencies, input);
+    return submitWaitlistEntry(input, { service });
 }

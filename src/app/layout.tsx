@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { DevelopmentSecurityWidget } from "@/components/dev/DevelopmentSecurityWidget";
+import { TenantThemeRegistry } from "@/components/theme/tenant-theme-registry";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,11 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Providers>
+          {process.env.NODE_ENV === "development" ? <DevelopmentSecurityWidget /> : null}
+          <TenantThemeRegistry orgId={null}>{children}</TenantThemeRegistry>
+        </Providers>
       </body>
     </html>
   );

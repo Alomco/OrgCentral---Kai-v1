@@ -2,7 +2,7 @@
 
 import type { Span, Attributes, Context } from '@opentelemetry/api';
 import { trace, context, createContextKey } from '@opentelemetry/api';
-import { SEMRESATTRS_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import pino, { type Logger } from 'pino';
 
 const TENANT_ID_KEY = createContextKey('tenantId');
@@ -26,7 +26,7 @@ export class StructuredLogger {
   constructor(serviceName: string) {
     this.serviceName = serviceName;
     this.resourceAttributes = {
-      [SEMRESATTRS_SERVICE_NAME]: this.serviceName,
+      [ATTR_SERVICE_NAME]: this.serviceName,
     };
     this.logger = baseLogger.child({ service: serviceName });
   }

@@ -23,6 +23,7 @@ const authorization: RepositoryAuthorizationContext = {
     orgId: 'org-1',
     userId: 'user-1',
     roleKey: 'orgAdmin',
+    permissions: {},
     dataResidency: 'UK_ONLY',
     dataClassification: 'OFFICIAL',
     correlationId: 'corr-1',

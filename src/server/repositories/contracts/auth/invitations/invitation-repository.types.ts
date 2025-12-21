@@ -1,4 +1,5 @@
 import type { InvitationData, InvitationStatus } from '@/server/types/auth-types';
+import type { Prisma } from '@prisma/client';
 
 export interface InvitationRecord extends InvitationData {
     invitedByUserId?: string;
@@ -6,6 +7,19 @@ export interface InvitationRecord extends InvitationData {
     acceptedByUserId?: string;
     expiresAt?: Date;
     updatedAt?: Date;
+}
+
+export interface InvitationCreateInput {
+    orgId: string;
+    organizationName: string;
+    targetEmail: string;
+    invitedByUserId?: string;
+    expiresAt?: Date;
+    onboardingData: InvitationData['onboardingData'];
+    metadata?: Prisma.JsonValue | null;
+    securityContext?: Prisma.JsonValue | null;
+    ipAddress?: string | null;
+    userAgent?: string | null;
 }
 
 export interface InvitationStatusUpdate {

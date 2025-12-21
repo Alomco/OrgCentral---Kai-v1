@@ -227,6 +227,7 @@ function buildSyntheticAuthorization(orgId: string, userId: string): RepositoryA
     orgId,
     userId,
     roleKey: 'custom',
+    permissions: {},
     dataResidency: 'UK_ONLY',
     dataClassification: 'OFFICIAL',
     auditSource: 'people-notifications',

@@ -7,6 +7,7 @@ import {
 } from '@/server/types/hr/notifications';
 import { AbstractHrService } from '@/server/services/hr/abstract-hr-service';
 import type { ServiceExecutionContext } from '@/server/services/abstract-base-service';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export interface HrNotificationServiceDependencies {
     hrNotificationRepository: IHRNotificationRepository;
@@ -72,7 +73,11 @@ export class HrNotificationService extends AbstractHrService {
 
     async createNotification(input: CreateNotificationInput): Promise<CreateNotificationResult> {
         const authorization = input.authorization;
-        await this.ensureOrgAccess(authorization);
+        await this.ensureOrgAccess(authorization, {
+            action: HR_ACTION.CREATE,
+            resourceType: HR_RESOURCE.HR_NOTIFICATION,
+            resourceAttributes: { targetUserId: input.notification.userId, type: input.notification.type },
+        });
 
         const payload: HRNotificationCreateDTO = {
             ...input.notification,
@@ -97,7 +102,11 @@ export class HrNotificationService extends AbstractHrService {
 
     async listNotifications(input: ListNotificationsInput): Promise<ListNotificationsResult> {
         const authorization = input.authorization;
-        await this.ensureOrgAccess(authorization);
+        await this.ensureOrgAccess(authorization, {
+            action: HR_ACTION.READ,
+            resourceType: HR_RESOURCE.HR_NOTIFICATION,
+            resourceAttributes: { userId: input.userId ?? authorization.userId, filters: input.filters },
+        });
         const targetUser: string = input.userId ?? authorization.userId;
 
         const context = this.buildServiceContext(authorization, 'hr.notifications.list', {
@@ -115,7 +124,11 @@ export class HrNotificationService extends AbstractHrService {
 
     async markNotificationRead(input: MarkNotificationReadInput): Promise<MarkNotificationReadResult> {
         const authorization = input.authorization;
-        await this.ensureOrgAccess(authorization);
+        await this.ensureOrgAccess(authorization, {
+            action: HR_ACTION.UPDATE,
+            resourceType: HR_RESOURCE.HR_NOTIFICATION,
+            resourceAttributes: { notificationId: input.notificationId },
+        });
         const readAt = input.readAt ? new Date(input.readAt) : undefined;
 
         const context = this.buildServiceContext(authorization, 'hr.notifications.read', {
@@ -133,7 +146,11 @@ export class HrNotificationService extends AbstractHrService {
         input: MarkAllNotificationsReadInput,
     ): Promise<MarkAllNotificationsReadResult> {
         const authorization = input.authorization;
-        await this.ensureOrgAccess(authorization);
+        await this.ensureOrgAccess(authorization, {
+            action: HR_ACTION.UPDATE,
+            resourceType: HR_RESOURCE.HR_NOTIFICATION,
+            resourceAttributes: { userId: input.userId ?? authorization.userId, before: input.before },
+        });
         const before = input.before ? new Date(input.before) : undefined;
         const targetUser: string = input.userId ?? authorization.userId;
 
@@ -152,7 +169,11 @@ export class HrNotificationService extends AbstractHrService {
 
     async deleteNotification(input: DeleteNotificationInput): Promise<{ success: true }> {
         const authorization = input.authorization;
-        await this.ensureOrgAccess(authorization);
+        await this.ensureOrgAccess(authorization, {
+            action: HR_ACTION.DELETE,
+            resourceType: HR_RESOURCE.HR_NOTIFICATION,
+            resourceAttributes: { notificationId: input.notificationId },
+        });
 
         const context = this.buildServiceContext(authorization, 'hr.notifications.delete', {
             'hr.notifications.notificationId': input.notificationId,

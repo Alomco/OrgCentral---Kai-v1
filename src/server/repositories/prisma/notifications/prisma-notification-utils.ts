@@ -21,41 +21,41 @@ import { RepositoryAuthorizationError } from '@/server/repositories/security/rep
 export class NotificationValidationError extends Error { }
 
 const topicToPrisma: Record<NotificationTopicCode, NotificationTopic> = {
-    broadcast: 'BROADCAST',
-    'compliance-reminder': 'COMPLIANCE_REMINDER',
-    'document-expiry': 'DOCUMENT_EXPIRY',
-    'leave-approval': 'LEAVE_APPROVAL',
-    'leave-rejection': 'LEAVE_REJECTION',
-    'performance-review': 'PERFORMANCE_REVIEW',
-    'policy-update': 'POLICY_UPDATE',
-    'system-announcement': 'SYSTEM_ANNOUNCEMENT',
-    other: 'OTHER',
+    broadcast: 'broadcast',
+    'compliance-reminder': 'compliance-reminder',
+    'document-expiry': 'document-expiry',
+    'leave-approval': 'leave-approval',
+    'leave-rejection': 'leave-rejection',
+    'performance-review': 'performance-review',
+    'policy-update': 'policy-update',
+    'system-announcement': 'system-announcement',
+    other: 'other',
 };
 
 const topicFromPrisma: Record<NotificationTopic, NotificationTopicCode> = {
-    BROADCAST: 'broadcast',
-    COMPLIANCE_REMINDER: 'compliance-reminder',
-    DOCUMENT_EXPIRY: 'document-expiry',
-    LEAVE_APPROVAL: 'leave-approval',
-    LEAVE_REJECTION: 'leave-rejection',
-    PERFORMANCE_REVIEW: 'performance-review',
-    POLICY_UPDATE: 'policy-update',
-    SYSTEM_ANNOUNCEMENT: 'system-announcement',
-    OTHER: 'other',
+    broadcast: 'broadcast',
+    'compliance-reminder': 'compliance-reminder',
+    'document-expiry': 'document-expiry',
+    'leave-approval': 'leave-approval',
+    'leave-rejection': 'leave-rejection',
+    'performance-review': 'performance-review',
+    'policy-update': 'policy-update',
+    'system-announcement': 'system-announcement',
+    other: 'other',
 };
 
 const priorityToPrisma: Record<NotificationPriorityCode, NotificationUrgency> = {
-    high: 'HIGH',
-    low: 'LOW',
-    medium: 'MEDIUM',
-    urgent: 'URGENT',
+    high: 'high',
+    low: 'low',
+    medium: 'medium',
+    urgent: 'urgent',
 };
 
 const priorityFromPrisma: Record<NotificationUrgency, NotificationPriorityCode> = {
-    HIGH: 'high',
-    LOW: 'low',
-    MEDIUM: 'medium',
-    URGENT: 'urgent',
+    high: 'high',
+    low: 'low',
+    medium: 'medium',
+    urgent: 'urgent',
 };
 
 export function normalizeCreateInput(

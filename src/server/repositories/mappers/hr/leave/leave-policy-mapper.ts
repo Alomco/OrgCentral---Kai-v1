@@ -43,6 +43,12 @@ export function mapCreateToPrisma(input: LeavePolicyCreationData): Prisma.LeaveP
 export function buildPrismaLeavePolicyUpdate(updates: Partial<LeavePolicyUpdateData>): Prisma.LeavePolicyUncheckedUpdateInput {
     const prismaUpdate: Prisma.LeavePolicyUncheckedUpdateInput = {};
 
+    if (updates.name !== undefined) {
+        prismaUpdate.name = updates.name;
+    }
+    if (updates.policyType !== undefined) {
+        prismaUpdate.policyType = updates.policyType;
+    }
     if (Object.prototype.hasOwnProperty.call(updates, 'departmentId')) {
         prismaUpdate.departmentId = updates.departmentId as string | null;
     }

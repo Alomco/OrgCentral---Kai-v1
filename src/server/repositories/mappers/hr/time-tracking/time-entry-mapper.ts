@@ -1,5 +1,5 @@
 import type { TimeEntry as PrismaTimeEntry } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import type { TimeEntry } from '@/server/types/hr-ops-types';
 
 export function mapPrismaTimeEntryToDomain(record: PrismaTimeEntry): TimeEntry {
@@ -10,8 +10,8 @@ export function mapPrismaTimeEntryToDomain(record: PrismaTimeEntry): TimeEntry {
     date: record.date,
     clockIn: record.clockIn,
     clockOut: record.clockOut ?? undefined,
-    totalHours: record.totalHours ? Number(record.totalHours) : undefined,
-    breakDuration: record.breakDuration ? Number(record.breakDuration) : undefined,
+    totalHours: record.totalHours === null ? undefined : Number(record.totalHours),
+    breakDuration: record.breakDuration === null ? undefined : Number(record.breakDuration),
     project: record.project ?? undefined,
     tasks: record.tasks as Prisma.JsonValue | undefined,
     notes: record.notes ?? undefined,
@@ -39,7 +39,7 @@ export function mapDomainTimeEntryToPrismaCreate(
     totalHours: input.totalHours ?? null,
     breakDuration: input.breakDuration ?? null,
     project: input.project ?? null,
-    tasks: input.tasks ?? undefined,
+    tasks: toJsonInput(input.tasks),
     notes: input.notes ?? null,
     status: input.status,
     approvedByOrgId: input.approvedByOrgId ?? null,
@@ -47,7 +47,7 @@ export function mapDomainTimeEntryToPrismaCreate(
     approvedAt: input.approvedAt ?? null,
     dataClassification: input.dataClassification,
     residencyTag: input.residencyTag,
-    metadata: input.metadata ?? undefined,
+    metadata: toJsonInput(input.metadata),
   };
 }
 
@@ -56,18 +56,30 @@ export function mapDomainTimeEntryToPrismaUpdate(
 ): Prisma.TimeEntryUncheckedUpdateInput {
   return {
     clockIn: updates.clockIn,
-    clockOut: updates.clockOut ?? undefined,
-    totalHours: updates.totalHours ?? undefined,
-    breakDuration: updates.breakDuration ?? undefined,
-    project: updates.project ?? undefined,
-    tasks: updates.tasks ?? undefined,
-    notes: updates.notes ?? undefined,
-    status: updates.status ?? undefined,
-    approvedByOrgId: updates.approvedByOrgId ?? undefined,
-    approvedByUserId: updates.approvedByUserId ?? undefined,
-    approvedAt: updates.approvedAt ?? undefined,
-    dataClassification: updates.dataClassification ?? undefined,
-    residencyTag: updates.residencyTag ?? undefined,
-    metadata: updates.metadata ?? undefined,
+    clockOut: updates.clockOut,
+    totalHours: updates.totalHours,
+    breakDuration: updates.breakDuration,
+    project: updates.project,
+    tasks: toJsonInput(updates.tasks),
+    notes: updates.notes,
+    status: updates.status,
+    approvedByOrgId: updates.approvedByOrgId,
+    approvedByUserId: updates.approvedByUserId,
+    approvedAt: updates.approvedAt,
+    dataClassification: updates.dataClassification,
+    residencyTag: updates.residencyTag,
+    metadata: toJsonInput(updates.metadata),
   };
+}
+
+function toJsonInput(
+  value: Prisma.JsonValue | null | undefined,
+): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === null) {
+    return Prisma.DbNull;
+  }
+  return value as Prisma.InputJsonValue;
 }

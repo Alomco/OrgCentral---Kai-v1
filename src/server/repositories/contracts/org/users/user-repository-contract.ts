@@ -5,6 +5,7 @@
 import type { User } from '@/server/types/hr-types';
 import type { UserData } from '@/server/types/leave-types';
 import type { Membership } from '@/server/types/membership';
+import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
 export interface IUserRepository {
   findById(userId: string): Promise<User | null>;
@@ -23,7 +24,7 @@ export interface IUserRepository {
    * Update user memberships
    */
   updateUserMemberships(
-    tenantId: string,
+    context: RepositoryAuthorizationContext,
     userId: string,
     memberships: Membership[]
   ): Promise<void>;
@@ -32,7 +33,7 @@ export interface IUserRepository {
    * Add user to an organization
    */
   addUserToOrganization(
-    tenantId: string,
+    context: RepositoryAuthorizationContext,
     userId: string,
     organizationId: string,
     organizationName: string,
@@ -43,7 +44,7 @@ export interface IUserRepository {
    * Remove user from an organization
    */
   removeUserFromOrganization(
-    tenantId: string,
+    context: RepositoryAuthorizationContext,
     userId: string,
     organizationId: string
   ): Promise<void>;
@@ -52,7 +53,7 @@ export interface IUserRepository {
    * Get all users in an organization
    */
   getUsersInOrganization(
-    tenantId: string,
+    context: RepositoryAuthorizationContext,
     organizationId: string
   ): Promise<UserData[]>;
 }

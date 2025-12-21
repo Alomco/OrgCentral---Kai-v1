@@ -34,3 +34,5 @@ export {
     AbsenceAttachmentTypeError,
     AbsenceAttachmentSizeError,
 } from './hr-absences';
+
+export { LeavePolicyInUseError } from './hr-leave-policies';

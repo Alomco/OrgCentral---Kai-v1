@@ -3,6 +3,8 @@ import type { IPolicyAcknowledgmentRepository } from '@/server/repositories/cont
 import { mapDomainPolicyAckToPrismaCreate, mapPrismaPolicyAckToDomain } from '@/server/repositories/mappers/hr/policies/hr-policy-mapper';
 import type { PolicyAcknowledgment } from '@/server/types/hr-ops-types';
 import { AuthorizationError } from '@/server/errors';
+import { registerOrgCacheTag } from '@/server/lib/cache-tags';
+import { CACHE_SCOPE_HR_POLICIES, CACHE_SCOPE_HR_POLICY_ACKNOWLEDGMENTS } from '@/server/repositories/cache-scopes';
 
 export class PrismaPolicyAcknowledgmentRepository extends BasePrismaRepository implements IPolicyAcknowledgmentRepository {
   async acknowledgePolicy(orgId: string, input: Omit<PolicyAcknowledgment, 'id'>): Promise<PolicyAcknowledgment> {
@@ -11,16 +13,20 @@ export class PrismaPolicyAcknowledgmentRepository extends BasePrismaRepository i
     if (rec.orgId !== orgId) {
       throw new AuthorizationError('Cross-tenant policy acknowledgment mismatch', { orgId });
     }
+
+    await this.invalidateAfterWrite(orgId, [CACHE_SCOPE_HR_POLICIES, CACHE_SCOPE_HR_POLICY_ACKNOWLEDGMENTS]);
     return mapPrismaPolicyAckToDomain(rec);
   }
 
   async getAcknowledgment(orgId: string, policyId: string, userId: string, version: string): Promise<PolicyAcknowledgment | null> {
+    registerOrgCacheTag(orgId, CACHE_SCOPE_HR_POLICY_ACKNOWLEDGMENTS);
     const rec = await this.prisma.policyAcknowledgment.findFirst({ where: { orgId, policyId, userId, version } });
     return rec ? mapPrismaPolicyAckToDomain(rec) : null;
   }
 
-  async listAcknowledgments(orgId: string, policyId: string): Promise<PolicyAcknowledgment[]> {
-    const recs = await this.prisma.policyAcknowledgment.findMany({ where: { orgId, policyId }, orderBy: { acknowledgedAt: 'desc' } });
+  async listAcknowledgments(orgId: string, policyId: string, version?: string): Promise<PolicyAcknowledgment[]> {
+    registerOrgCacheTag(orgId, CACHE_SCOPE_HR_POLICY_ACKNOWLEDGMENTS);
+    const recs = await this.prisma.policyAcknowledgment.findMany({ where: { orgId, policyId, ...(version ? { version } : {}) }, orderBy: { acknowledgedAt: 'desc' } });
     return recs.map(mapPrismaPolicyAckToDomain);
   }
 }

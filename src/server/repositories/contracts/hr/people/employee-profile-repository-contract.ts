@@ -47,6 +47,14 @@ export interface IEmployeeProfileRepository {
   ): Promise<EmployeeProfileDTO[]>;
 
   /**
+   * Count employee profiles for an organization (supports the same filters as list).
+   */
+  countEmployeeProfilesByOrganization(
+    tenantId: string,
+    filters?: PeopleListFilters
+  ): Promise<number>;
+
+  /**
    * Find an employee profile by org-scoped employeeNumber
    */
   findByEmployeeNumber(

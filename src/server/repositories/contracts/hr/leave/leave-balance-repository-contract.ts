@@ -53,4 +53,13 @@ export interface ILeaveBalanceRepository {
     tenantId: string,
     employeeId: string
   ): Promise<LeaveBalance[]>;
+
+  /**
+   * Count leave balances linked to a specific policy.
+   * Used to guard against deleting policies that are already in use.
+   */
+  countLeaveBalancesByPolicy(
+    tenantId: string,
+    policyId: string,
+  ): Promise<number>;
 }

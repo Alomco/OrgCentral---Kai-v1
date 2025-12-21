@@ -15,6 +15,7 @@ import {
     type LeaveControllerDependencies,
     readJson,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export interface SubmitLeaveRequestResult extends SubmitLeaveRequestUseCaseResult {
     success: true;
@@ -34,11 +35,10 @@ export async function submitLeaveRequestController(
 
     const { session: authSession, authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['member'],
-        requiredPermissions: { organization: ['create'] },
+        requiredPermissions: { organization: ['read'] },
         auditSource: 'api:hr:leave:submit',
-        action: 'create',
-        resourceType: 'hr.leave',
+        action: HR_ACTION.CREATE,
+        resourceType: HR_RESOURCE.HR_LEAVE,
         resourceAttributes: {
             leaveType: payload.leaveType,
             employeeId: payload.employeeId,
@@ -48,7 +48,7 @@ export async function submitLeaveRequestController(
 
     const { userId } = requireSessionUser(authSession);
     const requestId = payload.id ?? randomUUID();
-    const actorUserId = payload.userId ?? payload.employeeId;
+    const actorUserId = payload.userId ?? userId;
     const submittedAt = new Date();
     const hoursPerDay = await resolveHoursPerDay(absenceSettingsRepository, authorization.orgId);
     const leaveRequest: Omit<LeaveRequest, 'createdAt'> = {

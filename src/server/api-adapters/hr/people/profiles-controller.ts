@@ -7,7 +7,14 @@ import {
   updateEmployeeProfileInputSchema,
 } from '@/server/types/hr-people-schemas';
 import type { EmployeeProfile } from '@/server/types/hr-types';
-import { normalizeProfileChanges } from '@/server/services/hr/people/helpers/onboard-payload.helpers';
+import {
+  normalizeProfileChanges,
+} from '@/server/services/hr/people/helpers/onboard-payload.helpers';
+import {
+  normalizeEmploymentStatus,
+  normalizeEmploymentType,
+} from '@/server/services/hr/people/helpers/normalization.helpers';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 interface ListProfilesResult {
   success: true;
@@ -42,15 +49,23 @@ async function readJson<T = unknown>(request: Request, fallback: T): Promise<T> 
 }
 
 export async function listProfilesController(request: Request): Promise<ListProfilesResult> {
-  const raw = await readJson(request, {});
-  const input = listEmployeeProfilesRequestSchema.parse(raw);
+  const raw = await readJson<Record<string, unknown>>(request, {});
+  const input = listEmployeeProfilesRequestSchema.parse({
+    ...raw,
+    filters: raw.filters
+      ? {
+        ...raw.filters as Record<string, unknown>,
+        employmentStatus: normalizeEmploymentStatus((raw.filters as Record<string, unknown>).employmentStatus),
+      }
+      : undefined,
+  });
 
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['member'],
+    requiredPermissions: { employeeProfile: ['list'] },
     auditSource: 'api:hr:people:profiles:list',
-    action: 'read',
-    resourceType: 'employeeProfile',
+    action: HR_ACTION.READ,
+    resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
     resourceAttributes: { filterCount: Object.keys(input.filters ?? {}).length, filters: input.filters },
   });
 
@@ -64,15 +79,25 @@ export async function listProfilesController(request: Request): Promise<ListProf
 }
 
 export async function createProfileController(request: Request): Promise<CreateProfileResult> {
-  const raw = await readJson(request, {});
-  const input = createEmployeeProfileInputSchema.parse(raw);
+  const raw = await readJson<Record<string, unknown>>(request, {});
+  const normalized = {
+    ...raw,
+    changes: raw.changes
+      ? {
+        ...raw.changes as Record<string, unknown>,
+        employmentType: normalizeEmploymentType((raw.changes as Record<string, unknown>).employmentType),
+        employmentStatus: normalizeEmploymentStatus((raw.changes as Record<string, unknown>).employmentStatus),
+      }
+      : raw.changes,
+  };
+  const input = createEmployeeProfileInputSchema.parse(normalized);
 
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['orgAdmin'],
+    requiredPermissions: { employeeProfile: ['create'] },
     auditSource: 'api:hr:people:profiles:create',
-    action: 'create',
-    resourceType: 'employeeProfile',
+    action: HR_ACTION.CREATE,
+    resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
     resourceAttributes: {
       targetUserId: input.targetUserId,
       jobTitle: input.changes.jobTitle,
@@ -105,10 +130,10 @@ export async function getProfileController(
 
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['member'],
+    requiredPermissions: { employeeProfile: ['read'] },
     auditSource: 'api:hr:people:profiles:get',
-    action: 'read',
-    resourceType: 'employeeProfile',
+    action: HR_ACTION.READ,
+    resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
     resourceAttributes: { profileId: input.profileId },
   });
 
@@ -126,14 +151,24 @@ export async function updateProfileController(
   profileId: string,
 ): Promise<UpdateProfileResult> {
   const raw = await readJson<Record<string, unknown>>(request, {});
-  const parsed = updateEmployeeProfileInputSchema.parse({ ...raw, profileId });
+  const parsed = updateEmployeeProfileInputSchema.parse({
+    ...raw,
+    profileId,
+    changes: raw.changes
+      ? {
+        ...raw.changes as Record<string, unknown>,
+        employmentType: normalizeEmploymentType((raw.changes as Record<string, unknown>).employmentType),
+        employmentStatus: normalizeEmploymentStatus((raw.changes as Record<string, unknown>).employmentStatus),
+      }
+      : raw.changes,
+  });
 
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['orgAdmin'],
+    requiredPermissions: { employeeProfile: ['update'] },
     auditSource: 'api:hr:people:profiles:update',
-    action: 'update',
-    resourceType: 'employeeProfile',
+    action: HR_ACTION.UPDATE,
+    resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
     resourceAttributes: { profileId: parsed.profileId, updateKeys: Object.keys(parsed.changes) },
   });
 
@@ -153,10 +188,10 @@ export async function deleteProfileController(
 ): Promise<DeleteProfileResult> {
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['orgAdmin'],
+    requiredPermissions: { employeeProfile: ['delete'] },
     auditSource: 'api:hr:people:profiles:delete',
-    action: 'delete',
-    resourceType: 'employeeProfile',
+    action: HR_ACTION.DELETE,
+    resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
     resourceAttributes: { profileId },
   });
 

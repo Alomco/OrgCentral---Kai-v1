@@ -3,11 +3,17 @@
  * Guards use it to enforce zero-trust access without touching Prisma directly.
  */
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
+import type { OrgPermissionMap } from '@/server/security/access-control';
+import type { MembershipStatus } from '@prisma/client';
 
 export interface GuardMembershipRecord {
     orgId: string;
     userId: string;
+    status: MembershipStatus;
     roleName?: string | null;
+    /** Raw permissions attached to the membership role (custom roles live here). */
+    rolePermissions?: OrgPermissionMap | null;
+    departmentId?: string | null;
     metadata?: Record<string, unknown> | null;
     organization: {
         id: string;

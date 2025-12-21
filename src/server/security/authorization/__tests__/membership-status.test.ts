@@ -3,17 +3,18 @@ import type { IGuardMembershipRepository, GuardMembershipRecord } from '@/server
 import { requireActiveMembership } from '../membership-status';
 
 class FakeGuardMembershipRepository implements IGuardMembershipRepository {
-    constructor(private readonly record: GuardMembershipRecord | null) {}
+    constructor(private readonly record: GuardMembershipRecord | null) { }
 
     async findMembership(): Promise<GuardMembershipRecord | null> {
         return this.record;
     }
 }
 
-function buildMembership(metadata?: Record<string, unknown>): GuardMembershipRecord {
+function buildMembership(status: GuardMembershipRecord['status'], metadata?: Record<string, unknown>): GuardMembershipRecord {
     return {
         orgId: 'org-1',
         userId: 'user-1',
+        status,
         roleName: 'orgAdmin',
         metadata: metadata ?? null,
         organization: {
@@ -27,22 +28,15 @@ function buildMembership(metadata?: Record<string, unknown>): GuardMembershipRec
 
 describe('requireActiveMembership', () => {
     it('allows active membership with status flag', async () => {
-        const repo = new FakeGuardMembershipRepository(buildMembership({ status: 'ACTIVE' }));
+        const repo = new FakeGuardMembershipRepository(buildMembership('ACTIVE'));
         const result = await requireActiveMembership('org-1', 'user-1', { repository: repo });
 
         expect(result.status).toBe('ACTIVE');
         expect(result.correlationId).toBeTypeOf('string');
     });
 
-    it('allows membership when status is missing', async () => {
-        const repo = new FakeGuardMembershipRepository(buildMembership());
-        const result = await requireActiveMembership('org-1', 'user-1', { repository: repo });
-
-        expect(result.status).toBeUndefined();
-    });
-
     it('blocks membership when status is not allowed', async () => {
-        const repo = new FakeGuardMembershipRepository(buildMembership({ status: 'SUSPENDED' }));
+        const repo = new FakeGuardMembershipRepository(buildMembership('SUSPENDED'));
 
         await expect(
             requireActiveMembership('org-1', 'user-1', { repository: repo }),

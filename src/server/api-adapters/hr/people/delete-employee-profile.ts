@@ -3,6 +3,7 @@ import type { infer as Infer } from 'zod';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { deleteEmployeeProfileInputSchema } from '@/server/types/hr-people-schemas';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export type DeleteEmployeeProfileApiInput = Infer<typeof deleteEmployeeProfileInputSchema>;
 
@@ -23,10 +24,10 @@ export async function deleteEmployeeProfileAdapter(
       {},
       {
         headers: new Headers(req.headers as unknown as HeadersInit),
-        requiredRoles: ['orgAdmin'],
+        requiredPermissions: { employeeProfile: ['delete'] },
         auditSource: 'api:hr:people:delete-employee-profile',
-        action: 'delete',
-        resourceType: 'employeeProfile',
+        action: HR_ACTION.DELETE,
+        resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
         resourceAttributes: { profileId: input.profileId },
       },
     );

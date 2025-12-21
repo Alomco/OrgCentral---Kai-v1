@@ -4,6 +4,7 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { updateEmploymentContractInputSchema } from '@/server/types/hr-people-schemas';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
 import { normalizeContractChanges } from '@/server/services/hr/people/helpers/onboard-payload.helpers';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export type UpdateEmploymentContractApiInput = Infer<typeof updateEmploymentContractInputSchema>;
 
@@ -25,10 +26,10 @@ export async function updateEmploymentContractAdapter(
       {},
       {
         headers: new Headers(req.headers as unknown as HeadersInit),
-        requiredRoles: ['orgAdmin'],
+        requiredPermissions: { employmentContract: ['update'] },
         auditSource: 'api:hr:people:employment:update-contract',
-        action: 'update',
-        resourceType: 'employmentContract',
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
         resourceAttributes: { contractId: input.contractId, updateKeys: Object.keys(input.changes) },
       },
     );

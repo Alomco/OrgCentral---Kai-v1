@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { JsonValue } from '@/server/types/hr/people';
 
 export type OnboardingInvitationStatus = 'pending' | 'accepted' | 'expired' | 'declined' | 'revoked';
 
@@ -7,10 +7,10 @@ export interface OnboardingInvitationCreateInput {
   organizationName: string;
   targetEmail: string;
   invitedByUserId?: string | null;
-  onboardingData: Prisma.JsonValue;
+  onboardingData: JsonValue;
   expiresAt?: Date | null;
-  metadata?: Prisma.JsonValue;
-  securityContext?: Prisma.JsonValue;
+  metadata?: JsonValue;
+  securityContext?: JsonValue;
   ipAddress?: string | null;
   userAgent?: string | null;
 }
@@ -22,9 +22,9 @@ export interface OnboardingInvitation {
   targetEmail: string;
   status: OnboardingInvitationStatus;
   invitedByUserId?: string | null;
-  onboardingData: Prisma.JsonValue;
-  metadata?: Prisma.JsonValue;
-  securityContext?: Prisma.JsonValue;
+  onboardingData: JsonValue;
+  metadata?: JsonValue;
+  securityContext?: JsonValue;
   ipAddress?: string | null;
   userAgent?: string | null;
   expiresAt?: Date | null;
@@ -39,6 +39,7 @@ export interface OnboardingInvitation {
 export interface IOnboardingInvitationRepository {
   createInvitation(payload: OnboardingInvitationCreateInput): Promise<OnboardingInvitation>;
   getActiveInvitationByEmail(orgId: string, email: string): Promise<OnboardingInvitation | null>;
+  getInvitationByToken(token: string): Promise<OnboardingInvitation | null>;
   markAccepted(orgId: string, token: string, acceptedByUserId: string): Promise<void>;
   revokeInvitation(orgId: string, token: string, revokedByUserId: string, reason?: string): Promise<void>;
 }

@@ -1,5 +1,5 @@
 import { RepositoryAuthorizer, type RepositoryAuthorizationContext, type TenantScopedRecord } from '@/server/repositories/security';
-import { assertOrgAccess } from '@/server/security/guards';
+import { assertOrgAccessWithAbac, type OrgAccessInput } from '@/server/security/guards';
 import { AbstractBaseService, type ServiceExecutionContext } from '@/server/services/abstract-base-service';
 
 export abstract class AbstractHrService extends AbstractBaseService {
@@ -14,8 +14,32 @@ export abstract class AbstractHrService extends AbstractBaseService {
         };
     }
 
-    protected async ensureOrgAccess(authorization: RepositoryAuthorizationContext): Promise<void> {
-        await assertOrgAccess({ orgId: authorization.orgId, userId: authorization.userId });
+    protected async ensureOrgAccess(
+        authorization: RepositoryAuthorizationContext,
+        guard?: Pick<
+            OrgAccessInput,
+            | 'requiredPermissions'
+            | 'requiredAnyPermissions'
+            | 'expectedClassification'
+            | 'expectedResidency'
+            | 'action'
+            | 'resourceType'
+            | 'resourceAttributes'
+        >,
+    ): Promise<void> {
+        await assertOrgAccessWithAbac({
+            orgId: authorization.orgId,
+            userId: authorization.userId,
+            auditSource: authorization.auditSource,
+            correlationId: authorization.correlationId,
+            requiredPermissions: guard?.requiredPermissions,
+            requiredAnyPermissions: guard?.requiredAnyPermissions,
+            expectedClassification: guard?.expectedClassification,
+            expectedResidency: guard?.expectedResidency,
+            action: guard?.action,
+            resourceType: guard?.resourceType,
+            resourceAttributes: guard?.resourceAttributes,
+        });
     }
 
     protected ensureEntityAccess<TEntity extends TenantScopedRecord>(

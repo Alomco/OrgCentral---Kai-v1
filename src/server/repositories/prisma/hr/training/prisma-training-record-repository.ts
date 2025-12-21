@@ -30,6 +30,13 @@ export class PrismaTrainingRecordRepository extends BasePrismaRepository impleme
 
     if (filters?.endDate) { whereClause.endDate = { lte: filters.endDate }; }
 
+    if (filters && (filters.expiryAfter !== undefined || filters.expiryBefore !== undefined)) {
+      const expiryFilter: Prisma.DateTimeNullableFilter = {};
+      if (filters.expiryAfter !== undefined) { expiryFilter.gte = filters.expiryAfter; }
+      if (filters.expiryBefore !== undefined) { expiryFilter.lte = filters.expiryBefore; }
+      whereClause.expiryDate = expiryFilter;
+    }
+
     return this.prisma.trainingRecord.findMany({ where: whereClause, orderBy: { startDate: 'desc' } });
   }
 
@@ -96,14 +103,25 @@ export class PrismaTrainingRecordRepository extends BasePrismaRepository impleme
     return this.getTrainingRecordsByUser(tenantId, employeeId);
   }
 
-  async getTrainingRecordsByOrganization(tenantId: string, filters?: { status?: string; trainingTitle?: string; startDate?: Date; endDate?: Date; employeeId?: string; userId?: string; }): Promise<DomainTrainingRecord[]> {
+  async getTrainingRecordsByOrganization(tenantId: string, filters?: {
+    status?: string;
+    trainingTitle?: string;
+    startDate?: Date;
+    endDate?: Date;
+    employeeId?: string;
+    userId?: string;
+    expiryAfter?: Date;
+    expiryBefore?: Date;
+  }): Promise<DomainTrainingRecord[]> {
     const where: TrainingRecordFilters = { orgId: tenantId };
     if (filters?.status) { where.status = filters.status; }
     if (filters?.trainingTitle) { where.courseName = filters.trainingTitle; }
     if (filters?.startDate) { where.startDate = filters.startDate; }
     if (filters?.endDate) { where.endDate = filters.endDate; }
-    if (filters?.employeeId) { where.userId = filters.employeeId; }
-    if (filters?.userId) { where.userId = filters.userId; }
+    if (filters?.expiryAfter) { where.expiryAfter = filters.expiryAfter; }
+    if (filters?.expiryBefore) { where.expiryBefore = filters.expiryBefore; }
+    const requestedUser = filters?.userId ?? filters?.employeeId;
+    if (requestedUser) { where.userId = requestedUser; }
     const recs = await this.findAll(where);
     return recs.map(mapPrismaTrainingRecordToDomain);
   }

@@ -1,0 +1,168 @@
+.mesh {
+  position: absolute;
+  inset: -25%;
+  background: radial-gradient(ellipse at 20% 20%, hsl(var(--primary) / 0.22), transparent 45%),
+    radial-gradient(ellipse at 80% 30%, hsl(var(--accent) / 0.18), transparent 45%),
+    radial-gradient(ellipse at 50% 80%, hsl(var(--chart-3) / 0.16), transparent 45%);
+  filter: blur(48px);
+  opacity: 0.8;
+  mix-blend-mode: screen;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(hsl(var(--foreground) / 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.12) 1px, transparent 1px);
+  background-size: 36px 36px;
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.45), transparent 60%);
+  mask-image: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.45), transparent 60%);
+  opacity: 0.35;
+  animation: drift 18s linear infinite;
+}
+
+.halo {
+  position: absolute;
+  inset: -12%;
+  border-radius: 32px;
+  background: radial-gradient(ellipse at 30% 30%, hsl(var(--primary) / 0.16), transparent 55%),
+    radial-gradient(ellipse at 70% 20%, hsl(var(--accent) / 0.12), transparent 50%),
+    radial-gradient(ellipse at 50% 70%, hsl(var(--chart-3) / 0.16), transparent 55%);
+  filter: blur(38px);
+  opacity: 0.8;
+  mix-blend-mode: screen;
+}
+
+.headline {
+  background: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--chart-3)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 18px 60px hsl(var(--primary) / 0.25);
+}
+
+.ctaGlow {
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.35),
+    0 18px 50px -18px hsl(var(--primary) / 0.65);
+}
+
+.meta {
+  letter-spacing: 0.28em;
+}
+
+.orb {
+  position: absolute;
+  top: -80px;
+  right: -40px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 120deg,
+    hsl(var(--primary) / 0.32),
+    hsl(var(--chart-3) / 0.22),
+    hsl(var(--chart-5) / 0.28),
+    hsl(var(--accent) / 0.2),
+    hsl(var(--chart-2) / 0.34),
+    hsl(var(--primary) / 0.32)
+  );
+  filter: blur(24px);
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  animation: spin 22s linear infinite;
+}
+
+.beam {
+  position: absolute;
+  left: 14%;
+  top: -10%;
+  width: 18px;
+  height: 140%;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--chart-3) / 0.0) 0%,
+    hsl(var(--chart-3) / 0.55) 40%,
+    hsl(var(--primary) / 0.55) 60%,
+    hsl(var(--primary) / 0.0) 100%
+  );
+  filter: blur(6px);
+  opacity: 0.45;
+  transform: rotate(-6deg);
+  animation: float 12s ease-in-out infinite alternate;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float {
+  from {
+    transform: translateY(-6px) rotate(-6deg);
+  }
+  to {
+    transform: translateY(6px) rotate(-6deg);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-36px, -36px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh {
+    filter: blur(32px);
+  }
+  .grid {
+    animation: none;
+  }
+  .halo {
+    filter: blur(28px);
+  }
+  .orb {
+    animation: none;
+  }
+  .beam {
+    animation: none;
+  }
+  .headline {
+    text-shadow: none;
+  }
+}
+
+.shell {
+  padding: calc(var(--phi-lg));
+  gap: calc(var(--phi-md));
+}
+
+.gridPhi {
+  display: grid;
+  gap: calc(var(--phi-md));
+  grid-template-columns: minmax(240px, 0.382fr) 1fr;
+}
+
+@media (max-width: 1024px) {
+  .gridPhi {
+    grid-template-columns: 1fr;
+  }
+}
+
+.imageWell {
+  padding: calc(var(--phi-base));
+  width: min(18rem, 62vw);
+  aspect-ratio: 1 / 1;
+}
+
+.titleStack {
+  gap: calc(var(--phi-sm));
+}

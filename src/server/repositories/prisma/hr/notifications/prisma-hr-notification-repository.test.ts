@@ -30,7 +30,7 @@ vi.mock('../../../../lib/cache-tags/hr-notifications', () => ({
 const ORG_ID = 'org-1';
 const USER_ID = 'user-1';
 const DOMAIN_APPROVAL_TYPE = 'leave-approval';
-const PRISMA_REJECTION_TYPE: PrismaNotification['type'] = 'LEAVE_REJECTION';
+const PRISMA_REJECTION_TYPE: PrismaNotification['type'] = 'leave-rejection';
 const DOMAIN_REJECTION_TYPE = 'leave-rejection';
 
 const baseRecord: PrismaNotification = {
@@ -39,8 +39,8 @@ const baseRecord: PrismaNotification = {
     userId: USER_ID,
     title: 'Title',
     message: 'Message',
-    type: 'LEAVE_APPROVAL',
-    priority: 'MEDIUM',
+    type: 'leave-approval',
+    priority: 'medium',
     isRead: false,
     readAt: null,
     actionUrl: null,
@@ -97,8 +97,8 @@ describe.skip('PrismaHRNotificationRepository', () => {
 
         const expectedCreateArguments = {
             data: expect.objectContaining({
-                type: 'LEAVE_APPROVAL',
-                priority: 'MEDIUM',
+                type: 'leave-approval',
+                priority: 'medium',
                 isRead: false,
             }),
         } satisfies Record<string, unknown>;
@@ -137,7 +137,7 @@ describe.skip('PrismaHRNotificationRepository', () => {
 
     it('lists notifications with filters and registers cache tag', async () => {
         const { repo, model } = createRepository();
-        model.findMany.mockResolvedValue([{ ...baseRecord, type: PRISMA_REJECTION_TYPE, priority: 'HIGH' }]);
+        model.findMany.mockResolvedValue([{ ...baseRecord, type: PRISMA_REJECTION_TYPE, priority: 'high' }]);
 
         const listFilters = {
             unreadOnly: true,
@@ -154,7 +154,7 @@ describe.skip('PrismaHRNotificationRepository', () => {
                 userId: USER_ID,
                 isRead: false,
                 type: { in: [PRISMA_REJECTION_TYPE] },
-                priority: { in: ['HIGH'] },
+                priority: { in: ['high'] },
             },
             orderBy: { createdAt: 'desc' },
             take: 10,

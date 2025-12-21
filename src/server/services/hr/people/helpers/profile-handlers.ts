@@ -3,6 +3,7 @@ import type { IEmployeeProfileRepository } from '@/server/repositories/contracts
 import { getEmployeeProfile as getEmployeeProfileUseCase } from '@/server/use-cases/hr/people/get-employee-profile';
 import { getEmployeeProfileByUser as getEmployeeProfileByUserUseCase } from '@/server/use-cases/hr/people/get-employee-profile-by-user';
 import { listEmployeeProfiles as listEmployeeProfilesUseCase } from '@/server/use-cases/hr/people/list-employee-profiles';
+import { countEmployeeProfiles as countEmployeeProfilesUseCase } from '@/server/use-cases/hr/people/count-employee-profiles';
 import { createEmployeeProfile as createEmployeeProfileUseCase } from '@/server/use-cases/hr/people/create-employee-profile';
 import { updateEmployeeProfile as updateEmployeeProfileUseCase } from '@/server/use-cases/hr/people/update-employee-profile';
 import {
@@ -60,6 +61,23 @@ export function listEmployeeProfiles(params: {
 }): ResultAsync<{ profiles: EmployeeProfile[] }, Error> {
   return ResultAsync.fromPromise(
     listEmployeeProfilesUseCase(
+      { employeeProfileRepository: params.repositories.profileRepo },
+      {
+        authorization: params.authorization,
+        filters: params.filters,
+      },
+    ),
+    toError,
+  );
+}
+
+export function countEmployeeProfiles(params: {
+  authorization: RepositoryAuthorizationContext;
+  filters?: PeopleListFilters;
+  repositories: ProfileRepositoryDeps;
+}): ResultAsync<{ count: number }, Error> {
+  return ResultAsync.fromPromise(
+    countEmployeeProfilesUseCase(
       { employeeProfileRepository: params.repositories.profileRepo },
       {
         authorization: params.authorization,

@@ -16,9 +16,9 @@ export interface DepartmentCreationData {
 
 export interface DepartmentUpdateData {
     name?: string;
-    path?: string;
-    leaderOrgId?: string;
-    leaderUserId?: string;
-    businessUnit?: string;
-    costCenter?: string;
+    path?: string | null;
+    leaderOrgId?: string | null;
+    leaderUserId?: string | null;
+    businessUnit?: string | null;
+    costCenter?: string | null;
 }

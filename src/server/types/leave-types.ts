@@ -4,6 +4,7 @@
 
 import type { Identifier, OrgId, TenantMetadata } from './tenant';
 import type { MembershipRole, Membership } from './membership';
+import type { LeaveYearStartDate } from './org/leave-year-start-date';
 
 export { DATA_RESIDENCY_ZONES, DATA_CLASSIFICATION_LEVELS } from './tenant';
 export type {
@@ -141,6 +142,8 @@ export interface LeavePolicyAccrual {
 export interface OrganizationData extends TenantMetadata {
   id: OrgId;
   name: string;
+  slug: string;
+  regionCode: string;
   address?: string;
   phone?: string;
   website?: string;
@@ -155,7 +158,7 @@ export interface OrganizationData extends TenantMetadata {
   leaveTypes?: LeaveTypeCode[];
   leaveEntitlements: Record<LeaveTypeCode, number>;
   primaryLeaveType: LeaveTypeCode;
-  leaveYearStartDate: string;
+  leaveYearStartDate: LeaveYearStartDate;
   leaveRoundingRule: LeaveRoundingRule;
   availablePermissions?: PermissionCode[];
   createdAt: TimestampString;

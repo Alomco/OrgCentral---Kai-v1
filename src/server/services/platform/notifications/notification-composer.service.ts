@@ -1,4 +1,4 @@
-import type { NotificationCreateInput, NotificationRecord } from '@/server/repositories/notifications/notification-schemas';
+import type { NotificationRecord } from '@/server/repositories/notifications/notification-schemas';
 import type { INotificationRepository } from '@/server/repositories/contracts/notifications';
 import type { INotificationPreferenceRepository } from '@/server/repositories/contracts/org/notifications/notification-preference-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
@@ -10,6 +10,7 @@ import {
   type ComposeNotificationInput,
   type ComposeNotificationResult,
   type MarkAllNotificationsInput,
+  type NormalizableNotificationInput,
   type NotificationAbacContext,
   type NotificationDeliveryAdapter,
   type NotificationDeliveryResult,
@@ -186,7 +187,7 @@ export class NotificationComposerService extends AbstractBaseService {
   private async enforceAccess(
     authorization: RepositoryAuthorizationContext,
     abac?: NotificationAbacContext,
-    notification?: NotificationCreateInput,
+    notification?: NormalizableNotificationInput,
   ): Promise<void> {
     const resourceAttributes: Record<string, unknown> = {
       ...abac?.resourceAttributes,

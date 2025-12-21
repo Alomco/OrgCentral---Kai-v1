@@ -5,6 +5,7 @@ import {
     resolveAbsenceControllerDependencies,
     type AbsenceControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export async function cancelUnplannedAbsenceController(
     request: Request,
@@ -17,10 +18,10 @@ export async function cancelUnplannedAbsenceController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['orgAdmin'],
+        requiredPermissions: { organization: ['update'] },
         auditSource: 'api:hr:absences:cancel',
-        action: 'update',
-        resourceType: 'hr.absence',
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_ABSENCE,
         resourceAttributes: { scope: 'unplanned', absenceId },
     });
 

@@ -5,6 +5,7 @@ import {
     resolveAbsenceControllerDependencies,
     type AbsenceControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export async function updateAbsenceSettingsController(
     request: Request,
@@ -17,10 +18,10 @@ export async function updateAbsenceSettingsController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['orgAdmin'],
+        requiredPermissions: { organization: ['update'] },
         auditSource: 'api:hr:absences:update-settings',
-        action: 'update',
-        resourceType: 'hr.absence-settings',
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_ABSENCE_SETTINGS,
         resourceAttributes: { scope: 'unplanned' },
     });
 

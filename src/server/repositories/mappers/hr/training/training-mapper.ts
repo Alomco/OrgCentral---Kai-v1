@@ -21,6 +21,8 @@ export function mapPrismaTrainingRecordToDomain(record: PrismaTrainingRecord): T
         provider: record.provider,
         startDate: record.startDate,
         endDate: record.endDate ?? null,
+        expiryDate: record.expiryDate ?? null,
+        renewalDate: record.renewalDate ?? null,
         status: record.status,
         certificate: record.certificate ?? null,
         competency: record.competency,
@@ -42,6 +44,8 @@ export function mapDomainTrainingRecordToPrisma(input: TrainingRecord): Training
         provider: input.provider,
         startDate: input.startDate,
         endDate: input.endDate ?? null,
+        expiryDate: input.expiryDate ?? null,
+        renewalDate: input.renewalDate ?? null,
         status: input.status,
         certificate: input.certificate ?? null,
         competency: input.competency === null ? Prisma.JsonNull : (input.competency as Prisma.InputJsonValue | undefined),
@@ -59,6 +63,8 @@ export function mapDomainTrainingUpdateToPrisma(input: Partial<Omit<TrainingReco
     const update: Partial<TrainingRecordUpdateData> = {};
     if (input.startDate !== undefined) { update.startDate = input.startDate; }
     if (input.endDate !== undefined) { update.endDate = input.endDate ?? null; }
+    if (input.expiryDate !== undefined) { update.expiryDate = input.expiryDate ?? null; }
+    if (input.renewalDate !== undefined) { update.renewalDate = input.renewalDate ?? null; }
     if (input.status !== undefined) { update.status = input.status; }
     if (input.certificate !== undefined) { update.certificate = input.certificate ?? null; }
     if (input.competency !== undefined) { update.competency = input.competency === null ? Prisma.JsonNull : (input.competency as Prisma.InputJsonValue | undefined); }

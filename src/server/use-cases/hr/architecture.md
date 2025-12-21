@@ -47,7 +47,7 @@ This guide tells AI agents how to explore and extend the HR domain without dupli
 | Notifications | `use-cases/hr/notifications` | Service + repo live; emitter helper available | Use `notification-emitter.ts` (service-backed) for cross-module events; ensure cache tags are registered/invalidated. |
 | People Directory | `use-cases/hr/people` | Not yet modernized | Mirror legacy `old/src/lib/people` flows; centralize profile enrichment in a domain helper. |
 | Performance | `use-cases/hr/performance` | Placeholder | Define evaluation repository contracts first, then create service entry points for review cycles and feedback. |
-| Policies | `use-cases/hr/policies` | Pending | Use `old/docs/requirements/HR_POLICIES` to model acknowledgements; add policy repository + service. |
+| Policies | `use-cases/hr/policies`, `services/hr/policies`, `api-adapters/hr/policies`, `app/api/hr/policies` | Service + API surface implemented | Maintain parity with legacy acknowledgement rules and ensure policy change + acknowledgement notifications remain tenant-scoped and cache-safe. |
 | Training | `use-cases/hr/training` | Pending | Align with `old/docs/qwen_cp_mix/training` before adding modules. |
 | Settings | `use-cases/hr/settings` | Only absence settings implemented | Expand to cover approval workflows + telemetry toggles; keep config storage in Prisma metadata columns. |
 | Time Tracking | `use-cases/hr/time-tracking` | Partial (reporting + return-to-work) | Confirm `time entry` domain models line up with `old/firebase/time` data before extending. |
@@ -89,6 +89,15 @@ Documenting these ensures future modules don’t re-implement the same behavior.
 	- Accepts all repositories via constructor injection; no `import` of Prisma clients inside service methods.
 	- Wraps public operations with `this.executeInServiceContext('operationName', async () => { ... })` and logs key events via `this.logger.withFields`. 
 	- Centralizes cache invalidation via helper utilities so the API layer does not repeat cache logic.
+
+## HR Policies (Implementation Notes)
+
+- **Entry points**: REST routes under `src/app/api/hr/policies/**/route.ts` delegate to controllers in `src/server/api-adapters/hr/policies/**`.
+- **Validation**: HR policy request schemas live with the module and are imported by API adapters (for example `src/server/services/hr/policies/hr-policy-schemas.ts`).
+- **Notifications**:
+	- Policy create/update emits an HR notification of type `policy-update` to active employees in the same organization (excluding the actor).
+	- Policy acknowledgement emits an HR notification to the acknowledging user (represented via `metadata.event = 'acknowledged'`).
+	- Recipient targeting must always be derived from org-scoped repositories (for example employee profiles filtered by `orgId` and `employmentStatus: 'ACTIVE'`) to prevent cross-tenant fan-out.
 
 - **Repositories & Mappers** – When introducing new data access patterns:
 	- Add contracts under `src/server/repositories/contracts/hr/<module>/*.ts` with type-only imports for DTOs.

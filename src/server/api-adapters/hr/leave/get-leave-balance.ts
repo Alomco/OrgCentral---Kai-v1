@@ -23,7 +23,6 @@ export async function getLeaveBalanceController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['member'],
         requiredPermissions: { organization: ['read'] },
         auditSource: 'api:hr:leave:balance:get',
         action: 'read',

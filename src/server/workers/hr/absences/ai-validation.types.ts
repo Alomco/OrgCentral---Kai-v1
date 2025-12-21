@@ -10,7 +10,12 @@ export const jobAuthorizationSchema = z.object({
     userId: z.uuid(),
     auditSource: z.string().min(3).default('worker:hr:absences:ai'),
     correlationId: z.uuid().optional(),
-    requiredRoles: z.array(z.string().min(2)).optional(),
+    requiredPermissions: z.record(z.string().min(1), z.array(z.string().min(1))).optional(),
+    requiredAnyPermissions: z
+        .array(z.record(z.string().min(1), z.array(z.string().min(1))))
+        .optional(),
+    expectedClassification: z.enum(DATA_CLASSIFICATION_LEVELS).optional(),
+    expectedResidency: z.enum(DATA_RESIDENCY_ZONES).optional(),
 });
 
 export const storageMetadataSchema = z.object({
@@ -49,5 +54,3 @@ export interface AbsenceAiValidationServiceDeps {
     auditLogger?: (event: AuditEventPayload) => Promise<void> | void;
     now?: () => Date;
 }
-
-export const DEFAULT_ROLES = ['orgAdmin'] as const;

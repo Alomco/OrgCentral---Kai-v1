@@ -1,6 +1,7 @@
 import { AbstractHrService } from '@/server/services/hr/abstract-hr-service';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { IComplianceItemRepository } from '@/server/repositories/contracts/hr/compliance/compliance-item-repository-contract';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export interface AssignComplianceInput {
     authorization: RepositoryAuthorizationContext;
@@ -19,7 +20,15 @@ export class ComplianceAssignmentService extends AbstractHrService {
     }
 
     async assignCompliancePack(input: AssignComplianceInput): Promise<void> {
-        await this.ensureOrgAccess(input.authorization);
+        await this.ensureOrgAccess(input.authorization, {
+            action: HR_ACTION.ASSIGN,
+            resourceType: HR_RESOURCE.HR_COMPLIANCE,
+            resourceAttributes: {
+                templateId: input.templateId,
+                userIds: input.userIds,
+                itemCount: input.templateItemIds.length,
+            },
+        });
 
         const context = this.buildContext(input.authorization, {
             metadata: {

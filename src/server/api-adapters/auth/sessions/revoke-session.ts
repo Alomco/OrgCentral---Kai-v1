@@ -1,20 +1,13 @@
-import { PrismaUserSessionRepository } from '@/server/repositories/prisma/auth/sessions';
-import {
-    revokeSession,
-    type RevokeSessionDependencies,
-    type RevokeSessionInput,
-    type RevokeSessionResult,
-} from '@/server/use-cases/auth/sessions/revoke-session';
+import { getSessionService } from '@/server/services/auth/session-service';
+import type { SessionService } from '@/server/services/auth/session-service';
+import type { RevokeSessionInput, RevokeSessionResult } from '@/server/use-cases/auth/sessions/revoke-session';
+import { performSessionRevocation } from '@/server/use-cases/auth/sessions/revoke-session-action';
 
-const userSessionRepository = new PrismaUserSessionRepository();
-
-const defaultDependencies: RevokeSessionDependencies = {
-    userSessionRepository,
-};
+const sessionService = getSessionService();
 
 export async function revokeSessionController(
     input: RevokeSessionInput,
-    dependencies: RevokeSessionDependencies = defaultDependencies,
+    service: SessionService = sessionService,
 ): Promise<RevokeSessionResult> {
-    return revokeSession(dependencies, input);
+    return performSessionRevocation(input, { service });
 }

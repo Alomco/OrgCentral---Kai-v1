@@ -27,6 +27,8 @@ export interface LeavePolicyCreationData {
 }
 
 export interface LeavePolicyUpdateData {
+    name?: string;
+    policyType?: PrismaLeavePolicyType;
     departmentId?: string | null;
     accrualFrequency?: PrismaLeaveAccrualFrequency;
     accrualAmount?: number | null;

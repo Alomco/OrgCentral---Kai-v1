@@ -11,7 +11,7 @@ const DEFAULT_JOB_OPTIONS: JobsOptions = {
 };
 
 export interface QueueRegistryOptions {
-    queueName?: string;
+    queueName?: WorkerQueueName;
     connection?: QueueOptions['connection'] | RedisConnectionOptions;
     defaultJobOptions?: JobsOptions;
 }
@@ -26,13 +26,10 @@ const queuePool = new Map<string, Queue>();
 const redisPool = new Map<string, RedisLikeConnection>();
 
 export function getQueue(
-    name: WorkerQueueName | string,
+    name: WorkerQueueName,
     options?: QueueRegistryOptions,
 ): Queue {
     const queueName = options?.queueName ?? name;
-    if (!queueName) {
-        throw new Error('Queue name is required to resolve a BullMQ queue.');
-    }
 
     const existing = queuePool.get(queueName);
     if (existing) {

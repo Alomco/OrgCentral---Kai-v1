@@ -123,3 +123,17 @@ model UserSession {
   @@map("user_sessions")
   @@schema("auth")
 }
+
+// Stores verification tokens for Better Auth flows (email, MFA, domain checks)
+model Verification {
+  id          String   @id
+  identifier  String
+  value       String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+  @@schema("auth")
+}

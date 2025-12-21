@@ -16,37 +16,7 @@ const toPrismaNotificationTypes = (
     if (!types?.length) {
         return undefined;
     }
-    const result: $Enums.HRNotificationType[] = [];
-    for (const type of types) {
-        switch (type) {
-            case 'leave-approval':
-                result.push('LEAVE_APPROVAL');
-                break;
-            case 'leave-rejection':
-                result.push('LEAVE_REJECTION');
-                break;
-            case 'document-expiry':
-                result.push('DOCUMENT_EXPIRY');
-                break;
-            case 'policy-update':
-                result.push('POLICY_UPDATE');
-                break;
-            case 'performance-review':
-                result.push('PERFORMANCE_REVIEW');
-                break;
-            case 'system-announcement':
-                result.push('SYSTEM_ANNOUNCEMENT');
-                break;
-            case 'compliance-reminder':
-                result.push('COMPLIANCE_REMINDER');
-                break;
-            case 'other':
-            default:
-                result.push('OTHER');
-                break;
-        }
-    }
-    return result;
+    return types.map((type) => type as $Enums.HRNotificationType);
 };
 
 const toPrismaNotificationPriorities = (
@@ -55,25 +25,7 @@ const toPrismaNotificationPriorities = (
     if (!priorities?.length) {
         return undefined;
     }
-    const result: $Enums.NotificationPriority[] = [];
-    for (const priority of priorities) {
-        switch (priority) {
-            case 'low':
-                result.push('LOW');
-                break;
-            case 'medium':
-                result.push('MEDIUM');
-                break;
-            case 'high':
-                result.push('HIGH');
-                break;
-            case 'urgent':
-            default:
-                result.push('URGENT');
-                break;
-        }
-    }
-    return result;
+    return priorities.map((priority) => priority as $Enums.NotificationPriority);
 };
 
 export class PrismaHRNotificationRepository extends BasePrismaRepository implements IHRNotificationRepository {

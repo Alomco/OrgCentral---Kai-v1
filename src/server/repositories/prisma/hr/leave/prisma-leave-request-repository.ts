@@ -133,4 +133,13 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
         });
         return records.map((record) => mapPrismaLeaveRequestToDomain(record, { hoursPerDay: options?.hoursPerDay }));
     }
+
+    async countLeaveRequestsByPolicy(tenantId: string, policyId: string): Promise<number> {
+        return this.prisma.leaveRequest.count({
+            where: {
+                orgId: tenantId,
+                policyId,
+            },
+        });
+    }
 }

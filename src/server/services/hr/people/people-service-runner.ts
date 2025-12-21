@@ -8,6 +8,7 @@ import {
 } from '@/server/security/guards-hr-people';
 import { PEOPLE_CACHE_METADATA } from '@/server/use-cases/hr/people/shared/cache-helpers';
 import type { PeopleServiceCacheHandlers } from './people-service.types';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 type PeopleScope = 'profiles' | 'contracts';
 type AccessLevel = 'read' | 'write';
@@ -22,7 +23,14 @@ export interface PeopleServiceRuntime {
     operationName: string,
     handler: () => Promise<T>,
   ) => Promise<T>;
-  ensureOrgAccess: (authorization: RepositoryAuthorizationContext) => Promise<void>;
+  ensureOrgAccess: (
+    authorization: RepositoryAuthorizationContext,
+    guard?: {
+      action?: string;
+      resourceType?: string;
+      resourceAttributes?: Record<string, unknown>;
+    },
+  ) => Promise<void>;
 }
 
 interface PeopleServiceRunnerDeps {
@@ -114,7 +122,15 @@ export class PeopleServiceOperationRunner {
     correlationId: string | undefined,
     handler: (authorization: RepositoryAuthorizationContext) => Promise<TResult>,
   ): Promise<TResult> {
-    await this.deps.runtime.ensureOrgAccess(authorization);
+    const resourceType =
+      scope === 'profiles' ? HR_RESOURCE.HR_EMPLOYEE_PROFILE : HR_RESOURCE.HR_EMPLOYMENT_CONTRACT;
+    const action = access === 'read' ? HR_ACTION.READ : HR_ACTION.UPDATE;
+
+    await this.deps.runtime.ensureOrgAccess(authorization, {
+      action,
+      resourceType,
+      resourceAttributes: guardAttributes,
+    });
 
     const scopedAuth = await this.applyGuard(scope, access, authorization, guardAttributes);
     if (access === 'read') {

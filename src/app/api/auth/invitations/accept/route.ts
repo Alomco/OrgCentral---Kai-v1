@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { acceptInvitationController } from '@/server/api-adapters/auth/accept-invitation';
+import { completeOnboardingInviteController } from '@/server/api-adapters/hr/onboarding/complete-onboarding-invite';
 import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
 import { requireSessionUser } from '@/server/api-adapters/http/session-helpers';
 import { AuthorizationError } from '@/server/errors';
@@ -19,7 +19,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         const payload = (await request.json()) as unknown;
         const session = await auth.api.getSession({ headers: request.headers });
         const actor = requireActor(session);
-        const result = await acceptInvitationController(payload, actor);
+        const result = await completeOnboardingInviteController(payload, actor);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);

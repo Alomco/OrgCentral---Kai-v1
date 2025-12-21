@@ -1,0 +1,198 @@
+/// Better Auth core + plugin persistence models
+/// NOTE: These models map to Better Auth's expected table shapes.
+/// They live in the Postgres `auth` schema to keep auth data isolated.
+
+model AuthUser {
+  id               String   @id
+  name             String
+  email            String   @db.Citext
+  emailVerified    Boolean  @default(false)
+  image            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // username plugin
+  username        String? @db.Citext
+  displayUsername String?
+
+  // twoFactor plugin
+  twoFactorEnabled Boolean? @default(false)
+
+  sessions  AuthSession[]
+  accounts  AuthAccount[]
+  members   AuthOrgMember[]
+  invitations AuthOrgInvitation[]
+  twofactors TwoFactor[]
+
+  oauthapplications OauthApplication[]
+  oauthaccesstokens OauthAccessToken[]
+  oauthconsents     OauthConsent[]
+
+  @@unique([email])
+  @@unique([username])
+  @@map("user")
+  @@schema("auth")
+}
+
+model AuthSession {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // organization plugin (active org context)
+  activeOrganizationId String?
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+  @@schema("auth")
+}
+
+model AuthAccount {
+  id         String @id
+  accountId  String
+  providerId String
+  userId     String
+
+  user AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+  @@map("account")
+  @@schema("auth")
+}
+
+model AuthOrganization {
+  id        String   @id
+  name      String
+  slug      String   @db.Citext
+  logo      String?
+  createdAt DateTime @default(now())
+  metadata  String?
+
+  members     AuthOrgMember[]
+  invitations AuthOrgInvitation[]
+
+  @@unique([slug])
+  @@map("organization")
+  @@schema("auth")
+}
+
+model AuthOrgMember {
+  id             String @id
+  organizationId String
+  userId         String
+  role           String @default("member")
+  createdAt      DateTime @default(now())
+
+  organization AuthOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         AuthUser         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("member")
+  @@schema("auth")
+}
+
+model AuthOrgInvitation {
+  id             String   @id
+  organizationId String
+  email          String   @db.Citext
+  role           String?
+  status         String   @default("pending")
+  expiresAt      DateTime
+  inviterId      String
+
+  organization AuthOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         AuthUser         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@map("invitation")
+  @@schema("auth")
+}
+
+model TwoFactor {
+  id          String @id
+  secret      String
+  backupCodes String
+  userId      String
+
+  user AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("twoFactor")
+  @@schema("auth")
+}
+
+model OauthApplication {
+  id           String  @id
+  name         String?
+  icon         String?
+  metadata     String?
+  clientId     String? @db.Citext
+  clientSecret String?
+  redirectURLs String?
+  type         String?
+  disabled     Boolean? @default(false)
+  userId       String?
+  createdAt    DateTime? @default(now())
+  updatedAt    DateTime? @updatedAt
+
+  user AuthUser? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  oauthaccesstokens OauthAccessToken[]
+  oauthconsents     OauthConsent[]
+
+  @@unique([clientId])
+  @@map("oauthApplication")
+  @@schema("auth")
+}
+
+model OauthAccessToken {
+  id                    String  @id
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  clientId              String? @db.Citext
+  userId                String?
+  scopes                String?
+  createdAt             DateTime? @default(now())
+  updatedAt             DateTime? @updatedAt
+
+  oauthapplication OauthApplication? @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user             AuthUser?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([accessToken])
+  @@unique([refreshToken])
+  @@map("oauthAccessToken")
+  @@schema("auth")
+}
+
+model OauthConsent {
+  id           String  @id
+  clientId     String? @db.Citext
+  userId       String?
+  scopes       String?
+  createdAt    DateTime? @default(now())
+  updatedAt    DateTime? @updatedAt
+  consentGiven Boolean?
+
+  oauthapplication OauthApplication? @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user             AuthUser?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("oauthConsent")
+  @@schema("auth")
+}

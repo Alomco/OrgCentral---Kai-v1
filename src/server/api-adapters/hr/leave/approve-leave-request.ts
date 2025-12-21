@@ -11,6 +11,7 @@ import {
     type LeaveControllerDependencies,
     readJson,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 interface ControllerInput {
     request: Request;
@@ -32,8 +33,8 @@ export async function approveLeaveRequestController(
         headers: request.headers,
         requiredPermissions: { organization: ['update'] },
         auditSource: 'api:hr:leave:approve',
-        action: 'update',
-        resourceType: 'hr.leave',
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_LEAVE,
         resourceAttributes: { requestId, decision: 'approved' },
     });
 

@@ -6,9 +6,9 @@ import { mapPrismaDepartmentToDomain } from '@/server/repositories/mappers/org/d
 import { CACHE_SCOPE_DEPARTMENTS } from '@/server/repositories/cache-scopes';
 import type { Department } from '@/server/types/hr-types';
 import type {
-    DepartmentFilters,
-    DepartmentCreationData,
-    DepartmentUpdateData,
+  DepartmentFilters,
+  DepartmentCreationData,
+  DepartmentUpdateData,
 } from './prisma-department-repository.types';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
@@ -94,11 +94,11 @@ export class PrismaDepartmentRepository extends OrgScopedPrismaRepository implem
     this.assertTenantRecord(existing, context.orgId);
     const updateData: DepartmentUpdateData = {} as DepartmentUpdateData;
     if (updates.name !== undefined) { updateData.name = updates.name; }
-    if (typeof updates.path === 'string') { updateData.path = updates.path; }
-    if (typeof updates.leaderOrgId === 'string') { updateData.leaderOrgId = updates.leaderOrgId; }
-    if (typeof updates.leaderUserId === 'string') { updateData.leaderUserId = updates.leaderUserId; }
-    if (typeof updates.businessUnit === 'string') { updateData.businessUnit = updates.businessUnit; }
-    if (typeof updates.costCenter === 'string') { updateData.costCenter = updates.costCenter; }
+    if (updates.path !== undefined) { updateData.path = updates.path ?? null; }
+    if (updates.leaderOrgId !== undefined) { updateData.leaderOrgId = updates.leaderOrgId ?? null; }
+    if (updates.leaderUserId !== undefined) { updateData.leaderUserId = updates.leaderUserId ?? null; }
+    if (updates.businessUnit !== undefined) { updateData.businessUnit = updates.businessUnit ?? null; }
+    if (updates.costCenter !== undefined) { updateData.costCenter = updates.costCenter ?? null; }
     await this.update(departmentId, updateData);
     await this.invalidateCache(context, CACHE_SCOPE_DEPARTMENTS);
   }

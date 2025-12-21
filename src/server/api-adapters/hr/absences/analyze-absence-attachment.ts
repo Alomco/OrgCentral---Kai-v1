@@ -8,6 +8,7 @@ import {
     resolveAbsenceControllerDependencies,
     type AbsenceControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 interface AnalyzeAttachmentControllerInput {
     request: Request;
@@ -24,10 +25,10 @@ export async function analyzeAbsenceAttachmentController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['orgAdmin'],
+        requiredPermissions: { organization: ['update'] },
         auditSource: 'api:hr:absences:ai-analyze',
-        action: 'update',
-        resourceType: 'hr.absence-ai-validation',
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_ABSENCE_AI_VALIDATION,
         resourceAttributes: {
             scope: 'unplanned',
             absenceId,

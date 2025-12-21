@@ -1,0 +1,133 @@
+/* AppHeader Modular Styles */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    height: 4.25rem;
+    width: 100%;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+    overflow: hidden;
+    border-bottom: 1px solid hsl(var(--border) / 0.3);
+    background: 
+        linear-gradient(135deg, 
+            hsl(262 83% 58% / 0.15) 0%,
+            hsl(262 83% 58% / 0.08) 25%,
+            transparent 50%,
+            hsl(330 81% 60% / 0.08) 75%,
+            hsl(330 81% 60% / 0.15) 100%
+        ),
+        radial-gradient(ellipse at 20% 50%, hsl(262 83% 58% / 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 50%, hsl(330 81% 60% / 0.12) 0%, transparent 50%),
+        linear-gradient(to bottom, hsl(var(--background) / 0.92), hsl(var(--background) / 0.95));
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: 
+        0 1px 3px hsl(var(--primary) / 0.1),
+        inset 0 1px 0 hsl(var(--primary) / 0.1);
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        linear-gradient(90deg,
+            hsl(262 83% 58% / 0.15) 0%,
+            hsl(330 81% 60% / 0.08) 25%,
+            transparent 50%,
+            hsl(262 83% 58% / 0.08) 75%,
+            hsl(330 81% 60% / 0.15) 100%
+        );
+    pointer-events: none;
+    animation: meshShift 15s ease-in-out infinite alternate;
+}
+
+@keyframes meshShift {
+    0% {
+        opacity: 0.6;
+        transform: translateX(0);
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0.6;
+        transform: translateX(2%);
+    }
+}
+
+.header::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        hsl(var(--border) / 0.7) 50%, 
+        transparent 100%
+    );
+}
+
+.headerContent {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 10;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.logoText {
+    display: none;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--sidebar-primary)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 700;
+}
+
+@media (min-width: 640px) {
+    .logoText {
+        display: inline-block;
+    }
+}
+
+.logo:hover .logoText {
+    filter: brightness(1.2);
+}
+
+.spacer {
+    flex: 1;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 10;
+}
+
+@media (min-width: 1024px) {
+    .header {
+        padding: 0 2rem;
+    }
+    
+    .headerContent {
+        gap: 1rem;
+    }
+}

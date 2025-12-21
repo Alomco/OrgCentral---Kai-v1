@@ -4,12 +4,13 @@ import {
     AuthorizationError,
     EntityNotFoundError,
     InfrastructureError,
+    LeavePolicyInUseError,
     ValidationError,
     type ErrorDetails,
 } from '@/server/errors';
 import { appLogger } from '@/server/logging/structured-logger';
 
-interface ErrorResponseBody {
+export interface ErrorResponseBody {
     error: {
         code: string;
         message: string;
@@ -82,6 +83,15 @@ function fromTypedError(error: ValidationError | EntityNotFoundError | Authoriza
 function toDescriptor(error: unknown): ErrorDescriptor {
     if (error instanceof ZodError) {
         return fromZodError(error);
+    }
+
+    if (error instanceof LeavePolicyInUseError) {
+        return {
+            status: 409,
+            code: error.code,
+            message: error.message,
+            details: error.details,
+        };
     }
 
     if (

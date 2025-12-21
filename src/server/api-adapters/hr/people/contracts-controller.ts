@@ -7,7 +7,14 @@ import {
   updateEmploymentContractInputSchema,
 } from '@/server/types/hr-people-schemas';
 import type { EmploymentContract } from '@/server/types/hr-types';
-import { normalizeContractChanges } from '@/server/services/hr/people/helpers/onboard-payload.helpers';
+import {
+  normalizeContractChanges,
+} from '@/server/services/hr/people/helpers/onboard-payload.helpers';
+import {
+  normalizeContractPayload,
+  normalizeContractType,
+} from '@/server/services/hr/people/helpers/normalization.helpers';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 interface ListContractsResult {
   success: true;
@@ -42,15 +49,23 @@ async function readJson<T = unknown>(request: Request, fallback: T): Promise<T> 
 }
 
 export async function listContractsController(request: Request): Promise<ListContractsResult> {
-  const raw = await readJson(request, {});
-  const input = listEmploymentContractsRequestSchema.parse(raw);
+  const raw = await readJson<Record<string, unknown>>(request, {});
+  const input = listEmploymentContractsRequestSchema.parse({
+    ...raw,
+    filters: raw.filters
+      ? {
+        ...raw.filters,
+        contractType: normalizeContractType((raw.filters as Record<string, unknown>).contractType),
+      }
+      : undefined,
+  });
 
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['member'],
+    requiredPermissions: { employmentContract: ['list'] },
     auditSource: 'api:hr:people:contracts:list',
-    action: 'read',
-    resourceType: 'employmentContract',
+    action: HR_ACTION.READ,
+    resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
     resourceAttributes: { filterCount: Object.keys(input.filters ?? {}).length, filters: input.filters },
   });
 
@@ -64,15 +79,19 @@ export async function listContractsController(request: Request): Promise<ListCon
 }
 
 export async function createContractController(request: Request): Promise<CreateContractResult> {
-  const raw = await readJson(request, {});
-  const input = createEmploymentContractInputSchema.parse(raw);
+  const raw = await readJson<Record<string, unknown>>(request, {});
+  const normalized = {
+    ...raw,
+    changes: raw.changes ? normalizeContractPayload(raw.changes as Record<string, unknown>) : raw.changes,
+  };
+  const input = createEmploymentContractInputSchema.parse(normalized);
 
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['orgAdmin'],
+    requiredPermissions: { employmentContract: ['create'] },
     auditSource: 'api:hr:people:contracts:create',
-    action: 'create',
-    resourceType: 'employmentContract',
+    action: HR_ACTION.CREATE,
+    resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
     resourceAttributes: {
       targetUserId: input.targetUserId,
       contractType: input.changes.contractType,
@@ -106,10 +125,10 @@ export async function getContractController(
 
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['member'],
+    requiredPermissions: { employmentContract: ['read'] },
     auditSource: 'api:hr:people:contracts:get',
-    action: 'read',
-    resourceType: 'employmentContract',
+    action: HR_ACTION.READ,
+    resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
     resourceAttributes: { contractId: input.contractId },
   });
 
@@ -127,14 +146,18 @@ export async function updateContractController(
   contractId: string,
 ): Promise<UpdateContractResult> {
   const raw = await readJson<Record<string, unknown>>(request, {});
-  const parsed = updateEmploymentContractInputSchema.parse({ ...raw, contractId });
+  const parsed = updateEmploymentContractInputSchema.parse({
+    ...raw,
+    contractId,
+    changes: raw.changes ? normalizeContractPayload(raw.changes as Record<string, unknown>) : raw.changes,
+  });
 
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['orgAdmin'],
+    requiredPermissions: { employmentContract: ['update'] },
     auditSource: 'api:hr:people:contracts:update',
-    action: 'update',
-    resourceType: 'employmentContract',
+    action: HR_ACTION.UPDATE,
+    resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
     resourceAttributes: { contractId: parsed.contractId, updateKeys: Object.keys(parsed.changes) },
   });
 
@@ -154,10 +177,10 @@ export async function deleteContractController(
 ): Promise<DeleteContractResult> {
   const { authorization } = await getSessionContext({}, {
     headers: request.headers,
-    requiredRoles: ['orgAdmin'],
+    requiredPermissions: { employmentContract: ['delete'] },
     auditSource: 'api:hr:people:contracts:delete',
-    action: 'delete',
-    resourceType: 'employmentContract',
+    action: HR_ACTION.DELETE,
+    resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
     resourceAttributes: { contractId },
   });
 

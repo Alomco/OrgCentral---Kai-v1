@@ -9,6 +9,7 @@ import {
     resolveAbsenceControllerDependencies,
     type AbsenceControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export async function getAbsencesController(
     request: Request,
@@ -20,11 +21,10 @@ export async function getAbsencesController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['member'],
         requiredPermissions: { organization: ['read'] },
         auditSource: 'api:hr:absences:get',
-        action: 'read',
-        resourceType: 'hr.absence',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE.HR_ABSENCE,
         resourceAttributes: buildFilterAttributes(filters),
     });
 

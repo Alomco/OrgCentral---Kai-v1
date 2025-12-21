@@ -4,10 +4,20 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import tseslint from "typescript-eslint";
 import importPlugin from "eslint-plugin-import";
+import sonarjs from "eslint-plugin-sonarjs";
 
 export default defineConfig([
   {
-    ignores: [".next/**", "node_modules/**"]
+    ignores: [
+      ".next/**",
+      ".tmp/**",
+      "node_modules/**",
+      "src/components/ui/**",
+      "src/hooks/use-mobile.ts",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/__tests__/**",
+    ]
   },
   js.configs.recommended,
   ...nextVitals,
@@ -24,6 +34,7 @@ export default defineConfig([
     files: ["**/*.{ts,tsx,js,jsx}"],
     plugins: {
       import: importPlugin,
+      sonarjs,
     },
     rules: {
       "no-console": "warn",

@@ -2,6 +2,8 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { IEmploymentContractRepository } from '@/server/repositories/contracts/hr/people/employment-contract-repository-contract';
 import type { ContractMutationPayload, ContractTypeCode } from '@/server/types/hr/people';
 import { invalidateContractsAfterMutation } from '../shared/cache-helpers';
+import { assertEmploymentContractEditor } from '@/server/security/guards-hr-people';
+import { HR_ACTION } from '@/server/security/authorization/hr-resource-registry';
 
 // Use-case: create an employment contract via employment contract repositories with RBAC/ABAC guard enforcement.
 
@@ -28,6 +30,19 @@ export async function createEmploymentContract(
   input: CreateEmploymentContractInput,
 ): Promise<CreateEmploymentContractResult> {
   const orgId = input.authorization.orgId;
+  await assertEmploymentContractEditor({
+    authorization: input.authorization,
+    action: HR_ACTION.CREATE,
+    resourceAttributes: {
+      orgId,
+      userId: input.contractData.userId,
+      employeeId: input.contractData.userId,
+      departmentId: input.contractData.departmentId ?? null,
+      contractType: input.contractData.contractType,
+      jobTitle: input.contractData.jobTitle,
+      startDate: input.contractData.startDate,
+    },
+  });
 
   await dependencies.employmentContractRepository.createEmploymentContract(
     orgId,

@@ -11,6 +11,7 @@ import type { IChecklistInstanceRepository } from '@/server/repositories/contrac
 import type { EmployeeProfileDTO } from '@/server/types/hr/people';
 import type { OrganizationData, UserData, Membership } from '@/server/types/leave-types';
 import type { ChecklistTemplate } from '@/server/types/onboarding-types';
+import { normalizeLeaveYearStartDate } from '@/server/types/org/leave-year-start-date';
 
 describe('acceptInvitation onboarding integration', () => {
     const actor = { userId: 'user-123', email: 'invitee@example.com' };
@@ -32,13 +33,15 @@ describe('acceptInvitation onboarding integration', () => {
     const organization: OrganizationData = {
         id: 'org-1',
         name: 'Org One',
+        slug: 'org-one',
+        regionCode: 'UK-LON',
         dataResidency: 'UK_ONLY',
         dataClassification: 'OFFICIAL',
         auditSource: 'test',
         auditBatchId: undefined,
         leaveEntitlements: { annual: 25 },
         primaryLeaveType: 'annual',
-        leaveYearStartDate: '2025-01-01',
+        leaveYearStartDate: normalizeLeaveYearStartDate('2025-01-01'),
         leaveRoundingRule: 'full_day',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -83,6 +86,7 @@ describe('acceptInvitation onboarding integration', () => {
     const buildOrganizationRepository = (): IOrganizationRepository =>
     ({
         getOrganization: vi.fn(async () => organization),
+        getOrganizationBySlug: vi.fn(async () => organization),
         getLeaveEntitlements: vi.fn(async () => ({})),
         updateLeaveSettings: vi.fn(async () => undefined),
         addCustomLeaveType: vi.fn(async () => undefined),

@@ -5,6 +5,8 @@ import { createPeopleProfileOperations } from './people-service.profile-operatio
 import type {
   CreateEmployeeProfilePayload,
   CreateEmployeeProfileResult,
+  CountEmployeeProfilesPayload,
+  CountEmployeeProfilesResult,
   CreateEmploymentContractPayload,
   CreateEmploymentContractResult,
   DeleteEmployeeProfilePayload,
@@ -52,6 +54,7 @@ import {
   getEmployeeProfilePayloadSchema,
   getEmploymentContractByEmployeePayloadSchema,
   getEmploymentContractPayloadSchema,
+  countEmployeeProfilesPayloadSchema,
   listEmployeeProfilesPayloadSchema,
   listEmploymentContractsPayloadSchema,
   updateEmployeeProfilePayloadSchema,
@@ -143,6 +146,16 @@ export class PeopleService extends AbstractHrService {
       input.payload,
     );
     return this.profileOperations.listEmployeeProfiles({ ...input, payload });
+  }
+
+  countEmployeeProfiles(
+    input: PeopleServiceInput<CountEmployeeProfilesPayload>,
+  ): Promise<CountEmployeeProfilesResult> {
+    const payload = this.parsePayload<CountEmployeeProfilesPayload>(
+      countEmployeeProfilesPayloadSchema,
+      input.payload,
+    );
+    return this.profileOperations.countEmployeeProfiles({ ...input, payload });
   }
 
   createEmployeeProfile(

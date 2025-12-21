@@ -1,13 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import type { IGuardMembershipRepository } from '@/server/repositories/contracts/security/guard-membership-repository-contract';
 import { PrismaGuardMembershipRepository } from '@/server/repositories/prisma/security/guard/prisma-guard-membership-repository';
+import type { MembershipStatus } from '@prisma/client';
 
-const ACTIVE_MEMBERSHIP_STATUSES = ['ACTIVE', 'INVITED'] as const;
+const ACTIVE_MEMBERSHIP_STATUSES: readonly MembershipStatus[] = ['ACTIVE', 'INVITED'];
 
 let membershipRepository: IGuardMembershipRepository = new PrismaGuardMembershipRepository();
 
 export interface RequireActiveMembershipOptions {
-    allowedStatuses?: readonly string[];
+    allowedStatuses?: readonly MembershipStatus[];
     repository?: IGuardMembershipRepository;
     correlationId?: string;
 }
@@ -15,7 +16,7 @@ export interface RequireActiveMembershipOptions {
 export interface ActiveMembershipCheckResult {
     orgId: string;
     userId: string;
-    status?: string;
+    status?: MembershipStatus;
     correlationId: string;
 }
 
@@ -31,10 +32,10 @@ export async function requireActiveMembership(
         throw new Error('Membership was not found for the requested organization.');
     }
 
-    const status = extractStatus(membership.metadata);
-    const allowedStatuses = new Set(options?.allowedStatuses ?? ACTIVE_MEMBERSHIP_STATUSES);
+    const status = membership.status;
+    const allowedStatuses = new Set<MembershipStatus>(options?.allowedStatuses ?? ACTIVE_MEMBERSHIP_STATUSES);
 
-    if (status && !allowedStatuses.has(status)) {
+    if (!allowedStatuses.has(status)) {
         throw new Error('Membership is not active for this operation.');
     }
 
@@ -54,11 +55,4 @@ export function __resetMembershipRepositoryForTests(): void {
     membershipRepository = new PrismaGuardMembershipRepository();
 }
 
-function extractStatus(metadata: Record<string, unknown> | null | undefined): string | undefined {
-    if (!metadata || typeof metadata !== 'object') {
-        return undefined;
-    }
-
-    const value = metadata.status;
-    return typeof value === 'string' ? value : undefined;
-}
+// Status is now sourced directly from membership.status.

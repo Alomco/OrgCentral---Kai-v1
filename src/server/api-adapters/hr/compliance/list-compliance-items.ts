@@ -24,7 +24,7 @@ export async function listComplianceItemsController(
 
     const baseAccess = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['member'],
+        requiredPermissions: { employeeProfile: ['read'] },
         auditSource: 'api:hr:compliance:list',
         action: 'read',
         resourceType: 'hr.compliance',

@@ -4,6 +4,8 @@ import type { EmploymentContract } from '@/server/types/hr-types';
 import type { ContractListFilters } from '@/server/types/hr/people';
 import { registerContractsCache } from '../shared/cache-helpers';
 import { normalizeContractFilters } from '../shared/profile-validators';
+import { assertEmploymentContractReader } from '@/server/security/guards-hr-people';
+import { HR_ACTION } from '@/server/security/authorization/hr-resource-registry';
 
 // Use-case: list employment contracts for an organization via contract repositories with RBAC/ABAC filters.
 
@@ -25,6 +27,16 @@ export async function listEmploymentContracts(
   input: ListEmploymentContractsInput,
 ): Promise<ListEmploymentContractsResult> {
   const normalizedFilters = normalizeContractFilters(input.filters);
+
+  await assertEmploymentContractReader({
+    authorization: input.authorization,
+    action: HR_ACTION.READ,
+    resourceAttributes: {
+      orgId: input.authorization.orgId,
+      filterCount: Object.keys(normalizedFilters ?? {}).length,
+      filters: normalizedFilters,
+    },
+  });
 
   const contracts = await dependencies.employmentContractRepository.getEmploymentContractsByOrganization(
     input.authorization.orgId,

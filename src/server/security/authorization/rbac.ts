@@ -14,7 +14,6 @@ export interface DelegatedAdminScope {
 }
 
 export interface RbacRequirement {
-    requiredRoles?: OrgRoleKey[];
     requiredPermissions?: OrgPermissionMap;
     delegatedScopes?: DelegatedAdminScope[];
 }
@@ -33,7 +32,7 @@ function satisfiesPermissions(
     granted: OrgPermissionMap,
     required: OrgPermissionMap,
 ): boolean {
-    for (const resource of Object.keys(required) as (keyof OrgPermissionMap)[]) {
+    for (const resource of Object.keys(required)) {
         const actions = required[resource];
         if (!actions?.length) {
             continue;
@@ -48,13 +47,6 @@ function satisfiesPermissions(
     return true;
 }
 
-function hasRole(
-    role: OrgRoleKey,
-    requiredRoles: readonly OrgRoleKey[] | undefined,
-): boolean {
-    return !requiredRoles?.length || requiredRoles.includes(role);
-}
-
 function isScopeActive(scope: DelegatedAdminScope, now: Date): boolean {
     return !scope.expiresAt || scope.expiresAt.getTime() >= now.getTime();
 }
@@ -66,12 +58,9 @@ export function evaluateRbac(
 ): RbacDecision {
     const reasons: string[] = [];
 
-    if (!hasRole(roleKey, requirement.requiredRoles)) {
-        reasons.push('Role not in requiredRoles list.');
-    }
-
     const requiredPermissions = requirement.requiredPermissions ?? {};
     const grantedPermissions = permissionsForRole(roleKey);
+
     if (!satisfiesPermissions(grantedPermissions, requiredPermissions)) {
         reasons.push('Role permissions do not satisfy requiredPermissions.');
     }

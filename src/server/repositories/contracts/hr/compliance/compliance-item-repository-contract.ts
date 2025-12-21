@@ -28,5 +28,9 @@ export interface IComplianceItemRepository {
     listItemsForUser(orgId: string, userId: string): Promise<ComplianceLogItem[]>;
     updateItem(orgId: string, userId: string, itemId: string, updates: ComplianceItemUpdateInput): Promise<ComplianceLogItem>;
     deleteItem(orgId: string, userId: string, itemId: string): Promise<void>;
-    findExpiringItems(referenceDate: Date, daysUntilExpiry: number): Promise<ComplianceLogItem[]>;
+    findExpiringItemsForOrg(
+        orgId: string,
+        referenceDate: Date,
+        daysUntilExpiry: number,
+    ): Promise<ComplianceLogItem[]>;
 }

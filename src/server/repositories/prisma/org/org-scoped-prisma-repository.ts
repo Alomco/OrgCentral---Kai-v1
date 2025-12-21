@@ -42,11 +42,13 @@ export abstract class OrgScopedPrismaRepository extends BasePrismaRepository {
 
     protected tagCache(context: RepositoryAuthorizationContext, ...tags: string[]): void {
         for (const tag of tags) {
-            registerOrgCacheTag(context.orgId, tag);
+            registerOrgCacheTag(context.orgId, tag, context.dataClassification, context.dataResidency);
         }
     }
 
     protected async invalidateCache(context: RepositoryAuthorizationContext, ...tags: string[]): Promise<void> {
-        await Promise.all(tags.map((tag) => invalidateOrgCache(context.orgId, tag)));
+        await Promise.all(
+            tags.map((tag) => invalidateOrgCache(context.orgId, tag, context.dataClassification, context.dataResidency)),
+        );
     }
 }

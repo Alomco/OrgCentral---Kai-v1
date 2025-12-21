@@ -4,7 +4,7 @@ export * from './leave/leave-balance-repository-contract';
 export * from './leave/leave-request-repository-contract';
 export * from './people/employee-profile-repository-contract';
 export * from './people/employment/employment-contract-repository-contract';
-export * from './performance/performance-review-repository-contract';
+export * from './performance/performance-repository.contract';
 export * from './training/training-record-repository-contract';
 export * from './absences/absence-type-config-repository-contract';
 export * from './absences/absence-settings-repository-contract';

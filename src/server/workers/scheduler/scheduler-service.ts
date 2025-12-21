@@ -11,7 +11,7 @@ export type RepeatExpression =
     | { every: number | DurationString; limit?: number; offset?: number };
 
 export interface RecurringJobDefinition<TPayload> {
-    queue: WorkerQueueName | string;
+    queue: WorkerQueueName;
     name: string;
     jobId: string;
     payload: TPayload;
@@ -23,7 +23,7 @@ export interface RecurringJobDefinition<TPayload> {
 export class SchedulerService {
     constructor(
         private readonly queueResolver: typeof getQueue = getQueue,
-    ) {}
+    ) { }
 
     async upsertRecurringJob<TPayload>(definition: RecurringJobDefinition<TPayload>): Promise<void> {
         const queue = this.queueResolver(definition.queue, definition.queueOptions);
@@ -36,7 +36,7 @@ export class SchedulerService {
     }
 
     async removeRecurringJob(
-        queueName: WorkerQueueName | string,
+        queueName: WorkerQueueName,
         name: string,
         repeat: RepeatExpression,
         queueOptions?: QueueRegistryOptions,
@@ -44,6 +44,7 @@ export class SchedulerService {
     ): Promise<void> {
         const queue = this.queueResolver(queueName, queueOptions);
         const repeatOptions = this.toRepeatOptions(repeat);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- migrate to job scheduler IDs when BullMQ upgrade completes
         await queue.removeRepeatable(name, repeatOptions, jobId);
     }
 
@@ -70,7 +71,7 @@ export class SchedulerService {
 
         const match = /^(-?\d+(?:\.\d+)?)(ms|s|m|h|d)$/i.exec(value.trim());
         if (!match) {
-            throw new Error(`Invalid interval value \"${value}\" supplied to SchedulerService.`);
+            throw new Error(`Invalid interval value "${value}" supplied to SchedulerService.`);
         }
         const [, rawAmount, rawUnit] = match;
         const amount = Number(rawAmount);

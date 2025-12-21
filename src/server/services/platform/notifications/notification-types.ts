@@ -39,9 +39,15 @@ export interface NotificationAbacContext {
   resourceAttributes?: Record<string, unknown>;
 }
 
+export type NormalizableNotificationInput = Pick<
+  NotificationCreateInput,
+  'userId' | 'title' | 'body' | 'topic' | 'priority'
+> &
+  Partial<Omit<NotificationCreateInput, 'userId' | 'title' | 'body' | 'topic' | 'priority'>>;
+
 export interface ComposeNotificationInput {
   authorization: RepositoryAuthorizationContext;
-  notification: NotificationCreateInput;
+  notification: NormalizableNotificationInput;
   targets?: DeliveryTarget[];
   abac?: NotificationAbacContext;
 }

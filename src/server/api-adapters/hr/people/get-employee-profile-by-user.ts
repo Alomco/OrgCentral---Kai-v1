@@ -4,6 +4,7 @@ import type { PeopleService } from '@/server/services/hr/people/people-service';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getEmployeeProfileByUserRequestSchema } from '@/server/types/hr-people-schemas';
 import type { EmployeeProfile } from '@/server/types/hr-types';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 // API adapter: get an employee profile by user id through people repositories with RBAC/ABAC guard checks.
 
@@ -29,10 +30,10 @@ export async function getEmployeeProfileByUserAdapter(
     // Get session context
     const { authorization } = await getSessionContext({}, {
       headers: new Headers(req.headers as unknown as HeadersInit),
-      requiredRoles: ['member'],
+      requiredPermissions: { employeeProfile: ['read'] },
       auditSource: 'api:hr:people:get-employee-profile-by-user',
-      action: 'read',
-      resourceType: 'employeeProfile',
+      action: HR_ACTION.READ,
+      resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
       resourceAttributes: {
         targetUserId: input.userId,
       },

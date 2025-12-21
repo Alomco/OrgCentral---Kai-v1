@@ -22,14 +22,14 @@ Keep the folder hierarchy aligned with the product domain (`org`, `hr`, `records
 - Avoid direct Prisma client usage outside repositories. Services interact with contracts only.
 
 ## Zero-Trust Authorization Workflow
-1. **Guard input** – Collect `orgId`, `userId`, and RBAC/ABAC requirements (`requiredRoles`, `requiredPermissions`, `action`, `resourceType`, `resourceAttributes`, residency/classification expectations).
+1. **Guard input** – Collect `orgId`, `userId`, and RBAC/ABAC requirements (`requiredPermissions`, `requiredAnyPermissions`, `action`, `resourceType`, `resourceAttributes`, residency/classification expectations).
 2. **Authorize** – Use `withRepositoryAuthorization` (exported from `src/server/repositories/security`) to wrap the service operation. The guard itself queries membership and organization metadata through `IGuardMembershipRepository`, so even guard logic never touches Prisma directly:
    ```ts
    return withRepositoryAuthorization(
      {
        orgId,
        userId,
-       requiredRoles: ['owner'],
+       requiredPermissions: { organization: ['update'] },
        action: 'update',
        resourceType: 'department',
        resourceAttributes: { departmentId },
@@ -89,7 +89,7 @@ export class PrismaFooRepository extends BasePrismaRepository implements IFooRep
 ## Reusability And Modularity Patterns
 - **Base class** – All Prisma repositories extend `BasePrismaRepository`, taking a `PrismaClient` through dependency injection.
 - **Org-scoped base class** - Repositories in `prisma/org` (or any module enforcing tenant checks) should extend `OrgScopedPrismaRepository`, which bundles the shared `RepositoryAuthorizer` along with cache tag helpers so implementations avoid duplicating boilerplate.
-- **Helpers** – Use `getModelDelegate`, `runTransaction`, `toPrismaInputJson`, and `extractRoles` for shared concerns.
+- **Helpers** – Use `getModelDelegate`, `runTransaction`, and `toPrismaInputJson` for shared concerns.
 - **Mappers** – Keep transformation logic isolated; repositories should not convert raw Prisma objects manually.
 - **Domain utilities** – Business calculations (e.g., converting hours to days for leave) belong in `src/server/domain/**` helpers such as `leave-calculator.ts` and `hours-per-day-resolver.ts`. Pass configuration (like org-specific hoursPerDay) down to mappers rather than hardcoding assumptions in mapping code.
 - **Security utilities** – Reuse the global `RepositoryAuthorizer` singleton rather than re-implementing org ID comparisons in each file.

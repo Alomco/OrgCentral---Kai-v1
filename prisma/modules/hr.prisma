@@ -90,6 +90,14 @@ enum ContractType {
   @@schema("hr")
 }
 
+enum PerformanceGoalStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  @@schema("hr")
+}
+
 model EmployeeProfile {
   id               String           @id @default(uuid()) @db.Uuid
   orgId            String           @db.Uuid
@@ -331,12 +339,14 @@ model PerformanceReview {
   userId           String   @db.Uuid
   reviewerOrgId    String   @db.Uuid
   reviewerUserId   String   @db.Uuid
-  reviewPeriod     String   // e.g., "2023-Q1"
+  periodStartDate  DateTime
+  periodEndDate    DateTime
   scheduledDate    DateTime
   completedDate    DateTime?
   status           String   @default("scheduled")
   overallRating    Int?     // 1-5 scale
-  goalsMet         Json?    @db.JsonB
+  strengths        String?
+  areasForImprovement String?
   developmentPlan  Json?    @db.JsonB
   reviewerNotes    String?
   employeeResponse String?
@@ -344,12 +354,35 @@ model PerformanceReview {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  goals PerformanceGoal[]
+
   reviewedMembership   Membership @relation("RevieweeMembership", fields: [orgId, userId], references: [orgId, userId], onDelete: Cascade)
   reviewerMembership   Membership @relation("ReviewerMembership", fields: [reviewerOrgId, reviewerUserId], references: [orgId, userId], onDelete: Cascade)
 
   @@index([orgId, userId])
-  @@index([reviewPeriod])
+  @@index([periodStartDate])
+  @@index([periodEndDate])
   @@map("performance_reviews")
+  @@schema("hr")
+}
+
+model PerformanceGoal {
+  id          String                @id @default(uuid()) @db.Uuid
+  orgId       String                @db.Uuid
+  reviewId    String                @db.Uuid
+  description String
+  targetDate  DateTime
+  status      PerformanceGoalStatus @default(PENDING)
+  rating      Int?
+  comments    String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  review PerformanceReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, status, targetDate])
+  @@index([reviewId])
+  @@map("performance_goals")
   @@schema("hr")
 }
 
@@ -362,6 +395,8 @@ model TrainingRecord {
   provider      String
   startDate     DateTime
   endDate       DateTime?
+  expiryDate    DateTime?
+  renewalDate   DateTime?
   status        String   @default("in_progress")
   certificate   String?  // Path to certificate document
   competency    Json?    @db.JsonB // Skills gained

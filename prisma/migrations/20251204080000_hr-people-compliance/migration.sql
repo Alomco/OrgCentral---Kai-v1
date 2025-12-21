@@ -1,0 +1,2 @@
+-- Duplicate of 20251203093234_hr-people-compliance.
+-- Intentionally left empty to avoid replaying the same schema DDL twice.

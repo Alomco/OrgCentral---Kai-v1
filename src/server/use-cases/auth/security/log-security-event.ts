@@ -23,7 +23,7 @@ export async function logSecurityEvent(
     {
       orgId: input.orgId,
       userId: input.userId,
-      requiredRoles: ['member'], // Any member can potentially trigger a security event log
+      requiredPermissions: { organization: ['read'] },
       action: 'create',
       resourceType: 'security_event',
     },

@@ -1,4 +1,5 @@
 import type { InvitationStatus as PrismaInvitationStatus } from '@prisma/client';
+import type { AbacSubjectAttributes } from '@/server/types/abac-subject-attributes';
 
 export type InvitationStatus = PrismaInvitationStatus;
 
@@ -20,6 +21,8 @@ export interface OnboardingData {
     paySchedule?: string | null;
     eligibleLeaveTypes?: string[];
     onboardingTemplateId?: string | null;
+    /** Optional ABAC subject attributes to apply to the accepted membership (stored on membership.metadata). */
+    abacSubjectAttributes?: AbacSubjectAttributes;
 }
 
 export interface InvitationData {

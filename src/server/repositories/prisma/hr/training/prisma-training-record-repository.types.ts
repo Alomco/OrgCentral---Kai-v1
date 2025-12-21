@@ -7,6 +7,8 @@ export interface TrainingRecordFilters {
     status?: string;
     startDate?: Date;
     endDate?: Date;
+    expiryBefore?: Date;
+    expiryAfter?: Date;
 }
 
 export type TrainingRecordCreationData = Prisma.TrainingRecordUncheckedCreateInput;

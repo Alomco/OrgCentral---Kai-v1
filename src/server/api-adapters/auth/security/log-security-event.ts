@@ -1,9 +1,10 @@
 // API adapter: Use-case: log a security event using the security-event repository for audit/compliance.
 import { z } from 'zod';
-import { PrismaSecurityEventRepository } from '@/server/repositories/prisma/auth/security/prisma-security-event-repository';
-import { logSecurityEvent } from '@/server/use-cases/auth/security/log-security-event';
+import { getSecurityEventService } from '@/server/services/auth/security-event-service';
+import type { SecurityEventService } from '@/server/services/auth/security-event-service';
 import type { LogSecurityEventInput, LogSecurityEventRequest } from '@/server/types';
 import { LogSecurityEventRequestSchema } from '@/server/types';
+import { recordSecurityEvent } from '@/server/use-cases/auth/security/log-security-event-action';
 
 /**
  * Controller-level adapter for logging a security event.
@@ -17,18 +18,15 @@ const ActorSchema = z.object({
     userId: z.string().min(1, 'Authenticated user id is required to log a security event.'),
 });
 
+const securityEventService = getSecurityEventService();
+
 export async function logSecurityEventController(
     payload: unknown,
     actor: unknown,
-    repository?: PrismaSecurityEventRepository,
+    service: SecurityEventService = securityEventService,
 ): Promise<{ success: true }> {
-    // Validate at the boundary
     const input = LogSecurityEventRequestSchema.parse(payload) as LogSecurityEventRequest;
     const { userId } = ActorSchema.parse(actor);
-
-    const repo = repository ?? new PrismaSecurityEventRepository();
     const logInput: LogSecurityEventInput = { ...input, userId };
-
-    // The use-case performs its own authorization guard (withRepositoryAuthorization)
-    return logSecurityEvent(logInput, repo);
+    return recordSecurityEvent(logInput, { service });
 }

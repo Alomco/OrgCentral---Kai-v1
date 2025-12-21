@@ -1,11 +1,14 @@
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
-import type { PrismaClient, Invitation as PrismaInvitation } from '@prisma/client';
+import { Prisma, type PrismaClient, type Invitation as PrismaInvitation } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 import type {
     IInvitationRepository,
     InvitationRecord,
     InvitationStatusUpdate,
+    InvitationCreateInput,
 } from '@/server/repositories/contracts/auth/invitations';
 import { resolveIdentityCacheScopes } from '@/server/lib/cache-tags/identity';
+import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 
 type InvitationEntity = PrismaInvitation;
 
@@ -26,6 +29,55 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
             return null;
         }
 
+        return mapInvitation(record);
+    }
+
+    async getActiveInvitationByEmail(orgId: string, email: string): Promise<InvitationRecord | null> {
+        const normalized = email.trim().toLowerCase();
+        const record = await getInvitationDelegate(this.prisma).findFirst({
+            where: {
+                orgId,
+                targetEmail: { equals: normalized, mode: 'insensitive' },
+                status: 'pending',
+                OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return record ? mapInvitation(record) : null;
+    }
+
+    async createInvitation(input: InvitationCreateInput): Promise<InvitationRecord> {
+        const token = `${input.orgId}-${randomUUID()}`;
+        const targetEmail = input.targetEmail.trim().toLowerCase();
+
+        const record = await getInvitationDelegate(this.prisma).create({
+            data: {
+                token,
+                orgId: input.orgId,
+                organizationName: input.organizationName,
+                targetEmail,
+                onboardingData:
+                    toPrismaInputJson(
+                        input.onboardingData as unknown as Prisma.InputJsonValue,
+                    ) ?? Prisma.JsonNull,
+                status: 'pending',
+                invitedByUserId: input.invitedByUserId ?? null,
+                expiresAt: input.expiresAt ?? null,
+                metadata:
+                    toPrismaInputJson(
+                        input.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined,
+                    ) ?? Prisma.JsonNull,
+                securityContext:
+                    toPrismaInputJson(
+                        input.securityContext as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined,
+                    ) ?? Prisma.JsonNull,
+                ipAddress: input.ipAddress ?? null,
+                userAgent: input.userAgent ?? null,
+            },
+        });
+
+        await this.invalidateAfterWrite(input.orgId, resolveIdentityCacheScopes());
         return mapInvitation(record);
     }
 
@@ -55,7 +107,12 @@ function getInvitationDelegate(prisma: unknown): InvitationDelegate {
     }
 
     const candidate = delegate as Partial<InvitationDelegate>;
-    if (typeof candidate.findUnique !== 'function' || typeof candidate.update !== 'function') {
+    if (
+        typeof candidate.findUnique !== 'function' ||
+        typeof candidate.findFirst !== 'function' ||
+        typeof candidate.create !== 'function' ||
+        typeof candidate.update !== 'function'
+    ) {
         throw new Error('Invitation delegate is missing required methods.');
     }
 

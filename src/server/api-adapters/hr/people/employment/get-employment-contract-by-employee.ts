@@ -4,6 +4,7 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { getEmploymentContractByEmployeeRequestSchema } from '@/server/types/hr-people-schemas';
 import type { EmploymentContract } from '@/server/types/hr-types';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export type GetEmploymentContractByEmployeeApiInput = Infer<typeof getEmploymentContractByEmployeeRequestSchema>;
 
@@ -25,10 +26,10 @@ export async function getEmploymentContractByEmployeeAdapter(
       {},
       {
         headers: new Headers(req.headers as unknown as HeadersInit),
-        requiredRoles: ['member'],
+        requiredPermissions: { employmentContract: ['read'] },
         auditSource: 'api:hr:people:employment:get-contract-by-employee',
-        action: 'read',
-        resourceType: 'employmentContract',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
         resourceAttributes: { employeeId: input.employeeId },
       },
     );

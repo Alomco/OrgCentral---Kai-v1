@@ -1,77 +1,14 @@
 import type { Prisma, HRNotification as PrismaHRNotification, $Enums } from '@prisma/client';
 import type { HRNotificationCreateDTO, HRNotificationDTO } from '@/server/types/hr/notifications';
 
-function mapPrismaTypeToDomain(type: $Enums.HRNotificationType): HRNotificationDTO['type'] {
-  switch (type) {
-    case 'LEAVE_APPROVAL':
-      return 'leave-approval';
-    case 'LEAVE_REJECTION':
-      return 'leave-rejection';
-    case 'DOCUMENT_EXPIRY':
-      return 'document-expiry';
-    case 'POLICY_UPDATE':
-      return 'policy-update';
-    case 'PERFORMANCE_REVIEW':
-      return 'performance-review';
-    case 'SYSTEM_ANNOUNCEMENT':
-      return 'system-announcement';
-    case 'COMPLIANCE_REMINDER':
-      return 'compliance-reminder';
-    case 'OTHER':
-    default:
-      return 'other';
-  }
-}
+const toDomainType = (type: $Enums.HRNotificationType): HRNotificationDTO['type'] => type;
+const toPrismaType = (type: HRNotificationDTO['type']): $Enums.HRNotificationType =>
+  type as $Enums.HRNotificationType;
 
-function mapDomainTypeToPrisma(type: HRNotificationDTO['type']): $Enums.HRNotificationType {
-  switch (type) {
-    case 'leave-approval':
-      return 'LEAVE_APPROVAL';
-    case 'leave-rejection':
-      return 'LEAVE_REJECTION';
-    case 'document-expiry':
-      return 'DOCUMENT_EXPIRY';
-    case 'policy-update':
-      return 'POLICY_UPDATE';
-    case 'performance-review':
-      return 'PERFORMANCE_REVIEW';
-    case 'system-announcement':
-      return 'SYSTEM_ANNOUNCEMENT';
-    case 'compliance-reminder':
-      return 'COMPLIANCE_REMINDER';
-    case 'other':
-    default:
-      return 'OTHER';
-  }
-}
-
-function mapPrismaPriorityToDomain(priority: $Enums.NotificationPriority): HRNotificationDTO['priority'] {
-  switch (priority) {
-    case 'LOW':
-      return 'low';
-    case 'MEDIUM':
-      return 'medium';
-    case 'HIGH':
-      return 'high';
-    case 'URGENT':
-    default:
-      return 'urgent';
-  }
-}
-
-function mapDomainPriorityToPrisma(priority: HRNotificationDTO['priority']): $Enums.NotificationPriority {
-  switch (priority) {
-    case 'low':
-      return 'LOW';
-    case 'medium':
-      return 'MEDIUM';
-    case 'high':
-      return 'HIGH';
-    case 'urgent':
-    default:
-      return 'URGENT';
-  }
-}
+const toDomainPriority = (priority: $Enums.NotificationPriority): HRNotificationDTO['priority'] =>
+  priority;
+const toPrismaPriority = (priority: HRNotificationDTO['priority']): $Enums.NotificationPriority =>
+  priority as $Enums.NotificationPriority;
 
 export function mapPrismaHRNotificationToDomain(record: PrismaHRNotification): HRNotificationDTO {
   const metadata = record.metadata as Prisma.JsonValue | null | undefined;
@@ -81,8 +18,8 @@ export function mapPrismaHRNotificationToDomain(record: PrismaHRNotification): H
     userId: record.userId,
     title: record.title,
     message: record.message,
-    type: mapPrismaTypeToDomain(record.type),
-    priority: mapPrismaPriorityToDomain(record.priority),
+    type: toDomainType(record.type),
+    priority: toDomainPriority(record.priority),
     isRead: record.isRead,
     readAt: record.readAt ?? undefined,
     actionUrl: record.actionUrl ?? undefined,
@@ -102,8 +39,8 @@ export function mapPrismaHRNotificationToDomain(record: PrismaHRNotification): H
 export function mapDomainHRNotificationToPrismaCreate(
   input: HRNotificationCreateDTO,
 ): Prisma.HRNotificationUncheckedCreateInput {
-  const type: $Enums.HRNotificationType = mapDomainTypeToPrisma(input.type);
-  const priority: $Enums.NotificationPriority = mapDomainPriorityToPrisma(input.priority);
+  const type: $Enums.HRNotificationType = toPrismaType(input.type);
+  const priority: $Enums.NotificationPriority = toPrismaPriority(input.priority);
   const metadata = input.metadata as Prisma.InputJsonValue | null | undefined;
   return {
     orgId: input.orgId,

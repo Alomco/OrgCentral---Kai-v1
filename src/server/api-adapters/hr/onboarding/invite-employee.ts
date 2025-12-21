@@ -61,7 +61,6 @@ export async function inviteEmployeeController(
 
     const { authorization } = await getSessionContext(resolved.session, {
         headers: request.headers,
-        requiredRoles: ['orgAdmin'],
         requiredPermissions: { member: ['invite'] },
         auditSource: 'api:hr:onboarding:invite',
         action: 'invite',

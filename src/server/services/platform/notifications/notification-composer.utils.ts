@@ -11,12 +11,7 @@ import type {
   NotificationDeliveryPayload,
   NotificationDeliveryResult,
 } from './notification-types';
-
-type NormalizableNotificationInput = Pick<
-  NotificationCreateInput,
-  'userId' | 'title' | 'body' | 'topic' | 'priority'
-> &
-  Partial<Omit<NotificationCreateInput, 'userId' | 'title' | 'body' | 'topic' | 'priority'>>;
+import type { NormalizableNotificationInput } from './notification-types';
 
 export function normalizeNotificationInput(
   authorization: RepositoryAuthorizationContext,

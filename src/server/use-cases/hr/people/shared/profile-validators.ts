@@ -15,6 +15,7 @@ export function normalizeProfileFilters(filters?: PeopleListFilters): PeopleList
   return {
     startDate: normalizeDateString(filters.startDate),
     endDate: normalizeDateString(filters.endDate),
+    employmentStatus: filters.employmentStatus,
   };
 }
 

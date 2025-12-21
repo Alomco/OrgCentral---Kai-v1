@@ -56,4 +56,13 @@ export interface ILeaveRequestRepository {
     filters?: { status?: string; startDate?: Date; endDate?: Date },
     options?: LeaveRequestReadOptions
   ): Promise<LeaveRequest[]>;
+
+  /**
+   * Count leave requests linked to a specific policy.
+   * Used to guard against deleting policies that are already in use.
+   */
+  countLeaveRequestsByPolicy(
+    tenantId: string,
+    policyId: string,
+  ): Promise<number>;
 }

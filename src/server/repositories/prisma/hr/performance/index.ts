@@ -1,2 +1,1 @@
-export { PrismaPerformanceReviewRepository } from './prisma-performance-review-repository';
-export type { PerformanceReviewFilters, PerformanceReviewCreationData, PerformanceReviewUpdateData } from './prisma-performance-review-repository.types';
+export { PrismaPerformanceRepository } from './prisma-performance-repository';

@@ -22,6 +22,7 @@ vi.mock('@/server/repositories/security', async () => {
                 orgId: (input as { orgId: string }).orgId,
                 userId: (input as { userId: string }).userId,
                 roleKey: 'orgAdmin',
+                permissions: {},
                 dataResidency:
                     (input as { expectedResidency?: DataResidencyZone }).expectedResidency ?? DEFAULT_RESIDENCY,
                 dataClassification:

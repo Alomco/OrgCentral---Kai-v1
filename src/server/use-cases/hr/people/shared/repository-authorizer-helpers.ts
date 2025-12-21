@@ -15,7 +15,7 @@ export function createHrPeopleAuthorizationDefaults(
     expectedClassification: DEFAULT_CLASSIFICATION,
     expectedResidency: DEFAULT_RESIDENCY,
     auditSource: 'hr:people',
-    requiredRoles: ['member'],
+    requiredPermissions: { organization: ['read'] },
     ...overrides,
   };
 }
@@ -25,7 +25,7 @@ export function createHrPeopleEditorRepositoryDefaults(
 ): RepositoryAuthorizationDefaults {
   return createHrPeopleAuthorizationDefaults({
     auditSource: 'hr:people:edit',
-    requiredRoles: ['orgAdmin'],
+    requiredPermissions: { employeeProfile: ['update'], employmentContract: ['update'] },
     ...overrides,
   });
 }

@@ -10,7 +10,7 @@ export class PrismaTimeEntryRepository extends BasePrismaRepository implements I
     orgId: string,
     input: Omit<TimeEntry, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { status?: TimeEntry['status'] },
   ): Promise<TimeEntry> {
-    const data = mapDomainTimeEntryToPrismaCreate({ ...input, status: input.status ?? 'ACTIVE' });
+    const data = mapDomainTimeEntryToPrismaCreate({ ...input, orgId, status: input.status ?? 'ACTIVE' });
     const rec = await this.prisma.timeEntry.create({ data });
     if (rec.orgId !== orgId) {
       throw new AuthorizationError('Cross-tenant time entry creation mismatch', { orgId });
@@ -24,9 +24,15 @@ export class PrismaTimeEntryRepository extends BasePrismaRepository implements I
     updates: Partial<Pick<TimeEntry, 'clockIn' | 'clockOut' | 'totalHours' | 'breakDuration' | 'project' | 'tasks' | 'notes' | 'status' | 'approvedByOrgId' | 'approvedByUserId' | 'approvedAt' | 'dataClassification' | 'residencyTag' | 'metadata'>>,
   ): Promise<TimeEntry> {
     const data = mapDomainTimeEntryToPrismaUpdate(updates);
-    const rec = await this.prisma.timeEntry.update({ where: { id }, data });
-    if (rec.orgId !== orgId) {
-      throw new AuthorizationError('Cross-tenant time entry update mismatch', { orgId });
+    const updated = await this.prisma.timeEntry.updateMany({ where: { id, orgId }, data });
+
+    if (updated.count !== 1) {
+      throw new AuthorizationError('Cross-tenant time entry update mismatch', { orgId, entryId: id });
+    }
+
+    const rec = await this.prisma.timeEntry.findFirst({ where: { id, orgId } });
+    if (!rec) {
+      throw new AuthorizationError('Cross-tenant time entry update mismatch', { orgId, entryId: id });
     }
     return mapPrismaTimeEntryToDomain(rec);
   }

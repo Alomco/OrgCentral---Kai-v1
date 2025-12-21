@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { DATA_CLASSIFICATION_LEVELS, DATA_RESIDENCY_ZONES } from '@/server/types/tenant';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { OrgPermissionMap } from '@/server/security/access-control';
 import {
     contractMutationPayloadSchema,
     profileMutationPayloadSchema,
@@ -10,10 +11,16 @@ import type { LeaveBalance, LeaveRequest } from '@/server/types/leave-types';
 import type { UnplannedAbsence } from '@/server/types/hr-ops-types';
 import type { ComplianceStatusSnapshot } from '@/server/repositories/contracts/hr/compliance/compliance-status-repository-contract';
 
+const permissionsSchema: z.ZodType<OrgPermissionMap> = z
+    .record(z.string().min(1), z.array(z.string().min(1)))
+    .default({})
+    .transform((value) => value as OrgPermissionMap);
+
 const authorizationSchema = z.object({
     orgId: z.uuid(),
     userId: z.uuid(),
     roleKey: z.string(),
+    permissions: permissionsSchema,
     dataResidency: z.enum(DATA_RESIDENCY_ZONES),
     dataClassification: z.enum(DATA_CLASSIFICATION_LEVELS),
     auditSource: z.string(),

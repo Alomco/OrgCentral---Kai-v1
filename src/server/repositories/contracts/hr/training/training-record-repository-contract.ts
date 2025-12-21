@@ -49,6 +49,9 @@ export interface ITrainingRecordRepository {
       startDate?: Date;
       endDate?: Date;
       employeeId?: string;
+      userId?: string;
+      expiryBefore?: Date;
+      expiryAfter?: Date;
     }
   ): Promise<TrainingRecord[]>;
 

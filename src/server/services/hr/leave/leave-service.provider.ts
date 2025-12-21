@@ -1,14 +1,14 @@
 import { PrismaLeaveBalanceRepository, PrismaLeavePolicyRepository, PrismaLeaveRequestRepository } from '@/server/repositories/prisma/hr/leave';
 import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
 import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
-import { prisma } from '@/server/lib/prisma';
 import { LeaveService, type LeaveServiceDependencies } from './leave-service';
 import { getHrNotificationService } from '@/server/services/hr/notifications/hr-notification-service.provider';
+import { getNotificationService } from '@/server/services/notifications/notification-service.provider';
 
 const leaveRequestRepository = new PrismaLeaveRequestRepository();
 const leaveBalanceRepository = new PrismaLeaveBalanceRepository();
 const leavePolicyRepository = new PrismaLeavePolicyRepository();
-const organizationRepository = new PrismaOrganizationRepository({ prisma });
+const organizationRepository = new PrismaOrganizationRepository();
 const profileRepository = new PrismaEmployeeProfileRepository();
 const defaultLeaveServiceDependencies: LeaveServiceDependencies = {
     leaveRequestRepository,
@@ -17,6 +17,7 @@ const defaultLeaveServiceDependencies: LeaveServiceDependencies = {
     organizationRepository,
     profileRepository,
     hrNotificationService: getHrNotificationService(),
+    notificationDispatchService: getNotificationService(),
 };
 
 const sharedLeaveService = new LeaveService(defaultLeaveServiceDependencies);

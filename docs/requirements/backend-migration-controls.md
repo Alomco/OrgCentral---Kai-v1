@@ -11,9 +11,9 @@ This document outlines compliance controls that must be implemented during the m
 - [ ] Functions affected: All HTTP-triggered functions
 
 ### Control: Authorization Verification
-- [ ] All API endpoints must validate user authorization
-- [ ] Role-based access controls (RBAC) must be enforced
-- [ ] Attribute-based access controls (ABAC) where applicable 
+- [x] All API endpoints must validate user authorization
+- [x] Role-based access controls (RBAC) must be enforced
+- [x] Attribute-based access controls (ABAC) where applicable 
 - [ ] Functions affected: All functions with permission requirements
 
 ### Control: Context Checking

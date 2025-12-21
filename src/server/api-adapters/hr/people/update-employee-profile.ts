@@ -4,6 +4,7 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { updateEmployeeProfileInputSchema } from '@/server/types/hr-people-schemas';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
 import { normalizeProfileChanges } from '@/server/services/hr/people/helpers/onboard-payload.helpers';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export type UpdateEmployeeProfileApiInput = Infer<typeof updateEmployeeProfileInputSchema>;
 
@@ -25,10 +26,10 @@ export async function updateEmployeeProfileAdapter(
       {},
       {
         headers: new Headers(req.headers as unknown as HeadersInit),
-        requiredRoles: ['orgAdmin'],
+        requiredPermissions: { employeeProfile: ['update'] },
         auditSource: 'api:hr:people:update-employee-profile',
-        action: 'update',
-        resourceType: 'employeeProfile',
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
         resourceAttributes: { profileId: input.profileId, updateKeys: Object.keys(input.changes) },
       },
     );

@@ -107,5 +107,5 @@ export function getMembershipService(
 
 export type MembershipServiceContract = Pick<
     MembershipService,
-    'acceptInvitation' | 'updateMembershipRoles' | 'suspendMembership' | 'resumeMembership'
+    'acceptInvitation' | 'inviteMember' | 'updateMembershipRoles' | 'suspendMembership' | 'resumeMembership'
 >;

@@ -40,6 +40,7 @@ export type PeopleServiceContract = Pick<
   | 'getEmployeeProfile'
   | 'getEmployeeProfileByUser'
   | 'listEmployeeProfiles'
+  | 'countEmployeeProfiles'
   | 'createEmployeeProfile'
   | 'updateEmployeeProfile'
   | 'deleteEmployeeProfile'

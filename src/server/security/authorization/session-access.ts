@@ -1,5 +1,5 @@
 import type { AuthSession } from '@/server/lib/auth';
-import type { OrgPermissionMap, OrgRoleKey } from '../access-control';
+import type { OrgPermissionMap } from '../access-control';
 import type { OrgAccessInput } from '../guards';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import {
@@ -11,8 +11,8 @@ import {
 
 export interface SessionAccessRequest {
     orgId?: string;
-    requiredRoles?: OrgRoleKey[];
     requiredPermissions?: OrgPermissionMap;
+    requiredAnyPermissions?: readonly OrgPermissionMap[];
     expectedClassification?: DataClassificationLevel;
     expectedResidency?: DataResidencyZone;
     auditSource?: string;
@@ -32,8 +32,8 @@ export function buildOrgAccessInputFromSession(
     return {
         orgId,
         userId,
-        requiredRoles: request.requiredRoles,
         requiredPermissions: request.requiredPermissions,
+        requiredAnyPermissions: request.requiredAnyPermissions,
         expectedClassification: request.expectedClassification,
         expectedResidency: request.expectedResidency,
         auditSource: request.auditSource ?? 'better-auth-session',

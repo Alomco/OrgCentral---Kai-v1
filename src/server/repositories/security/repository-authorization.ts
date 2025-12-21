@@ -1,4 +1,4 @@
-import type { OrgPermissionMap, OrgRoleKey } from '@/server/security/access-control';
+import type { OrgPermissionMap } from '@/server/security/access-control';
 import {
     assertOrgAccessWithAbac,
     type OrgAccessContext,
@@ -11,7 +11,6 @@ import type { TenantScope } from '@/server/types/tenant';
 type GuardEvaluator = (input: OrgAccessInput) => Promise<OrgAccessContext>;
 
 export interface RepositoryAuthorizationDefaults {
-    readonly requiredRoles?: readonly OrgRoleKey[];
     readonly requiredPermissions?: Readonly<OrgPermissionMap>;
     readonly expectedClassification?: OrgAccessInput['expectedClassification'];
     readonly expectedResidency?: OrgAccessInput['expectedResidency'];
@@ -70,7 +69,6 @@ export class RepositoryAuthorizer {
     }
 
     private mergeWithDefaults(input: OrgAccessInput): OrgAccessInput {
-        const mergedRoles = mergeUnique(this.defaults.requiredRoles, input.requiredRoles);
         const mergedPermissions = mergePermissionMaps(
             this.defaults.requiredPermissions,
             input.requiredPermissions,
@@ -78,7 +76,6 @@ export class RepositoryAuthorizer {
         return {
             ...this.defaults,
             ...input,
-            requiredRoles: mergedRoles.length ? mergedRoles : undefined,
             requiredPermissions: mergedPermissions,
             expectedClassification:
                 input.expectedClassification ?? this.defaults.expectedClassification,
@@ -128,10 +125,7 @@ function mergePermissionMaps(
         return undefined;
     }
     const result: OrgPermissionMap = {};
-    const resources = new Set<keyof OrgPermissionMap>([
-        ...(base ? (Object.keys(base) as (keyof OrgPermissionMap)[]) : []),
-        ...(override ? (Object.keys(override) as (keyof OrgPermissionMap)[]) : []),
-    ]);
+    const resources = new Set<string>([...Object.keys(base ?? {}), ...Object.keys(override ?? {})]);
     for (const resource of resources) {
         const baseActions = base?.[resource] ?? [];
         const overrideActions = override?.[resource] ?? [];

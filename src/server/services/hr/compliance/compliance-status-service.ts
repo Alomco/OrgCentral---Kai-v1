@@ -2,6 +2,7 @@ import { AbstractHrService } from '@/server/services/hr/abstract-hr-service';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ServiceExecutionContext } from '@/server/services/abstract-base-service';
 import { getComplianceStatus, type GetComplianceStatusDependencies } from '@/server/use-cases/hr/compliance/get-compliance-status';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export type ComplianceStatusServiceDependencies = GetComplianceStatusDependencies;
 
@@ -11,7 +12,11 @@ export class ComplianceStatusService extends AbstractHrService {
   }
 
   async getStatusForUser(authorization: RepositoryAuthorizationContext, userId: string) {
-    await this.ensureOrgAccess(authorization);
+    await this.ensureOrgAccess(authorization, {
+      action: HR_ACTION.READ,
+      resourceType: HR_RESOURCE.HR_COMPLIANCE,
+      resourceAttributes: { userId },
+    });
     return this.runOperation('hr.compliance.status.get', authorization, { userId }, () =>
       getComplianceStatus(this.dependencies, { authorization, userId }),
     );

@@ -6,6 +6,91 @@ import type { LeavePolicyFilters, LeavePolicyCreationData, LeavePolicyUpdateData
 import { mapCreateToPrisma, buildPrismaLeavePolicyUpdate, mapPrismaToDomain } from '@/server/repositories/mappers/hr/leave';
 import { EntityNotFoundError } from '@/server/errors';
 
+function hasOwnProperty(value: object, key: PropertyKey): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function normalizeLeavePolicyUpdates(
+  updates: Partial<Omit<LeavePolicy, 'id' | 'orgId' | 'createdAt'>>,
+): Partial<LeavePolicyUpdateData> {
+  const normalized: Partial<LeavePolicyUpdateData> = {};
+
+  const mappings: [
+    key: keyof typeof updates,
+    apply: (value: (typeof updates)[keyof typeof updates]) => void,
+  ][] = [
+      ['name', (value) => {
+        normalized.name = value as string;
+      }],
+      ['policyType', (value) => {
+        normalized.policyType = value as PrismaLeavePolicyType;
+      }],
+      ['accrualFrequency', (value) => {
+        normalized.accrualFrequency = value as PrismaLeaveAccrualFrequency;
+      }],
+      ['requiresApproval', (value) => {
+        normalized.requiresApproval = value as boolean;
+      }],
+      ['isDefault', (value) => {
+        normalized.isDefault = value as boolean;
+      }],
+      ['statutoryCompliance', (value) => {
+        normalized.statutoryCompliance = value as boolean;
+      }],
+      ['allowNegativeBalance', (value) => {
+        normalized.allowNegativeBalance = value as boolean;
+      }],
+      ['metadata', (value) => {
+        normalized.metadata = value as Prisma.InputJsonValue | Record<string, unknown> | null;
+      }],
+    ];
+
+  for (const [key, apply] of mappings) {
+    const value = updates[key];
+    if (value !== undefined) {
+      apply(value);
+    }
+  }
+
+  if (hasOwnProperty(updates, 'departmentId')) {
+    normalized.departmentId = updates.departmentId as string | null;
+  }
+
+  if (hasOwnProperty(updates, 'accrualAmount')) {
+    normalized.accrualAmount = updates.accrualAmount as number | null;
+  }
+
+  if (hasOwnProperty(updates, 'carryOverLimit')) {
+    normalized.carryOverLimit = updates.carryOverLimit as number | null;
+  }
+
+  if (updates.activeFrom !== undefined) {
+    normalized.activeFrom =
+      typeof updates.activeFrom === 'string'
+        ? new Date(updates.activeFrom as unknown as string)
+        : (updates.activeFrom as Date);
+  }
+
+  if (hasOwnProperty(updates, 'activeTo')) {
+    const activeTo = updates.activeTo;
+    if (activeTo === undefined) {
+      normalized.activeTo = undefined;
+    } else if (activeTo === null) {
+      normalized.activeTo = null;
+    } else if (typeof activeTo === 'string') {
+      normalized.activeTo = new Date(activeTo);
+    } else {
+      normalized.activeTo = activeTo as Date;
+    }
+  }
+
+  if (hasOwnProperty(updates, 'maxConsecutiveDays')) {
+    normalized.maxConsecutiveDays = updates.maxConsecutiveDays as number | null;
+  }
+
+  return normalized;
+}
+
 export class PrismaLeavePolicyRepository extends BasePrismaRepository implements ILeavePolicyRepository {
   // BasePrismaRepository enforces DI
 
@@ -114,56 +199,29 @@ export class PrismaLeavePolicyRepository extends BasePrismaRepository implements
   async updateLeavePolicy(tenantId: string, policyId: string, updates: Partial<Omit<LeavePolicy, 'id' | 'orgId' | 'createdAt'>>): Promise<void> {
     const existing = await this.findById(policyId);
     this.assertPolicyOwnership(existing, tenantId);
-    const normalized: Partial<LeavePolicyUpdateData> = {};
-    if (Object.prototype.hasOwnProperty.call(updates, 'departmentId')) {
-      normalized.departmentId = updates.departmentId as string | null;
-    }
-    if (updates.accrualFrequency !== undefined) {
-      normalized.accrualFrequency = updates.accrualFrequency as PrismaLeaveAccrualFrequency;
-    }
-    if (Object.prototype.hasOwnProperty.call(updates, 'accrualAmount')) {
-      normalized.accrualAmount = updates.accrualAmount as number | null;
-    }
-    if (Object.prototype.hasOwnProperty.call(updates, 'carryOverLimit')) {
-      normalized.carryOverLimit = updates.carryOverLimit as number | null;
-    }
-    if (updates.requiresApproval !== undefined) {
-      normalized.requiresApproval = updates.requiresApproval;
-    }
-    if (updates.isDefault !== undefined) {
-      normalized.isDefault = updates.isDefault;
-    }
-    if (updates.activeFrom !== undefined) {
-      normalized.activeFrom = typeof updates.activeFrom === 'string' ? new Date(updates.activeFrom as unknown as string) : (updates.activeFrom as Date);
-    }
-    if (Object.prototype.hasOwnProperty.call(updates, 'activeTo')) {
-      const at = updates.activeTo;
-      if (at === undefined) {
-        normalized.activeTo = undefined;
-      } else if (at === null) {
-        normalized.activeTo = null;
-      } else if (typeof at === 'string') {
-        normalized.activeTo = new Date(at);
-      } else {
-        normalized.activeTo = at as Date;
-      }
-    }
-    if (updates.statutoryCompliance !== undefined) {
-      normalized.statutoryCompliance = updates.statutoryCompliance;
-    }
-    if (Object.prototype.hasOwnProperty.call(updates, 'maxConsecutiveDays')) {
-      normalized.maxConsecutiveDays = updates.maxConsecutiveDays as number | null;
-    }
-    if (updates.allowNegativeBalance !== undefined) {
-      normalized.allowNegativeBalance = updates.allowNegativeBalance;
-    }
-    if (updates.metadata !== undefined) {
-      normalized.metadata = updates.metadata;
-    }
+    const normalized = normalizeLeavePolicyUpdates(updates);
     const prismaUpdate = buildPrismaLeavePolicyUpdate(normalized);
-    if (Object.keys(prismaUpdate).length > 0) {
-      await this.prisma.leavePolicy.update({ where: { id: policyId }, data: prismaUpdate });
+
+    if (Object.keys(prismaUpdate).length === 0) {
+      return;
     }
+
+    if (updates.isDefault === true) {
+      await this.prisma.$transaction([
+        this.prisma.leavePolicy.updateMany({
+          where: {
+            orgId: tenantId,
+            id: { not: policyId },
+            isDefault: true,
+          },
+          data: { isDefault: false },
+        }),
+        this.prisma.leavePolicy.update({ where: { id: policyId }, data: prismaUpdate }),
+      ]);
+      return;
+    }
+
+    await this.prisma.leavePolicy.update({ where: { id: policyId }, data: prismaUpdate });
   }
 
   async getLeavePolicy(tenantId: string, policyId: string): Promise<LeavePolicy | null> {

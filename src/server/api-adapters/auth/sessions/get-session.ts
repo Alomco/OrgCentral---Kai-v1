@@ -1,20 +1,13 @@
-import { PrismaUserSessionRepository } from '@/server/repositories/prisma/auth/sessions';
-import {
-    getSessionContext,
-    type GetSessionDependencies,
-    type GetSessionInput,
-    type GetSessionResult,
-} from '@/server/use-cases/auth/sessions/get-session';
+import { getSessionService } from '@/server/services/auth/session-service';
+import type { SessionService } from '@/server/services/auth/session-service';
+import type { GetSessionInput, GetSessionResult } from '@/server/use-cases/auth/sessions/get-session';
+import { fetchSessionContext } from '@/server/use-cases/auth/sessions/get-session-action';
 
-const userSessionRepository = new PrismaUserSessionRepository();
-
-const defaultDependencies: GetSessionDependencies = {
-    userSessionRepository,
-};
+const sessionService = getSessionService();
 
 export async function getSessionController(
     input: GetSessionInput,
-    dependencies: GetSessionDependencies = defaultDependencies,
+    service: SessionService = sessionService,
 ): Promise<GetSessionResult> {
-    return getSessionContext(dependencies, input);
+    return fetchSessionContext(input, { service });
 }

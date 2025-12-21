@@ -63,8 +63,8 @@ export async function getSessionContext(
 function extractAccessRequest(input: GetSessionInput): SessionAccessRequest {
     return {
         orgId: input.orgId,
-        requiredRoles: input.requiredRoles,
         requiredPermissions: input.requiredPermissions,
+        requiredAnyPermissions: input.requiredAnyPermissions,
         expectedClassification: input.expectedClassification,
         expectedResidency: input.expectedResidency,
         auditSource: input.auditSource,

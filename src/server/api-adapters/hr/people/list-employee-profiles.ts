@@ -4,6 +4,7 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { listEmployeeProfilesRequestSchema } from '@/server/types/hr-people-schemas';
 import type { EmployeeProfile } from '@/server/types/hr-types';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export type ListEmployeeProfilesApiInput = Infer<typeof listEmployeeProfilesRequestSchema>;
 
@@ -25,10 +26,10 @@ export async function listEmployeeProfilesAdapter(
       {},
       {
         headers: new Headers(req.headers as unknown as HeadersInit),
-        requiredRoles: ['member'],
+        requiredPermissions: { employeeProfile: ['list'] },
         auditSource: 'api:hr:people:list-employee-profiles',
-        action: 'read',
-        resourceType: 'employeeProfile',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
         resourceAttributes: { filterCount: Object.keys(input.filters ?? {}).length, filters: input.filters },
       },
     );

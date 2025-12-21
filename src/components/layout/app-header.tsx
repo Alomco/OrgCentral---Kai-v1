@@ -1,0 +1,104 @@
+'use client';
+
+import Link from 'next/link';
+import { Search, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { useState } from 'react';
+
+import type { AuthSession } from '@/server/lib/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { UserNav } from './user-nav';
+import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { OrgBranding } from '@/server/types/branding-types';
+import styles from './app-header.module.css';
+
+interface AppHeaderProps {
+    session: NonNullable<AuthSession>;
+    authorization: RepositoryAuthorizationContext;
+    branding?: OrgBranding | null;
+}
+
+export function AppHeader({ session, authorization, branding }: AppHeaderProps) {
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const { theme, setTheme } = useTheme();
+
+    const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const searchTerm = formData.get('search');
+        if (searchTerm) {
+            // TODO: Implement search functionality
+            setIsSearchOpen(false);
+        }
+    };
+
+    return (
+        <header className={styles.header}>
+            <SidebarTrigger className="lg:hidden" />
+
+            <div className={styles.headerContent}>
+                <Link href="/dashboard" className={styles.logo}>
+                    <span className={styles.logoText}>
+                        {branding?.companyName ?? 'OrgCentral'}
+                    </span>
+                </Link>
+            </div>
+
+            <div className={styles.spacer} />
+
+            <div className={styles.actions}>
+                {/* Search */}
+                <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8.5 w-8.5 rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                            aria-label="Search"
+                        >
+                            <Search className="h-4.5 w-4.5" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="end" sideOffset={8}>
+                        <form onSubmit={handleSearchSubmit} className="space-y-3">
+                            <p className="text-sm font-medium">
+                                Search OrgCentral
+                            </p>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    name="search"
+                                    type="search"
+                                    placeholder="Search..."
+                                    className="pl-10"
+                                    autoFocus
+                                />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Try searching for employees, policies, or documents
+                            </p>
+                        </form>
+                    </PopoverContent>
+                </Popover>
+
+                {/* Theme Toggle */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8.5 w-8.5 rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    aria-label="Toggle theme"
+                >
+                    <Sun className="h-4.5 w-4.5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                    <Moon className="absolute h-4.5 w-4.5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                </Button>
+
+                {/* User Navigation */}
+                <UserNav session={session} authorization={authorization} />
+            </div>
+        </header>
+    );
+}

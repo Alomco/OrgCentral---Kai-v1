@@ -10,6 +10,7 @@ import {
     resolveLeaveControllerDependencies,
     type LeaveControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 
 export interface LeaveRequestsControllerResult extends GetLeaveRequestsResult {
     success: true;
@@ -25,11 +26,10 @@ export async function getLeaveRequestsController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredRoles: ['member'],
         requiredPermissions: { organization: ['read'] },
         auditSource: 'api:hr:leave:list',
-        action: 'read',
-        resourceType: 'hr.leave',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE.HR_LEAVE,
         resourceAttributes: buildAuditAttributes(filters),
     });
 

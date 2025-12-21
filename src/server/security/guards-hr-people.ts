@@ -1,13 +1,11 @@
 import { requireAbacAllowance } from './authorization/abac-context';
-import { assertRbac } from './authorization/rbac';
-import type { OrgRoleKey } from './access-control';
+import { authorizeOrgAccessRbacOnly } from './authorization/engine';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import {
     createHrPeopleAuthorizationDefaults,
-    createHrPeopleContractRepositoryDefaults,
-    createHrPeopleEditorRepositoryDefaults,
-    createHrPeopleProfileRepositoryDefaults,
 } from '@/server/use-cases/hr/people/shared/repository-authorizer-helpers';
+import { HR_ACTION, HR_RESOURCE } from './authorization/hr-resource-registry';
+import type { OrgPermissionMap } from './access-control';
 
 interface PeopleGuardRequest {
     authorization: RepositoryAuthorizationContext;
@@ -16,29 +14,6 @@ interface PeopleGuardRequest {
 }
 
 const BASE_DEFAULTS = createHrPeopleAuthorizationDefaults();
-const PROFILE_DEFAULTS = createHrPeopleProfileRepositoryDefaults();
-const PROFILE_EDITOR_DEFAULTS = createHrPeopleEditorRepositoryDefaults();
-const CONTRACT_DEFAULTS = createHrPeopleContractRepositoryDefaults();
-
-function resolveRoleKey(context: RepositoryAuthorizationContext): OrgRoleKey | undefined {
-    return context.roleKey === 'custom' ? undefined : context.roleKey;
-}
-
-function assertRoleRequirement(
-    authorization: RepositoryAuthorizationContext,
-    requiredRoles?: readonly OrgRoleKey[],
-): void {
-    if (!requiredRoles?.length) {
-        return;
-    }
-
-    const roleKey = resolveRoleKey(authorization);
-    if (!roleKey) {
-        throw new Error('Custom roles are not permitted for this HR people operation.');
-    }
-
-    assertRbac(roleKey, { requiredRoles: [...requiredRoles] });
-}
 
 async function assertPeopleAccess(
     authorization: RepositoryAuthorizationContext,
@@ -46,19 +21,26 @@ async function assertPeopleAccess(
         action: string;
         resourceType: string;
         resourceAttributes?: Record<string, unknown>;
-        requiredRoles?: readonly OrgRoleKey[];
+        requiredPermissions?: OrgPermissionMap;
     },
 ): Promise<RepositoryAuthorizationContext> {
-    assertRoleRequirement(authorization, params.requiredRoles ?? BASE_DEFAULTS.requiredRoles);
-
-    const resolvedRole = resolveRoleKey(authorization);
+    authorizeOrgAccessRbacOnly(
+        {
+            orgId: authorization.orgId,
+            userId: authorization.userId,
+            requiredPermissions: params.requiredPermissions ?? BASE_DEFAULTS.requiredPermissions,
+            expectedResidency: BASE_DEFAULTS.expectedResidency,
+            expectedClassification: BASE_DEFAULTS.expectedClassification,
+        },
+        authorization,
+    );
 
     await requireAbacAllowance({
         orgId: authorization.orgId,
         userId: authorization.userId,
         action: params.action,
         resourceType: params.resourceType,
-        roles: resolvedRole ? [resolvedRole] : undefined,
+        roles: [authorization.roleKey],
         guardContext: authorization,
         resourceAttributes: {
             ...params.resourceAttributes,
@@ -76,10 +58,10 @@ export function assertPeopleProfileReader(
     request: PeopleGuardRequest,
 ): Promise<RepositoryAuthorizationContext> {
     return assertPeopleAccess(request.authorization, {
-        action: request.action ?? 'read',
-        resourceType: 'employeeProfile',
+        action: request.action ?? HR_ACTION.READ,
+        resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
         resourceAttributes: request.resourceAttributes,
-        requiredRoles: PROFILE_DEFAULTS.requiredRoles ?? BASE_DEFAULTS.requiredRoles,
+        requiredPermissions: { employeeProfile: ['read'] },
     });
 }
 
@@ -87,10 +69,10 @@ export function assertPeopleProfileEditor(
     request: PeopleGuardRequest,
 ): Promise<RepositoryAuthorizationContext> {
     return assertPeopleAccess(request.authorization, {
-        action: request.action ?? 'update',
-        resourceType: 'employeeProfile',
+        action: request.action ?? HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_EMPLOYEE_PROFILE,
         resourceAttributes: request.resourceAttributes,
-        requiredRoles: PROFILE_EDITOR_DEFAULTS.requiredRoles,
+        requiredPermissions: { employeeProfile: ['update'] },
     });
 }
 
@@ -98,10 +80,10 @@ export function assertEmploymentContractReader(
     request: PeopleGuardRequest,
 ): Promise<RepositoryAuthorizationContext> {
     return assertPeopleAccess(request.authorization, {
-        action: request.action ?? 'read',
-        resourceType: 'employmentContract',
+        action: request.action ?? HR_ACTION.READ,
+        resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
         resourceAttributes: request.resourceAttributes,
-        requiredRoles: CONTRACT_DEFAULTS.requiredRoles ?? BASE_DEFAULTS.requiredRoles,
+        requiredPermissions: { employmentContract: ['read'] },
     });
 }
 
@@ -109,9 +91,9 @@ export function assertEmploymentContractEditor(
     request: PeopleGuardRequest,
 ): Promise<RepositoryAuthorizationContext> {
     return assertPeopleAccess(request.authorization, {
-        action: request.action ?? 'update',
-        resourceType: 'employmentContract',
+        action: request.action ?? HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE.HR_EMPLOYMENT_CONTRACT,
         resourceAttributes: request.resourceAttributes,
-        requiredRoles: PROFILE_EDITOR_DEFAULTS.requiredRoles,
+        requiredPermissions: { employmentContract: ['update'] },
     });
 }

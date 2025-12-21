@@ -26,7 +26,7 @@ export interface WorkerJobEnvelope<TPayload> {
 }
 
 export interface OrgWorkerConfig<TPayload, TEnvelope extends WorkerJobEnvelope<TPayload>> {
-    queueName: WorkerQueueName | string;
+    queueName: WorkerQueueName;
     workerName: string;
     schema: ZodType<TEnvelope>;
     queueOptions?: QueueRegistryOptions;
@@ -39,7 +39,7 @@ export abstract class AbstractOrgWorker<
 > extends AbstractBaseService {
     private readonly schema: ZodType<TEnvelope>;
     private readonly workerName: string;
-    private readonly queueName: WorkerQueueName | string;
+    private readonly queueName: WorkerQueueName;
     private readonly queueOptions?: QueueRegistryOptions;
     private readonly authorizer: RepositoryAuthorizer;
 
@@ -64,7 +64,7 @@ export abstract class AbstractOrgWorker<
             const envelope = this.schema.parse(job.data);
             const authorizationContext = await this.authorizer.authorize(
                 this.buildOrgAccessInput(envelope),
-                async (context) => context,
+                (context) => Promise.resolve(context),
             );
             const serviceContext = this.buildServiceContext(envelope, authorizationContext, job);
             return this.executeInServiceContext(serviceContext, `${this.workerName}.process`, () =>
@@ -102,7 +102,7 @@ export abstract class AbstractOrgWorker<
             metadata: {
                 queue: this.queueName,
                 jobId: job.id,
-                jobName: job.name ?? this.workerName,
+                jobName: job.name,
                 attemptsMade: job.attemptsMade,
                 cacheScopes: envelope.metadata?.cacheScopes,
                 ...envelope.metadata?.attributes,

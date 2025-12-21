@@ -1,0 +1,64 @@
+import { AbstractBaseService } from '@/server/services/abstract-base-service';
+import { buildTenantServiceContext } from '@/server/services/auth/service-context';
+import type { LogSecurityEventInput, LogSecurityEventOutput } from '@/server/types/security-types';
+import { logSecurityEvent } from '@/server/use-cases/auth/security/log-security-event';
+import type { ISecurityEventRepository } from '@/server/repositories/contracts/auth/security/security-event-repository-contract';
+import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
+import { PrismaSecurityEventRepository } from '@/server/repositories/prisma/auth/security/prisma-security-event-repository';
+import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
+
+const AUDIT_SOURCE = 'auth.security-event-service';
+
+export interface SecurityEventServiceDependencies {
+    securityEventRepository: ISecurityEventRepository;
+    organizationRepository: IOrganizationRepository;
+}
+
+export class SecurityEventService extends AbstractBaseService {
+    constructor(private readonly dependencies: SecurityEventServiceDependencies) {
+        super();
+    }
+
+    async logEvent(input: LogSecurityEventInput): Promise<LogSecurityEventOutput> {
+        const organization = await this.dependencies.organizationRepository.getOrganization(input.orgId);
+        const context = buildTenantServiceContext({
+            orgId: input.orgId,
+            userId: input.userId,
+            dataResidency: organization?.dataResidency ?? 'UK_ONLY',
+            dataClassification: organization?.dataClassification ?? 'OFFICIAL',
+            auditSource: AUDIT_SOURCE,
+            metadata: {
+                eventType: input.eventType,
+                severity: input.severity,
+            },
+        });
+
+        return this.executeInServiceContext(context, 'auth.security.log-event', () =>
+            logSecurityEvent(input, this.dependencies.securityEventRepository),
+        );
+    }
+}
+
+let sharedService: SecurityEventService | null = null;
+
+export function getSecurityEventService(
+    overrides?: Partial<SecurityEventServiceDependencies>,
+): SecurityEventService {
+    if (!sharedService || overrides) {
+        const dependencies: SecurityEventServiceDependencies = {
+            securityEventRepository:
+                overrides?.securityEventRepository ?? new PrismaSecurityEventRepository(),
+            organizationRepository:
+                overrides?.organizationRepository ?? new PrismaOrganizationRepository(),
+        };
+
+        if (!overrides) {
+            sharedService = new SecurityEventService(dependencies);
+            return sharedService;
+        }
+
+        return new SecurityEventService(dependencies);
+    }
+
+    return sharedService;
+}

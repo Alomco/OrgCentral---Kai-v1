@@ -84,3 +84,10 @@ export {
     type CreateLeaveBalanceInput,
     type CreateLeaveBalanceResult,
 } from './create-leave-balance';
+
+export {
+    syncLeaveAccruals,
+    type SyncLeaveAccrualsDependencies,
+    type SyncLeaveAccrualsInput,
+    type SyncLeaveAccrualsResult,
+} from './acc/sync-leave-accruals';

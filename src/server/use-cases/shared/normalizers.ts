@@ -55,18 +55,22 @@ export function normalizeEmploymentType(value: string | undefined): EmploymentTy
 }
 
 /**
- * Normalizes a role or roles array, ensuring deduplication and filtering empty strings.
+ * Normalizes a role or roles array.
+ *
+ * Note: The current persistence model supports a single primary role per membership
+ * (stored as a single roleId). Any additional roles are ignored.
  */
 export function normalizeRoles(roles: string | string[] | undefined): string[] {
     if (!roles) {
         return ['member'];
     }
-    const rolesArray = Array.isArray(roles) ? roles : [roles];
-    const filtered = rolesArray
-        .filter((role) => typeof role === 'string' && role.trim().length > 0)
-        .map((role) => role.trim());
 
-    return filtered.length > 0 ? Array.from(new Set(filtered)) : ['member'];
+    const rolesArray = Array.isArray(roles) ? roles : [roles];
+    const primary = rolesArray
+        .filter((role) => typeof role === 'string' && role.trim().length > 0)
+        .map((role) => role.trim())[0];
+
+    return primary ? [primary] : ['member'];
 }
 
 /**

@@ -1,11 +1,15 @@
 import { AuthorizationError, ValidationError } from '@/server/errors';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import type { OrgRoleKey } from '@/server/security/access-control';
+import type { OrgPermissionMap } from '@/server/security/access-control';
+import { satisfiesAnyPermissionProfile } from './permission-utils';
 
-const ORG_ABSENCE_ROLES: readonly OrgRoleKey[] = ['owner', 'orgAdmin', 'compliance'];
+const ABSENCE_MANAGEMENT_ANY_PERMISSIONS: readonly OrgPermissionMap[] = [
+    { organization: ['update'] },
+    { audit: ['write'] },
+];
 
 export function canManageOrgAbsences(context: RepositoryAuthorizationContext): boolean {
-    return ORG_ABSENCE_ROLES.includes(context.roleKey as OrgRoleKey);
+    return satisfiesAnyPermissionProfile(context.permissions, ABSENCE_MANAGEMENT_ANY_PERMISSIONS);
 }
 
 export function assertActorOrPrivileged(

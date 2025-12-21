@@ -69,6 +69,14 @@ export class PrismaOnboardingInvitationRepository
     return record ? this.mapToDomain(record) : null;
   }
 
+  async getInvitationByToken(token: string): Promise<OnboardingInvitation | null> {
+    const record = await this.invitation.findUnique({ where: { token } });
+    if (record) {
+      registerOrgCacheTag(record.orgId, CACHE_SCOPE_ONBOARDING_INVITATIONS);
+    }
+    return record ? this.mapToDomain(record) : null;
+  }
+
   async markAccepted(orgId: string, token: string, acceptedByUserId: string): Promise<void> {
     await this.assertOrgScope(orgId, token);
     await this.invitation.update({

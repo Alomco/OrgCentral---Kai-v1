@@ -38,20 +38,8 @@ export function toPrismaInputJson(value: JsonLike): Prisma.InputJsonValue | type
     return value as Prisma.InputJsonValue;
 }
 
-export function extractRoles(metadata: Prisma.JsonValue | null | undefined): string[] {
-    if (!isJsonObject(metadata)) {
-        return [];
-    }
-    const roles = metadata.roles;
-    if (Array.isArray(roles) && roles.every((r) => typeof r === 'string')) {
-        return roles.map(String);
-    }
-    return [];
-}
-
-export function buildMembershipMetadataJson(scope: TenantScope, roles: string[]): Prisma.InputJsonValue {
+export function buildMembershipMetadataJson(scope: TenantScope): Prisma.InputJsonValue {
     return toPrismaInputJson({
-        roles: [...roles],
         dataResidency: scope.dataResidency,
         dataClassification: scope.dataClassification,
         auditSource: scope.auditSource,

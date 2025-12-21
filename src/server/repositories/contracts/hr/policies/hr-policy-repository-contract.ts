@@ -1,7 +1,10 @@
 import type { HRPolicy } from '@/server/types/hr-ops-types';
 
 export interface IHRPolicyRepository {
-  createPolicy(orgId: string, input: Omit<HRPolicy, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { status?: HRPolicy['status'] }): Promise<HRPolicy>;
+  createPolicy(
+    orgId: string,
+    input: Omit<HRPolicy, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'orgId'> & { status?: HRPolicy['status'] }
+  ): Promise<HRPolicy>;
   updatePolicy(
     orgId: string,
     policyId: string,

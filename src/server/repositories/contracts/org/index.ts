@@ -1,4 +1,5 @@
 export * from './abac/abac-policy-repository-contract';
+export * from './billing';
 export * from './branding/branding-repository-contract';
 export * from './departments/department-repository-contract';
 export * from './enterprise/enterprise-admin-repository-contract';

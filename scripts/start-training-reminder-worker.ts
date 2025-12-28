@@ -1,3 +1,4 @@
+ 
 import type { WorkerOptions } from 'bullmq';
 import { registerTrainingReminderWorker } from '@/server/workers/hr/training/reminder.worker';
 import { shutdownQueueRegistry } from '@/server/workers/config/queue-registry';

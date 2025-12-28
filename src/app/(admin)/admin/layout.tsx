@@ -13,6 +13,7 @@ import {
 } from '@/server/ui/auth/role-redirect';
 
 import { AdminNavigation } from './_components/admin-navigation';
+import { AdminShell } from '../_components/admin-shell';
 
 async function AdminLayoutContent({ children }: { children: ReactNode }) {
     const headerStore = await headers();
@@ -53,25 +54,28 @@ async function AdminLayoutContent({ children }: { children: ReactNode }) {
                 residency: authorization.dataResidency,
             }}
         >
-            <div className="min-h-screen bg-background text-foreground">
-                <a
-                    href="#admin-main-content"
-                    suppressHydrationWarning
-                    className="sr-only focus:not-sr-only focus:fixed focus:left-6 focus:top-4 focus:z-50 rounded-md border bg-background px-3 py-2 text-sm font-medium text-foreground"
-                >
-                    Skip to content
-                </a>
-                <AdminNavigation
-                    organizationId={authorization.orgId}
-                    organizationLabel={branding?.companyName ?? null}
-                    roleKey={authorization.roleKey}
-                    permissions={authorization.permissions}
-                    userEmail={userEmail}
-                />
-                <main id="admin-main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl px-6 py-6">
+            <AdminShell
+                navigation={
+                    <AdminNavigation
+                        organizationId={authorization.orgId}
+                        organizationLabel={branding?.companyName ?? null}
+                        roleKey={authorization.roleKey}
+                        permissions={authorization.permissions}
+                        userEmail={userEmail}
+                    />
+                }
+                orbColor="primary"
+                particleCount={6}
+            >
+                {/* 
+                  We use a plain div here because Admin pages likely have their own specialized containers.
+                  Using PageContainer here might double-pad. 
+                  Future refactors can move individual pages to use local PageContainers.
+                */}
+                <div className="w-full h-full">
                     {children}
-                </main>
-            </div>
+                </div>
+            </AdminShell>
         </TenantThemeRegistry>
     );
 }
@@ -91,4 +95,3 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </Suspense>
     );
 }
-

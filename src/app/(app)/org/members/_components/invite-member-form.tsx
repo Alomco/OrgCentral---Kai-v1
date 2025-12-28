@@ -10,7 +10,8 @@ const initialState: InviteMemberActionState = { status: 'idle' };
 export function InviteMemberForm(props: { roles: string[] }) {
     const [state, action, pending] = useActionState(inviteMemberAction, initialState);
 
-    const defaultRole = useMemo(() => props.roles[0] ?? 'member', [props.roles]);
+    const roleOptions = useMemo(() => (props.roles.length > 0 ? props.roles : ['member']), [props.roles]);
+    const defaultRole = useMemo(() => roleOptions[0] ?? 'member', [roleOptions]);
 
     const invitationUrl =
         state.status === 'success'
@@ -41,22 +42,12 @@ export function InviteMemberForm(props: { roles: string[] }) {
                         defaultValue={defaultRole}
                         className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
                     >
-                        {props.roles.map((role) => (
+                        {roleOptions.map((role) => (
                             <option key={role} value={role}>
                                 {role}
                             </option>
                         ))}
                     </select>
-                </label>
-
-                <label className="grid gap-1">
-                    <span className="text-[11px] font-medium text-[hsl(var(--muted-foreground))]">ABAC subject attributes (JSON, optional)</span>
-                    <textarea
-                        name="abacSubjectAttributesJson"
-                        rows={3}
-                        className="w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))]"
-                        placeholder='{"departmentId":"dept-1"}'
-                    />
                 </label>
 
                 {state.status !== 'idle' ? (

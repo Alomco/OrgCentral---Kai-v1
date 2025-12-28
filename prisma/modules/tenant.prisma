@@ -114,6 +114,7 @@ model Organization {
   complianceCategories   ComplianceCategory[] @relation("OrgComplianceCategories")
   complianceLogItems     ComplianceLogItem[] @relation("OrgComplianceLogItems")
   managedOrganizations   ManagedOrganization[] @relation("ManagedOrgOrganization")
+  subscriptions          OrganizationSubscription[]
   @@index([tenantId]) // For tenant isolation
   @@map("organizations") // PostgreSQL schema mapping
   @@schema("hr")

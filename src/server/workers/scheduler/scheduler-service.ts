@@ -43,9 +43,10 @@ export class SchedulerService {
         jobId?: string,
     ): Promise<void> {
         const queue = this.queueResolver(queueName, queueOptions);
-        const repeatOptions = this.toRepeatOptions(repeat);
-        // eslint-disable-next-line @typescript-eslint/no-deprecated -- migrate to job scheduler IDs when BullMQ upgrade completes
-        await queue.removeRepeatable(name, repeatOptions, jobId);
+        if (!jobId) {
+            throw new Error(`Job id is required to remove recurring job "${name}".`);
+        }
+        await queue.removeJobScheduler(jobId);
     }
 
     private toRepeatOptions(repeat: RepeatExpression): RepeatOptions {

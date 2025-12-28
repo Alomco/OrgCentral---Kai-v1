@@ -1,0 +1,128 @@
+/**
+ * 🦶 Premium Footer Component
+ * 
+ * Elegant footer with gradient border and links.
+ * Server Component.
+ * 
+ * @module components/theme/layout/footer
+ */
+
+/* ============================================================================
+ * Footer Base
+ * ============================================================================ */
+
+.footer {
+    position: relative;
+    padding: 2rem 1.5rem;
+    margin-top: auto;
+    
+    /* Top border with gradient */
+    border-top: 1px solid transparent;
+    background-image: 
+        linear-gradient(hsl(var(--background)), hsl(var(--background))),
+        linear-gradient(90deg, hsl(var(--border)), hsl(var(--primary) / 0.3), hsl(var(--accent) / 0.3), hsl(var(--border)));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+}
+
+.footerContent {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .footerContent {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+/* ============================================================================
+ * Footer Sections
+ * ============================================================================ */
+
+.footerBrand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.footerLogo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1rem;
+    color: hsl(var(--foreground));
+}
+
+.footerLogoIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.375rem;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    color: white;
+    font-weight: 800;
+    font-size: 0.75rem;
+}
+
+.footerCopyright {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+}
+
+/* ============================================================================
+ * Footer Links
+ * ============================================================================ */
+
+.footerLinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+}
+
+.footerLink {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footerLink:hover {
+    color: hsl(var(--foreground));
+}
+
+/* ============================================================================
+ * Footer Social
+ * ============================================================================ */
+
+.footerSocial {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.socialButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.socialButton:hover {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+}

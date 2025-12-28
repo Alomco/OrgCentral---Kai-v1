@@ -3,8 +3,7 @@ import type { CacheEngine, CacheTagRegistrationOptions } from '@/server/lib/cach
 export class NextCacheEngine implements CacheEngine {
     registerTag(tag: string, options?: CacheTagRegistrationOptions): void {
         // Import at call-time to keep the module safe in non-Next runtimes.
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        void this.registerTagInternal(tag, options);
+        this.registerTagInternal(tag, options).catch(() => undefined);
     }
 
     private async registerTagInternal(tag: string, options?: CacheTagRegistrationOptions): Promise<void> {

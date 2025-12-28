@@ -126,7 +126,7 @@ Keep this table up-to-date whenever a module gains a service, repository, or API
 - ✅ Done: Add tenant theme SSR for HR app routes using `TenantThemeRegistry`.
 - ✅ Done: Standardize HR UI styling on Tailwind tokens + existing primitives.
 - ✅ Done: Add CSS-first motion tokens + `motion-reduce` safeguards to key HR interactions.
-- TODO: Audit HR endpoints for zero-trust tenant scoping (orgId/residency/classification) and ensure RBAC/ABAC guard metadata is enforced at every boundary.
+- TODO: Audit HR endpoints for zero-trust tenant scoping (orgId/residency/classification) and ensure RBAC/ABAC guard context is enforced at every boundary.
 - TODO: Document Open/Closed extension points and Liskov-safe interfaces for HR services (policies, performance, training) so new flows can be added without modifying core orchestration logic.
 
 ## HR Frontend UI/UX Review (December 2025)

@@ -12,6 +12,8 @@ import {
 } from '@/server/ui/auth/role-redirect';
 
 import { AdminNavigation } from '@/app/(admin)/admin/_components/admin-navigation';
+import { AdminShell } from '@/app/(admin)/_components/admin-shell';
+import { DevelopmentViewSwitcher } from './_components/development-view-switcher';
 
 export default async function DevelopmentLayout({ children }: { children: ReactNode }) {
     const headerStore = await headers();
@@ -53,25 +55,23 @@ export default async function DevelopmentLayout({ children }: { children: ReactN
                 residency: authorization.dataResidency,
             }}
         >
-            <div className="min-h-screen bg-background text-foreground">
-                <a
-                    href="#dev-main-content"
-                    className="sr-only focus:not-sr-only focus:fixed focus:left-6 focus:top-4 focus:z-50 rounded-md border bg-background px-3 py-2 text-sm font-medium text-foreground"
-                >
-                    Skip to content
-                </a>
-                <AdminNavigation
-                    organizationId={authorization.orgId}
-                    organizationLabel={branding?.companyName ?? null}
-                    roleKey={authorization.roleKey}
-                    permissions={authorization.permissions}
-                    userEmail={userEmail}
-                />
-                <main id="dev-main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl px-6 py-6">
+            <AdminShell
+                navigation={
+                    <AdminNavigation
+                        organizationId={authorization.orgId}
+                        organizationLabel={branding?.companyName ?? null}
+                        roleKey={authorization.roleKey}
+                        permissions={authorization.permissions}
+                        userEmail={userEmail}
+                    />
+                }
+                orbColor="multi"
+                particleCount={8}
+            >
+                <DevelopmentViewSwitcher>
                     {children}
-                </main>
-            </div>
+                </DevelopmentViewSwitcher>
+            </AdminShell>
         </TenantThemeRegistry>
     );
 }
-

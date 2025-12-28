@@ -1,7 +1,6 @@
 import type { EmploymentType, MembershipStatus, Prisma } from '@prisma/client';
 import type { Membership } from '@/server/types/membership';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import type { AbacSubjectAttributes } from '@/server/types/abac-subject-attributes';
 
 export interface EmployeeProfilePayload {
     orgId: string;
@@ -25,8 +24,6 @@ export interface MembershipCreationInput {
     roles: string[];
     profile: EmployeeProfilePayload;
     userUpdate: UserActivationPayload;
-    /** Optional ABAC subject attributes to persist on membership.metadata. */
-    abacSubjectAttributes?: AbacSubjectAttributes;
 }
 
 export interface MembershipCreationResult {
@@ -47,4 +44,6 @@ export interface IMembershipRepository {
         userId: string,
         status: MembershipStatus,
     ): Promise<void>;
+
+    countActiveMemberships(context: RepositoryAuthorizationContext): Promise<number>;
 }

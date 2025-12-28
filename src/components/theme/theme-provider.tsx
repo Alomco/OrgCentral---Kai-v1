@@ -4,7 +4,7 @@
 import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 
 import { getThemePreset, themePresets, type ThemePresetId } from '@/server/theme/theme-presets';
-import { themeTokenKeys, type ThemeTokenKey } from '@/server/theme/tokens';
+import { themeTokenKeys } from '@/server/theme/tokens';
 
 export type ThemeId = ThemePresetId;
 
@@ -88,9 +88,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const preset = getThemePreset(themeId);
         const root = document.documentElement;
 
-        // Apply all canonical theme tokens to CSS custom properties.
-        themeTokenKeys.forEach((key: ThemeTokenKey) => {
-            root.style.setProperty(`--${key}`, preset.tokens[key]);
+        // Apply only defined theme tokens to allow globals.css placeholders to work for undefined ones
+        Object.entries(preset.tokens).forEach(([key, value]) => {
+            if (typeof value === 'string' && value.length > 0) {
+                root.style.setProperty(`--${key}`, value);
+            }
         });
     };
 

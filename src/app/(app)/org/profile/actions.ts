@@ -10,6 +10,7 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { updateOrganizationProfile } from '@/server/use-cases/org/organization/update-profile';
 import {
     organizationProfileUpdateSchema,
+    type OrganizationProfileUpdateInput,
 } from '@/server/validators/org/organization-profile';
 
 export interface OrgProfileActionState {
@@ -21,6 +22,7 @@ export interface OrgProfileActionState {
 export const initialOrgProfileActionState: OrgProfileActionState = { status: 'idle' };
 
 const ORG_PROFILE_CACHE_SCOPE = 'org:profile';
+const FIELD_ERROR_MESSAGE = 'Please correct the highlighted fields.';
 
 const orgProfileCoreFormSchema = organizationProfileUpdateSchema
     .omit({ contactDetails: true })
@@ -55,6 +57,9 @@ const contactGroupSchema = z
         }
     });
 
+type ContactGroupInput = z.infer<typeof contactGroupSchema>;
+type ContactParseResult = ReturnType<typeof contactGroupSchema.safeParse>;
+
 function collectFieldErrors(error: z.ZodError): Partial<Record<string, string[]>> {
     const out: Partial<Record<string, string[]>> = {};
     for (const issue of error.issues) {
@@ -65,6 +70,72 @@ function collectFieldErrors(error: z.ZodError): Partial<Record<string, string[]>
         (out[key] ??= []).push(issue.message);
     }
     return out;
+}
+
+function readContactGroup(formData: FormData, prefix: 'primary' | 'finance'): ContactGroupInput {
+    const toKey = (field: 'Name' | 'Email' | 'Phone') => `${prefix}Contact${field}`;
+    return {
+        name: normalizeOptionalText(formData.get(toKey('Name'))),
+        email: normalizeOptionalText(formData.get(toKey('Email'))),
+        phone: normalizeOptionalText(formData.get(toKey('Phone'))),
+    };
+}
+
+function assignContactErrors(
+    fieldErrors: Record<string, string[]>,
+    prefix: 'primary' | 'finance',
+    parsed: ContactParseResult,
+): void {
+    if (parsed.success) {
+        return;
+    }
+    const errors = collectFieldErrors(parsed.error);
+    const toKey = (field: 'Name' | 'Email' | 'Phone') => `${prefix}Contact${field}`;
+
+    if (errors.name?.length) {
+        fieldErrors[toKey('Name')] = errors.name;
+    }
+    if (errors.email?.length) {
+        fieldErrors[toKey('Email')] = errors.email;
+    }
+    if (errors.phone?.length) {
+        fieldErrors[toKey('Phone')] = errors.phone;
+    }
+}
+
+function buildContactDetails(
+    primaryParsed: ContactParseResult,
+    financeParsed: ContactParseResult,
+    hasAnyContactInput: boolean,
+): OrganizationProfileUpdateInput['contactDetails'] {
+    if (!hasAnyContactInput) {
+        return null;
+    }
+    return {
+        primaryBusinessContact: toContactInfo(primaryParsed),
+        accountsFinanceContact: toContactInfo(financeParsed),
+    };
+}
+
+function toErrorState(fieldErrors: Record<string, string[]>): OrgProfileActionState {
+    return {
+        status: 'error',
+        message: FIELD_ERROR_MESSAGE,
+        fieldErrors,
+    };
+}
+
+type ContactInfoOutput = NonNullable<OrganizationProfileUpdateInput['contactDetails']>['primaryBusinessContact'];
+
+function toContactInfo(parsed: ContactParseResult): ContactInfoOutput | undefined {
+    if (!parsed.success) {
+        return undefined;
+    }
+    const { name, email, phone } = parsed.data;
+    if (!name || !email) {
+        return undefined;
+    }
+    return phone ? { name, email, phone } : { name, email };
 }
 
 export async function updateOrgProfileAction(
@@ -78,55 +149,24 @@ export async function updateOrgProfileAction(
 
     const fieldErrors: Record<string, string[]> = {};
 
-    const primaryContactValues = {
-        name: normalizeOptionalText(formData.get('primaryContactName')),
-        email: normalizeOptionalText(formData.get('primaryContactEmail')),
-        phone: normalizeOptionalText(formData.get('primaryContactPhone')),
-    };
-    const financeContactValues = {
-        name: normalizeOptionalText(formData.get('financeContactName')),
-        email: normalizeOptionalText(formData.get('financeContactEmail')),
-        phone: normalizeOptionalText(formData.get('financeContactPhone')),
-    };
+    const primaryContactValues = readContactGroup(formData, 'primary');
+    const financeContactValues = readContactGroup(formData, 'finance');
 
     const primaryContactParsed = contactGroupSchema.safeParse(primaryContactValues);
-    if (!primaryContactParsed.success) {
-        const contactErrors = collectFieldErrors(primaryContactParsed.error);
-        if (contactErrors.name?.length) {
-            fieldErrors.primaryContactName = contactErrors.name;
-        }
-        if (contactErrors.email?.length) {
-            fieldErrors.primaryContactEmail = contactErrors.email;
-        }
-        if (contactErrors.phone?.length) {
-            fieldErrors.primaryContactPhone = contactErrors.phone;
-        }
-    }
-
     const financeContactParsed = contactGroupSchema.safeParse(financeContactValues);
-    if (!financeContactParsed.success) {
-        const contactErrors = collectFieldErrors(financeContactParsed.error);
-        if (contactErrors.name?.length) {
-            fieldErrors.financeContactName = contactErrors.name;
-        }
-        if (contactErrors.email?.length) {
-            fieldErrors.financeContactEmail = contactErrors.email;
-        }
-        if (contactErrors.phone?.length) {
-            fieldErrors.financeContactPhone = contactErrors.phone;
-        }
-    }
+
+    assignContactErrors(fieldErrors, 'primary', primaryContactParsed);
+    assignContactErrors(fieldErrors, 'finance', financeContactParsed);
 
     const hasAnyContactInput =
         Boolean(primaryContactValues.name ?? primaryContactValues.email ?? primaryContactValues.phone) ||
         Boolean(financeContactValues.name ?? financeContactValues.email ?? financeContactValues.phone);
 
-    const contactDetails = hasAnyContactInput
-        ? {
-            primaryBusinessContact: primaryContactParsed.success ? primaryContactParsed.data : undefined,
-            accountsFinanceContact: financeContactParsed.success ? financeContactParsed.data : undefined,
-        }
-        : null;
+    const contactDetails = buildContactDetails(
+        primaryContactParsed,
+        financeContactParsed,
+        hasAnyContactInput,
+    );
 
     const payload = {
         name: normalizeRequiredText(formData.get('name')),
@@ -144,23 +184,15 @@ export async function updateOrgProfileAction(
     if (!parsed.success) {
         const coreErrors = collectFieldErrors(parsed.error);
         for (const [key, errors] of Object.entries(coreErrors)) {
-            if (errors.length > 0) {
+            if (errors && errors.length > 0) {
                 fieldErrors[key] = errors;
             }
         }
-        return {
-            status: 'error',
-            message: 'Please correct the highlighted fields.',
-            fieldErrors,
-        };
+        return toErrorState(fieldErrors);
     }
 
     if (Object.keys(fieldErrors).length > 0) {
-        return {
-            status: 'error',
-            message: 'Please correct the highlighted fields.',
-            fieldErrors,
-        };
+        return toErrorState(fieldErrors);
     }
 
     const { authorization } = await getSessionContext(

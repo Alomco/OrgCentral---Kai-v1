@@ -24,7 +24,7 @@ export function createRecord(options: {
     kind: string;
     summary: string;
     tags?: string[];
-    volatility?: string;
+    volatility?: 'low' | 'medium' | 'high';
     related?: string[];
     domain?: string;
 }): VectorBuilderInput {

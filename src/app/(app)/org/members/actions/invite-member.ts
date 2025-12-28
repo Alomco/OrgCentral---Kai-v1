@@ -7,14 +7,14 @@ import { resolveOrgContext } from '@/server/org/org-context';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getMembershipService } from '@/server/services/org/membership/membership-service.provider';
-import type { AbacSubjectAttributes } from '@/server/types/abac-subject-attributes';
-import { parseAbacSubjectAttributes, type InviteMemberActionState } from './shared';
+import { sendInvitationEmail } from '@/server/use-cases/notifications/send-invitation-email';
+import { getInvitationEmailDependencies } from '@/server/use-cases/notifications/invitation-email.provider';
+import { type InviteMemberActionState } from './shared';
 
 const inviteMemberSchema = z
     .object({
         email: z.email(),
         role: z.string().trim().min(1),
-        abacSubjectAttributesJson: z.string().trim().optional(),
     })
     .strict();
 
@@ -29,16 +29,10 @@ export async function inviteMemberAction(
     const parsed = inviteMemberSchema.safeParse({
         email: formData.get('email') ?? '',
         role: formData.get('role') ?? '',
-        abacSubjectAttributesJson: formData.get('abacSubjectAttributesJson') ?? undefined,
     });
 
     if (!parsed.success) {
         return { status: 'error', message: 'Invalid invitation input.' };
-    }
-
-    const abacSubjectAttributes = parseAbacSubjectAttributes(parsed.data.abacSubjectAttributesJson);
-    if (parsed.data.abacSubjectAttributesJson && !abacSubjectAttributes) {
-        return { status: 'error', message: 'ABAC subject attributes must be valid JSON (object of primitives/arrays).' };
     }
 
     const { authorization } = await getSessionContext(
@@ -70,7 +64,6 @@ export async function inviteMemberAction(
                 authorization: RepositoryAuthorizationContext;
                 email: string;
                 roles: string[];
-                abacSubjectAttributes?: AbacSubjectAttributes;
             }): Promise<{ token: string; alreadyInvited: boolean }>;
         };
         const membershipService = getMembershipServiceTyped();
@@ -79,13 +72,27 @@ export async function inviteMemberAction(
                 authorization,
                 email: parsed.data.email,
                 roles: [parsed.data.role],
-                abacSubjectAttributes: abacSubjectAttributes ?? undefined,
             }),
         );
 
+        let message = result.alreadyInvited ? 'An active invitation already exists for this email.' : 'Invitation created.';
+        if (!result.alreadyInvited) {
+            try {
+                const dependencies = getInvitationEmailDependencies();
+                await sendInvitationEmail(dependencies, {
+                    authorization,
+                    invitationToken: result.token,
+                });
+            } catch (error) {
+                message = error instanceof Error
+                    ? `Invitation created, but email delivery failed: ${error.message}`
+                    : 'Invitation created, but email delivery failed.';
+            }
+        }
+
         return {
             status: 'success',
-            message: result.alreadyInvited ? 'An active invitation already exists for this email.' : 'Invitation created.',
+            message,
             token: result.token,
             alreadyInvited: result.alreadyInvited,
         };

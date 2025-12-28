@@ -1,0 +1,66 @@
+/**
+ * 💀 Premium Skeleton Loader
+ * 
+ * Shimmer wave animation for loading states.
+ * CSS-first with reduced-motion support.
+ * 
+ * @module components/theme/primitives/skeletons
+ */
+
+/* ============================================================================
+ * Shimmer Wave Animation
+ * ============================================================================ */
+
+@keyframes shimmerWave {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* ============================================================================
+ * Skeleton Styles
+ * ============================================================================ */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        hsl(var(--muted)) 0%,
+        hsl(var(--muted-foreground) / 0.15) 25%,
+        hsl(var(--muted-foreground) / 0.25) 50%,
+        hsl(var(--muted-foreground) / 0.15) 75%,
+        hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmerWave 1.8s ease-in-out infinite;
+    border-radius: var(--radius);
+}
+
+.skeletonGlow {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.08);
+}
+
+.skeletonSubtle {
+    background: linear-gradient(
+        90deg,
+        hsl(var(--muted)) 0%,
+        hsl(var(--muted-foreground) / 0.08) 50%,
+        hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmerWave 2s ease-in-out infinite;
+}
+
+/* ============================================================================
+ * Reduced Motion
+ * ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton,
+    .skeletonSubtle {
+        animation: none;
+        background: hsl(var(--muted));
+    }
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, Building2, User } from 'lucide-react';
@@ -52,21 +52,20 @@ export function AdminNavigationLinks({ items }: { items: AdminNavItem[] }) {
             {primary.map((item) => {
                 const active = stablePathname ? isActive(stablePathname, item.href) : false;
                 return (
-                    <Activity key={item.href} mode={active ? 'visible' : 'hidden'}>
-                        <Link
-                            href={item.href}
-                            aria-current={active ? 'page' : undefined}
-                            className={cn(
-                                'rounded-md px-3 py-1.5 text-sm font-medium motion-safe:transition-colors',
-                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                                active
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                            )}
-                        >
-                            {item.label}
-                        </Link>
-                    </Activity>
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(
+                            'rounded-md px-3 py-1.5 text-sm font-medium motion-safe:transition-colors',
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                            active
+                                ? 'bg-primary/10 text-primary'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                        )}
+                    >
+                        {item.label}
+                    </Link>
                 );
             })}
             {overflow.length > 0 && (

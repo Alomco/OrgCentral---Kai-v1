@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { DevelopmentSecurityWidget } from "@/components/dev/DevelopmentSecurityWidget";
 import { TenantThemeRegistry } from "@/components/theme/tenant-theme-registry";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { UiStyleProvider } from "@/components/theme/ui-style-provider";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -32,11 +33,14 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <ThemeProvider>
-            {process.env.NODE_ENV === "development" ? <DevelopmentSecurityWidget /> : null}
-            <TenantThemeRegistry orgId={null}>{children}</TenantThemeRegistry>
+            <UiStyleProvider>
+              {process.env.NODE_ENV === "development" ? <DevelopmentSecurityWidget /> : null}
+              <TenantThemeRegistry orgId={null}>{children}</TenantThemeRegistry>
+            </UiStyleProvider>
           </ThemeProvider>
         </Providers>
       </body>
     </html>
   );
 }
+

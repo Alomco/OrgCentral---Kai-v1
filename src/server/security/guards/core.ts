@@ -14,11 +14,9 @@ import {
 } from '@/server/security/authorization/engine';
 
 import { getGuardMembershipRepository } from './membership-repository';
-import { isDevelopmentSuperAdminMembership } from './development-super-admin';
 import {
     resolveGrantedPermissions,
 } from './permission-requirements';
-import type { AbacSubjectAttributes } from '@/server/types/abac-subject-attributes';
 
 export interface OrgAccessInput {
     orgId: string;
@@ -47,10 +45,6 @@ export interface OrgAccessContext {
     auditSource: string;
     auditBatchId?: string;
     correlationId: string;
-    /** Development-only escape hatch for bootstrapped super admins. */
-    developmentSuperAdmin?: boolean;
-    /** Optional ABAC subject attributes (persisted on membership.metadata.abacSubjectAttributes). */
-    abacSubjectAttributes?: AbacSubjectAttributes;
 }
 
 export function toTenantScope(context: OrgAccessContext): TenantScope {
@@ -99,8 +93,6 @@ export async function assertOrgAccess(input: OrgAccessInput): Promise<OrgAccessC
         membership.rolePermissions,
     );
 
-    const developmentSuperAdmin = isDevelopmentSuperAdminMembership(membership.metadata, grantedPermissions);
-
     const context: OrgAccessContext = {
         orgId: input.orgId,
         userId: input.userId,
@@ -111,48 +103,11 @@ export async function assertOrgAccess(input: OrgAccessInput): Promise<OrgAccessC
         auditSource: input.auditSource ?? 'org-guard',
         auditBatchId: extractAuditBatchId(membership.metadata),
         correlationId: input.correlationId ?? randomUUID(),
-        developmentSuperAdmin: developmentSuperAdmin || undefined,
-        abacSubjectAttributes: extractAbacSubjectAttributes(membership.metadata),
     };
 
     authorizeOrgAccessRbacOnly(input, context);
 
     return context;
-}
-
-export function extractAbacSubjectAttributes(metadata: unknown): AbacSubjectAttributes | undefined {
-    if (!metadata || typeof metadata !== 'object') {
-        return undefined;
-    }
-
-    const record = metadata as Record<string, unknown>;
-    const raw = record.abacSubjectAttributes;
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-        return undefined;
-    }
-
-    const value = raw as Record<string, unknown>;
-    const result: AbacSubjectAttributes = {};
-
-    for (const [key, entry] of Object.entries(value)) {
-        if (key.trim().length === 0) {
-            continue;
-        }
-
-        if (entry === null || typeof entry === 'string' || typeof entry === 'number' || typeof entry === 'boolean') {
-            result[key] = entry;
-            continue;
-        }
-
-        if (
-            Array.isArray(entry) &&
-            entry.every((item) => item === null || typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean')
-        ) {
-            result[key] = entry;
-        }
-    }
-
-    return Object.keys(result).length > 0 ? result : undefined;
 }
 
 export async function withOrgContext<T>(

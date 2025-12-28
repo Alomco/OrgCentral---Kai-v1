@@ -6,6 +6,7 @@ export * from './departments';
 export * from './notifications';
 export * from './integrations';
 export * from './abac';
+export * from './billing';
 export * from './branding/prisma-branding-repository';
 export * from './enterprise/prisma-enterprise-admin-repository';
 export { OrgScopedPrismaRepository } from './org-scoped-prisma-repository';

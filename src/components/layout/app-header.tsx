@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { UserNav } from './user-nav';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { OrgBranding } from '@/server/types/branding-types';
@@ -84,7 +85,10 @@ export function AppHeader({ session, authorization, branding }: AppHeaderProps) 
                     </PopoverContent>
                 </Popover>
 
-                {/* Theme Toggle */}
+                {/* Theme & Style Switcher */}
+                <ThemeSwitcher />
+
+                {/* Dark/Light Mode Toggle */}
                 <Button
                     variant="ghost"
                     size="icon"
@@ -102,3 +106,4 @@ export function AppHeader({ session, authorization, branding }: AppHeaderProps) 
         </header>
     );
 }
+

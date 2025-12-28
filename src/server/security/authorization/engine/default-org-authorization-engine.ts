@@ -19,10 +19,6 @@ const classificationRank: Record<DataClassificationLevel, number> = {
 };
 
 function assertTenantConstraints(input: OrgAuthorizationInput, context: OrgAuthorizationContext): void {
-    if (context.developmentSuperAdmin) {
-        return;
-    }
-
     if (
         input.expectedClassification &&
         classificationRank[context.dataClassification] < classificationRank[input.expectedClassification]
@@ -36,10 +32,6 @@ function assertTenantConstraints(input: OrgAuthorizationInput, context: OrgAutho
 }
 
 function assertRbac(input: OrgAuthorizationInput, context: OrgAuthorizationContext): void {
-    if (context.developmentSuperAdmin) {
-        return;
-    }
-
     const requiredPermissions = normalizePermissionRequirement(input.requiredPermissions);
     const requiredAnyPermissionProfiles = buildAnyPermissionProfiles(input.requiredAnyPermissions);
 
@@ -62,10 +54,6 @@ function assertRbac(input: OrgAuthorizationInput, context: OrgAuthorizationConte
 }
 
 async function assertAbac(input: OrgAuthorizationInput, context: OrgAuthorizationContext): Promise<void> {
-    if (context.developmentSuperAdmin) {
-        return;
-    }
-
     if (!input.action || !input.resourceType) {
         return;
     }
@@ -75,7 +63,6 @@ async function assertAbac(input: OrgAuthorizationInput, context: OrgAuthorizatio
         input.userId,
         [context.roleKey === 'custom' ? 'custom' : context.roleKey],
         {
-            ...(context.abacSubjectAttributes ?? {}),
             residency: context.dataResidency,
             classification: context.dataClassification,
         },

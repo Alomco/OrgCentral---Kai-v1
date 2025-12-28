@@ -27,6 +27,10 @@ export class FakeInvitationRepository implements IInvitationRepository {
         return null;
     }
 
+    async listInvitationsByOrg(orgId: string): Promise<InvitationRecord[]> {
+        return Array.from(this.records.values()).filter((record) => record.organizationId === orgId);
+    }
+
     async createInvitation(input: InvitationCreateInput): Promise<InvitationRecord> {
         const record: InvitationRecord = {
             token: input.orgId,
@@ -37,9 +41,23 @@ export class FakeInvitationRepository implements IInvitationRepository {
             invitedByUid: input.invitedByUserId,
             onboardingData: input.onboardingData,
             invitedByUserId: input.invitedByUserId,
+            createdAt: new Date(),
         };
         this.records.set(record.token, record);
         return record;
+    }
+
+    async revokeInvitation(orgId: string, token: string, revokedByUserId: string): Promise<void> {
+        const record = this.records.get(token);
+        if (!record || record.organizationId !== orgId) {
+            throw new Error('Invitation not found for this organization.');
+        }
+        this.records.set(token, {
+            ...record,
+            status: 'revoked',
+            revokedAt: new Date(),
+            revokedByUserId,
+        });
     }
 }
 
@@ -71,6 +89,10 @@ export class FakeMembershipRepository implements IMembershipRepository {
         _status: MembershipStatus,
     ): Promise<void> {
         return Promise.resolve();
+    }
+
+    async countActiveMemberships(_context: RepositoryAuthorizationContext): Promise<number> {
+        return 0;
     }
 }
 

@@ -1,0 +1,123 @@
+/**
+ * 🎬 Motion Animations
+ * 
+ * CSS-first enter animations with reduced-motion support.
+ * 
+ * @module components/theme/primitives/motion
+ */
+
+/* ============================================================================
+ * Keyframes
+ * ============================================================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.03);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ============================================================================
+ * Animation Classes
+ * ============================================================================ */
+
+.fadeIn {
+    animation: fadeIn 300ms ease-out forwards;
+}
+
+.slideUp {
+    animation: slideUp 400ms ease-out forwards;
+}
+
+.slideDown {
+    animation: slideDown 400ms ease-out forwards;
+}
+
+.scaleIn {
+    animation: scaleIn 250ms ease-out forwards;
+}
+
+.bounceIn {
+    animation: bounceIn 450ms ease-out forwards;
+}
+
+/* Stagger delays */
+.delay100 { animation-delay: 100ms; opacity: 0; }
+.delay200 { animation-delay: 200ms; opacity: 0; }
+.delay300 { animation-delay: 300ms; opacity: 0; }
+.delay400 { animation-delay: 400ms; opacity: 0; }
+.delay500 { animation-delay: 500ms; opacity: 0; }
+
+/* ============================================================================
+ * Reduced Motion
+ * ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .fadeIn,
+    .slideUp,
+    .slideDown,
+    .scaleIn,
+    .bounceIn {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+    
+    .delay100,
+    .delay200,
+    .delay300,
+    .delay400,
+    .delay500 {
+        animation-delay: 0ms;
+        opacity: 1;
+    }
+}

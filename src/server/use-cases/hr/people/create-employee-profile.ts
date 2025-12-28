@@ -1,4 +1,4 @@
-import type { ProfileMutationPayload } from '@/server/types/hr/people';
+import type { EmployeeProfileDTO } from '@/server/types/hr/people';
 import { invalidateContractsAfterMutation, invalidateProfilesAfterMutation } from './shared/cache-helpers';
 import { assertEmploymentContractEditor, assertPeopleProfileEditor } from '@/server/security/guards-hr-people';
 import { HR_ACTION } from '@/server/security/authorization/hr-resource-registry';
@@ -29,9 +29,11 @@ export async function createEmployeeProfile(
   input: CreateEmployeeProfileInput,
 ): Promise<CreateEmployeeProfileResult> {
   const orgId = input.authorization.orgId;
-  const payload: ProfileMutationPayload['changes'] & { orgId: string } = {
+  const payload: ProfileCreateRecord = {
     ...input.profileData,
     orgId,
+    userId: input.profileData.userId,
+    employeeNumber: input.profileData.employeeNumber,
     healthStatus: input.profileData.healthStatus ?? 'UNDEFINED',
     employmentType: input.profileData.employmentType ?? 'FULL_TIME',
     employmentStatus: input.profileData.employmentStatus ?? 'ACTIVE',
@@ -45,8 +47,8 @@ export async function createEmployeeProfile(
     action: HR_ACTION.CREATE,
     resourceAttributes: {
       orgId,
-      userId: payload.userId,
-      employeeNumber: payload.employeeNumber,
+      userId: input.profileData.userId,
+      employeeNumber: input.profileData.employeeNumber,
       departmentId: payload.departmentId ?? null,
       jobTitle: payload.jobTitle ?? null,
       employmentType: payload.employmentType,
@@ -98,3 +100,5 @@ export async function createEmployeeProfile(
     checklistInstanceId,
   };
 }
+
+type ProfileCreateRecord = Omit<EmployeeProfileDTO, 'id' | 'createdAt' | 'updatedAt'>;

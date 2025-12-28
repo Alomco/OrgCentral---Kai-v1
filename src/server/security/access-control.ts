@@ -15,6 +15,16 @@ const STATEMENTS = {
 export const orgAccessControl = createAccessControl(STATEMENTS);
 
 export const orgRoles = {
+    globalAdmin: orgAccessControl.newRole({
+        organization: STATEMENTS.organization,
+        member: STATEMENTS.member,
+        invitation: STATEMENTS.invitation,
+        audit: STATEMENTS.audit,
+        cache: STATEMENTS.cache,
+        residency: STATEMENTS.residency,
+        employeeProfile: STATEMENTS.employeeProfile,
+        employmentContract: STATEMENTS.employmentContract,
+    }),
     owner: orgAccessControl.newRole({
         organization: STATEMENTS.organization,
         member: STATEMENTS.member,
@@ -30,6 +40,13 @@ export const orgRoles = {
         member: ['read', 'invite', 'update'],
         invitation: STATEMENTS.invitation,
         cache: STATEMENTS.cache,
+        employeeProfile: STATEMENTS.employeeProfile,
+        employmentContract: STATEMENTS.employmentContract,
+    }),
+    hrAdmin: orgAccessControl.newRole({
+        organization: ['read'],
+        member: ['read', 'invite'],
+        invitation: STATEMENTS.invitation,
         employeeProfile: STATEMENTS.employeeProfile,
         employmentContract: STATEMENTS.employmentContract,
     }),

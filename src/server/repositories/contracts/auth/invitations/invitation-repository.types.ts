@@ -5,8 +5,12 @@ export interface InvitationRecord extends InvitationData {
     invitedByUserId?: string;
     acceptedAt?: Date;
     acceptedByUserId?: string;
+    revokedAt?: Date;
+    revokedByUserId?: string;
     expiresAt?: Date;
+    createdAt?: Date;
     updatedAt?: Date;
+    metadata?: Prisma.JsonValue | null;
 }
 
 export interface InvitationCreateInput {

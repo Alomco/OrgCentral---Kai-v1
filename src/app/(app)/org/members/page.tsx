@@ -8,6 +8,7 @@ import { getRoleService } from '@/server/services/org';
 import { getUserService, type UserServiceContract } from '@/server/services/org/users/user-service.provider';
 import { MemberActions } from './_components/member-actions';
 import { InviteMemberForm } from './_components/invite-member-form';
+import { OrgInvitationsPanel } from './_components/org-invitations-panel';
 
 const membershipStatusSchema = z.enum(['INVITED', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']);
 
@@ -52,6 +53,7 @@ export default async function OrgMembersPage() {
     const users = z.array(orgUserSchema).parse(rawUsers);
     const roles = await getRoleService().listRoles({ authorization });
     const roleNames = roles.map((role) => role.name);
+    const allowedRoles = resolveInviteRoles(authorization.roleKey, roleNames);
 
     return (
         <div className="space-y-6 p-6">
@@ -61,7 +63,9 @@ export default async function OrgMembersPage() {
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Users with access to this organization.</p>
             </div>
 
-            <InviteMemberForm roles={roleNames.length > 0 ? roleNames : ['member']} />
+            <InviteMemberForm roles={allowedRoles} />
+
+            <OrgInvitationsPanel authorization={authorization} />
 
             <div className="rounded-2xl bg-[hsl(var(--card)/0.6)] p-6 backdrop-blur">
                 <div className="grid gap-3">
@@ -110,4 +114,26 @@ function resolveMembershipForOrg(
     orgId: string,
 ): z.infer<typeof membershipSchema> | undefined {
     return user.memberships.find((candidate) => candidate.organizationId === orgId);
+}
+
+function resolveInviteRoles(roleKey: string, roleNames: string[]): string[] {
+    const existing = roleNames.length > 0 ? roleNames : ['member'];
+    const merged = new Set(existing);
+
+    if (roleKey === 'globalAdmin' || roleKey === 'owner') {
+        merged.add('orgAdmin');
+        return Array.from(merged).filter((role) => role === 'orgAdmin');
+    }
+
+    if (roleKey === 'orgAdmin') {
+        merged.add('hrAdmin');
+        return Array.from(merged).filter((role) => role === 'hrAdmin');
+    }
+
+    if (roleKey === 'hrAdmin') {
+        merged.add('member');
+        return Array.from(merged).filter((role) => role === 'member');
+    }
+
+    return ['member'];
 }

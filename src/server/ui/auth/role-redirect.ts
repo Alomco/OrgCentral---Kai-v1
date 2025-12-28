@@ -1,4 +1,4 @@
-import { type RoleScope } from '@prisma/client';
+import { RoleScope } from '@prisma/client';
 
 import { prisma } from '@/server/lib/prisma';
 
@@ -37,8 +37,8 @@ export async function getMembershipRoleSnapshot(
     }
 
     return {
-        roleName: membership.role.name,
-        roleScope: membership.role.scope,
+        roleName: membership.role?.name ?? 'unknown',
+        roleScope: membership.role?.scope ?? RoleScope.ORG,
         orgSlug: membership.org.slug,
     };
 }
@@ -49,7 +49,7 @@ export async function getMembershipRoleSnapshot(
  * ORG/DELEGATED scope → employee (standard workspace)
  */
 export function resolveRoleDashboard(snapshot: MembershipRoleSnapshot): RoleDashboardKey {
-    if (snapshot.roleScope === 'GLOBAL') {
+    if (snapshot.roleScope === RoleScope.GLOBAL) {
         return 'globalAdmin';
     }
     return 'employee';

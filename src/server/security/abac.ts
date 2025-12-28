@@ -3,6 +3,7 @@ import { appLogger } from '@/server/logging/structured-logger';
 import type { AbacPolicy } from './abac-types';
 import { normalizeAbacPolicies } from './abac-policy-normalizer';
 import { DEFAULT_BOOTSTRAP_POLICIES } from './abac-constants';
+export { DEFAULT_BOOTSTRAP_POLICIES };
 import { evaluateCondition, matchesPolicySelector, subjectHasRole } from './abac-helpers';
 export { makeResource, makeSubject } from './abac-helpers';
 
@@ -16,7 +17,7 @@ export class AbacService {
   constructor(
     private repository: IAbacPolicyRepository | null = null,
     private readonly options: AbacServiceOptions = {},
-  ) {}
+  ) { }
 
   private async getRepository(): Promise<IAbacPolicyRepository> {
     if (this.repository) {

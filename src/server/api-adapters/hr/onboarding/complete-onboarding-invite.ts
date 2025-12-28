@@ -6,7 +6,9 @@ import {
     PrismaChecklistInstanceRepository,
 } from '@/server/repositories/prisma/hr/onboarding';
 import { PrismaEmployeeProfileRepository, PrismaEmploymentContractRepository } from '@/server/repositories/prisma/hr/people';
+import { PrismaMembershipRepository } from '@/server/repositories/prisma/org/membership/prisma-membership-repository';
 import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
+import { resolveBillingService } from '@/server/services/billing/billing-service.provider';
 import {
     completeOnboardingInvite,
     type CompleteOnboardingInviteDependencies,
@@ -28,6 +30,8 @@ const defaultDependencies: CompleteOnboardingInviteDependencies = {
     onboardingInvitationRepository: new PrismaOnboardingInvitationRepository(),
     organizationRepository: new PrismaOrganizationRepository(),
     employeeProfileRepository: new PrismaEmployeeProfileRepository(),
+    membershipRepository: new PrismaMembershipRepository(),
+    billingService: resolveBillingService() ?? undefined,
     employmentContractRepository: new PrismaEmploymentContractRepository(),
     checklistTemplateRepository: new PrismaChecklistTemplateRepository(),
     checklistInstanceRepository: new PrismaChecklistInstanceRepository(),

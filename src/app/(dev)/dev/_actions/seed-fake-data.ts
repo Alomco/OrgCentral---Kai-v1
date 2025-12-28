@@ -15,6 +15,11 @@ import { revalidatePath } from 'next/cache';
 import { DEFAULT_BOOTSTRAP_POLICIES } from '@/server/security/abac-constants';
 
 const SEEDED_METADATA_KEY = 'devSeeded';
+const PLATFORM_ORG_SLUG = 'orgcentral-platform';
+const DEV_DASHBOARD_PATH = '/dev/dashboard';
+const HR_EMPLOYEES_PATH = '/hr/employees';
+const HR_LEAVE_PATH = '/hr/leave';
+const UNKNOWN_ERROR_MESSAGE = 'Unknown error';
 
 interface SeedResult {
     success: boolean;
@@ -24,7 +29,7 @@ interface SeedResult {
 
 async function getDefaultOrg() {
     const org = await prisma.organization.findFirst({
-        where: { slug: 'orgcentral-platform' },
+        where: { slug: PLATFORM_ORG_SLUG },
     });
     if (!org) {
         throw new Error('Platform organization not found. Run admin bootstrap first.');
@@ -149,11 +154,11 @@ export async function seedFakeEmployees(count = 5): Promise<SeedResult> {
             created++;
         }
 
-        revalidatePath('/dev/dashboard');
-        revalidatePath('/hr/employees');
+        revalidatePath(DEV_DASHBOARD_PATH);
+        revalidatePath(HR_EMPLOYEES_PATH);
         return { success: true, message: `Created ${String(created)} fake employees`, count: created };
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE;
         return { success: false, message };
     }
 }
@@ -207,11 +212,11 @@ export async function seedFakeLeaveRequests(count = 10): Promise<SeedResult> {
             created++;
         }
 
-        revalidatePath('/dev/dashboard');
-        revalidatePath('/hr/leave');
+        revalidatePath(DEV_DASHBOARD_PATH);
+        revalidatePath(HR_LEAVE_PATH);
         return { success: true, message: `Created ${String(created)} fake leave requests`, count: created };
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE;
         return { success: false, message };
     }
 }
@@ -247,10 +252,10 @@ export async function seedFakeDepartments(count = 5): Promise<SeedResult> {
             created++;
         }
 
-        revalidatePath('/dev/dashboard');
+        revalidatePath(DEV_DASHBOARD_PATH);
         return { success: true, message: `Created ${String(created)} departments`, count: created };
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE;
         return { success: false, message };
     }
 }
@@ -291,9 +296,9 @@ export async function clearSeededData(): Promise<SeedResult> {
             },
         });
 
-        revalidatePath('/dev/dashboard');
-        revalidatePath('/hr/employees');
-        revalidatePath('/hr/leave');
+        revalidatePath(DEV_DASHBOARD_PATH);
+        revalidatePath(HR_EMPLOYEES_PATH);
+        revalidatePath(HR_LEAVE_PATH);
 
         const total = deletedLeave.count + deletedProfiles.count + deletedMemberships.count + deletedPolicies.count;
         return {
@@ -302,7 +307,7 @@ export async function clearSeededData(): Promise<SeedResult> {
             count: total,
         };
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE;
         return { success: false, message };
     }
 }
@@ -356,7 +361,7 @@ export async function seedAbacPolicies(): Promise<SeedResult> {
         await prisma.organization.update({
             where: { id: org.id },
             data: {
-                settings: updatedSettings as Prisma.InputJsonValue,
+                settings: updatedSettings as unknown as Prisma.InputJsonValue,
             },
         });
 
@@ -368,7 +373,7 @@ export async function seedAbacPolicies(): Promise<SeedResult> {
             count: DEFAULT_BOOTSTRAP_POLICIES.length,
         };
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE;
         return { success: false, message };
     }
 }

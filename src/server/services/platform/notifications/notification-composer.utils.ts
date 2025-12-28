@@ -23,8 +23,7 @@ export function normalizeNotificationInput(
     orgId: authorization.orgId,
     retentionPolicyId: notification.retentionPolicyId ?? defaultRetentionPolicyId,
     // auditSource may be overridden by caller; fall back to tenant context when omitted
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    auditSource: notification.auditSource ?? authorization.auditSource ?? 'platform.notifications',
+    auditSource: notification.auditSource ?? authorization.auditSource,
     dataClassification: notification.dataClassification ?? authorization.dataClassification,
     residencyTag: notification.residencyTag ?? authorization.dataResidency,
     createdByUserId: notification.createdByUserId ?? authorization.userId,

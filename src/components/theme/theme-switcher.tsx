@@ -1,13 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { Palette, Check } from 'lucide-react';
+import { Palette, Check, Sparkles, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from './theme-provider';
+import { useUiStyle } from './ui-style-provider';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 
 export function ThemeSwitcher() {
     const { currentTheme, setTheme, clearTheme, themes } = useTheme();
-    const [isOpen, setIsOpen] = useState(false);
+    const { currentStyle, setStyle, styles } = useUiStyle();
+
+    // We can use the open state if needed, or let Popover handle it.
+    // For auto-closing on selection, we might need controlled state.
+    const [open, setOpen] = useState(false);
 
     const swatchCss = themes
         .map((theme) => `.orgcentral-theme-swatch[data-theme-id="${theme.id}"]{background-color:${theme.color};}`)
@@ -15,109 +27,129 @@ export function ThemeSwitcher() {
 
     const handleThemeChange = (themeId: (typeof themes)[number]['id']) => {
         setTheme(themeId);
-        setIsOpen(false);
     };
 
     const selectedLabel =
-        currentTheme ? themes.find((t) => t.id === currentTheme)?.name : 'Organization theme';
+        currentTheme ? themes.find((t) => t.id === currentTheme)?.name : 'Org default';
 
     return (
-        <div className="relative">
+        <Popover open={open} onOpenChange={setOpen}>
             <style dangerouslySetInnerHTML={{ __html: swatchCss }} />
-            {/* Theme Switcher Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg",
-                    "bg-linear-to-r from-primary/10 to-accent/10",
-                    "border border-primary/20",
-                    "hover:from-primary/20 hover:to-accent/20",
-                    "transition-all duration-300",
-                    "text-sm font-medium"
-                )}
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg",
+                        "bg-gradient-to-r from-primary/10 to-accent/10",
+                        "border-primary/20",
+                        "hover:from-primary/20 hover:to-accent/20",
+                        "transition-all duration-300",
+                        "text-sm font-medium"
+                    )}
+                >
+                    <Palette className="h-4 w-4" />
+                    <span className="hidden sm:inline">Theme</span>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent
+                className="w-80 p-0 overflow-hidden rounded-xl border-border bg-background/95 backdrop-blur-xl shadow-2xl"
+                align="start"
+                sideOffset={10}
             >
-                <Palette className="h-4 w-4" />
-                <span>Switch Theme</span>
-                <span className="px-2 py-0.5 rounded-md bg-primary/20 text-xs">
-                    {selectedLabel}
-                </span>
-            </button>
+                <Tabs defaultValue="colors" className="w-full">
+                    <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0">
+                        <TabsTrigger
+                            value="colors"
+                            className="flex-1 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                        >
+                            <Palette className="mr-2 h-4 w-4" />
+                            Colors
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="styles"
+                            className="flex-1 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                        >
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            UI Style
+                        </TabsTrigger>
+                    </TabsList>
 
-            {/* Theme Dropdown */}
-            {isOpen && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsOpen(false)}
-                    />
-
-                    {/* Dropdown Menu */}
-                    <div className="absolute top-full mt-2 right-0 z-50 w-80 rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-                        <div className="p-4 border-b border-border">
-                            <h3 className="font-semibold text-sm">Choose Your Theme</h3>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Select a theme to instantly transform your experience
-                            </p>
-                        </div>
-
-                        <div className="p-2 max-h-96 overflow-y-auto">
+                    <TabsContent value="colors" className="m-0 p-0">
+                        <div className="p-2 max-h-72 overflow-y-auto">
                             <div className="grid grid-cols-2 gap-2">
                                 {themes.map((theme) => (
                                     <button
                                         key={theme.id}
                                         onClick={() => handleThemeChange(theme.id)}
                                         className={cn(
-                                            "group relative p-3 rounded-lg border transition-all duration-300",
-                                            "hover:scale-105 hover:shadow-lg",
+                                            "group relative p-3 rounded-lg border transition-all duration-200 text-left w-full",
+                                            "hover:scale-[1.02] hover:shadow-md",
                                             currentTheme === theme.id
-                                                ? "border-primary bg-primary/5 shadow-md"
+                                                ? "border-primary bg-primary/5 shadow-sm"
                                                 : "border-border hover:border-primary/50"
                                         )}
                                     >
-                                        {/* Color Preview */}
                                         <div
-                                            className={cn(
-                                                "orgcentral-theme-swatch h-12 rounded-md mb-2 transition-all duration-300 group-hover:scale-110"
-                                            )}
+                                            className="orgcentral-theme-swatch h-10 rounded-md mb-2 w-full"
                                             data-theme-id={theme.id}
                                         />
-
-                                        {/* Theme Name */}
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium">{theme.name}</span>
+                                            <span className="text-xs font-medium truncate">{theme.name}</span>
                                             {currentTheme === theme.id && (
-                                                <Check className="h-4 w-4 text-primary" />
+                                                <Check className="h-3 w-3 text-primary shrink-0" />
                                             )}
                                         </div>
                                     </button>
                                 ))}
                             </div>
                         </div>
+                    </TabsContent>
 
-                        <div className="p-3 border-t border-border bg-muted/30">
-                            <div className="flex items-center justify-between gap-3">
-                                <p className="text-xs text-muted-foreground">
-                                    Preview applies instantly • Persists locally
-                                </p>
+                    <TabsContent value="styles" className="m-0 p-0">
+                        <div className="p-2 max-h-72 overflow-y-auto space-y-1">
+                            {styles.map((style) => (
                                 <button
-                                    type="button"
-                                    onClick={() => {
-                                        clearTheme();
-                                        setIsOpen(false);
-                                    }}
+                                    key={style.id}
+                                    onClick={() => setStyle(style.id)}
                                     className={cn(
-                                        "text-xs font-medium underline-offset-4 hover:underline",
-                                        "text-muted-foreground hover:text-foreground"
+                                        "w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left",
+                                        currentStyle === style.id
+                                            ? "border-primary bg-primary/5"
+                                            : "border-transparent hover:bg-muted/50"
                                     )}
                                 >
-                                    Reset
+                                    <span className="text-xl shrink-0">{style.emoji}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium truncate">{style.name}</div>
+                                        <div className="text-xs text-muted-foreground truncate">
+                                            {style.description}
+                                        </div>
+                                    </div>
+                                    {currentStyle === style.id && (
+                                        <Check className="h-4 w-4 text-primary shrink-0" />
+                                    )}
                                 </button>
-                            </div>
+                            ))}
                         </div>
-                    </div>
-                </>
-            )}
-        </div>
+                    </TabsContent>
+                </Tabs>
+
+                <div className="p-3 border-t border-border bg-muted/30 flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                        {selectedLabel} • {styles.find(s => s.id === currentStyle)?.name}
+                    </span>
+                    <button
+                        onClick={() => {
+                            clearTheme();
+                            setOpen(false);
+                        }}
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 shrink-0"
+                    >
+                        <RotateCcw className="h-3 w-3" />
+                        Reset
+                    </button>
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }

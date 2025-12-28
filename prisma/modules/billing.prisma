@@ -1,0 +1,40 @@
+// Billing and subscription models
+enum BillingSubscriptionStatus {
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
+  @@schema("hr")
+}
+
+model OrganizationSubscription {
+  id                       String                    @id @default(uuid()) @db.Uuid
+  orgId                    String                    @db.Uuid
+  stripeCustomerId         String                    @db.Text
+  stripeSubscriptionId     String                    @db.Text
+  stripeSubscriptionItemId String?                   @db.Text
+  stripePriceId            String                    @db.Text
+  status                   BillingSubscriptionStatus @default(INCOMPLETE)
+  seatCount                Int                       @default(1)
+  currentPeriodEnd         DateTime?
+  cancelAtPeriodEnd        Boolean                   @default(false)
+  lastStripeEventAt        DateTime?
+  metadata                 Json?                     @db.JsonB
+  dataClassification       DataClassificationLevel   @default(OFFICIAL)
+  residencyTag             DataResidencyZone         @default(UK_ONLY)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId])
+  @@unique([stripeCustomerId])
+  @@unique([stripeSubscriptionId])
+  @@index([orgId, status])
+  @@map("organization_subscriptions")
+  @@schema("hr")
+}

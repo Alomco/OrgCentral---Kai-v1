@@ -1,6 +1,5 @@
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import type { OrgPermissionMap, OrgRoleKey } from '@/server/security/access-control';
-import type { AbacSubjectAttributes } from '@/server/types/abac-subject-attributes';
 
 export interface OrgAuthorizationInput {
     orgId: string;
@@ -27,11 +26,6 @@ export interface OrgAuthorizationContext {
     dataResidency: DataResidencyZone;
     dataClassification: DataClassificationLevel;
 
-    /** Optional ABAC subject attributes (e.g., departmentId) sourced from membership metadata. */
-    abacSubjectAttributes?: AbacSubjectAttributes;
-
-    /** Development-only escape hatch for bootstrapped super admins. */
-    developmentSuperAdmin?: boolean;
 }
 
 export interface OrgAuthorizationEngine {

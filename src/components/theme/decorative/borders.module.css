@@ -1,0 +1,112 @@
+/**
+ * 🌀 Animated Border Effects
+ * 
+ * CSS-first animations for rotating and neon borders.
+ * Respects prefers-reduced-motion for accessibility.
+ * 
+ * @module components/theme/decorative/borders
+ */
+
+/* CSS Custom Property for animation */
+@property --border-angle {
+    syntax: "<angle>";
+    inherits: true;
+    initial-value: 0deg;
+}
+
+/* ============================================================================
+ * Rotating Gradient Border
+ * ============================================================================ */
+
+@keyframes rotateBorder {
+    to {
+        --border-angle: 360deg;
+    }
+}
+
+.rotatingBorderWrapper {
+    position: relative;
+    border-radius: var(--radius);
+    padding: 2px;
+    background: conic-gradient(
+        from var(--border-angle),
+        hsl(var(--primary)),
+        hsl(var(--accent)),
+        hsl(var(--secondary)),
+        hsl(var(--primary))
+    );
+    animation: rotateBorder 4s linear infinite;
+}
+
+.rotatingBorderContent {
+    background: hsl(var(--card));
+    border-radius: calc(var(--radius) - 2px);
+    height: 100%;
+    width: 100%;
+}
+
+/* ============================================================================
+ * Neon Pulse Border
+ * ============================================================================ */
+
+@keyframes neonPulse {
+    0%, 100% {
+        box-shadow: 
+            0 0 5px hsl(var(--primary) / 0.5),
+            0 0 10px hsl(var(--primary) / 0.3),
+            inset 0 0 5px hsl(var(--primary) / 0.1);
+    }
+    50% {
+        box-shadow: 
+            0 0 15px hsl(var(--primary) / 0.8),
+            0 0 30px hsl(var(--primary) / 0.5),
+            inset 0 0 10px hsl(var(--primary) / 0.2);
+    }
+}
+
+.neonBorder {
+    border: 2px solid hsl(var(--primary) / 0.6);
+    border-radius: var(--radius);
+    animation: neonPulse 2s ease-in-out infinite;
+    background: hsl(var(--card) / 0.95);
+    backdrop-filter: blur(8px);
+}
+
+/* ============================================================================
+ * Gradient Border (Static)
+ * ============================================================================ */
+
+.gradientBorderWrapper {
+    position: relative;
+    border-radius: var(--radius);
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        hsl(var(--primary)),
+        hsl(var(--accent)),
+        hsl(var(--primary))
+    );
+}
+
+.gradientBorderContent {
+    background: hsl(var(--card));
+    border-radius: calc(var(--radius) - 1px);
+    height: 100%;
+    width: 100%;
+}
+
+/* ============================================================================
+ * Reduced Motion
+ * ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .rotatingBorderWrapper {
+        animation: none;
+        background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    }
+    
+    .neonBorder {
+        animation: none;
+        box-shadow: 0 0 10px hsl(var(--primary) / 0.4);
+    }
+}

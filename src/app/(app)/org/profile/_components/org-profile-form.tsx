@@ -37,8 +37,53 @@ export function OrgProfileForm({ organization }: { organization: OrganizationDat
     const formMessage = state.message;
     const formError = state.status === 'error' ? formMessage : undefined;
     const formSuccess = state.status === 'success' ? formMessage ?? 'Saved' : undefined;
+    const fieldErrors: Partial<Record<string, string[]>> = state.fieldErrors ?? {};
 
-    const errorFor = (name: string): string | undefined => state.fieldErrors?.[name]?.[0];
+    const errorFor = (name: string): string | undefined => fieldErrors[name]?.[0];
+
+    const profileFields: TextFieldConfig[] = [
+        {
+            name: 'name',
+            label: 'Organization name',
+            defaultValue: organization.name,
+            required: true,
+        },
+        {
+            name: 'website',
+            label: 'Website',
+            type: 'url',
+            placeholder: 'https://...',
+            defaultValue: organization.website ?? '',
+        },
+        {
+            name: 'phone',
+            label: 'Phone',
+            type: 'tel',
+            placeholder: '+44...',
+            defaultValue: organization.phone ?? '',
+        },
+        {
+            name: 'industry',
+            label: 'Industry',
+            defaultValue: organization.industry ?? '',
+        },
+        {
+            name: 'companyType',
+            label: 'Company type',
+            defaultValue: organization.companyType ?? '',
+        },
+        {
+            name: 'employeeCountRange',
+            label: 'Employee count range',
+            defaultValue: organization.employeeCountRange ?? '',
+        },
+        {
+            name: 'incorporationDate',
+            label: 'Incorporation date',
+            type: 'date',
+            defaultValue: incorporationDate,
+        },
+    ];
 
     return (
         <form action={formAction} className={panelVariants()}>
@@ -55,153 +100,27 @@ export function OrgProfileForm({ organization }: { organization: OrganizationDat
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Organization name</span>
-                        <Input
-                            name="name"
-                            defaultValue={organization.name}
-                            required
-                            aria-invalid={Boolean(errorFor('name'))}
-                            aria-describedby={errorFor('name') ? 'name-error' : undefined}
+                    {profileFields.map((field) => (
+                        <TextField
+                            key={field.name}
+                            {...field}
+                            error={errorFor(field.name)}
                         />
-                        {errorFor('name') ? (
-                            <p id="name-error" className="text-xs text-destructive">
-                                {errorFor('name')}
-                            </p>
-                        ) : null}
-                    </label>
-
-                    <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Website</span>
-                        <Input
-                            name="website"
-                            type="url"
-                            defaultValue={organization.website ?? ''}
-                            placeholder="https://..."
-                            aria-invalid={Boolean(errorFor('website'))}
-                            aria-describedby={errorFor('website') ? 'website-error' : undefined}
-                        />
-                        {errorFor('website') ? (
-                            <p id="website-error" className="text-xs text-destructive">
-                                {errorFor('website')}
-                            </p>
-                        ) : null}
-                    </label>
-
-                    <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Phone</span>
-                        <Input
-                            name="phone"
-                            type="tel"
-                            defaultValue={organization.phone ?? ''}
-                            placeholder="+44..."
-                            aria-invalid={Boolean(errorFor('phone'))}
-                            aria-describedby={errorFor('phone') ? 'phone-error' : undefined}
-                        />
-                        {errorFor('phone') ? (
-                            <p id="phone-error" className="text-xs text-destructive">
-                                {errorFor('phone')}
-                            </p>
-                        ) : null}
-                    </label>
-
-                    <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Industry</span>
-                        <Input
-                            name="industry"
-                            defaultValue={organization.industry ?? ''}
-                            aria-invalid={Boolean(errorFor('industry'))}
-                            aria-describedby={errorFor('industry') ? 'industry-error' : undefined}
-                        />
-                        {errorFor('industry') ? (
-                            <p id="industry-error" className="text-xs text-destructive">
-                                {errorFor('industry')}
-                            </p>
-                        ) : null}
-                    </label>
-
-                    <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Company type</span>
-                        <Input
-                            name="companyType"
-                            defaultValue={organization.companyType ?? ''}
-                            aria-invalid={Boolean(errorFor('companyType'))}
-                            aria-describedby={errorFor('companyType') ? 'companyType-error' : undefined}
-                        />
-                        {errorFor('companyType') ? (
-                            <p id="companyType-error" className="text-xs text-destructive">
-                                {errorFor('companyType')}
-                            </p>
-                        ) : null}
-                    </label>
-
-                    <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Employee count range</span>
-                        <Input
-                            name="employeeCountRange"
-                            defaultValue={organization.employeeCountRange ?? ''}
-                            aria-invalid={Boolean(errorFor('employeeCountRange'))}
-                            aria-describedby={
-                                errorFor('employeeCountRange') ? 'employeeCountRange-error' : undefined
-                            }
-                        />
-                        {errorFor('employeeCountRange') ? (
-                            <p id="employeeCountRange-error" className="text-xs text-destructive">
-                                {errorFor('employeeCountRange')}
-                            </p>
-                        ) : null}
-                    </label>
-
-                    <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Incorporation date</span>
-                        <Input
-                            name="incorporationDate"
-                            type="date"
-                            defaultValue={incorporationDate}
-                            aria-invalid={Boolean(errorFor('incorporationDate'))}
-                            aria-describedby={errorFor('incorporationDate') ? 'incorporationDate-error' : undefined}
-                        />
-                        {errorFor('incorporationDate') ? (
-                            <p id="incorporationDate-error" className="text-xs text-destructive">
-                                {errorFor('incorporationDate')}
-                            </p>
-                        ) : null}
-                    </label>
+                    ))}
                 </div>
 
-                <label className="grid gap-1">
-                    <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Address</span>
-                    <Textarea
-                        name="address"
-                        defaultValue={organization.address ?? ''}
-                        rows={3}
-                        aria-invalid={Boolean(errorFor('address'))}
-                        aria-describedby={errorFor('address') ? 'address-error' : undefined}
-                    />
-                    {errorFor('address') ? (
-                        <p id="address-error" className="text-xs text-destructive">
-                            {errorFor('address')}
-                        </p>
-                    ) : null}
-                </label>
-
-                <label className="grid gap-1">
-                    <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Registered office address</span>
-                    <Textarea
-                        name="registeredOfficeAddress"
-                        defaultValue={organization.registeredOfficeAddress ?? ''}
-                        rows={3}
-                        aria-invalid={Boolean(errorFor('registeredOfficeAddress'))}
-                        aria-describedby={
-                            errorFor('registeredOfficeAddress') ? 'registeredOfficeAddress-error' : undefined
-                        }
-                    />
-                    {errorFor('registeredOfficeAddress') ? (
-                        <p id="registeredOfficeAddress-error" className="text-xs text-destructive">
-                            {errorFor('registeredOfficeAddress')}
-                        </p>
-                    ) : null}
-                </label>
+                <TextAreaField
+                    name="address"
+                    label="Address"
+                    defaultValue={organization.address ?? ''}
+                    error={errorFor('address')}
+                />
+                <TextAreaField
+                    name="registeredOfficeAddress"
+                    label="Registered office address"
+                    defaultValue={organization.registeredOfficeAddress ?? ''}
+                    error={errorFor('registeredOfficeAddress')}
+                />
 
                 <div className="grid gap-4">
                     <div>
@@ -212,111 +131,58 @@ export function OrgProfileForm({ organization }: { organization: OrganizationDat
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="grid gap-3 rounded-xl bg-[hsl(var(--muted)/0.25)] p-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
-                                Primary business
-                            </p>
-                            <label className="grid gap-1">
-                                <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Name</span>
-                                <Input
-                                    name="primaryContactName"
-                                    defaultValue={organization.primaryBusinessContact?.name ?? ''}
-                                    aria-invalid={Boolean(errorFor('primaryContactName'))}
-                                    aria-describedby={errorFor('primaryContactName') ? 'primaryContactName-error' : undefined}
-                                />
-                                {errorFor('primaryContactName') ? (
-                                    <p id="primaryContactName-error" className="text-xs text-destructive">
-                                        {errorFor('primaryContactName')}
-                                    </p>
-                                ) : null}
-                            </label>
-                            <label className="grid gap-1">
-                                <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Email</span>
-                                <Input
-                                    name="primaryContactEmail"
-                                    type="email"
-                                    defaultValue={organization.primaryBusinessContact?.email ?? ''}
-                                    aria-invalid={Boolean(errorFor('primaryContactEmail'))}
-                                    aria-describedby={errorFor('primaryContactEmail') ? 'primaryContactEmail-error' : undefined}
-                                />
-                                {errorFor('primaryContactEmail') ? (
-                                    <p id="primaryContactEmail-error" className="text-xs text-destructive">
-                                        {errorFor('primaryContactEmail')}
-                                    </p>
-                                ) : null}
-                            </label>
-                            <label className="grid gap-1">
-                                <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Phone</span>
-                                <Input
-                                    name="primaryContactPhone"
-                                    type="tel"
-                                    defaultValue={organization.primaryBusinessContact?.phone ?? ''}
-                                    aria-invalid={Boolean(errorFor('primaryContactPhone'))}
-                                    aria-describedby={errorFor('primaryContactPhone') ? 'primaryContactPhone-error' : undefined}
-                                />
-                                {errorFor('primaryContactPhone') ? (
-                                    <p id="primaryContactPhone-error" className="text-xs text-destructive">
-                                        {errorFor('primaryContactPhone')}
-                                    </p>
-                                ) : null}
-                            </label>
-                        </div>
-
-                        <div className="grid gap-3 rounded-xl bg-[hsl(var(--muted)/0.25)] p-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
-                                Accounts & finance
-                            </p>
-                            <label className="grid gap-1">
-                                <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Name</span>
-                                <Input
-                                    name="financeContactName"
-                                    defaultValue={organization.accountsFinanceContact?.name ?? ''}
-                                    aria-invalid={Boolean(errorFor('financeContactName'))}
-                                    aria-describedby={errorFor('financeContactName') ? 'financeContactName-error' : undefined}
-                                />
-                                {errorFor('financeContactName') ? (
-                                    <p id="financeContactName-error" className="text-xs text-destructive">
-                                        {errorFor('financeContactName')}
-                                    </p>
-                                ) : null}
-                            </label>
-                            <label className="grid gap-1">
-                                <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Email</span>
-                                <Input
-                                    name="financeContactEmail"
-                                    type="email"
-                                    defaultValue={organization.accountsFinanceContact?.email ?? ''}
-                                    aria-invalid={Boolean(errorFor('financeContactEmail'))}
-                                    aria-describedby={errorFor('financeContactEmail') ? 'financeContactEmail-error' : undefined}
-                                />
-                                {errorFor('financeContactEmail') ? (
-                                    <p id="financeContactEmail-error" className="text-xs text-destructive">
-                                        {errorFor('financeContactEmail')}
-                                    </p>
-                                ) : null}
-                            </label>
-                            <label className="grid gap-1">
-                                <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Phone</span>
-                                <Input
-                                    name="financeContactPhone"
-                                    type="tel"
-                                    defaultValue={organization.accountsFinanceContact?.phone ?? ''}
-                                    aria-invalid={Boolean(errorFor('financeContactPhone'))}
-                                    aria-describedby={errorFor('financeContactPhone') ? 'financeContactPhone-error' : undefined}
-                                />
-                                {errorFor('financeContactPhone') ? (
-                                    <p id="financeContactPhone-error" className="text-xs text-destructive">
-                                        {errorFor('financeContactPhone')}
-                                    </p>
-                                ) : null}
-                            </label>
-                        </div>
+                        <ContactCard
+                            title="Primary business"
+                            fields={[
+                                {
+                                    name: 'primaryContactName',
+                                    label: 'Name',
+                                    defaultValue: organization.primaryBusinessContact?.name ?? '',
+                                },
+                                {
+                                    name: 'primaryContactEmail',
+                                    label: 'Email',
+                                    type: 'email',
+                                    defaultValue: organization.primaryBusinessContact?.email ?? '',
+                                },
+                                {
+                                    name: 'primaryContactPhone',
+                                    label: 'Phone',
+                                    type: 'tel',
+                                    defaultValue: organization.primaryBusinessContact?.phone ?? '',
+                                },
+                            ]}
+                            errorFor={errorFor}
+                        />
+                        <ContactCard
+                            title="Accounts & finance"
+                            fields={[
+                                {
+                                    name: 'financeContactName',
+                                    label: 'Name',
+                                    defaultValue: organization.accountsFinanceContact?.name ?? '',
+                                },
+                                {
+                                    name: 'financeContactEmail',
+                                    label: 'Email',
+                                    type: 'email',
+                                    defaultValue: organization.accountsFinanceContact?.email ?? '',
+                                },
+                                {
+                                    name: 'financeContactPhone',
+                                    label: 'Phone',
+                                    type: 'tel',
+                                    defaultValue: organization.accountsFinanceContact?.phone ?? '',
+                                },
+                            ]}
+                            errorFor={errorFor}
+                        />
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Button type="submit" size="sm" className="px-4" disabled={pending}>
-                        {pending ? 'Saving…' : 'Save changes'}
+                        {pending ? 'Saving...' : 'Save changes'}
                     </Button>
                     {formSuccess ? <p className="text-xs text-[hsl(var(--muted-foreground))]">{formSuccess}</p> : null}
                 </div>
@@ -349,3 +215,96 @@ function toDateInputValue(value: string | undefined): string {
 
     return parsed.toISOString().slice(0, 10);
 }
+
+interface TextFieldConfig {
+    name: string;
+    label: string;
+    defaultValue: string;
+    type?: string;
+    placeholder?: string;
+    required?: boolean;
+}
+
+function TextField({
+    name,
+    label,
+    defaultValue,
+    type,
+    placeholder,
+    required,
+    error,
+}: TextFieldConfig & { error?: string }) {
+    const errorId = error ? `${name}-error` : undefined;
+    return (
+        <label className="grid gap-1">
+            <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">{label}</span>
+            <Input
+                name={name}
+                type={type}
+                defaultValue={defaultValue}
+                placeholder={placeholder}
+                required={required}
+                aria-invalid={Boolean(error)}
+                aria-describedby={errorId}
+            />
+            {error ? (
+                <p id={errorId} className="text-xs text-destructive">
+                    {error}
+                </p>
+            ) : null}
+        </label>
+    );
+}
+
+function TextAreaField({
+    name,
+    label,
+    defaultValue,
+    error,
+}: {
+    name: string;
+    label: string;
+    defaultValue: string;
+    error?: string;
+}) {
+    const errorId = error ? `${name}-error` : undefined;
+    return (
+        <label className="grid gap-1">
+            <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">{label}</span>
+            <Textarea
+                name={name}
+                defaultValue={defaultValue}
+                rows={3}
+                aria-invalid={Boolean(error)}
+                aria-describedby={errorId}
+            />
+            {error ? (
+                <p id={errorId} className="text-xs text-destructive">
+                    {error}
+                </p>
+            ) : null}
+        </label>
+    );
+}
+
+function ContactCard({
+    title,
+    fields,
+    errorFor,
+}: {
+    title: string;
+    fields: TextFieldConfig[];
+    errorFor: (name: string) => string | undefined;
+}) {
+    return (
+        <div className="grid gap-3 rounded-xl bg-[hsl(var(--muted)/0.25)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
+                {title}
+            </p>
+            {fields.map((field) => (
+                <TextField key={field.name} {...field} error={errorFor(field.name)} />
+            ))}
+        </div>
+    );
+}
+

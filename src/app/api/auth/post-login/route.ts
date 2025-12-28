@@ -81,7 +81,7 @@ async function handlePostLogin(request: NextRequest): Promise<NextResponse> {
         desiredOrgId = await resolveOrganizationId(session.user.id, desiredOrgSlug);
     }
 
-    desiredOrgId ??= currentActiveOrgId;
+    desiredOrgId ??= currentActiveOrgId ?? null;
     desiredOrgId ??= await resolveOrganizationId(session.user.id, null);
 
     if (!desiredOrgId) {

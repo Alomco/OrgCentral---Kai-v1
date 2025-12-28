@@ -1,0 +1,116 @@
+/**
+ * 🎨 DOM-Level UI Style Support
+ * 
+ * CSS custom properties and data-attribute selectors for UI style presets.
+ * Add this to globals.css or import separately.
+ * 
+ * @module styles/ui-styles
+ */
+
+/* ============================================================================
+ * UI Style Token Defaults (Glass Neon) - SSR Safe Defaults
+ * ============================================================================ */
+
+ :root {
+    /* UI Style Tokens - Defaults (Glass Neon) matches server/theme/ui-style-presets.ts */
+    --ui-backdrop-blur: 12px;
+    --ui-glow-intensity: 0.35;
+    --ui-transition-duration: 200ms;
+    --ui-transition-easing: ease-out;
+    --ui-transition: var(--ui-transition-duration) var(--ui-transition-easing);
+    --ui-border-opacity: 0.2;
+    --ui-card-opacity: 0.9;
+    
+    /* Shadow presets (Base values) */
+    --shadow-none: none;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-glow: 0 8px 24px -4px hsl(var(--primary) / 0.25);
+
+    /* Mapped Variables (Default to Glass Neon values) */
+    --ui-card-shadow: var(--shadow-glow);
+    --ui-border-radius: var(--radius-lg);
+}
+
+/* ============================================================================
+ * Component Usage of UI Style Tokens
+ * ============================================================================ */
+
+/* Premium Card & Popovers & Dialogs */
+[data-slot="card"],
+[data-slot="popover-content"],
+[data-slot="dialog-content"],
+[data-slot="sheet-content"], 
+.glass-card {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--card) / var(--ui-card-opacity));
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Specific overrides for Glass Neon Glow if needed */
+[data-ui-style="glass-neon"] [data-slot="card"] {
+    border-color: hsl(var(--primary) / var(--ui-border-opacity));
+}
+
+/* Premium Input Focus */
+[data-slot="input"]:focus-visible,
+[data-slot="textarea"]:focus-visible,
+.focus-ring-theme:focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / var(--ui-glow-intensity));
+    transition: box-shadow var(--ui-transition);
+}
+
+/* Premium Dialog/Popover Overlay */
+[data-slot="dialog-overlay"],
+[data-slot="sheet-overlay"] {
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    transition: backdrop-filter var(--ui-transition);
+}
+
+/* Premium Avatar */
+[data-slot="avatar"],
+[data-slot="premium-avatar"] {
+    transition: transform var(--ui-transition), box-shadow var(--ui-transition);
+}
+
+[data-slot="avatar"]:hover,
+[data-slot="premium-avatar"]:hover {
+    transform: scale(1.05);
+}
+
+/* Premium Accordion */
+[data-slot="accordion-trigger"] {
+    transition: color var(--ui-transition);
+}
+
+/* ============================================================================
+ * Premium Scrollbar
+ * ============================================================================ */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.5);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}

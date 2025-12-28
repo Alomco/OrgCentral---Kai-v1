@@ -11,6 +11,7 @@ import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/b
 import type { OrgScopedRepositoryOptions } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
 import { MembershipService, type MembershipServiceDependencies } from './membership-service';
+import { resolveBillingService } from '@/server/services/billing/billing-service.provider';
 
 export interface MembershipServiceProviderOptions {
     prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
@@ -69,6 +70,7 @@ export class MembershipServiceProvider {
             employeeProfileRepository: new PrismaEmployeeProfileRepository(repoOptions),
             checklistTemplateRepository: new PrismaChecklistTemplateRepository(repoOptions),
             checklistInstanceRepository: new PrismaChecklistInstanceRepository(repoOptions),
+            billingService: resolveBillingService(undefined, { prismaOptions }) ?? undefined,
         };
     }
 

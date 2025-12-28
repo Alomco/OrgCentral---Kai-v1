@@ -10,6 +10,8 @@ import { PrismaOnboardingInvitationRepository } from '@/server/repositories/pris
 import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { sendOnboardingInvite } from '@/server/use-cases/hr/onboarding/send-onboarding-invite';
+import { sendInvitationEmail } from '@/server/use-cases/notifications/send-invitation-email';
+import { getInvitationEmailDependencies } from '@/server/use-cases/notifications/invitation-email.provider';
 
 import type { OnboardingInviteFormState } from '../form-state';
 import { onboardingInviteFormSchema } from '../schema';
@@ -92,6 +94,19 @@ export async function inviteEmployeeAction(
             },
         );
 
+        let message = 'Invitation created.';
+        try {
+            const dependencies = getInvitationEmailDependencies();
+            await sendInvitationEmail(dependencies, {
+                authorization: session.authorization,
+                invitationToken: result.token,
+            });
+        } catch (error) {
+            message = error instanceof Error
+                ? `Invitation created, but email delivery failed: ${error.message}`
+                : 'Invitation created, but email delivery failed.';
+        }
+
         await invalidateOrgCache(
             session.authorization.orgId,
             CACHE_SCOPE_ONBOARDING_INVITATIONS,
@@ -101,7 +116,7 @@ export async function inviteEmployeeAction(
 
         return {
             status: 'success',
-            message: 'Invitation created.',
+            message,
             token: result.token,
             fieldErrors: undefined,
             values: {

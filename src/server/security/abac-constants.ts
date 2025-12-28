@@ -2,6 +2,15 @@ import type { AbacPolicy } from './abac-types';
 
 export const DEFAULT_BOOTSTRAP_POLICIES: AbacPolicy[] = [
   {
+    id: 'default:abac:globalAdmin:allow-all',
+    description: 'Fallback ABAC: allow global admins to proceed when tenant policies are missing.',
+    effect: 'allow',
+    actions: ['*'],
+    resources: ['*'],
+    condition: { subject: { roles: ['globalAdmin'] } },
+    priority: 1100,
+  },
+  {
     id: 'default:abac:owner:allow-all',
     description: 'Fallback ABAC: allow owners to proceed when tenant policies are missing.',
     effect: 'allow',

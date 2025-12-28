@@ -18,7 +18,7 @@
 ## Immediate Remediation Checklist (include tenant guard + cache tag guidance)
 1. **Reinstate Tenant Guards**
    - Ensure all entry points use `assertOrgAccessWithAbac` via `getSessionContext` / `authAction` / `withRepositoryAuthorization`.
-   - Require every service/action to call the guard before hitting repositories; fail if guard metadata is missing.
+   - Require every service/action to call the guard before hitting repositories; fail if guard context is missing.
 2. **Enhance Cache Tags**
    - Replace `buildOrgCacheTag(orgId, scope)` with ``buildCacheTag({ orgId, scope, classification, residency })`` and emit tags such as ``org:${orgId}:pii:uk-south:leave-requests``.
    - For sensitive data, wrap server actions with `cacheLife('seconds', 30)` and `cacheTag(cacheTagValue)` while marking responses `cache: 'no-store'` on mutation endpoints.
@@ -33,4 +33,5 @@
 
 ## Notes
 - Cache tag + guard requirements are flagged; merges should show usage snippets.
+- Authorization decisions must rely on RBAC roles and ABAC policies stored in the database, not on membership metadata flags.
 - No MCP diagnostics available in this session; annotate once server runtime is active.

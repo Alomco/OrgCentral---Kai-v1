@@ -1,7 +1,6 @@
 import type { Invitation as PrismaInvitation } from '@prisma/client';
 import type { InvitationRecord } from '@/server/repositories/contracts/auth/invitations';
 import type { OnboardingData } from '@/server/types/auth-types';
-import type { AbacSubjectAttributes } from '@/server/types/abac-subject-attributes';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -15,40 +14,6 @@ function toStringArray(value: unknown): string[] | undefined {
     return value.every((entry) => typeof entry === 'string') ? [...value] : undefined;
 }
 
-function isAbacPrimitive(value: unknown): value is string | number | boolean | null {
-    return (
-        typeof value === 'string' ||
-        typeof value === 'number' ||
-        typeof value === 'boolean' ||
-        value === null
-    );
-}
-
-function coerceAbacSubjectAttributes(value: unknown): AbacSubjectAttributes | undefined {
-    if (!isPlainObject(value)) {
-        return undefined;
-    }
-
-    const record = value;
-    const result: AbacSubjectAttributes = {};
-
-    for (const [key, raw] of Object.entries(record)) {
-        if (key.trim().length === 0) {
-            continue;
-        }
-
-        if (isAbacPrimitive(raw)) {
-            result[key] = raw;
-            continue;
-        }
-
-        if (Array.isArray(raw) && raw.every(isAbacPrimitive)) {
-            result[key] = [...raw];
-        }
-    }
-
-    return Object.keys(result).length > 0 ? result : undefined;
-}
 
 export function coerceOnboardingData(raw: unknown, fallbackEmail: string): InvitationRecord['onboardingData'] {
     const onboarding: InvitationRecord['onboardingData'] = {
@@ -134,13 +99,6 @@ export function coerceOnboardingData(raw: unknown, fallbackEmail: string): Invit
         onboarding.onboardingTemplateId = payload.onboardingTemplateId;
     }
 
-    const abacSubjectAttributes = coerceAbacSubjectAttributes(
-        (payload as Partial<OnboardingData> & { abacSubjectAttributes?: unknown }).abacSubjectAttributes,
-    );
-    if (abacSubjectAttributes) {
-        onboarding.abacSubjectAttributes = abacSubjectAttributes;
-    }
-
     return onboarding;
 }
 
@@ -156,7 +114,11 @@ export function mapPrismaInvitationToInvitationRecord(record: PrismaInvitation):
         invitedByUserId: record.invitedByUserId ?? undefined,
         acceptedAt: record.acceptedAt ?? undefined,
         acceptedByUserId: record.acceptedByUserId ?? undefined,
+        revokedAt: record.revokedAt ?? undefined,
+        revokedByUserId: record.revokedByUserId ?? undefined,
         expiresAt: record.expiresAt ?? undefined,
+        createdAt: record.createdAt,
         updatedAt: record.updatedAt,
+        metadata: record.metadata ?? null,
     };
 }

@@ -1,4 +1,5 @@
 import { ValidationError } from '@/server/errors';
+import { AuthorizationError } from '@/server/errors';
 import { EntityNotFoundError } from '@/server/errors';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { AcceptInvitationResult } from '@/server/use-cases/auth/accept-invitation';
@@ -12,10 +13,12 @@ import { assertDependency } from '@/server/use-cases/shared';
 import { updateMembershipRoles as updateMembershipRolesUseCase } from '@/server/use-cases/org/membership/update-membership-roles';
 import { updateMembershipStatus as updateMembershipStatusUseCase } from '@/server/use-cases/org/membership/update-membership-status';
 import { normalizeRoles } from '@/server/use-cases/shared';
-import type { AbacSubjectAttributes } from '@/server/types/abac-subject-attributes';
 import { buildAuthorizationContext, invalidateIdentityCache } from './membership-service.helpers';
+import type { BillingServiceContract } from '@/server/services/billing/billing-service.provider';
 
-export type MembershipServiceDependencies = AcceptInvitationDependencies;
+export type MembershipServiceDependencies = AcceptInvitationDependencies & {
+    billingService?: BillingServiceContract;
+};
 
 const ORG_MEMBERSHIP_RESOURCE_TYPE = 'org.membership';
 
@@ -64,9 +67,11 @@ export class MembershipService extends AbstractOrgService {
             checklistInstanceRepository: this.dependencies.checklistInstanceRepository,
         };
 
-        return this.executeInServiceContext(context, 'identity.accept-invitation', () =>
+        const result = await this.executeInServiceContext(context, 'identity.accept-invitation', () =>
             acceptInvitation(deps, input),
         );
+        await this.dependencies.billingService?.syncSeats({ authorization });
+        return result;
     }
 
     async updateMembershipRoles(input: {
@@ -106,7 +111,6 @@ export class MembershipService extends AbstractOrgService {
         authorization: RepositoryAuthorizationContext;
         email: string;
         roles: string[];
-        abacSubjectAttributes?: AbacSubjectAttributes;
     }): Promise<{ token: string; alreadyInvited: boolean }> {
         await this.ensureOrgAccess(input.authorization, {
             action: 'org.invitation.create',
@@ -124,6 +128,8 @@ export class MembershipService extends AbstractOrgService {
 
         const normalizedEmail = input.email.trim().toLowerCase();
         const roles = normalizeRoles(input.roles);
+        const normalizedRoles = roles.length > 0 ? roles : ['member'];
+        enforceInviteRolePolicy(input.authorization, normalizedRoles);
 
         const existing = await invitationRepository.getActiveInvitationByEmail(
             input.authorization.orgId,
@@ -155,8 +161,7 @@ export class MembershipService extends AbstractOrgService {
                 onboardingData: {
                     email: normalizedEmail,
                     displayName: '',
-                    roles,
-                    abacSubjectAttributes: input.abacSubjectAttributes,
+                    roles: normalizedRoles,
                 },
                 metadata: {
                     auditSource: input.authorization.auditSource,
@@ -218,6 +223,38 @@ export class MembershipService extends AbstractOrgService {
                 { authorization, targetUserId, status },
             );
             await invalidateIdentityCache(authorization);
+            await this.dependencies.billingService?.syncSeats({ authorization });
         });
     }
+}
+
+function enforceInviteRolePolicy(
+    authorization: RepositoryAuthorizationContext,
+    roles: string[],
+): void {
+    const primaryRole = roles[0] ?? 'member';
+    const roleKey = authorization.roleKey;
+
+    if (roleKey === 'globalAdmin' || roleKey === 'owner') {
+        if (primaryRole !== 'orgAdmin') {
+            throw new AuthorizationError('Global admins may only invite organization admins.');
+        }
+        return;
+    }
+
+    if (roleKey === 'orgAdmin') {
+        if (primaryRole !== 'hrAdmin') {
+            throw new AuthorizationError('Organization admins may only invite HR admins.');
+        }
+        return;
+    }
+
+    if (roleKey === 'hrAdmin') {
+        if (primaryRole !== 'member') {
+            throw new AuthorizationError('HR admins may only invite members.');
+        }
+        return;
+    }
+
+    throw new AuthorizationError('You are not permitted to invite users with this role.');
 }

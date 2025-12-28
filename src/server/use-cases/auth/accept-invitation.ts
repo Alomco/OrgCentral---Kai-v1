@@ -129,7 +129,6 @@ async function ensureMembershipAndOnboarding(
             actor.userId,
         );
 
-        const abacSubjectAttributes = record.onboardingData.abacSubjectAttributes;
         const preboardingProfile = await resolvePreboardingProfilePayload(
             deps.employeeProfileRepository,
             record,
@@ -148,7 +147,6 @@ async function ensureMembershipAndOnboarding(
             userId: actor.userId,
             invitedByUserId: record.invitedByUserId ?? record.invitedByUid,
             roles,
-            abacSubjectAttributes,
             profile: profilePayload,
             userUpdate,
         });

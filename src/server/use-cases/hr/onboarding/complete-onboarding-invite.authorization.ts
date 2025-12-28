@@ -42,6 +42,7 @@ export function buildAuthorizationForInvite(
     return buildAuthorizationContext({
         orgId: organization.id,
         userId,
+        roleKey: 'orgAdmin',
         dataResidency: tenantScope.dataResidency,
         dataClassification: tenantScope.dataClassification,
         auditSource: 'hr.complete-onboarding-invite',

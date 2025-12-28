@@ -23,6 +23,7 @@ const OWNER_ROLE_PERMISSIONS: Record<string, string[]> = {
 };
 
 // Default admin emails
+const PLATFORM_ORG_SLUG = 'orgcentral-platform';
 const DEFAULT_DEV_ADMIN_EMAIL = 'aant1563@gmail.com';
 const DEFAULT_GLOBAL_ADMIN_EMAIL = 'bdturag01@gmail.com';
 
@@ -36,7 +37,7 @@ interface AdminUser {
 
 export async function listGlobalAdmins(): Promise<AdminUser[]> {
     const platformOrg = await prisma.organization.findFirst({
-        where: { slug: 'orgcentral-platform' },
+        where: { slug: PLATFORM_ORG_SLUG },
     });
 
     if (!platformOrg) {
@@ -59,7 +60,7 @@ export async function listGlobalAdmins(): Promise<AdminUser[]> {
         email: m.user.email,
         displayName: m.user.displayName,
         roleKey: m.role?.name ?? 'unknown',
-        createdAt: m.createdAt as Date,
+        createdAt: m.user.createdAt,
     }));
 }
 
@@ -78,13 +79,13 @@ export async function createGlobalAdmin(email: string, displayName?: string): Pr
 
         // Ensure platform organization exists
         const organization = await prisma.organization.upsert({
-            where: { slug: 'orgcentral-platform' },
+            where: { slug: PLATFORM_ORG_SLUG },
             update: {},
             create: {
-                slug: 'orgcentral-platform',
+                slug: PLATFORM_ORG_SLUG,
                 name: 'OrgCentral Platform',
                 regionCode: 'UK-LON',
-                tenantId: 'orgcentral-platform',
+                tenantId: PLATFORM_ORG_SLUG,
                 status: OrganizationStatus.ACTIVE,
                 complianceTier: ComplianceTier.GOV_SECURE,
                 dataResidency: DataResidencyZone.UK_ONLY,

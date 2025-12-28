@@ -8,6 +8,7 @@ import {
     cacheLibraryPath,
     repoContractPath,
     routeBase,
+    schemaPath,
     schemaTypesPath,
     securityPath,
     useCaseDirectory,

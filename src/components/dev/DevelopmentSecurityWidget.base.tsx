@@ -61,8 +61,7 @@ export function DevelopmentSecurityWidget() {
       return null;
     }
     const role = payload.authorization?.roleKey ?? "unknown";
-    const variant = payload.authorization?.developmentSuperAdmin ? "destructive" : "secondary";
-    return <Badge variant={variant}>{role}</Badge>;
+    return <Badge variant="secondary">{role}</Badge>;
   }, [payload]);
 
   const handleToggle = useCallback(() => {
@@ -105,9 +104,6 @@ export function DevelopmentSecurityWidget() {
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
                 <div className="text-sm font-semibold">Dev security</div>
-                {payload?.ok && payload.authenticated && payload.authorization?.developmentSuperAdmin ? (
-                  <Badge variant="destructive">super</Badge>
-                ) : null}
               </div>
               <div className="mt-1 truncate text-xs text-muted-foreground">{summary}</div>
             </div>

@@ -28,7 +28,6 @@ export interface DebugSecurityResponseAuthenticated {
     dataClassification: string;
     auditSource: string;
     correlationId: string;
-    developmentSuperAdmin?: boolean;
   };
   rbac?: {
     roleStatements?: Record<string, string[]>;

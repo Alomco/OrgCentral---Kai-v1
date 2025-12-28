@@ -75,13 +75,10 @@ export async function POST(request: NextRequest): Promise<Response> {
         });
 
         const config = resolvePlatformConfig();
-        const developmentSuperAdmin = process.env.NODE_ENV === 'development' && config.roleName === 'owner';
         const superAdminMetadata: Prisma.InputJsonObject = {
             seedSource: BOOTSTRAP_SEED_SOURCE,
             roles: [config.roleName],
-            superAdmin: true,
             bootstrapProvider: providerId,
-            ...(developmentSuperAdmin ? { devSuperAdmin: true } : {}),
         };
 
         const organization = await prisma.organization.upsert({

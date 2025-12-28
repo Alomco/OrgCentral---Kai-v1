@@ -9,6 +9,7 @@ import type {
 } from '@/server/repositories/contracts/auth/invitations';
 import { resolveIdentityCacheScopes } from '@/server/lib/cache-tags/identity';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
+import { RepositoryAuthorizationError } from '@/server/repositories/security';
 
 type InvitationEntity = PrismaInvitation;
 
@@ -45,6 +46,23 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
         });
 
         return record ? mapInvitation(record) : null;
+    }
+
+    async listInvitationsByOrg(
+        orgId: string,
+        options?: { status?: InvitationRecord['status']; limit?: number },
+    ): Promise<InvitationRecord[]> {
+        const limit = options?.limit ?? 25;
+        const records = await getInvitationDelegate(this.prisma).findMany({
+            where: {
+                orgId,
+                status: options?.status,
+            },
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+        });
+
+        return records.map((record) => mapInvitation(record));
     }
 
     async createInvitation(input: InvitationCreateInput): Promise<InvitationRecord> {
@@ -96,6 +114,34 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
         if (orgId) {
             await this.invalidateAfterWrite(orgId, resolveIdentityCacheScopes());
         }
+    }
+
+    async revokeInvitation(orgId: string, token: string, revokedByUserId: string, reason?: string): Promise<void> {
+        const record = await getInvitationDelegate(this.prisma).findUnique({ where: { token } });
+        if (!record || record.orgId !== orgId) {
+            throw new RepositoryAuthorizationError('Invitation not found for this organization.');
+        }
+
+        const metadata = (record.metadata ?? {}) as Record<string, unknown>;
+        const nextMetadata = {
+            ...metadata,
+            revocationReason: reason ?? metadata.revocationReason,
+        };
+
+        await getInvitationDelegate(this.prisma).update({
+            where: { token },
+            data: {
+                status: 'revoked',
+                revokedByUserId,
+                revokedAt: new Date(),
+                metadata:
+                    toPrismaInputJson(
+                        nextMetadata as Record<string, Prisma.InputJsonValue> | Prisma.InputJsonValue,
+                    ) ?? Prisma.JsonNull,
+            },
+        });
+
+        await this.invalidateAfterWrite(orgId, resolveIdentityCacheScopes());
     }
 }
 

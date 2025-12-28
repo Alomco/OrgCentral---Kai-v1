@@ -45,7 +45,6 @@ type DebugSecurityResponse =
             dataClassification: string;
             auditSource: string;
             correlationId: string;
-            developmentSuperAdmin?: boolean;
         };
         rbac?: {
             roleStatements?: Record<string, string[]>;
@@ -168,7 +167,6 @@ export async function GET(request: NextRequest): Promise<Response> {
                 dataClassification: authorization.dataClassification,
                 auditSource: authorization.auditSource,
                 correlationId: authorization.correlationId,
-                ...(authorization.developmentSuperAdmin ? { developmentSuperAdmin: true } : {}),
             },
             rbac: roleStatements ? { roleStatements } : undefined,
             abac: {

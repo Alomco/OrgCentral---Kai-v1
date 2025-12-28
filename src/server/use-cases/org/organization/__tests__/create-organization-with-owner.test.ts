@@ -36,15 +36,15 @@ describe('createOrganizationWithOwner', () => {
     it('creates owner role and membership for the creator', async () => {
         const organization = buildOrganizationData();
 
-        const createOrganization = vi.fn<Promise<OrganizationData>, [CreateOrganizationInput]>(async () => organization);
-        const getRoleByName = vi.fn<Promise<Role | null>, [string, string]>(async () => null);
-        const createRole = vi.fn<Promise<void>, [string, Omit<Role, 'id' | 'createdAt' | 'updatedAt'>]>(
-            async () => {},
+        const createOrganization = vi.fn(async (input: CreateOrganizationInput) => organization);
+        const getRoleByName = vi.fn(async (orgId: string, name: string) => null);
+        const createRole = vi.fn(
+            async (orgId: string, roleData: Omit<Role, 'id' | 'createdAt' | 'updatedAt'>) => { },
         );
-        const createMembershipWithProfile = vi.fn<
-            Promise<MembershipCreationResult>,
-            [RepositoryAuthorizationContext, MembershipCreationInput]
-        >(async () => ({ organizationId: organization.id, roles: ['owner'] }));
+        const createMembershipWithProfile = vi.fn(
+            async (_ctx: RepositoryAuthorizationContext, _input: MembershipCreationInput): Promise<MembershipCreationResult> =>
+                ({ organizationId: organization.id, roles: ['owner'] })
+        );
 
         const deps: CreateOrganizationWithOwnerDependencies = {
             organizationRepository: { createOrganization },
@@ -98,7 +98,9 @@ describe('createOrganizationWithOwner', () => {
             }),
         );
 
-        const [context, membershipInput] = createMembershipWithProfile.mock.calls[0];
+        const call = createMembershipWithProfile.mock.calls[0];
+        if (!call) throw new Error('Expected createMembershipWithProfile to be called');
+        const [context, membershipInput] = call;
         expect(context.orgId).toBe(organization.id);
         expect(membershipInput.roles).toEqual(['owner']);
         expect(membershipInput.userUpdate).toEqual(

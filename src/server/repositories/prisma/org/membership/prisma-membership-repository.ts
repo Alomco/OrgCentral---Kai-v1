@@ -61,12 +61,6 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
                 string,
                 Prisma.InputJsonValue
             >;
-            const nextMetadata = {
-                ...baseMetadata,
-                ...(input.abacSubjectAttributes
-                    ? { abacSubjectAttributes: input.abacSubjectAttributes as Prisma.InputJsonValue }
-                    : {}),
-            };
             await getModelDelegate(tx, 'membership').create({
                 data: {
                     orgId: context.orgId,
@@ -77,7 +71,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
                     activatedAt: new Date(),
                     createdBy: input.invitedByUserId ?? '',
                     roleId: primaryRoleId ?? undefined,
-                    metadata: toPrismaInputJson(nextMetadata) ?? Prisma.JsonNull,
+                    metadata: toPrismaInputJson(baseMetadata) ?? Prisma.JsonNull,
                 },
             });
 
@@ -131,6 +125,13 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
             },
         });
         await this.invalidateAfterWrite(context.orgId, resolveIdentityCacheScopes());
+    }
+
+    async countActiveMemberships(context: RepositoryAuthorizationContext): Promise<number> {
+        const count = await getModelDelegate(this.prisma, 'membership').count({
+            where: { orgId: context.orgId, status: ACTIVE_MEMBERSHIP_STATUS },
+        });
+        return count;
     }
 
     private mapProfilePayload(payload: EmployeeProfilePayload): EmployeeProfilePersistence {

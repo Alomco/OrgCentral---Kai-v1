@@ -19,6 +19,7 @@ import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-u
 import { registerOrgCacheTag, invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_COMPLIANCE_ITEMS } from '@/server/repositories/cache-scopes';
 import { RepositoryAuthorizationError } from '@/server/repositories/security';
+import { attachmentSchema } from '@/server/validators/hr/compliance/compliance-validators';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 
 type ComplianceLogRecord = PrismaComplianceLogItem;
@@ -57,15 +58,19 @@ export class PrismaComplianceItemRepository
     async assignItems(input: ComplianceAssignmentInput): Promise<void> {
         const records = mapComplianceAssignmentInputToRecord(input);
         await Promise.all(
-            records.map((data) =>
-                this.complianceLog.create({
+            records.map((data) => {
+                // Validate attachments and metadata (optional but safe)
+                const validatedAttachments = data.attachments ? attachmentSchema.parse(data.attachments) : null;
+                // metadata is already typed as Record<string, unknown> | undefined in mapper result usually
+
+                return this.complianceLog.create({
                     data: stampCreate({
                         ...data,
-                        attachments: toPrismaInputJson(data.attachments ?? null),
-                        metadata: toPrismaInputJson(data.metadata ?? null),
+                        attachments: toPrismaInputJson(validatedAttachments as unknown as Prisma.InputJsonValue),
+                        metadata: toPrismaInputJson(data.metadata as unknown as Prisma.InputJsonValue),
                     }) as ComplianceLogCreateData,
-                }),
-            ),
+                });
+            }),
         );
         registerOrgCacheTag(
             input.orgId,
@@ -109,10 +114,18 @@ export class PrismaComplianceItemRepository
     ): Promise<ComplianceLogItem> {
         await this.ensureItemScope(itemId, orgId, userId);
         const mapped = mapComplianceItemUpdateToRecord(updates);
+
+        // Validate attachments if present
+        let attachmentsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
+        if (mapped.attachments !== undefined) {
+            const validatedAttachments = mapped.attachments ? attachmentSchema.parse(mapped.attachments) : null;
+            attachmentsJson = toPrismaInputJson(validatedAttachments as unknown as Prisma.InputJsonValue);
+        }
+
         const data: ComplianceLogUpdateData = stampUpdate({
             ...mapped,
-            attachments: toPrismaInputJson(mapped.attachments ?? null),
-            metadata: toPrismaInputJson(mapped.metadata ?? null),
+            attachments: attachmentsJson,
+            metadata: toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue),
             orgId,
             userId,
         });

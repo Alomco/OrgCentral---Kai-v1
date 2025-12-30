@@ -77,6 +77,9 @@ export async function submitLeaveRequestController(
         cancelledAt: undefined,
         cancellationReason: undefined,
         managerComments: payload.managerComments,
+        dataResidency: 'UK_ONLY',
+        dataClassification: 'OFFICIAL',
+        auditSource: authorization.auditSource || 'api:hr:leave:submit',
     };
 
     const decision = await getFeatureFlagDecision('leave_policy_resolver', userId);

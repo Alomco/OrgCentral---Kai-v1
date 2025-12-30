@@ -48,12 +48,12 @@ export function mapDomainTrainingRecordToPrisma(input: TrainingRecord): Training
         renewalDate: input.renewalDate ?? null,
         status: input.status,
         certificate: input.certificate ?? null,
-        competency: input.competency === null ? Prisma.JsonNull : (input.competency as Prisma.InputJsonValue | undefined),
+        competency: input.competency === null ? Prisma.JsonNull : (input.competency),
         cost: input.cost ?? null,
         approved: input.approved,
         approvedAt: input.approvedAt ?? null,
         approvedBy: input.approvedBy ?? null,
-        metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata as Prisma.InputJsonValue | undefined),
+        metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata),
         createdAt: input.createdAt,
         updatedAt: input.updatedAt,
     };
@@ -67,12 +67,12 @@ export function mapDomainTrainingUpdateToPrisma(input: Partial<Omit<TrainingReco
     if (input.renewalDate !== undefined) { update.renewalDate = input.renewalDate ?? null; }
     if (input.status !== undefined) { update.status = input.status; }
     if (input.certificate !== undefined) { update.certificate = input.certificate ?? null; }
-    if (input.competency !== undefined) { update.competency = input.competency === null ? Prisma.JsonNull : (input.competency as Prisma.InputJsonValue | undefined); }
+    if (input.competency !== undefined) { update.competency = input.competency ?? Prisma.JsonNull; }
     if (input.cost !== undefined) { update.cost = input.cost ?? null; }
     if (input.approved !== undefined) { update.approved = input.approved; }
     if (input.approvedAt !== undefined) { update.approvedAt = input.approvedAt ?? null; }
     if (input.approvedBy !== undefined) { update.approvedBy = input.approvedBy ?? null; }
-    if (input.metadata !== undefined) { update.metadata = input.metadata === null ? Prisma.JsonNull : (input.metadata as Prisma.InputJsonValue | undefined); }
+    if (input.metadata !== undefined) { update.metadata = input.metadata ?? Prisma.JsonNull; }
     if (input.courseName !== undefined) { update.courseName = input.courseName; }
     if (input.provider !== undefined) { update.provider = input.provider; }
     return update;

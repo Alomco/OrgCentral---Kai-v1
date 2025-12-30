@@ -22,8 +22,29 @@ export interface ChecklistInstanceRecord {
     metadata?: JsonValue | null;
 }
 
+
+function serializeChecklistItem(item: ChecklistItemProgress): Record<string, unknown> {
+    return {
+        ...item,
+        completedAt: item.completedAt instanceof Date ? item.completedAt.toISOString() : item.completedAt,
+    };
+}
+
+function deserializeChecklistItem(item: unknown): ChecklistItemProgress {
+    // Basic casting and date restoration
+    const p = item as ChecklistItemProgress;
+    return {
+        ...p,
+        completedAt: typeof p.completedAt === 'string' ? new Date(p.completedAt) : p.completedAt,
+    };
+}
+
 export function mapChecklistInstanceRecordToDomain(record: ChecklistInstanceRecord): ChecklistInstance {
-    const items = Array.isArray(record.items) ? (record.items as ChecklistItemProgress[]) : [];
+    const rawItems = Array.isArray(record.items) ? record.items : [];
+     
+
+    const items = rawItems.map((item) => deserializeChecklistItem(item));
+
     const metadata =
         record.metadata && typeof record.metadata === 'object' && !Array.isArray(record.metadata)
             ? (record.metadata as Record<string, unknown>)
@@ -51,11 +72,16 @@ export function mapChecklistInstanceInputToRecord(
     input: ChecklistInstanceCreateInput | ChecklistInstanceItemsUpdate,
 ): Partial<ChecklistInstanceRecord> {
     const payload: Partial<ChecklistInstanceRecord> = {};
-    if ('orgId' in input) {payload.orgId = input.orgId;}
-    if ('employeeId' in input) {payload.employeeId = input.employeeId;}
-    if ('templateId' in input) {payload.templateId = input.templateId;}
-    if ('templateName' in input) {payload.templateName = input.templateName;}
-    payload.items = input.items;
-    if (input.metadata !== undefined) {payload.metadata = input.metadata as unknown as JsonValue;}
+    if ('orgId' in input) { payload.orgId = input.orgId; }
+    if ('employeeId' in input) { payload.employeeId = input.employeeId; }
+    if ('templateId' in input) { payload.templateId = input.templateId; }
+    if ('templateName' in input) { payload.templateName = input.templateName; }
+
+    if (input.items) {
+        payload.items = input.items.map(serializeChecklistItem) as unknown as JsonValue;
+    }
+
+    if (input.metadata !== undefined) { payload.metadata = input.metadata as unknown as JsonValue; }
     return payload;
 }
+

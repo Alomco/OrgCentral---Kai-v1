@@ -22,7 +22,7 @@ export function mapDomainIntegrationConfigToPrisma(input: IntegrationConfig): Pr
         credentials: input.credentials as Prisma.InputJsonValue,
         settings: input.settings as Prisma.InputJsonValue,
         active: input.active,
-        compliance: input.compliance === null ? Prisma.JsonNull : (input.compliance as Prisma.InputJsonValue | undefined),
+        compliance: input.compliance === null ? Prisma.JsonNull : (input.compliance),
         createdAt: input.createdAt,
         updatedAt: input.updatedAt,
     };

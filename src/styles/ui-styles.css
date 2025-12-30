@@ -2,7 +2,8 @@
  * 🎨 DOM-Level UI Style Support
  * 
  * CSS custom properties and data-attribute selectors for UI style presets.
- * Add this to globals.css or import separately.
+ * This file provides comprehensive styling for all UI components using
+ * the UI engine tokens (backdrop-blur, shadows, border-radius, transitions).
  * 
  * @module styles/ui-styles
  */
@@ -11,37 +12,47 @@
  * UI Style Token Defaults (Glass Neon) - SSR Safe Defaults
  * ============================================================================ */
 
- :root {
-    /* UI Style Tokens - Defaults (Glass Neon) matches server/theme/ui-style-presets.ts */
+:root {
+    /* UI Style Tokens - BORDERLESS with SOLID backgrounds */
     --ui-backdrop-blur: 12px;
     --ui-glow-intensity: 0.35;
     --ui-transition-duration: 200ms;
     --ui-transition-easing: ease-out;
     --ui-transition: var(--ui-transition-duration) var(--ui-transition-easing);
-    --ui-border-opacity: 0.2;
-    --ui-card-opacity: 0.9;
-    
-    /* Shadow presets (Base values) */
+    /* BORDERLESS: Border opacity 0 = invisible borders */
+    --ui-border-opacity: 0;
+    /* SOLID: Card opacity 1 = no transparency */
+    --ui-card-opacity: 1;
+
+    /* Interactive State Tokens */
+    --ui-hover-scale: 1.02;
+    --ui-hover-lift: -2px;
+    --ui-active-scale: 0.98;
+    --ui-focus-ring-width: 3px;
+    --ui-focus-ring-offset: 2px;
+    /* BORDERLESS: Border width 0 */
+    --ui-border-width: 0px;
+    --ui-animation-intensity: expressive;
+
+    /* Shadow presets - Use shadows for elevation instead of borders */
     --shadow-none: none;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     --shadow-glow: 0 8px 24px -4px hsl(var(--primary) / 0.25);
 
-    /* Mapped Variables (Default to Glass Neon values) */
-    --ui-card-shadow: var(--shadow-glow);
+    /* Mapped Variables */
+    --ui-card-shadow: var(--shadow-md);
     --ui-border-radius: var(--radius-lg);
 }
 
 /* ============================================================================
- * Component Usage of UI Style Tokens
+ * 1. Floating/Overlay Elements - Cards, Popovers, Dialogs, Dropdowns, etc.
  * ============================================================================ */
 
-/* Premium Card & Popovers & Dialogs */
+/* Cards retain glass effect with opacity */
 [data-slot="card"],
-[data-slot="popover-content"],
-[data-slot="dialog-content"],
-[data-slot="sheet-content"], 
 .glass-card {
     transition: all var(--ui-transition);
     backdrop-filter: blur(var(--ui-backdrop-blur));
@@ -49,29 +60,269 @@
     border-radius: var(--ui-border-radius);
     background-color: hsl(var(--card) / var(--ui-card-opacity));
     border-color: hsl(var(--border) / var(--ui-border-opacity));
+    border-width: var(--ui-border-width);
 }
 
-/* Specific overrides for Glass Neon Glow if needed */
-[data-ui-style="glass-neon"] [data-slot="card"] {
+/* Card hover effects */
+[data-slot="card"]:hover,
+.glass-card:hover {
+    transform: scale(var(--ui-hover-scale)) translateY(var(--ui-hover-lift));
+}
+
+/* Popovers, Dialogs, Sheets - SOLID backgrounds for readability */
+[data-slot="popover-content"],
+[data-slot="dialog-content"],
+[data-slot="sheet-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Dropdown Menus - SOLID backgrounds */
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Select Content - SOLID backgrounds */
+[data-slot="select-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Context Menu - SOLID backgrounds */
+[data-slot="context-menu-content"],
+[data-slot="context-menu-sub-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Menubar Content - SOLID backgrounds */
+[data-slot="menubar-content"],
+[data-slot="menubar-sub-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Navigation Menu Content - SOLID backgrounds */
+[data-slot="navigation-menu-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Tooltip - SOLID backgrounds for readability */
+[data-slot="tooltip-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--shadow-md);
+    border-radius: calc(var(--ui-border-radius) / 2);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Hover Card - SOLID backgrounds */
+[data-slot="hover-card-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Command Palette - SOLID backgrounds */
+[data-slot="command"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Drawer Content - SOLID backgrounds */
+[data-slot="drawer-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    background-color: hsl(var(--card)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Alert Dialog Content - SOLID backgrounds */
+[data-slot="alert-dialog-content"] {
+    transition: all var(--ui-transition);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    box-shadow: var(--ui-card-shadow);
+    border-radius: var(--ui-border-radius);
+    background-color: hsl(var(--card)) !important;
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* Specific overrides for Glass Neon Glow */
+[data-ui-style="glass-neon"] [data-slot="card"],
+[data-ui-style="glass-neon"] [data-slot="dropdown-menu-content"],
+[data-ui-style="glass-neon"] [data-slot="select-content"],
+[data-ui-style="glass-neon"] [data-slot="popover-content"] {
     border-color: hsl(var(--primary) / var(--ui-border-opacity));
 }
 
-/* Premium Input Focus */
-[data-slot="input"]:focus-visible,
-[data-slot="textarea"]:focus-visible,
-.focus-ring-theme:focus-visible {
-    box-shadow: 0 0 0 3px hsl(var(--primary) / var(--ui-glow-intensity));
-    transition: box-shadow var(--ui-transition);
-}
+/* ============================================================================
+ * 2. Overlay Backgrounds
+ * ============================================================================ */
 
-/* Premium Dialog/Popover Overlay */
 [data-slot="dialog-overlay"],
-[data-slot="sheet-overlay"] {
+[data-slot="sheet-overlay"],
+[data-slot="alert-dialog-overlay"],
+[data-slot="drawer-overlay"] {
     backdrop-filter: blur(var(--ui-backdrop-blur));
     transition: backdrop-filter var(--ui-transition);
 }
 
-/* Premium Avatar */
+/* ============================================================================
+ * 3. Form Inputs - Focus Glow Styling with UI Tokens
+ * ============================================================================ */
+
+/* Text Inputs */
+[data-slot="input"]:focus-visible,
+[data-slot="textarea"]:focus-visible,
+.focus-ring-theme:focus-visible {
+    box-shadow: 0 0 0 var(--ui-focus-ring-width) hsl(var(--primary) / var(--ui-glow-intensity));
+    outline: none;
+    transition: box-shadow var(--ui-transition);
+}
+
+/* Select Trigger */
+[data-slot="select-trigger"]:focus-visible {
+    box-shadow: 0 0 0 var(--ui-focus-ring-width) hsl(var(--primary) / var(--ui-glow-intensity));
+    outline: none;
+    transition: box-shadow var(--ui-transition);
+}
+
+/* Checkbox */
+[data-slot="checkbox"]:focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / var(--ui-glow-intensity));
+    transition: box-shadow var(--ui-transition);
+}
+
+/* Switch */
+[data-slot="switch"]:focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / var(--ui-glow-intensity));
+    transition: box-shadow var(--ui-transition);
+}
+
+/* Radio Group Item */
+[data-slot="radio-group-item"]:focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / var(--ui-glow-intensity));
+    transition: box-shadow var(--ui-transition);
+}
+
+/* Slider */
+[data-slot="slider"]:focus-visible,
+[data-slot="slider-thumb"]:focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / var(--ui-glow-intensity));
+    transition: box-shadow var(--ui-transition);
+}
+
+/* Input OTP */
+[data-slot="input-otp-slot"]:focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / var(--ui-glow-intensity));
+    transition: box-shadow var(--ui-transition);
+}
+
+/* ============================================================================
+ * 4. Interactive Elements - Hover, Active, Focus States
+ * ============================================================================ */
+
+/* Buttons - Full Interactive States */
+[data-slot="button"] {
+    transition: all var(--ui-transition);
+    border-width: var(--ui-border-width);
+}
+
+[data-slot="button"]:hover {
+    transform: scale(var(--ui-hover-scale)) translateY(var(--ui-hover-lift));
+    box-shadow: var(--ui-card-shadow);
+}
+
+[data-slot="button"]:active {
+    transform: scale(var(--ui-active-scale));
+    transition-duration: 50ms;
+}
+
+[data-slot="button"]:focus-visible {
+    outline: var(--ui-focus-ring-width) solid hsl(var(--primary) / var(--ui-glow-intensity));
+    outline-offset: var(--ui-focus-ring-offset);
+}
+
+/* Badge */
+[data-slot="badge"] {
+    transition: all var(--ui-transition);
+}
+
+/* Toggle and Toggle Group */
+[data-slot="toggle"],
+[data-slot="toggle-group-item"] {
+    transition: all var(--ui-transition);
+}
+
+/* Tabs Trigger */
+[data-slot="tabs-trigger"] {
+    transition: all var(--ui-transition);
+}
+
+/* Menu Items */
+[data-slot="dropdown-menu-item"],
+[data-slot="dropdown-menu-checkbox-item"],
+[data-slot="dropdown-menu-radio-item"],
+[data-slot="dropdown-menu-sub-trigger"],
+[data-slot="select-item"],
+[data-slot="context-menu-item"],
+[data-slot="menubar-item"],
+[data-slot="command-item"] {
+    transition: background-color var(--ui-transition), color var(--ui-transition);
+}
+
+/* Accordion */
+[data-slot="accordion-trigger"],
+[data-slot="accordion-content"] {
+    transition: all var(--ui-transition);
+}
+
+/* Collapsible */
+[data-slot="collapsible-trigger"],
+[data-slot="collapsible-content"] {
+    transition: all var(--ui-transition);
+}
+
+/* ============================================================================
+ * 5. Avatar Effects
+ * ============================================================================ */
+
 [data-slot="avatar"],
 [data-slot="premium-avatar"] {
     transition: transform var(--ui-transition), box-shadow var(--ui-transition);
@@ -82,9 +333,139 @@
     transform: scale(1.05);
 }
 
-/* Premium Accordion */
-[data-slot="accordion-trigger"] {
+/* ============================================================================
+ * 6. Tables - Theme-aware Styling
+ * ============================================================================ */
+
+[data-slot="table-container"] {
+    border-radius: var(--ui-border-radius);
+    overflow: hidden;
+}
+
+[data-slot="table"] {
+    transition: all var(--ui-transition);
+}
+
+[data-slot="table-row"] {
+    transition: background-color var(--ui-transition);
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+[data-slot="table-header"] {
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+[data-slot="table-head"],
+[data-slot="table-cell"] {
+    transition: background-color var(--ui-transition);
+}
+
+/* ============================================================================
+ * 7. Separators - Theme-aware Border Color
+ * ============================================================================ */
+
+[data-slot="separator"] {
+    background-color: hsl(var(--border) / var(--ui-border-opacity));
+    transition: background-color var(--ui-transition);
+}
+
+[data-slot="dropdown-menu-separator"],
+[data-slot="select-separator"],
+[data-slot="context-menu-separator"],
+[data-slot="menubar-separator"],
+[data-slot="command-separator"] {
+    background-color: hsl(var(--border) / var(--ui-border-opacity));
+    transition: background-color var(--ui-transition);
+}
+
+/* ============================================================================
+ * 8. Sidebar Components
+ * ============================================================================ */
+
+[data-slot="sidebar"] {
+    transition: all var(--ui-transition);
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+[data-slot="sidebar-menu-button"] {
+    transition: all var(--ui-transition);
+}
+
+[data-slot="sidebar-menu-button"]:hover {
+    background-color: hsl(var(--accent) / 0.8);
+}
+
+/* ============================================================================
+ * 9. Breadcrumb
+ * ============================================================================ */
+
+[data-slot="breadcrumb-link"],
+[data-slot="breadcrumb-page"] {
     transition: color var(--ui-transition);
+}
+
+/* ============================================================================
+ * 10. Navigation Menu
+ * ============================================================================ */
+
+[data-slot="navigation-menu-trigger"],
+[data-slot="navigation-menu-link"] {
+    transition: all var(--ui-transition);
+}
+
+/* ============================================================================
+ * 11. Progress and Skeleton
+ * ============================================================================ */
+
+[data-slot="progress"] {
+    transition: all var(--ui-transition);
+    border-radius: calc(var(--ui-border-radius) / 2);
+    overflow: hidden;
+}
+
+[data-slot="progress-indicator"] {
+    transition: width var(--ui-transition);
+}
+
+[data-slot="skeleton"] {
+    border-radius: calc(var(--ui-border-radius) / 2);
+}
+
+/* ============================================================================
+ * 12. Carousel
+ * ============================================================================ */
+
+[data-slot="carousel-previous"],
+[data-slot="carousel-next"] {
+    transition: all var(--ui-transition);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-slot="carousel-previous"]:hover,
+[data-slot="carousel-next"]:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* ============================================================================
+ * 13. Alert Component
+ * ============================================================================ */
+
+[data-slot="alert"] {
+    transition: all var(--ui-transition);
+    border-radius: var(--ui-border-radius);
+    border-color: hsl(var(--border) / var(--ui-border-opacity));
+}
+
+/* ============================================================================
+ * 14. Resizable Panels
+ * ============================================================================ */
+
+[data-slot="resizable-handle"] {
+    transition: background-color var(--ui-transition);
+}
+
+[data-slot="resizable-handle"]:hover {
+    background-color: hsl(var(--primary) / 0.3);
 }
 
 /* ============================================================================
@@ -113,4 +494,183 @@
 * {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
+
+/* ============================================================================
+ * EXPLICIT UI STYLE PRESET OVERRIDES
+ * These ensure all token values are applied correctly when switching styles
+ * ============================================================================ */
+
+/* Glass Neon - BORDERLESS with neon glows */
+[data-ui-style="glass-neon"] {
+    --ui-backdrop-blur: 12px;
+    --ui-card-shadow: var(--shadow-glow);
+    --ui-border-radius: var(--radius-lg);
+    --ui-glow-intensity: 0.35;
+    --ui-transition-duration: 200ms;
+    --ui-transition-easing: ease-out;
+    --ui-border-opacity: 0;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1.02;
+    --ui-hover-lift: -2px;
+    --ui-active-scale: 0.98;
+    --ui-focus-ring-width: 3px;
+    --ui-focus-ring-offset: 2px;
+    --ui-border-width: 0px;
+}
+
+/* Clean Corporate - BORDERLESS and minimal */
+[data-ui-style="clean-corporate"] {
+    --ui-backdrop-blur: 0px;
+    --ui-card-shadow: var(--shadow-sm);
+    --ui-border-radius: var(--radius-md);
+    --ui-glow-intensity: 0;
+    --ui-transition-duration: 150ms;
+    --ui-transition-easing: ease-out;
+    --ui-border-opacity: 0;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1;
+    --ui-hover-lift: 0px;
+    --ui-active-scale: 0.99;
+    --ui-focus-ring-width: 2px;
+    --ui-focus-ring-offset: 1px;
+    --ui-border-width: 0px;
+}
+
+/* Soft Neutral - BORDERLESS with warm shadows */
+[data-ui-style="soft-neutral"] {
+    --ui-backdrop-blur: 8px;
+    --ui-card-shadow: var(--shadow-md);
+    --ui-border-radius: var(--radius-xl);
+    --ui-glow-intensity: 0.15;
+    --ui-transition-duration: 250ms;
+    --ui-transition-easing: ease-in-out;
+    --ui-border-opacity: 0;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1.01;
+    --ui-hover-lift: -1px;
+    --ui-active-scale: 0.99;
+    --ui-focus-ring-width: 3px;
+    --ui-focus-ring-offset: 2px;
+    --ui-border-width: 0px;
+}
+
+/* Bold AMOLED - BORDERLESS high contrast */
+[data-ui-style="bold-amoled"] {
+    --ui-backdrop-blur: 0px;
+    --ui-card-shadow: var(--shadow-xl);
+    --ui-border-radius: var(--radius-md);
+    --ui-glow-intensity: 0.5;
+    --ui-transition-duration: 150ms;
+    --ui-transition-easing: ease-out;
+    --ui-border-opacity: 0;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1.03;
+    --ui-hover-lift: -4px;
+    --ui-active-scale: 0.97;
+    --ui-focus-ring-width: 4px;
+    --ui-focus-ring-offset: 2px;
+    --ui-border-width: 0px;
+}
+
+/* Material Motion - BORDERLESS with elevation shadows */
+[data-ui-style="material-motion"] {
+    --ui-backdrop-blur: 4px;
+    --ui-card-shadow: var(--shadow-lg);
+    --ui-border-radius: var(--radius-lg);
+    --ui-glow-intensity: 0;
+    --ui-transition-duration: 300ms;
+    --ui-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+    --ui-border-opacity: 0;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1.01;
+    --ui-hover-lift: -2px;
+    --ui-active-scale: 0.98;
+    --ui-focus-ring-width: 2px;
+    --ui-focus-ring-offset: 2px;
+    --ui-border-width: 0px;
+}
+
+/* Recompute the transition shorthand when duration/easing changes */
+[data-ui-style] {
+    --ui-transition: var(--ui-transition-duration) var(--ui-transition-easing);
+}
+
+/* ============================================================================
+ * GLOBAL COMPONENT OVERRIDES
+ * Force Tailwind utility classes to consume UI style variables
+ * ============================================================================ */
+
+/* Override all elements with .border class to use --ui-border-width */
+[data-ui-style] .border {
+    border-width: var(--ui-border-width) !important;
+}
+
+/* Override all cards to use UI style border width */
+[data-ui-style] [data-slot="card"] {
+    border-width: var(--ui-border-width) !important;
+}
+
+/* Override all buttons to use UI style tokens */
+[data-ui-style] [data-slot="button"] {
+    border-width: var(--ui-border-width) !important;
+    transition: all var(--ui-transition) !important;
+}
+
+/* Override all transition duration classes */
+[data-ui-style] .transition,
+[data-ui-style] .transition-all,
+[data-ui-style] .transition-colors,
+[data-ui-style] .transition-opacity,
+[data-ui-style] .transition-shadow,
+[data-ui-style] .transition-transform {
+    transition-duration: var(--ui-transition-duration) !important;
+    transition-timing-function: var(--ui-transition-easing) !important;
+}
+
+/* Override static duration classes */
+[data-ui-style] .duration-150,
+[data-ui-style] .duration-200,
+[data-ui-style] .duration-300 {
+    transition-duration: var(--ui-transition-duration) !important;
+}
+
+/* Override rounded classes to use --ui-border-radius for major components */
+[data-ui-style] [data-slot="card"],
+[data-ui-style] [data-slot="popover-content"],
+[data-ui-style] [data-slot="dropdown-menu-content"],
+[data-ui-style] [data-slot="dialog-content"],
+[data-ui-style] [data-slot="sheet-content"],
+[data-ui-style] [data-slot="select-content"] {
+    border-radius: var(--ui-border-radius) !important;
+}
+
+/* Bold AMOLED specific: Emphasize high contrast */
+[data-ui-style="bold-amoled"] [data-slot="card"],
+[data-ui-style="bold-amoled"] [data-slot="popover-content"],
+[data-ui-style="bold-amoled"] [data-slot="dropdown-menu-content"],
+[data-ui-style="bold-amoled"] [data-slot="dialog-content"] {
+    border: 2px solid hsl(var(--primary) / 0.3) !important;
+    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.4) !important;
+}
+
+/* Material Motion specific: Material Design curves */
+[data-ui-style="material-motion"] [data-slot="card"],
+[data-ui-style="material-motion"] [data-slot="button"],
+[data-ui-style="material-motion"] [data-slot="popover-content"] {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition-duration: 300ms !important;
+}
+
+/* Hover effects that use tokens */
+[data-ui-style] [data-slot="card"]:hover {
+    transform: scale(var(--ui-hover-scale)) translateY(var(--ui-hover-lift)) !important;
+}
+
+[data-ui-style] [data-slot="button"]:hover {
+    transform: scale(var(--ui-hover-scale)) translateY(var(--ui-hover-lift)) !important;
+}
+
+[data-ui-style] [data-slot="button"]:active {
+    transform: scale(var(--ui-active-scale)) !important;
 }

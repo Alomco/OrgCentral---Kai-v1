@@ -10,6 +10,7 @@ import type {
 import { resolveIdentityCacheScopes } from '@/server/lib/cache-tags/identity';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { RepositoryAuthorizationError } from '@/server/repositories/security';
+import { onboardingDataSchema } from '@/server/validators/auth/invitation-validators';
 
 type InvitationEntity = PrismaInvitation;
 
@@ -62,12 +63,15 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
             take: limit,
         });
 
-        return records.map((record) => mapInvitation(record));
+        return records.map((record: InvitationEntity) => mapInvitation(record));
     }
 
     async createInvitation(input: InvitationCreateInput): Promise<InvitationRecord> {
         const token = `${input.orgId}-${randomUUID()}`;
         const targetEmail = input.targetEmail.trim().toLowerCase();
+
+        // Validate onboarding data
+        const validatedOnboardingData = onboardingDataSchema.parse(input.onboardingData);
 
         const record = await getInvitationDelegate(this.prisma).create({
             data: {
@@ -77,18 +81,18 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
                 targetEmail,
                 onboardingData:
                     toPrismaInputJson(
-                        input.onboardingData as unknown as Prisma.InputJsonValue,
+                        validatedOnboardingData as unknown as Prisma.InputJsonValue,
                     ) ?? Prisma.JsonNull,
                 status: 'pending',
                 invitedByUserId: input.invitedByUserId ?? null,
                 expiresAt: input.expiresAt ?? null,
                 metadata:
                     toPrismaInputJson(
-                        input.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined,
+                        input.metadata as unknown as Prisma.InputJsonValue,
                     ) ?? Prisma.JsonNull,
                 securityContext:
                     toPrismaInputJson(
-                        input.securityContext as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined,
+                        input.securityContext as unknown as Prisma.InputJsonValue,
                     ) ?? Prisma.JsonNull,
                 ipAddress: input.ipAddress ?? null,
                 userAgent: input.userAgent ?? null,
@@ -136,7 +140,7 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
                 revokedAt: new Date(),
                 metadata:
                     toPrismaInputJson(
-                        nextMetadata as Record<string, Prisma.InputJsonValue> | Prisma.InputJsonValue,
+                        nextMetadata as unknown as Prisma.InputJsonValue,
                     ) ?? Prisma.JsonNull,
             },
         });

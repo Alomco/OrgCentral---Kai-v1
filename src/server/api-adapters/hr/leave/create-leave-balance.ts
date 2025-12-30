@@ -75,5 +75,8 @@ function buildBalanceModel(payload: LeaveBalancePayload, orgId: string): Omit<Le
         used,
         pending,
         available,
+        dataResidency: 'UK_ONLY',
+        dataClassification: 'OFFICIAL',
+        auditSource: 'api:hr:leave:balance:create',
     };
 }

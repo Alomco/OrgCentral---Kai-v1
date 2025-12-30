@@ -10,59 +10,54 @@ function hasOwnProperty(value: object, key: PropertyKey): boolean {
   return Object.prototype.hasOwnProperty.call(value, key);
 }
 
-export function normalizeLeavePolicyUpdates(
+function assignSimpleFields(
+  normalized: Partial<LeavePolicyUpdateData>,
   updates: Partial<Omit<LeavePolicy, 'id' | 'orgId' | 'createdAt'>>,
-): Partial<LeavePolicyUpdateData> {
-  const normalized: Partial<LeavePolicyUpdateData> = {};
+) {
+  if (updates.name !== undefined) {normalized.name = updates.name;}
+  if (updates.requiresApproval !== undefined) {normalized.requiresApproval = updates.requiresApproval;}
+  if (updates.isDefault !== undefined) {normalized.isDefault = updates.isDefault;}
+  if (updates.statutoryCompliance !== undefined) {normalized.statutoryCompliance = updates.statutoryCompliance;}
+  if (updates.allowNegativeBalance !== undefined) {normalized.allowNegativeBalance = updates.allowNegativeBalance;}
+  if (updates.dataClassification !== undefined) {normalized.dataClassification = updates.dataClassification;}
+  if (updates.auditSource !== undefined) {normalized.auditSource = updates.auditSource;}
+  if (updates.auditBatchId !== undefined) {normalized.auditBatchId = updates.auditBatchId;}
+  if (updates.metadata !== undefined) {normalized.metadata = updates.metadata;}
+}
 
-  if (updates.name !== undefined) {
-    normalized.name = updates.name;
-  }
+function assignEnumFields(
+  normalized: Partial<LeavePolicyUpdateData>,
+  updates: Partial<Omit<LeavePolicy, 'id' | 'orgId' | 'createdAt'>>,
+) {
   if (updates.policyType !== undefined) {
     normalized.policyType = updates.policyType as PrismaLeavePolicyType;
   }
   if (updates.accrualFrequency !== undefined) {
     normalized.accrualFrequency = updates.accrualFrequency as PrismaLeaveAccrualFrequency;
   }
-  if (updates.requiresApproval !== undefined) {
-    normalized.requiresApproval = updates.requiresApproval;
-  }
-  if (updates.isDefault !== undefined) {
-    normalized.isDefault = updates.isDefault;
-  }
-  if (updates.statutoryCompliance !== undefined) {
-    normalized.statutoryCompliance = updates.statutoryCompliance;
-  }
-  if (updates.allowNegativeBalance !== undefined) {
-    normalized.allowNegativeBalance = updates.allowNegativeBalance;
-  }
-  if (updates.dataClassification !== undefined) {
-    normalized.dataClassification = updates.dataClassification;
-  }
   if (updates.dataResidency !== undefined) {
     normalized.residencyTag = updates.dataResidency;
   }
-  if (updates.auditSource !== undefined) {
-    normalized.auditSource = updates.auditSource;
-  }
-  if (updates.auditBatchId !== undefined) {
-    normalized.auditBatchId = updates.auditBatchId;
-  }
-  if (updates.metadata !== undefined) {
-    normalized.metadata = updates.metadata;
-  }
+}
 
-  if (hasOwnProperty(updates, 'departmentId')) {
-    normalized.departmentId = updates.departmentId;
-  }
+function assignOptionalFields(
+  normalized: Partial<LeavePolicyUpdateData>,
+  updates: Partial<Omit<LeavePolicy, 'id' | 'orgId' | 'createdAt'>>,
+) {
+  if (hasOwnProperty(updates, 'departmentId')) {normalized.departmentId = updates.departmentId;}
+  if (hasOwnProperty(updates, 'accrualAmount')) {normalized.accrualAmount = updates.accrualAmount;}
+  if (hasOwnProperty(updates, 'carryOverLimit')) {normalized.carryOverLimit = updates.carryOverLimit;}
+  if (hasOwnProperty(updates, 'maxConsecutiveDays')) {normalized.maxConsecutiveDays = updates.maxConsecutiveDays;}
+}
 
-  if (hasOwnProperty(updates, 'accrualAmount')) {
-    normalized.accrualAmount = updates.accrualAmount;
-  }
+export function normalizeLeavePolicyUpdates(
+  updates: Partial<Omit<LeavePolicy, 'id' | 'orgId' | 'createdAt'>>,
+): Partial<LeavePolicyUpdateData> {
+  const normalized: Partial<LeavePolicyUpdateData> = {};
 
-  if (hasOwnProperty(updates, 'carryOverLimit')) {
-    normalized.carryOverLimit = updates.carryOverLimit;
-  }
+  assignSimpleFields(normalized, updates);
+  assignEnumFields(normalized, updates);
+  assignOptionalFields(normalized, updates);
 
   if (updates.activeFrom !== undefined) {
     normalized.activeFrom = new Date(updates.activeFrom);
@@ -77,10 +72,6 @@ export function normalizeLeavePolicyUpdates(
     } else {
       normalized.activeTo = new Date(activeTo);
     }
-  }
-
-  if (hasOwnProperty(updates, 'maxConsecutiveDays')) {
-    normalized.maxConsecutiveDays = updates.maxConsecutiveDays;
   }
 
   return normalized;

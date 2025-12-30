@@ -21,6 +21,7 @@ import {
 } from '@/server/use-cases/org/roles/list-roles';
 import { getRole as getRoleUseCase, type GetRoleInput } from '@/server/use-cases/org/roles/get-role';
 import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
+import type { RoleQueueClient } from '@/server/workers/org/roles/role.queue';
 
 type RoleChangeKind = 'created' | 'updated' | 'deleted';
 
@@ -30,6 +31,7 @@ const ROLE_ADMIN_PERMISSIONS: Record<string, string[]> = { organization: ['updat
 export interface RoleServiceDependencies {
   roleRepository: IRoleRepository;
   notificationComposer?: NotificationComposerContract;
+  roleQueue?: RoleQueueClient;
 }
 
 export class RoleService extends AbstractOrgService {
@@ -76,6 +78,7 @@ export class RoleService extends AbstractOrgService {
     );
 
     await this.notify(input.authorization, role, 'created');
+    this.enqueueWorker(input.authorization, role, 'created');
     return role;
   }
 
@@ -96,6 +99,7 @@ export class RoleService extends AbstractOrgService {
     );
 
     await this.notify(input.authorization, role, 'updated');
+    this.enqueueWorker(input.authorization, role, 'updated');
     return role;
   }
 
@@ -111,6 +115,8 @@ export class RoleService extends AbstractOrgService {
     const result = await this.executeInServiceContext(context, 'roles.delete', () =>
       deleteRoleUseCase({ roleRepository: this.dependencies.roleRepository }, input),
     );
+
+    this.enqueueWorker(input.authorization, { id: result.roleId, name: result.roleName } as Role, 'deleted');
 
     await this.notify(input.authorization, {
       id: result.roleId,
@@ -151,6 +157,28 @@ export class RoleService extends AbstractOrgService {
         resourceType: 'notification',
         resourceAttributes: { targetUserId: authorization.userId },
       },
+    });
+  }
+
+  private enqueueWorker(
+    authorization: RepositoryAuthorizationContext,
+    role: Role,
+    action: RoleChangeKind,
+  ) {
+    if (!this.dependencies.roleQueue) {return;}
+
+    // Fire and forget
+    this.dependencies.roleQueue.enqueueRoleUpdate({
+      orgId: authorization.orgId,
+      authorization,
+      payload: {
+        roleId: role.id,
+        roleName: role.name,
+        action,
+      },
+    }).catch((error) => {
+      // Log error but don't fail the request
+      console.error('Failed to enqueue role update worker', error);
     });
   }
 }

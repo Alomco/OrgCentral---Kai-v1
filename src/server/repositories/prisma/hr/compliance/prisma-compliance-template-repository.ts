@@ -1,4 +1,6 @@
 import { Prisma, type PrismaClient, type ComplianceTemplate as PrismaComplianceTemplate } from '@prisma/client';
+import { z } from 'zod';
+import { complianceTemplateItemSchema } from '@/server/validators/hr/compliance/compliance-validators';
 import type {
     ComplianceTemplateCreateInput,
     ComplianceTemplateUpdateInput,
@@ -41,13 +43,17 @@ export class PrismaComplianceTemplateRepository
 
     async createTemplate(input: ComplianceTemplateCreateInput): Promise<ComplianceTemplate> {
         const mapped = mapComplianceTemplateInputToRecord(input);
+
+        // Validate items
+        const validatedItems = z.array(complianceTemplateItemSchema).parse(mapped.items);
+
         const data: ComplianceTemplateCreateData = stampCreate({
             orgId: input.orgId,
             name: input.name,
             categoryKey: input.categoryKey ?? null,
             version: input.version ?? null,
-            items: toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
-            metadata: toPrismaInputJson(mapped.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
+            items: toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+            metadata: toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
         });
         const record = await this.templates.create({
             data,
@@ -68,16 +74,21 @@ export class PrismaComplianceTemplateRepository
     ): Promise<ComplianceTemplate> {
         await this.ensureTemplateOrg(templateId, orgId);
         const mapped = mapComplianceTemplateInputToRecord(updates);
+
+        // Validate items if present
+        let itemsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
+        if (mapped.items !== undefined) {
+            const validatedItems = z.array(complianceTemplateItemSchema).parse(mapped.items);
+            itemsJson = toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull;
+        }
+
         const data: ComplianceTemplateUpdateData = stampUpdate({
             ...mapped,
             orgId,
-            items:
-                mapped.items !== undefined
-                    ? toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull
-                    : undefined,
+            items: itemsJson,
             metadata:
                 mapped.metadata !== undefined
-                    ? toPrismaInputJson(mapped.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull
+                    ? toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull
                     : undefined,
         });
         const record = await this.templates.update({

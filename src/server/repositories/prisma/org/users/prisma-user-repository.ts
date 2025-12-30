@@ -212,7 +212,7 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     for (const mem of memberships) {
       const user = mem.user;
       const domainUser = mapPrismaUserToDomain(user);
-      const domainMembership: Membership = mapPrismaMembershipToDomain(mem as PrismaMembership & { org?: Organization | null });
+      const domainMembership: Membership = mapPrismaMembershipToDomain(mem);
       results.push({
         id: domainUser.id,
         email: domainUser.email,

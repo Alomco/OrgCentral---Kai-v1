@@ -1,0 +1,143 @@
+import Link from 'next/link';
+import { Clock, CheckCircle, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
+interface PendingAbsence {
+    id: string;
+    employeeName: string;
+    type: string;
+    startDate: Date;
+    endDate: Date;
+    reason?: string;
+    submittedAt: Date;
+}
+
+interface AbsenceApprovalPanelProps {
+    pendingRequests: PendingAbsence[];
+    onApprove?: (id: string) => void;
+    onReject?: (id: string) => void;
+}
+
+function formatDateRange(start: Date, end: Date): string {
+    const startString = start.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+    });
+    const endString = end.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+    });
+    if (startString === endString) {return startString;}
+    return `${startString} - ${endString}`;
+}
+
+function formatTimeAgo(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) {return `${String(days)}d ago`;}
+    if (hours > 0) {return `${String(hours)}h ago`;}
+    return 'Just now';
+}
+
+export function AbsenceApprovalPanel({
+    pendingRequests,
+    onApprove,
+    onReject,
+}: AbsenceApprovalPanelProps) {
+    const hasRequests = pendingRequests.length > 0;
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Pending Approvals
+                    </CardTitle>
+                    <CardDescription>Absence requests awaiting your review</CardDescription>
+                </div>
+                {hasRequests ? (
+                    <Badge variant="secondary">{pendingRequests.length}</Badge>
+                ) : null}
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {hasRequests ? (
+                    <>
+                        {pendingRequests.slice(0, 5).map((request) => (
+                            <div
+                                key={request.id}
+                                className="flex items-start justify-between gap-4 rounded-lg border p-3"
+                            >
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-medium text-sm truncate">
+                                            {request.employeeName}
+                                        </p>
+                                        <Badge variant="outline" className="text-xs">
+                                            {request.type}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {formatDateRange(request.startDate, request.endDate)}
+                                    </p>
+                                    {request.reason ? (
+                                        <p className="text-xs text-muted-foreground mt-1 truncate">
+                                            {request.reason}
+                                        </p>
+                                    ) : null}
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                    <span className="text-xs text-muted-foreground">
+                                        {formatTimeAgo(request.submittedAt)}
+                                    </span>
+                                    <div className="flex gap-1">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => onReject?.(request.id)}
+                                            title="Reject"
+                                        >
+                                            <XCircle className="h-3.5 w-3.5 text-red-500" />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => onApprove?.(request.id)}
+                                            title="Approve"
+                                        >
+                                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {pendingRequests.length > 5 ? (
+                            <Button variant="ghost" size="sm" className="w-full" asChild>
+                                <Link href="/hr/leave?status=pending">
+                                    View all {pendingRequests.length} requests
+                                    <ArrowRight className="h-3 w-3 ml-1" />
+                                </Link>
+                            </Button>
+                        ) : null}
+                    </>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                        <CheckCircle className="h-8 w-8 text-emerald-500 mb-2" />
+                        <p className="text-sm font-medium">All Caught Up!</p>
+                        <p className="text-xs text-muted-foreground">
+                            No pending absence requests to review
+                        </p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}

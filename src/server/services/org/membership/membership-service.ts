@@ -16,8 +16,11 @@ import { normalizeRoles } from '@/server/use-cases/shared';
 import { buildAuthorizationContext, invalidateIdentityCache } from './membership-service.helpers';
 import type { BillingServiceContract } from '@/server/services/billing/billing-service.provider';
 
+import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
+
 export type MembershipServiceDependencies = AcceptInvitationDependencies & {
     billingService?: BillingServiceContract;
+    notificationComposer?: NotificationComposerContract;
 };
 
 const ORG_MEMBERSHIP_RESOURCE_TYPE = 'org.membership';
@@ -103,7 +106,95 @@ export class MembershipService extends AbstractOrgService {
                 },
             );
             await invalidateIdentityCache(input.authorization);
+
+            // Notify user about role update
+            if (this.dependencies.notificationComposer) {
+                await this.dependencies.notificationComposer.composeAndSend({
+                    authorization: input.authorization,
+                    notification: {
+                        userId: input.targetUserId,
+                        title: 'Roles Updated',
+                        body: `Your roles in ${input.authorization.orgId} have been updated to: ${input.roles.join(', ')}.`,
+                        topic: 'system-announcement',
+                        priority: 'medium',
+                    },
+                    abac: {
+                        action: 'notification.compose',
+                        resourceType: 'notification',
+                        resourceAttributes: { targetUserId: input.targetUserId },
+                    },
+                }).catch(error => {
+                    console.error('Failed to send role update notification', error);
+                });
+            }
+
             return membership;
+        });
+    }
+
+    async bulkUpdateMembershipRoles(input: {
+        authorization: RepositoryAuthorizationContext;
+        targetUserIds: string[];
+        roles: string[];
+    }): Promise<void> {
+        await this.ensureOrgAccess(input.authorization, {
+            action: 'org.membership.bulk-update-roles',
+            resourceType: ORG_MEMBERSHIP_RESOURCE_TYPE,
+            resourceAttributes: {
+                targetUserIds: input.targetUserIds,
+                roles: input.roles,
+            },
+        });
+
+        const context: ServiceExecutionContext = this.buildContext(input.authorization, {
+            correlationId: input.authorization.correlationId,
+            metadata: { userCount: input.targetUserIds.length },
+        });
+
+        await this.executeInServiceContext(context, 'identity.bulk-update-roles', async () => {
+            const updates = input.targetUserIds.map(async (targetUserId) => {
+                const { membership } = await updateMembershipRolesUseCase(
+                    { userRepository: this.dependencies.userRepository },
+                    {
+                        authorization: input.authorization,
+                        targetUserId,
+                        roles: input.roles,
+                    },
+                );
+
+                // Prepare notification but don't send yet
+                return { targetUserId, membership };
+            });
+
+            // Run updates in parallel (since we are under batch limit)
+            const results = await Promise.all(updates);
+
+            // 1. Invalidate Cache ONCE
+            await invalidateIdentityCache(input.authorization);
+
+            // 2. Send Notifications in parallel
+            if (this.dependencies.notificationComposer) {
+                const notifications = results.map(({ targetUserId }) =>
+                    this.dependencies.notificationComposer!.composeAndSend({
+                        authorization: input.authorization,
+                        notification: {
+                            userId: targetUserId,
+                            title: 'Roles Updated',
+                            body: `Your roles in ${input.authorization.orgId} have been updated to: ${input.roles.join(', ')}.`,
+                            topic: 'system-announcement',
+                            priority: 'medium',
+                        },
+                        abac: {
+                            action: 'notification.compose',
+                            resourceType: 'notification',
+                            resourceAttributes: { targetUserId },
+                        },
+                    }).catch(error => {
+                        console.error(`Failed to send role update notification to ${targetUserId}`, error);
+                    })
+                );
+                await Promise.all(notifications);
+            }
         });
     }
 

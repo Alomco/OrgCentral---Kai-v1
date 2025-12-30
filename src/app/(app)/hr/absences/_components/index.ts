@@ -8,3 +8,10 @@ export { AbsenceRow, type AbsenceRowData, type AbsenceRowProps } from './absence
 export { AbsenceRows, type AbsenceRowsProps } from './absence-rows';
 export { CancelAbsenceDialog, type CancelAbsenceDialogProps } from './cancel-absence-dialog';
 export { ReportAbsenceForm, type ReportAbsenceFormProps } from './report-absence-form';
+
+// New calendar and manager components
+export { AbsenceCalendar } from './absence-calendar';
+export { AbsenceApprovalPanel } from './absence-approval-panel';
+export { AbsenceApprovalDialog } from './absence-approval-dialog';
+export { TeamAbsencePanel } from './team-absence-panel';
+

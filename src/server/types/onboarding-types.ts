@@ -58,3 +58,8 @@ export interface ChecklistTemplateUpdatePayload {
 export interface ChecklistTemplateListFilters {
     type?: ChecklistTemplateType;
 }
+
+export interface ChecklistInstanceItemsUpdate {
+    items?: ChecklistItemProgress[];
+    metadata?: Record<string, unknown>;
+}

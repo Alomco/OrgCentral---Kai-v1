@@ -18,6 +18,7 @@ import { invalidateOrgCache, registerOrgCacheTag } from '@/server/lib/cache-tags
 import { RepositoryAuthorizationError } from '@/server/repositories/security';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import { CACHE_SCOPE_ENTERPRISE_MANAGED_ORGS } from '@/server/repositories/cache-scopes';
+import { moduleAccessSchema } from '@/server/validators/org/enterprise/enterprise-validators';
 
 type ManagedOrgDelegate = PrismaClient['managedOrganization'];
 type ManagedOrgCreateData = Prisma.ManagedOrganizationUncheckedCreateInput;
@@ -34,12 +35,16 @@ export class PrismaEnterpriseAdminRepository
 
     async onboardOrganization(input: EnterpriseOnboardingInput): Promise<ManagedOrganizationSummary> {
         const newOrgId = randomUUID();
+
+        // Validate module access
+        const validatedModuleAccess = moduleAccessSchema.parse(input.moduleAccess);
+
         const data: ManagedOrgCreateData = stampCreate({
             ...mapEnterpriseOnboardingInputToRecord(input),
             adminUserId: input.adminUserId,
             orgId: newOrgId,
             id: newOrgId,
-            moduleAccess: toPrismaInputJson(input.moduleAccess as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+            moduleAccess: toPrismaInputJson(validatedModuleAccess as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
             metadata: toPrismaInputJson(null),
         });
         const record = await this.delegate.create({
@@ -78,10 +83,13 @@ export class PrismaEnterpriseAdminRepository
     }
 
     async updateModuleAccess(input: ModuleAccessUpdateInput): Promise<ManagedOrganizationSummary> {
+        // Validate module access
+        const validatedModuleAccess = moduleAccessSchema.parse(input.moduleAccess);
+
         const data: ManagedOrgUpdateData = stampUpdate({
             ...mapModuleAccessUpdateToRecord(input),
             adminUserId: input.adminUserId,
-            moduleAccess: toPrismaInputJson(input.moduleAccess as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+            moduleAccess: toPrismaInputJson(validatedModuleAccess as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
         });
         const record = await this.delegate.update({
             where: { id: input.orgId },

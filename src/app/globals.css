@@ -55,6 +55,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
@@ -64,87 +65,146 @@
   --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
 
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
+
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
   }
+
   @keyframes fade-in {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
+
   @keyframes blob {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
   }
+
   @keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
+    0% {
+      background-position: -1000px 0;
+    }
+
+    100% {
+      background-position: 1000px 0;
+    }
   }
+
   @keyframes pulse-glow {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.05); }
+
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.6;
+      transform: scale(1.05);
+    }
   }
 }
 
 :root {
   /* Golden Ratio: φ ≈ 1.618 - use for harmonious spacing */
   --phi: 1.618;
-  --phi-sm: 0.618rem; /* 1/φ */
+  --phi-sm: 0.618rem;
+  /* 1/φ */
   --phi-base: 1rem;
-  --phi-md: 1.618rem; /* φ */
-  --phi-lg: 2.618rem; /* φ² */
-  --phi-xl: 4.236rem; /* φ³ */
-  
+  --phi-md: 1.618rem;
+  /* φ */
+  --phi-lg: 2.618rem;
+  /* φ² */
+  --phi-xl: 4.236rem;
+  /* φ³ */
+
   /* Modern Border Radius with Golden Ratio */
-  --radius: 0.618rem; /* φ⁻¹ */
-  
+  --radius: 0.618rem;
+  /* φ⁻¹ */
+
   /* Vibrant Modern Color System - Purple/Pink/Blue HR Theme */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
-  
+
   /* Cards with subtle gradient capability */
   --card: 0 0% 100%;
   --card-foreground: 222.2 84% 4.9%;
-  
+
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
-  
+
   /* Primary: Vibrant Purple-Blue */
-  --primary: 262 83% 58%; /* Modern purple */
+  --primary: 262 83% 58%;
+  /* Modern purple */
   --primary-foreground: 0 0% 100%;
-  
+
   /* Secondary: Soft lavender */
   --secondary: 262 40% 96%;
   --secondary-foreground: 262 84% 25%;
-  
+
   /* Muted: Light purple-gray */
   --muted: 262 20% 96%;
   --muted-foreground: 262 16.3% 46.9%;
-  
+
   /* Accent: Pink-Purple gradient base */
-  --accent: 330 81% 60%; /* Vibrant pink */
+  --accent: 330 81% 60%;
+  /* Vibrant pink */
   --accent-foreground: 0 0% 100%;
-  
+
   /* Destructive: Modern red */
   --destructive: 0 72% 51%;
-  
+
   /* Border: Subtle purple tint */
   --border: 262 31.8% 91.4%;
   --input: 262 31.8% 91.4%;
   --ring: 262 83.2% 58%;
-  
+
   /* Charts: Vibrant modern palette */
-  --chart-1: 330 81% 60%; /* Pink */
-  --chart-2: 262 83% 58%; /* Purple */
-  --chart-3: 200 98% 39%; /* Cyan */
-  --chart-4: 48 96% 53%; /* Yellow */
-  --chart-5: 31 87% 51%; /* Orange */
-  
+  --chart-1: 330 81% 60%;
+  /* Pink */
+  --chart-2: 262 83% 58%;
+  /* Purple */
+  --chart-3: 200 98% 39%;
+  /* Cyan */
+  --chart-4: 48 96% 53%;
+  /* Yellow */
+  --chart-5: 31 87% 51%;
+  /* Orange */
+
   /* Sidebar: Modern gradient-ready */
   --sidebar: 262 20% 98%;
   --sidebar-background: var(--sidebar);
@@ -168,46 +228,52 @@
 
 .dark {
   /* Dark Mode: Deep purple-blue with vibrant accents */
-  --background: 262 47% 7%; /* Deep purple-black */
+  --background: 262 47% 7%;
+  /* Deep purple-black */
   --foreground: 262 20% 96%;
-  
+
   --card: 262 45% 9%;
   --card-foreground: 262 20% 96%;
-  
+
   --popover: 262 45% 9%;
   --popover-foreground: 262 20% 96%;
-  
+
   /* Primary: Bright purple in dark mode */
   --primary: 262 90% 68%;
   --primary-foreground: 0 0% 100%;
-  
+
   /* Secondary: Dark purple-gray */
   --secondary: 262 35% 15%;
   --secondary-foreground: 262 20% 96%;
-  
+
   /* Muted: Darker purple-gray */
   --muted: 262 35% 15%;
   --muted-foreground: 262 20% 65%;
-  
+
   /* Accent: Vibrant pink in dark mode */
   --accent: 330 85% 65%;
   --accent-foreground: 0 0% 100%;
-  
+
   /* Destructive: Bright red */
   --destructive: 0 72% 58%;
-  
+
   /* Border: Subtle purple */
   --border: 262 35% 20%;
   --input: 262 35% 20%;
   --ring: 262 90% 68%;
-  
+
   /* Charts: Vibrant dark mode palette */
-  --chart-1: 330 85% 65%; /* Pink */
-  --chart-2: 262 90% 68%; /* Purple */
-  --chart-3: 200 95% 50%; /* Cyan */
-  --chart-4: 48 96% 65%; /* Yellow */
-  --chart-5: 31 87% 60%; /* Orange */
-  
+  --chart-1: 330 85% 65%;
+  /* Pink */
+  --chart-2: 262 90% 68%;
+  /* Purple */
+  --chart-3: 200 95% 50%;
+  /* Cyan */
+  --chart-4: 48 96% 65%;
+  /* Yellow */
+  --chart-5: 31 87% 60%;
+  /* Orange */
+
   /* Sidebar: Deep purple-black with vibrant accents */
   --sidebar: 262 45% 9%;
   --sidebar-background: var(--sidebar);
@@ -224,24 +290,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply text-foreground;
-    background: linear-gradient(135deg, 
-      #f0f4ff 0%, 
-      #e8eeff 25%, 
-      #f5f3ff 50%, 
-      #faf5ff 75%, 
-      #fef3ff 100%
-    );
+    /* Theme-reactive background using CSS variables */
+    background-color: hsl(var(--background));
+    /* Subtle gradient overlay using primary color for theme tinting */
+    background-image:
+      radial-gradient(ellipse at 0% 0%, hsl(var(--primary) / 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 0%, hsl(var(--accent) / 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, hsl(var(--primary) / 0.02) 0%, transparent 50%);
     background-attachment: fixed;
+    min-height: 100vh;
   }
-  
+
   .dark body {
-    background: linear-gradient(135deg, 
-      #0f172a 0%, 
-      #1e1b4b 50%, 
-      #1e293b 100%
-    );
+    /* Dark mode uses the same theme-reactive approach */
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(ellipse at 0% 0%, hsl(var(--primary) / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 0%, hsl(var(--accent) / 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, hsl(var(--primary) / 0.04) 0%, transparent 50%);
     background-attachment: fixed;
   }
 }
@@ -306,33 +375,29 @@
     inset: -1px;
     border-radius: inherit;
     padding: 3px;
-    background: 
-      conic-gradient(
-        from var(--border-angle-1),
+    background:
+      conic-gradient(from var(--border-angle-1),
         transparent 0deg,
         transparent 60deg,
         #1d4ed8 70deg,
         #2563eb 90deg,
         #1d4ed8 110deg,
         transparent 120deg,
-        transparent 360deg
-      ),
-      conic-gradient(
-        from var(--border-angle-2),
+        transparent 360deg),
+      conic-gradient(from var(--border-angle-2),
         transparent 0deg,
         transparent 60deg,
         #be185d 70deg,
         #db2777 90deg,
         #be185d 110deg,
         transparent 120deg,
-        transparent 360deg
-      );
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
+        transparent 360deg);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
-    mask: 
-      linear-gradient(#fff 0 0) content-box, 
+    mask:
+      linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
     mask-composite: exclude;
     opacity: 0;
@@ -347,15 +412,14 @@
   }
 
   .glass-card {
-    background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.95) 0%, 
-      rgba(243, 244, 246, 0.85) 50%,
-      rgba(249, 250, 251, 0.9) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(243, 244, 246, 0.85) 50%,
+        rgba(249, 250, 251, 0.9) 100%);
     -webkit-backdrop-filter: blur(15px);
     backdrop-filter: blur(15px);
     border: 2px solid rgba(148, 163, 184, 0.3);
-    box-shadow: 
+    box-shadow:
       0 4px 20px rgba(99, 102, 241, 0.08),
       0 2px 8px rgba(139, 92, 246, 0.05),
       inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -370,7 +434,7 @@
   }
 
   @keyframes rotateBorderAngles {
-    to { 
+    to {
       --border-angle-1: 360deg;
       --border-angle-2: 540deg;
     }
@@ -446,12 +510,15 @@
     0% {
       transform: translate(0px, 0px) scale(1);
     }
+
     33% {
       transform: translate(30px, -50px) scale(1.1);
     }
+
     66% {
       transform: translate(-20px, 20px) scale(0.9);
     }
+
     100% {
       transform: translate(0px, 0px) scale(1);
     }
@@ -471,7 +538,7 @@
 
   /* Neon glow effect */
   .neon-glow {
-    box-shadow: 
+    box-shadow:
       0 0 5px theme('colors.blue.500'),
       0 0 10px theme('colors.blue.500'),
       0 0 20px theme('colors.blue.500'),
@@ -496,6 +563,7 @@
     0% {
       background-position: -1000px 0;
     }
+
     100% {
       background-position: 1000px 0;
     }
@@ -503,7 +571,7 @@
 
   .shimmer {
     animation: shimmer 2s infinite linear;
-    background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
     background-size: 1000px 100%;
   }
 
@@ -517,7 +585,7 @@
   }
 
   .gradient-mesh {
-    background: 
+    background:
       radial-gradient(at 27% 37%, hsl(262, 90%, 95%) 0px, transparent 50%),
       radial-gradient(at 97% 21%, hsl(330, 90%, 95%) 0px, transparent 50%),
       radial-gradient(at 52% 99%, hsl(200, 90%, 95%) 0px, transparent 50%),
@@ -528,7 +596,7 @@
   }
 
   .dark .gradient-mesh {
-    background: 
+    background:
       radial-gradient(at 27% 37%, hsl(262, 50%, 15%) 0px, transparent 50%),
       radial-gradient(at 97% 21%, hsl(330, 50%, 15%) 0px, transparent 50%),
       radial-gradient(at 52% 99%, hsl(200, 50%, 15%) 0px, transparent 50%),
@@ -553,21 +621,21 @@
 
   /* Modern Card Shadows with Color */
   .card-shadow {
-    box-shadow: 
+    box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.03),
       0 2px 4px rgba(0, 0, 0, 0.05),
       0 12px 24px rgba(0, 0, 0, 0.05);
   }
 
   .card-shadow-colored {
-    box-shadow: 
+    box-shadow:
       0 0 0 1px hsl(262, 83%, 90%),
       0 4px 6px -1px hsl(262, 50%, 80%),
       0 10px 15px -3px hsl(262, 30%, 85%);
   }
 
   .dark .card-shadow-colored {
-    box-shadow: 
+    box-shadow:
       0 0 0 1px hsl(262, 40%, 20%),
       0 4px 6px -1px hsl(262, 40%, 15%),
       0 10px 15px -3px hsl(262, 40%, 10%);
@@ -660,14 +728,14 @@
 
   .interactive-card:hover {
     transform: translateY(-4px);
-    box-shadow: 
+    box-shadow:
       0 0 0 1px hsl(262, 40%, 90%),
       0 12px 24px -4px hsl(262, 40%, 80%),
       0 20px 40px -8px hsl(262, 30%, 85%);
   }
 
   .dark .interactive-card:hover {
-    box-shadow: 
+    box-shadow:
       0 0 0 1px hsl(262, 40%, 25%),
       0 12px 24px -4px hsl(262, 50%, 15%),
       0 20px 40px -8px hsl(262, 40%, 10%);
@@ -683,9 +751,17 @@
 
   /* ✨ Animated Gradient Shift - For dynamic headers */
   @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
   }
 
   /* 🔮 Theme-aware Glow Effects */
@@ -702,15 +778,18 @@
     position: relative;
     border: 1px solid transparent;
     background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
-                linear-gradient(135deg, hsl(var(--primary) / 0.5), hsl(var(--accent) / 0.5)) border-box;
+      linear-gradient(135deg, hsl(var(--primary) / 0.5), hsl(var(--accent) / 0.5)) border-box;
   }
 
   /* 💫 Pulse Animation for Interactive Elements */
   @keyframes pulse-theme {
-    0%, 100% { 
+
+    0%,
+    100% {
       box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
     }
-    50% { 
+
+    50% {
       box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
     }
   }

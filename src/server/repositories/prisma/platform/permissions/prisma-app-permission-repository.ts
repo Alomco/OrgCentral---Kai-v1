@@ -13,6 +13,7 @@ import {
 import type { AppPermission } from '@/server/types/platform-types';
 import { stampCreate, stampUpdate } from '@/server/repositories/prisma/helpers/timestamps';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
+import { createAppPermissionSchema, updateAppPermissionSchema } from '@/server/validators/platform/permission-validators';
 
 type AppPermissionCreateData = Prisma.AppPermissionUncheckedCreateInput;
 type AppPermissionUpdateData = Prisma.AppPermissionUncheckedUpdateInput;
@@ -35,11 +36,19 @@ export class PrismaAppPermissionRepository
     }
 
     async createPermission(input: AppPermissionCreateInput): Promise<AppPermission> {
-        const mapped = mapAppPermissionCreateInputToRecord(input);
+        // Validate input against schema
+        const validated = createAppPermissionSchema.parse(input);
+
+        const mapped = mapAppPermissionCreateInputToRecord(validated);
+
+        // Use explicit cast safely after Zod validation
+        const metadataJson = toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull;
+
         const data: AppPermissionCreateData = stampCreate({
             ...mapped,
-            metadata: toPrismaInputJson(mapped.metadata as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+            metadata: metadataJson,
         });
+
         const record = await this.appPermissions.create({
             data,
         });
@@ -47,13 +56,20 @@ export class PrismaAppPermissionRepository
     }
 
     async updatePermission(permissionId: string, updates: AppPermissionUpdateInput): Promise<AppPermission> {
-        const mapped = mapAppPermissionUpdateInputToRecord(updates);
+        // Validate updates against schema
+        const validated = updateAppPermissionSchema.parse(updates);
+
+        const mapped = mapAppPermissionUpdateInputToRecord(validated);
+
+        const metadataJson = mapped.metadata !== undefined
+            ? toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull
+            : undefined;
+
         const data: AppPermissionUpdateData = stampUpdate({
             ...mapped,
-            metadata: mapped.metadata !== undefined
-                ? toPrismaInputJson(mapped.metadata as unknown as Prisma.JsonValue) ?? Prisma.JsonNull
-                : undefined,
+            metadata: metadataJson,
         });
+
         const record = await this.appPermissions.update({
             where: { id: permissionId },
             data,

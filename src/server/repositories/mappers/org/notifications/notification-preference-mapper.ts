@@ -20,8 +20,8 @@ export function mapDomainNotificationPreferenceToPrisma(input: NotificationPrefe
         userId: input.userId,
         channel: input.channel,
         enabled: input.enabled,
-        quietHours: input.quietHours === null ? Prisma.JsonNull : (input.quietHours as Prisma.InputJsonValue | undefined),
-        metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata as Prisma.InputJsonValue | undefined),
+        quietHours: input.quietHours === null ? Prisma.JsonNull : (input.quietHours),
+        metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata),
         updatedAt: input.updatedAt,
     };
 }

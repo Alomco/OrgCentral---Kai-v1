@@ -5,13 +5,13 @@ import type { HRSettings } from '@/server/types/hr-ops-types';
 export function mapPrismaHRSettingsToDomain(record: PrismaHRSettings): HRSettings {
   return {
     orgId: record.orgId,
-    leaveTypes: record.leaveTypes as Prisma.JsonValue | undefined,
-    workingHours: record.workingHours as Prisma.JsonValue | undefined,
-    approvalWorkflows: record.approvalWorkflows as Prisma.JsonValue | undefined,
-    overtimePolicy: record.overtimePolicy as Prisma.JsonValue | undefined,
+    leaveTypes: record.leaveTypes,
+    workingHours: record.workingHours,
+    approvalWorkflows: record.approvalWorkflows,
+    overtimePolicy: record.overtimePolicy,
     dataClassification: record.dataClassification,
     residencyTag: record.residencyTag,
-    metadata: record.metadata as Prisma.JsonValue | undefined,
+    metadata: record.metadata,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };

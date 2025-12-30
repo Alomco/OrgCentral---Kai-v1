@@ -29,7 +29,7 @@ function mapRecordToDomain(record: ComplianceCategoryRecord): ComplianceCategory
         key: record.key,
         label: record.label,
         sortOrder: record.sortOrder,
-        metadata: record.metadata as Prisma.JsonValue | undefined,
+        metadata: record.metadata,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
     };
@@ -69,12 +69,12 @@ export class PrismaComplianceCategoryRepository
                 key: input.key,
                 label: input.label,
                 sortOrder: safeSortOrder,
-                metadata: toPrismaInputJson(input.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
+                metadata: toPrismaInputJson(input.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
             }),
             update: stampUpdate({
                 label: input.label,
                 sortOrder: safeSortOrder,
-                metadata: toPrismaInputJson(input.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
+                metadata: toPrismaInputJson(input.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
             }),
         });
 

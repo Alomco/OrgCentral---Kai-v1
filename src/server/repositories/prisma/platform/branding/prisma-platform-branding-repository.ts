@@ -8,6 +8,7 @@ import {
 import type { PlatformBranding } from '@/server/types/branding-types';
 import { stampUpdate } from '@/server/repositories/prisma/helpers/timestamps';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
+import { platformBrandingSchema } from '@/server/validators/platform/branding-validators';
 
 type PlatformSettingsDelegate = PrismaClient['platformSetting'];
 type PlatformSettingsUpsertArguments = Prisma.PlatformSettingUpsertArgs;
@@ -35,11 +36,29 @@ export class PrismaPlatformBrandingRepository
     }
 
     async updateBranding(updates: Partial<PlatformBranding>): Promise<PlatformBranding> {
-        const brandingPayload = mapPlatformBrandingUpdateToRecord(updates).branding;
+        // Validate partial updates - logic depends on whether we fetch first or merge.
+        // For branding updates, usually we merge partials. Zod's partial() helps if checking input directly.
+        // But updates input is already Partial<PlatformBranding>. 
+        // We really want to validate the *result* to be safe, or validated the input field by field.
+        // Assuming mapPlatformBrandingUpdateToRecord handles simple mapping, we validate the mapped payload.
+
+        // mapPlatformBrandingUpdateToRecord(updates).branding;
+
+        // Construct a partial schema for validations if needed, or just rely on the full schema parsing the merged result? 
+        // Better: Validate the payload structure if possible.
+        // Since brandingPayload is Prisma Input, it's hard to validate directly with our domain schema.
+        // Strategy: Cast `brandingPayload` to unknown, then parse with a partial schema of platformBrandingSchema?
+        // Actually, `brandingPayload` comes from `updates` which is `Partial<PlatformBranding>`.
+        // Let's validate `updates` directly before mapping.
+
+        const validatedUpdates = platformBrandingSchema.partial().parse(updates);
+        const mappedPayload = mapPlatformBrandingUpdateToRecord(validatedUpdates).branding;
+
         const brandingJson =
-            brandingPayload !== undefined
-                ? toPrismaInputJson(brandingPayload as unknown as Prisma.JsonValue) ?? Prisma.JsonNull
+            mappedPayload !== undefined
+                ? toPrismaInputJson(mappedPayload as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull
                 : undefined;
+
         const args: PlatformSettingsUpsertArguments = {
             where: { id: SETTINGS_KEY },
             create: {

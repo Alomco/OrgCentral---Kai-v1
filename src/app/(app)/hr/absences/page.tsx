@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { headers as nextHeaders } from 'next/headers';
 import Link from 'next/link';
@@ -12,13 +13,21 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { HrCardSkeleton } from '../_components/hr-card-skeleton';
 import { AbsenceListPanel } from './_components/absences-list-panel';
 import { ReportAbsenceForm } from './_components/report-absence-form';
+import { AbsenceApprovalPanel } from './_components/absence-approval-panel';
+import { TeamAbsencePanel } from './_components/team-absence-panel';
 import { buildInitialReportAbsenceFormState } from './form-state';
 import { listAbsenceTypeConfigsForUi } from '@/server/use-cases/hr/absences/list-absence-type-configs.cached';
+
+export const metadata: Metadata = {
+    title: 'Absences',
+    description: 'Report unplanned absences and manage return-to-work flows.',
+};
 
 export default async function HrAbsencesPage() {
     const headerStore = await nextHeaders();
@@ -30,6 +39,23 @@ export default async function HrAbsencesPage() {
             auditSource: 'ui:hr:absences',
         },
     );
+
+    // Check for manager permissions
+    const managerAuthorization = await getSessionContext(
+        {},
+        {
+            headers: headerStore,
+            requiredPermissions: { organization: ['read'] },
+            auditSource: 'ui:hr:absences:manager',
+            action: 'list',
+            resourceType: 'hr.absences',
+            resourceAttributes: { view: 'team' },
+        },
+    )
+        .then((result) => result.authorization)
+        .catch(() => null);
+
+    const isManager = managerAuthorization !== null;
 
     const initialFormState = buildInitialReportAbsenceFormState();
     const { types: absenceTypes } = await listAbsenceTypeConfigsForUi({
@@ -72,6 +98,14 @@ export default async function HrAbsencesPage() {
                     />
                 </Suspense>
             </div>
+
+            {/* Manager Panels */}
+            {isManager ? (
+                <div className="grid gap-6 lg:grid-cols-2">
+                    <AbsenceApprovalPanel pendingRequests={[]} />
+                    <TeamAbsencePanel teamAbsences={[]} teamSize={0} />
+                </div>
+            ) : null}
         </div>
     );
 }

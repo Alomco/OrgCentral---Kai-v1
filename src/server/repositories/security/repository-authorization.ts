@@ -7,6 +7,7 @@ import {
 } from '@/server/security/guards';
 import { RepositoryAuthorizationError } from './repository-errors';
 import type { TenantScope } from '@/server/types/tenant';
+import { authorizeOrgAccessRbacOnly } from '@/server/security/authorization/engine';
 
 const DEFAULT_AUTHORIZATION_FAILED_MESSAGE = 'Authorization failed.';
 
@@ -101,6 +102,22 @@ export function withRepositoryAuthorization<TResult>(
     authorizer: RepositoryAuthorizer = RepositoryAuthorizer.default(),
 ): Promise<TResult> {
     return authorizer.authorize(input, handler);
+}
+
+export function enforcePermission(
+    context: RepositoryAuthorizationContext,
+    resource: string,
+    action: string,
+): void {
+    // We construct a temporary input to validate just this permission against the context
+    const input = {
+        orgId: context.orgId,
+        userId: context.userId,
+        requiredPermissions: { [resource]: [action] },
+    };
+
+    // Check RBAC using the standard engine
+    authorizeOrgAccessRbacOnly(input, context);
 }
 
 export interface TenantScopedRecord {

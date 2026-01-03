@@ -24,6 +24,8 @@ import {
 } from '@/server/use-cases/org/roles/list-roles';
 import { getRole as getRoleUseCase, type GetRoleInput } from '@/server/use-cases/org/roles/get-role';
 import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
+import type { RoleQueueClient } from '@/server/workers/org/roles/role.queue';
+import { appLogger } from '@/server/logging/structured-logger';
 
 type RoleChangeKind = 'created' | 'updated' | 'deleted';
 
@@ -33,6 +35,7 @@ const ROLE_ADMIN_PERMISSIONS: Record<string, string[]> = { organization: ['updat
 export interface RoleServiceDependencies {
   roleRepository: IRoleRepository;
   notificationComposer?: NotificationComposerContract;
+  roleQueue?: RoleQueueClient;
 }
 
 export class RoleService extends AbstractOrgService {
@@ -81,6 +84,7 @@ export class RoleService extends AbstractOrgService {
     await this.invalidatePermissionCaches(input.authorization);
     await this.auditRoleChange(input.authorization, role, 'created');
     await this.notify(input.authorization, role, 'created');
+    this.enqueueWorker(input.authorization, role, 'created');
     return role;
   }
 
@@ -103,6 +107,7 @@ export class RoleService extends AbstractOrgService {
     await this.invalidatePermissionCaches(input.authorization);
     await this.auditRoleChange(input.authorization, role, 'updated');
     await this.notify(input.authorization, role, 'updated');
+    this.enqueueWorker(input.authorization, role, 'updated');
     return role;
   }
 
@@ -121,13 +126,18 @@ export class RoleService extends AbstractOrgService {
 
     await this.invalidatePermissionCaches(input.authorization);
     await this.auditRoleChange(input.authorization, result.role, 'deleted');
-    await this.notify(input.authorization, {
-      ...result.role,
-      description: result.role.description ?? null,
-      permissions: result.role.permissions,
-      createdAt: result.role.createdAt,
-      updatedAt: result.role.updatedAt,
-    }, 'deleted');
+    this.enqueueWorker(input.authorization, result.role, 'deleted');
+    await this.notify(
+      input.authorization,
+      {
+        ...result.role,
+        description: result.role.description ?? null,
+        permissions: result.role.permissions,
+        createdAt: result.role.createdAt,
+        updatedAt: result.role.updatedAt,
+      },
+      'deleted',
+    );
   }
 
   private async auditRoleChange(
@@ -195,6 +205,32 @@ export class RoleService extends AbstractOrgService {
         resourceType: 'notification',
         resourceAttributes: { targetUserId: authorization.userId },
       },
+    });
+  }
+
+  private enqueueWorker(
+    authorization: RepositoryAuthorizationContext,
+    role: Role,
+    action: RoleChangeKind,
+  ) {
+    if (!this.dependencies.roleQueue) { return; }
+
+    // Fire and forget
+    this.dependencies.roleQueue.enqueueRoleUpdate({
+      orgId: authorization.orgId,
+      authorization,
+      payload: {
+        roleId: role.id,
+        roleName: role.name,
+        action,
+      },
+    }).catch((error: unknown) => {
+      appLogger.error('org.roles.worker.enqueue.failed', {
+        error,
+        orgId: authorization.orgId,
+        roleId: role.id,
+        action,
+      });
     });
   }
 }

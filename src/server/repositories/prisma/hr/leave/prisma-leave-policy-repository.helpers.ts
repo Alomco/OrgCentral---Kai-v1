@@ -42,7 +42,13 @@ function copyNullableFields(
 
   if (hasOwnProperty(updates, 'activeTo')) {
     const activeTo = updates.activeTo;
-    normalized.activeTo = activeTo === null || activeTo === undefined ? activeTo : new Date(activeTo);
+    if (activeTo === undefined) {
+      normalized.activeTo = undefined;
+    } else if (activeTo === null) {
+      normalized.activeTo = null;
+    } else {
+      normalized.activeTo = new Date(activeTo);
+    }
   }
 }
 

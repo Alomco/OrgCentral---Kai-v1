@@ -151,14 +151,14 @@ export async function submitLeaveRequestAction(
             endDate,
             reason: parsed.data.reason,
             totalDays: parsed.data.totalDays,
-            isHalfDay: parsed.data.isHalfDay ?? false,
+            isHalfDay: Boolean(parsed.data.isHalfDay),
             status: 'submitted',
             createdBy: userId,
             submittedAt: new Date().toISOString(),
             hoursPerDay,
             dataResidency: session.authorization.dataResidency,
             dataClassification: session.authorization.dataClassification,
-            auditSource: 'ui:hr-leave:submit',
+            auditSource: session.authorization.auditSource || 'ui:hr:leave:submit',
         };
 
         const service = getLeaveService();

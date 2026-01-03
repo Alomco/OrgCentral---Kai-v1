@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { CheckIcon, XIcon } from 'lucide-react';
 
-import { approveLeaveAction, rejectLeaveAction } from '../actions';
+import { approveLeaveAction, rejectLeaveAction } from '../actions/leave.actions';
 import type { LeaveApprovalFormState } from '../_types';
 
 interface LeaveApprovalFormProps {
@@ -40,9 +40,9 @@ export function LeaveApprovalForm({ requestId }: LeaveApprovalFormProps) {
             {/* Approve Button */}
             <form action={approveAction}>
                 <input type="hidden" name="requestId" value={requestId} />
-                <Button 
-                    type="submit" 
-                    size="sm" 
+                <Button
+                    type="submit"
+                    size="sm"
                     variant="default"
                     disabled={isPending}
                     className="gap-1"
@@ -55,8 +55,8 @@ export function LeaveApprovalForm({ requestId }: LeaveApprovalFormProps) {
             {/* Reject Dialog */}
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button 
-                        size="sm" 
+                    <Button
+                        size="sm"
                         variant="destructive"
                         disabled={isPending}
                         className="gap-1"
@@ -76,11 +76,11 @@ export function LeaveApprovalForm({ requestId }: LeaveApprovalFormProps) {
                         </DialogHeader>
                         <div className="py-4">
                             <Label htmlFor="reason">Reason</Label>
-                            <Input 
-                                id="reason" 
-                                name="reason" 
+                            <Input
+                                id="reason"
+                                name="reason"
                                 placeholder="Enter rejection reason..."
-                                required 
+                                required
                                 minLength={1}
                                 maxLength={500}
                                 className="mt-1.5"

@@ -1,7 +1,8 @@
 /**
- * 🎨 UI Style Provider
+ * 🎨 UI Style Provider with SSR Support
  * 
  * Client-side provider for UI style switching via data-ui-style attribute.
+ * Uses blocking script to apply styles BEFORE React hydration to prevent flash.
  * Works alongside ThemeProvider for color theming.
  * 
  * @module components/theme/ui-style-provider
@@ -9,7 +10,7 @@
 
 'use client';
 
-import { createContext, useContext, useEffect, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import { uiStylePresets, uiStyleKeys, defaultUiStyle, getUiStyleCssVariables, type UiStyleKey } from '@/server/theme/ui-style-presets';
 
 // ============================================================================
@@ -76,6 +77,48 @@ export const UI_STYLE_OPTIONS = uiStyleKeys.map((key) => ({
 }));
 
 // ============================================================================
+// SSR-Safe Blocking Script
+// This script runs BEFORE React hydration to prevent flash of unstyled content
+// ============================================================================
+
+function generateBlockingScript(): string {
+    // Build a map of all preset CSS variables
+    const presetsMap: Record<string, Record<string, string>> = {};
+    for (const key of uiStyleKeys) {
+        presetsMap[key] = getUiStyleCssVariables(key);
+    }
+
+    // Self-executing function that runs immediately on page load
+    return `(function(){
+try {
+    var STORAGE_KEY = '${UI_STYLE_STORAGE_KEY}';
+    var DEFAULT_STYLE = '${defaultUiStyle}';
+    var PRESETS = ${JSON.stringify(presetsMap)};
+    var VALID_KEYS = ${JSON.stringify(uiStyleKeys)};
+    
+    // Read from localStorage
+    var stored = null;
+    try { stored = localStorage.getItem(STORAGE_KEY); } catch(e) {}
+    var styleKey = (stored && VALID_KEYS.indexOf(stored) !== -1) ? stored : DEFAULT_STYLE;
+    
+    // Apply CSS variables to root
+    var root = document.documentElement;
+    var vars = PRESETS[styleKey];
+    if (vars) {
+        for (var key in vars) {
+            if (vars.hasOwnProperty(key)) {
+                root.style.setProperty(key, vars[key]);
+            }
+        }
+    }
+    
+    // Set data attribute for CSS selectors
+    root.dataset.uiStyle = styleKey;
+} catch(e) {}
+})();`;
+}
+
+// ============================================================================
 // Provider
 // ============================================================================
 
@@ -85,6 +128,9 @@ export function UiStyleProvider({ children }: { children: ReactNode }) {
         readStoredStyle,
         () => defaultUiStyle,
     );
+
+    // Generate blocking script for SSR
+    const blockingScript = useMemo(() => generateBlockingScript(), []);
 
     const applyStyleToDOM = (styleKey: UiStyleKey) => {
         const cssVariables = getUiStyleCssVariables(styleKey);
@@ -124,6 +170,11 @@ export function UiStyleProvider({ children }: { children: ReactNode }) {
             clearStyle,
             styles: UI_STYLE_OPTIONS,
         }}>
+            {/* Blocking script runs BEFORE React hydration */}
+            <script
+                suppressHydrationWarning
+                dangerouslySetInnerHTML={{ __html: blockingScript }}
+            />
             {children}
         </UiStyleContext.Provider>
     );
@@ -140,3 +191,4 @@ export function useUiStyle() {
     }
     return context;
 }
+

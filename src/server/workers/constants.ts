@@ -9,6 +9,7 @@ export const WORKER_QUEUE_NAMES = {
     HR_ONBOARDING_REMINDER: 'hr-onboarding-reminder',
     HR_PEOPLE_RETENTION: 'hr-people-retention',
     NOTIFICATIONS_DISPATCH: 'notifications-dispatcher',
+    ORG_ROLE_UPDATES: 'org-role-updates',
 } as const;
 
 export type WorkerQueueName = (typeof WORKER_QUEUE_NAMES)[keyof typeof WORKER_QUEUE_NAMES];

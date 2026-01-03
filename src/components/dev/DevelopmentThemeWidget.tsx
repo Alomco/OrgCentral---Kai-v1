@@ -109,7 +109,7 @@ export function DevelopmentThemeWidget({ orgId, enabled }: DevelopmentThemeWidge
     return (
         <div className="fixed bottom-4 right-4 z-50">
             {open ? (
-                <div className="w-[320px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border bg-background/95 text-foreground shadow-xl backdrop-blur">
+                <div className="w-[320px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border bg-card text-foreground shadow-xl backdrop-blur">
                     <div className="flex items-start justify-between gap-3 px-4 py-3">
                         <div className="min-w-0">
                             <div className="flex items-center gap-2">

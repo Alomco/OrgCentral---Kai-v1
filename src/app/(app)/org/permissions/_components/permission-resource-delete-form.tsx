@@ -36,13 +36,12 @@ export function PermissionResourceDeleteForm(props: { resourceId: string }) {
         }
     }, [router, state.status]);
 
+    useEffect(() => {
+        formReference.current?.setAttribute('aria-busy', pending ? 'true' : 'false');
+    }, [pending]);
+
     return (
-        <form
-            ref={formReference}
-            action={action}
-            className="flex flex-wrap items-center justify-end gap-2"
-            aria-busy={pending}
-        >
+        <form ref={formReference} action={action} className="flex flex-wrap items-center justify-end gap-2">
             <input type="hidden" name="resourceId" value={props.resourceId} />
 
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>

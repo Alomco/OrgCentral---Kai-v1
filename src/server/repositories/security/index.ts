@@ -1,6 +1,7 @@
 export {
     RepositoryAuthorizer,
     withRepositoryAuthorization,
+    enforcePermission,
     hasOrgId,
     type RepositoryAuthorizationContext,
     type RepositoryAuthorizationDefaults,

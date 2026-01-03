@@ -27,7 +27,7 @@ async function getDefaultOrg() {
     return org;
 }
 
-export async function seedPermissionResourcesForDev(): Promise<SeedResult> {
+export async function seedPermissionResourcesForDevelopment(): Promise<SeedResult> {
     try {
         const org = await getDefaultOrg();
         const repository = new PrismaPermissionResourceRepository();

@@ -56,7 +56,7 @@ export function HrSettingsForm(props: {
     }, [pending, state.status]);
 
     return (
-        <form ref={formReference} action={formAction} aria-busy={pending}>
+        <form ref={formReference} action={formAction}>
             <Card>
                 <CardHeader>
                     <CardTitle>Working hours</CardTitle>

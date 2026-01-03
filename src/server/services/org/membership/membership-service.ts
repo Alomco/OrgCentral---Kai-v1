@@ -20,8 +20,12 @@ import {
     recordMembershipAuditEvent,
 } from './membership-service.policy';
 
+import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
+import { appLogger } from '@/server/logging/structured-logger';
+
 export type MembershipServiceDependencies = AcceptInvitationDependencies & {
     billingService?: BillingServiceContract;
+    notificationComposer?: NotificationComposerContract;
 };
 
 export interface AcceptInvitationServiceInput {
@@ -105,11 +109,108 @@ export class MembershipService extends AbstractOrgService {
                 },
             );
             await invalidateIdentityCache(input.authorization);
-            await recordMembershipAuditEvent(input.authorization, input.targetUserId, {
-                targetUserId: input.targetUserId,
-                roles: membership.roles,
-            }, 'roles.updated');
+            await recordMembershipAuditEvent(
+                input.authorization,
+                input.targetUserId,
+                {
+                    targetUserId: input.targetUserId,
+                    roles: membership.roles,
+                },
+                'roles.updated',
+            );
+
+            if (this.dependencies.notificationComposer) {
+                await this.dependencies.notificationComposer
+                    .composeAndSend({
+                        authorization: input.authorization,
+                        notification: {
+                            userId: input.targetUserId,
+                            title: 'Roles Updated',
+                            body: `Your roles in ${input.authorization.orgId} have been updated to: ${input.roles.join(', ')}.`,
+                            topic: 'system-announcement',
+                            priority: 'medium',
+                        },
+                        abac: {
+                            action: 'notification.compose',
+                            resourceType: 'notification',
+                            resourceAttributes: { targetUserId: input.targetUserId },
+                        },
+                    })
+                    .catch(() => undefined);
+            }
+
             return membership;
+        });
+    }
+
+    async bulkUpdateMembershipRoles(input: {
+        authorization: RepositoryAuthorizationContext;
+        targetUserIds: string[];
+        roles: string[];
+    }): Promise<void> {
+        await this.ensureOrgAccess(input.authorization, {
+            action: 'org.membership.bulk-update-roles',
+            resourceType: ORG_MEMBERSHIP_RESOURCE_TYPE,
+            resourceAttributes: {
+                targetUserIds: input.targetUserIds,
+                roles: input.roles,
+            },
+        });
+
+        const context: ServiceExecutionContext = this.buildContext(input.authorization, {
+            correlationId: input.authorization.correlationId,
+            metadata: { userCount: input.targetUserIds.length },
+        });
+
+        await this.executeInServiceContext(context, 'identity.bulk-update-roles', async () => {
+            const updates = input.targetUserIds.map(async (targetUserId) => {
+                const { membership } = await updateMembershipRolesUseCase(
+                    { userRepository: this.dependencies.userRepository },
+                    {
+                        authorization: input.authorization,
+                        targetUserId,
+                        roles: input.roles,
+                    },
+                );
+
+                // Prepare notification but don't send yet
+                return { targetUserId, membership };
+            });
+
+            // Run updates in parallel (since we are under batch limit)
+            const results = await Promise.all(updates);
+
+            // 1. Invalidate Cache ONCE
+            await invalidateIdentityCache(input.authorization);
+
+            // 2. Send Notifications in parallel
+            const composer = this.dependencies.notificationComposer;
+            if (composer) {
+                const notifications = results.map(({ targetUserId }) =>
+                    composer.composeAndSend({
+                        authorization: input.authorization,
+                        notification: {
+                            userId: targetUserId,
+                            title: 'Roles Updated',
+                            body: `Your roles in ${input.authorization.orgId} have been updated to: ${input.roles.join(', ')}.`,
+                            topic: 'system-announcement',
+                            priority: 'medium',
+                        },
+                        abac: {
+                            action: 'notification.compose',
+                            resourceType: 'notification',
+                            resourceAttributes: { targetUserId },
+                        },
+                    }).catch((error: unknown) => {
+                        appLogger.error('org.membership.role-update.notification-failed', {
+                            error,
+                            targetUserId,
+                            orgId: input.authorization.orgId,
+                        });
+                    })
+                );
+                await Promise.all(notifications);
+            }
         });
     }
 

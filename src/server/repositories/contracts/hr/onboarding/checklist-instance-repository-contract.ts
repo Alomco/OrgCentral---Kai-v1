@@ -1,15 +1,16 @@
-import type { ChecklistInstance, ChecklistItemProgress } from '@/server/types/onboarding-types';
+import type {
+    ChecklistInstance,
+    ChecklistItemProgress,
+    ChecklistInstanceItemsUpdate
+} from '@/server/types/onboarding-types';
+
+export type { ChecklistInstanceItemsUpdate };
 
 export interface ChecklistInstanceCreateInput {
     orgId: string;
     employeeId: string;
     templateId: string;
     templateName?: string;
-    items: ChecklistItemProgress[];
-    metadata?: Record<string, unknown>;
-}
-
-export interface ChecklistInstanceItemsUpdate {
     items: ChecklistItemProgress[];
     metadata?: Record<string, unknown>;
 }
@@ -23,3 +24,4 @@ export interface IChecklistInstanceRepository {
     completeInstance(orgId: string, instanceId: string): Promise<ChecklistInstance>;
     cancelInstance(orgId: string, instanceId: string): Promise<void>;
 }
+

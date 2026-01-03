@@ -12,6 +12,7 @@ import type { OrgScopedRepositoryOptions } from '@/server/repositories/prisma/or
 import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
 import { MembershipService, type MembershipServiceDependencies } from './membership-service';
 import { resolveBillingService } from '@/server/services/billing/billing-service.provider';
+import { getNotificationComposerService } from '@/server/services/platform/notifications/notification-composer.provider';
 
 export interface MembershipServiceProviderOptions {
     prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
@@ -47,6 +48,7 @@ export class MembershipServiceProvider {
             checklistInstanceRepository:
                 overrides.checklistInstanceRepository ?? deps.checklistInstanceRepository,
             generateEmployeeNumber: overrides.generateEmployeeNumber ?? this.defaultDependencies.generateEmployeeNumber,
+            notificationComposer: overrides.notificationComposer ?? deps.notificationComposer,
         });
     }
 
@@ -71,6 +73,7 @@ export class MembershipServiceProvider {
             checklistTemplateRepository: new PrismaChecklistTemplateRepository(repoOptions),
             checklistInstanceRepository: new PrismaChecklistInstanceRepository(repoOptions),
             billingService: resolveBillingService(undefined, { prismaOptions }) ?? undefined,
+            notificationComposer: getNotificationComposerService(),
         };
     }
 
@@ -109,5 +112,5 @@ export function getMembershipService(
 
 export type MembershipServiceContract = Pick<
     MembershipService,
-    'acceptInvitation' | 'inviteMember' | 'updateMembershipRoles' | 'suspendMembership' | 'resumeMembership'
+    'acceptInvitation' | 'inviteMember' | 'updateMembershipRoles' | 'bulkUpdateMembershipRoles' | 'suspendMembership' | 'resumeMembership'
 >;

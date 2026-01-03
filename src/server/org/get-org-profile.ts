@@ -18,7 +18,7 @@ const ORG_PROFILE_CACHE_SCOPE = 'org:profile';
 
 export async function getOrgProfile(context: OrgContext): Promise<OrgProfile> {
     const headerStore = await headers();
-    const orgIdFromHeaders = context.orgId?.trim();
+    const orgIdFromHeaders = context.orgId.trim();
     const orgId = orgIdFromHeaders && orgIdFromHeaders !== 'public' ? orgIdFromHeaders : undefined;
 
     const session = await getSessionContext(

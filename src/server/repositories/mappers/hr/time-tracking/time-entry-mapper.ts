@@ -13,7 +13,7 @@ export function mapPrismaTimeEntryToDomain(record: PrismaTimeEntry): TimeEntry {
     totalHours: record.totalHours === null ? undefined : Number(record.totalHours),
     breakDuration: record.breakDuration === null ? undefined : Number(record.breakDuration),
     project: record.project ?? undefined,
-    tasks: record.tasks as Prisma.JsonValue | undefined,
+    tasks: record.tasks,
     notes: record.notes ?? undefined,
     status: record.status,
     approvedByOrgId: record.approvedByOrgId ?? undefined,
@@ -21,7 +21,7 @@ export function mapPrismaTimeEntryToDomain(record: PrismaTimeEntry): TimeEntry {
     approvedAt: record.approvedAt ?? undefined,
     dataClassification: record.dataClassification,
     residencyTag: record.residencyTag,
-    metadata: record.metadata as Prisma.JsonValue | undefined,
+    metadata: record.metadata,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };

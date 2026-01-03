@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import { Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 export function ThemeTogglePanel() {
-    const { theme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    const currentTheme = mounted ? (theme ?? 'system') : null;
+    const { theme, setTheme, resolvedTheme } = useTheme();
+    const isMounted = typeof window !== 'undefined';
+    const currentTheme = isMounted ? (resolvedTheme ?? theme ?? 'system') : null;
 
     const themes = [
         { id: 'light', label: 'Light', icon: Sun },
@@ -35,11 +29,11 @@ export function ThemeTogglePanel() {
                     <button
                         key={id}
                         onClick={() => setTheme(id)}
-                        disabled={!mounted}
-                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition ${mounted && currentTheme === id
-                                ? 'border-emerald-500 bg-emerald-900/50 text-emerald-100'
-                                : 'border-emerald-800 text-emerald-300/70 hover:border-emerald-600 hover:text-emerald-100'
-                            } ${mounted ? '' : 'opacity-60'}`}
+                        disabled={!isMounted}
+                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition ${isMounted && currentTheme === id
+                            ? 'border-emerald-500 bg-emerald-900/50 text-emerald-100'
+                            : 'border-emerald-800 text-emerald-300/70 hover:border-emerald-600 hover:text-emerald-100'
+                            } ${isMounted ? '' : 'opacity-60'}`}
                     >
                         <Icon className="h-4 w-4" />
                         {label}

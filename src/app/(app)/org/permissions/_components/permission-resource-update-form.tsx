@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ const initialInlineState: PermissionResourceInlineState = { status: 'idle' };
 export function PermissionResourceUpdateForm(props: { resource: PermissionResource }) {
     const router = useRouter();
     const [state, action, pending] = useActionState(updatePermissionResourceAction, initialInlineState);
+    const formReference = useRef<HTMLFormElement | null>(null);
     const actionsText = stringifyActionList(props.resource.actions);
 
     useEffect(() => {
@@ -30,13 +31,17 @@ export function PermissionResourceUpdateForm(props: { resource: PermissionResour
         }
     }, [router, state.status]);
 
+    useEffect(() => {
+        formReference.current?.setAttribute('aria-busy', pending ? 'true' : 'false');
+    }, [pending]);
+
     const message = state.status === 'idle' ? null : state.message;
     const resourceError = state.fieldErrors?.resource;
     const actionsError = state.fieldErrors?.actions;
     const descriptionError = state.fieldErrors?.description;
 
     return (
-        <form action={action} className="space-y-3" aria-busy={pending}>
+        <form ref={formReference} action={action} className="space-y-3">
             <input type="hidden" name="resourceId" value={props.resource.id} />
 
             <fieldset disabled={pending} className="space-y-3">

@@ -1,4 +1,6 @@
 import { Prisma, type PrismaClient, type ChecklistTemplate as PrismaChecklistTemplate } from '@prisma/client';
+import { z } from 'zod';
+import { checklistTemplateItemSchema } from '@/server/validators/hr/onboarding/checklist-validators';
 import type {
     ChecklistTemplateCreateInput,
     ChecklistTemplateUpdateInput,
@@ -39,11 +41,15 @@ export class PrismaChecklistTemplateRepository
 
     async createTemplate(input: ChecklistTemplateCreateInput): Promise<ChecklistTemplate> {
         const mapped = mapChecklistTemplateInputToRecord(input);
+
+        // Validate items
+        const validatedItems = z.array(checklistTemplateItemSchema).parse(mapped.items);
+
         const data: ChecklistTemplateCreateData = stampCreate({
             orgId: input.orgId,
             name: input.name,
             type: input.type,
-            items: toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
+            items: toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
         });
         const record = await this.templates.create({
             data,
@@ -64,12 +70,17 @@ export class PrismaChecklistTemplateRepository
     ): Promise<ChecklistTemplate> {
         await this.ensureTemplateOrg(templateId, orgId);
         const mapped = mapChecklistTemplateInputToRecord(updates);
+
+        // Validate items if present
+        let itemsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
+        if (mapped.items !== undefined) {
+            const validatedItems = z.array(checklistTemplateItemSchema).parse(mapped.items);
+            itemsJson = toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull;
+        }
+
         const data: ChecklistTemplateUpdateData = stampUpdate({
             ...mapped,
-            items:
-                mapped.items !== undefined
-                    ? toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull
-                    : undefined,
+            items: itemsJson,
             orgId,
         });
         const record = await this.templates.update({

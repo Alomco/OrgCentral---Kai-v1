@@ -2,6 +2,7 @@ import { PrismaRoleRepository } from '@/server/repositories/prisma/org/roles';
 import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
 import { getNotificationComposerService } from '@/server/services/platform/notifications/notification-composer.provider';
+import { getRoleQueueClient } from '@/server/workers/org/roles/role.queue';
 import { RoleService, type RoleServiceDependencies } from './role-service';
 
 export interface RoleServiceProviderOptions {
@@ -29,6 +30,7 @@ export class RoleServiceProvider {
     return new RoleService({
       roleRepository: overrides.roleRepository ?? deps.roleRepository,
       notificationComposer: overrides.notificationComposer ?? deps.notificationComposer,
+      roleQueue: overrides.roleQueue ?? deps.roleQueue,
     });
   }
 
@@ -45,6 +47,7 @@ export class RoleServiceProvider {
     return {
       roleRepository: new PrismaRoleRepository(repoOptions),
       notificationComposer: getNotificationComposerService(),
+      roleQueue: getRoleQueueClient(),
     };
   }
 }

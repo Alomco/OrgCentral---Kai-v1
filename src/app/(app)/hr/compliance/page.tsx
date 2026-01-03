@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { headers as nextHeaders } from 'next/headers';
@@ -19,6 +20,12 @@ import { HrPageHeader } from '../_components/hr-page-header';
 import { ComplianceItemsPanel } from './_components/compliance-items-panel';
 import { ComplianceReviewQueuePanel } from './_components/compliance-review-queue-panel';
 import { ComplianceTemplatesPanel } from './_components/compliance-templates-panel';
+import { BulkAssignDialog } from './_components/bulk-assign-dialog';
+
+export const metadata: Metadata = {
+    title: 'Compliance',
+    description: 'Track assigned compliance items, expirations, and reminders.',
+};
 
 export default async function HrCompliancePage() {
     const headerStore = await nextHeaders();
@@ -86,6 +93,10 @@ export default async function HrCompliancePage() {
 
             {adminAuthorization ? (
                 <div className="space-y-6">
+                    {/* Bulk Assign Action */}
+                    <div className="flex justify-end">
+                        <BulkAssignDialog templates={[]} employees={[]} />
+                    </div>
                     <Suspense fallback={<div className="text-sm text-muted-foreground">Loading templates…</div>}>
                         <ComplianceTemplatesPanel authorization={adminAuthorization} />
                     </Suspense>

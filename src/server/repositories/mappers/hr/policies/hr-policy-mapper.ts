@@ -12,13 +12,13 @@ export function mapPrismaHRPolicyToDomain(record: PrismaHRPolicy): HRPolicy {
     version: record.version,
     effectiveDate: record.effectiveDate,
     expiryDate: record.expiryDate ?? undefined,
-    applicableRoles: record.applicableRoles as Prisma.JsonValue | undefined,
-    applicableDepartments: record.applicableDepartments as Prisma.JsonValue | undefined,
+    applicableRoles: record.applicableRoles,
+    applicableDepartments: record.applicableDepartments,
     requiresAcknowledgment: record.requiresAcknowledgment,
     status: record.status,
     dataClassification: record.dataClassification,
     residencyTag: record.residencyTag,
-    metadata: record.metadata as Prisma.JsonValue | undefined,
+    metadata: record.metadata,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };
@@ -75,7 +75,7 @@ export function mapPrismaPolicyAckToDomain(record: PrismaPolicyAck): PolicyAckno
     version: record.version,
     acknowledgedAt: record.acknowledgedAt,
     ipAddress: record.ipAddress ?? undefined,
-    metadata: record.metadata as Prisma.JsonValue | undefined,
+    metadata: record.metadata,
   };
 }
 

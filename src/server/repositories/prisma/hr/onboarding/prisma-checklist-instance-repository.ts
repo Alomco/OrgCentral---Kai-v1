@@ -1,4 +1,6 @@
 import { Prisma, type PrismaClient, type ChecklistInstance as PrismaChecklistInstance } from '@prisma/client';
+import { z } from 'zod'; // Import z explicitly for array usage
+import { checklistInstanceItemSchema } from '@/server/validators/hr/onboarding/checklist-validators';
 import type {
     ChecklistInstanceCreateInput,
     ChecklistInstanceItemsUpdate,
@@ -39,13 +41,21 @@ export class PrismaChecklistInstanceRepository
 
     async createInstance(input: ChecklistInstanceCreateInput): Promise<ChecklistInstance> {
         const mapped = mapChecklistInstanceInputToRecord(input);
+
+        // Validate items and metadata
+        const validatedItems = z.array(checklistInstanceItemSchema).parse(mapped.items);
+        // mapped.metadata is already Record<string, unknown> | undefined, but let's be safe if we want strictness.
+        // Actually mapChecklistInstanceInputToRecord returns domain objects.
+        // We can just trust strict types or validate if we suspect the mapper lets loose types through.
+        // For items (JSON), validation is crucial.
+
         const data: ChecklistInstanceCreateData = {
             orgId: input.orgId,
             employeeId: input.employeeId,
             templateId: input.templateId,
             templateName: mapped.templateName ?? null,
-            items: toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
-            metadata: toPrismaInputJson(mapped.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull,
+            items: toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+            metadata: toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
             status: 'IN_PROGRESS',
             startedAt: new Date(),
             updatedAt: new Date(),
@@ -92,15 +102,20 @@ export class PrismaChecklistInstanceRepository
     ): Promise<ChecklistInstance> {
         await this.ensureInstanceOrg(instanceId, orgId);
         const mapped = mapChecklistInstanceInputToRecord(updates);
+
+        // Validate items if present
+        let itemsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
+        if (mapped.items !== undefined) {
+            const validatedItems = z.array(checklistInstanceItemSchema).parse(mapped.items);
+            itemsJson = toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull;
+        }
+
         const data: ChecklistInstanceUpdateData = stampUpdate({
             ...mapped,
-            items:
-                mapped.items !== undefined
-                    ? toPrismaInputJson(mapped.items as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull
-                    : undefined,
+            items: itemsJson,
             metadata:
                 mapped.metadata !== undefined
-                    ? toPrismaInputJson(mapped.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined) ?? Prisma.JsonNull
+                    ? toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull
                     : undefined,
             orgId,
         });
@@ -130,6 +145,18 @@ export class PrismaChecklistInstanceRepository
             PrismaChecklistInstanceRepository.DEFAULT_RESIDENCY,
         );
         return mapChecklistInstanceRecordToDomain(record);
+    }
+
+    async findPendingChecklists(
+        orgId: string,
+    ): Promise<ChecklistInstance[]> {
+        const records = await this.checklistInstances.findMany({
+            where: {
+                orgId,
+                status: 'IN_PROGRESS',
+            },
+        });
+        return records.map(mapChecklistInstanceRecordToDomain);
     }
 
     async cancelInstance(orgId: string, instanceId: string): Promise<void> {

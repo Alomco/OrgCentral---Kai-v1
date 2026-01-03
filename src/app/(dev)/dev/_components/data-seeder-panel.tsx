@@ -12,7 +12,7 @@ import {
     getAbacPolicyStatus,
 } from '../_actions/seed-fake-data';
 import {
-    seedPermissionResourcesForDev,
+    seedPermissionResourcesForDevelopment,
     getPermissionResourceStatus,
 } from '../_actions/seed-permission-resources';
 
@@ -85,7 +85,7 @@ export function DataSeederPanel() {
 
     const handleSeedPermissionResources = () => {
         startTransition(async () => {
-            const result = await seedPermissionResourcesForDev();
+            const result = await seedPermissionResourcesForDevelopment();
             setMessage(result.message);
             if (result.success) { loadStats(); }
         });

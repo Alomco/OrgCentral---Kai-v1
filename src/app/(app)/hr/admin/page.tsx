@@ -1,101 +1,131 @@
-/**
- * HR Admin Hub Page (Server Component)
- * Single Responsibility: Page-level orchestration with PPR + Suspense
- */
-
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { headers as nextHeaders } from 'next/headers';
-import { SettingsIcon } from 'lucide-react';
+import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
 
+export const metadata: Metadata = {
+    title: 'HR Administration',
+    description: 'Manage employees, compliance, and HR operations.',
+};
+
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbList,
+    BreadcrumbLink,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 
-import { HrPageHeader } from '../_components';
-import { ComplianceReviewQueuePanel } from '../compliance/_components/compliance-review-queue-panel';
+import { HrPageHeader } from '../_components/hr-page-header';
 import {
-    AdminHubTabs,
-    LeaveManagementHub,
-    AbsenceManagementHub,
-    EmployeeManagementHub,
-    LeaveHubSkeleton,
-    AbsenceHubSkeleton,
-    EmployeeHubSkeleton,
-    ComplianceHubSkeleton,
+    HrAdminStatsRow,
+    HrAdminAlerts,
+    HrAdminQuickActions,
+    HrAdminPendingItems,
 } from './_components';
-import type { AdminHubTabId } from './_types';
+import { getAdminDashboardStats, getPendingApprovals } from './actions';
 
-interface AdminPageProps {
-    searchParams: Promise<{ tab?: string }>;
-}
-
-export default async function HrAdminPage({ searchParams }: AdminPageProps) {
+export default async function HrAdminPage() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect({}, {
-        headers: headerStore,
-        requiredPermissions: { organization: ['update'] },
-        auditSource: 'ui:hr:admin',
-    });
-
-    const params = await searchParams;
-    const activeTab = validateTab(params.tab) ?? 'leave';
+    await getSessionContextOrRedirect(
+        {},
+        {
+            headers: headerStore,
+            requiredPermissions: { organization: ['update'] },
+            auditSource: 'ui:hr:admin',
+        },
+    );
 
     return (
         <div className="space-y-6">
+            <Breadcrumb>
+                <BreadcrumbList>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink asChild>
+                            <Link href="/hr">HR</Link>
+                        </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbPage>Admin Dashboard</BreadcrumbPage>
+                    </BreadcrumbItem>
+                </BreadcrumbList>
+            </Breadcrumb>
+
             <HrPageHeader
                 title="HR Administration"
-                description="Manage leave approvals, absence acknowledgments, employees, and compliance"
-                icon={<SettingsIcon className="h-6 w-6" />}
+                description="Manage employees, compliance, and HR operations"
+                icon={<ShieldCheck className="h-5 w-5" />}
             />
 
-            <AdminHubTabs defaultTab={activeTab} />
+            <Suspense fallback={<StatsRowSkeleton />}>
+                <StatsRow />
+            </Suspense>
 
-            <AdminHubContent tab={activeTab} authorization={authorization} />
+            <div className="grid gap-6 lg:grid-cols-2">
+                <HrAdminQuickActions />
+
+                <Suspense fallback={<CardSkeleton />}>
+                    <AlertsPanel />
+                </Suspense>
+            </div>
+
+            <Suspense fallback={<CardSkeleton />}>
+                <PendingItemsPanel />
+            </Suspense>
         </div>
     );
 }
 
-interface AdminHubContentProps {
-    tab: AdminHubTabId;
-    authorization: Parameters<typeof LeaveManagementHub>[0]['authorization'];
+async function StatsRow() {
+    const stats = await getAdminDashboardStats();
+    return <HrAdminStatsRow stats={stats} />;
 }
 
-function AdminHubContent({ tab, authorization }: AdminHubContentProps) {
-    switch (tab) {
-        case 'leave':
-            return (
-                <Suspense fallback={<LeaveHubSkeleton />}>
-                    <LeaveManagementHub authorization={authorization} />
-                </Suspense>
-            );
-        case 'absences':
-            return (
-                <Suspense fallback={<AbsenceHubSkeleton />}>
-                    <AbsenceManagementHub authorization={authorization} />
-                </Suspense>
-            );
-        case 'employees':
-            return (
-                <Suspense fallback={<EmployeeHubSkeleton />}>
-                    <EmployeeManagementHub authorization={authorization} />
-                </Suspense>
-            );
-        case 'compliance':
-            return (
-                <Suspense fallback={<ComplianceHubSkeleton />}>
-                    <ComplianceReviewQueuePanel authorization={authorization} />
-                </Suspense>
-            );
-        default:
-            return (
-                <Suspense fallback={<LeaveHubSkeleton />}>
-                    <LeaveManagementHub authorization={authorization} />
-                </Suspense>
-            );
-    }
+async function AlertsPanel() {
+    const stats = await getAdminDashboardStats();
+    return <HrAdminAlerts stats={stats} />;
 }
 
-function validateTab(value: string | undefined): AdminHubTabId | null {
-    if (!value) {return null;}
-    const valid: AdminHubTabId[] = ['leave', 'absences', 'employees', 'compliance'];
-    return valid.includes(value as AdminHubTabId) ? (value as AdminHubTabId) : null;
+async function PendingItemsPanel() {
+    const items = await getPendingApprovals();
+    return <HrAdminPendingItems items={items} />;
 }
 
+function StatsRowSkeleton() {
+    return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index}>
+                    <CardHeader className="pb-2">
+                        <Skeleton className="h-4 w-24" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-7 w-12" />
+                        <Skeleton className="mt-1 h-3 w-20" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+}
+
+function CardSkeleton() {
+    return (
+        <Card>
+            <CardHeader>
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+            </CardContent>
+        </Card>
+    );
+}

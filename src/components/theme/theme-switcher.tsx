@@ -85,7 +85,7 @@ export function ThemeSwitcher() {
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className="w-80 p-0 overflow-hidden border-border bg-background/95 backdrop-blur-xl"
+                className="w-80 p-0 overflow-hidden rounded-xl border bg-popover backdrop-blur-xl shadow-2xl"
                 align="start"
                 sideOffset={10}
             >

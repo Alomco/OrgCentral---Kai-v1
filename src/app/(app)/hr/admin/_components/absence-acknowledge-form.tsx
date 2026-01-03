@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { CheckCircleIcon, EyeIcon } from 'lucide-react';
 
-import { acknowledgeAbsenceAction, approveAbsenceAction } from '../actions';
+import { acknowledgeAbsenceAction, approveAbsenceAction } from '../actions/absence.actions';
 import type { AbsenceAcknowledgeFormState } from '../_types';
 
 interface AbsenceAcknowledgeFormProps {
@@ -40,9 +40,9 @@ export function AbsenceAcknowledgeForm({ absenceId }: AbsenceAcknowledgeFormProp
             {/* Quick Acknowledge */}
             <form action={ackAction}>
                 <input type="hidden" name="absenceId" value={absenceId} />
-                <Button 
-                    type="submit" 
-                    size="sm" 
+                <Button
+                    type="submit"
+                    size="sm"
                     variant="outline"
                     disabled={isPending}
                     className="gap-1"
@@ -55,8 +55,8 @@ export function AbsenceAcknowledgeForm({ absenceId }: AbsenceAcknowledgeFormProp
             {/* Approve with Details Dialog */}
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button 
-                        size="sm" 
+                    <Button
+                        size="sm"
                         variant="default"
                         disabled={isPending}
                         className="gap-1"
@@ -77,18 +77,18 @@ export function AbsenceAcknowledgeForm({ absenceId }: AbsenceAcknowledgeFormProp
                         <div className="space-y-4 py-4">
                             <div>
                                 <Label htmlFor="returnDate">Confirmed Return Date (optional)</Label>
-                                <Input 
-                                    id="returnDate" 
-                                    name="returnDate" 
+                                <Input
+                                    id="returnDate"
+                                    name="returnDate"
                                     type="date"
                                     className="mt-1.5"
                                 />
                             </div>
                             <div>
                                 <Label htmlFor="notes">Notes (optional)</Label>
-                                <Input 
-                                    id="notes" 
-                                    name="notes" 
+                                <Input
+                                    id="notes"
+                                    name="notes"
                                     placeholder="Additional notes..."
                                     maxLength={500}
                                     className="mt-1.5"

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { headers as nextHeaders } from 'next/headers';
 import Link from 'next/link';
@@ -12,12 +13,19 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getPerformanceReviewsForUi } from '@/server/use-cases/hr/performance/get-performance-reviews.cached';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { HrCardSkeleton } from '../_components/hr-card-skeleton';
 import { PerformanceReviewsPanel } from './_components/performance-reviews-panel';
 import { PerformanceStatsCard } from './_components/performance-stats-card';
+import { TeamPerformanceGrid } from './_components/team-performance-grid';
+
+export const metadata: Metadata = {
+    title: 'Performance',
+    description: 'Track your performance reviews and career goals.',
+};
 
 type PerformanceReview = Awaited<ReturnType<typeof getPerformanceReviewsForUi>>['reviews'][number];
 
@@ -59,6 +67,23 @@ export default async function HrPerformancePage() {
             auditSource: 'ui:hr:performance',
         },
     );
+
+    // Check for manager permissions
+    const managerAuthorization = await getSessionContext(
+        {},
+        {
+            headers: headerStore,
+            requiredPermissions: { organization: ['read'] },
+            auditSource: 'ui:hr:performance:manager',
+            action: 'list',
+            resourceType: 'hr.performance',
+            resourceAttributes: { view: 'team' },
+        },
+    )
+        .then((result) => result.authorization)
+        .catch(() => null);
+
+    const isManager = managerAuthorization !== null;
 
     const reviewsResult = await getPerformanceReviewsForUi({
         authorization,
@@ -102,6 +127,11 @@ export default async function HrPerformancePage() {
                     userId={authorization.userId}
                 />
             </Suspense>
+
+            {/* Manager View - Team Performance */}
+            {isManager ? (
+                <TeamPerformanceGrid teamMembers={[]} />
+            ) : null}
         </div>
     );
 }

@@ -79,7 +79,7 @@ export async function submitLeaveRequestController(
         managerComments: payload.managerComments,
         dataResidency: authorization.dataResidency,
         dataClassification: authorization.dataClassification,
-        auditSource: 'api:hr:leave:submit',
+        auditSource: authorization.auditSource || 'api:hr:leave:submit',
     };
 
     const decision = await getFeatureFlagDecision('leave_policy_resolver', userId);

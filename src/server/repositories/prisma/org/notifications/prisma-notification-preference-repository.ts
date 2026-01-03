@@ -65,8 +65,8 @@ export class PrismaNotificationPreferenceRepository
       userId: preference.userId,
       channel: preference.channel,
       enabled: preference.enabled,
-      quietHours: preference.quietHours === null ? Prisma.JsonNull : (preference.quietHours as Prisma.InputJsonValue | undefined),
-      metadata: preference.metadata === null ? Prisma.JsonNull : (preference.metadata as Prisma.InputJsonValue | undefined),
+      quietHours: preference.quietHours === null ? Prisma.JsonNull : (preference.quietHours),
+      metadata: preference.metadata === null ? Prisma.JsonNull : (preference.metadata),
     });
   }
 

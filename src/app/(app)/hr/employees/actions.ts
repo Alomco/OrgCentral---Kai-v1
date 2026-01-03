@@ -1,5 +1,4 @@
 'use server';
-
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -18,13 +17,16 @@ import { toFieldErrors, type FieldErrors } from '../_components/form-errors';
 import {
     employeeContractFormSchema,
     employeeProfileFormSchema,
+    employeeSearchSchema,
     type EmployeeContractFormValues,
     type EmployeeProfileFormValues,
+    type EmployeeSearchParams,
 } from './schema';
 import type {
     EmployeeContractFormState,
     EmployeeProfileFormState,
 } from './form-state';
+import type { EmployeeFilterOptions, EmployeeListItem, EmployeeListResult } from './types';
 import {
     FIELD_CHECK_MESSAGE,
     buildEmergencyContact,
@@ -464,4 +466,225 @@ export async function saveEmployeeContractAction(
             values: parsed.data,
         };
     }
+}
+
+/**
+ * Fetch paginated employee list with search/filter
+ */
+export async function getEmployeeList(
+    params: Partial<EmployeeSearchParams>,
+): Promise<EmployeeListResult> {
+    const headerStore = await headers();
+    const { authorization } = await getSessionContext(
+        {},
+        {
+            headers: headerStore,
+            requiredPermissions: { organization: ['read'] },
+            auditSource: 'action:hr:employees:list',
+        },
+    );
+
+    const validatedParams = employeeSearchSchema.parse(params);
+    const { query, department, status, page, pageSize, sortBy, sortOrder } = validatedParams;
+
+    const peopleService = getPeopleService();
+    const result = await peopleService.listEmployeeProfiles({
+        authorization,
+        payload: {},
+    });
+
+    // Transform to EmployeeListItem
+    let employees: EmployeeListItem[] = result.profiles.map((p) => {
+        // Handle startDate which can be Date | string | null
+        let startDate: Date | null = null;
+        if (p.startDate) {
+            startDate = p.startDate instanceof Date ? p.startDate : new Date(p.startDate);
+        }
+
+        // Handle location which can be JsonValue | null
+        const location = typeof p.location === 'string' ? p.location : null;
+        const trimmedDisplayName = p.displayName?.trim();
+        const displayName = trimmedDisplayName && trimmedDisplayName.length > 0
+            ? trimmedDisplayName
+            : `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
+        const employmentStatus = (p.employmentStatus as EmployeeListItem['employmentStatus'] | null | undefined)
+            ?? 'ACTIVE';
+
+        return {
+            id: p.id,
+            userId: p.userId,
+            firstName: p.firstName ?? '',
+            lastName: p.lastName ?? '',
+            displayName,
+            email: p.email ?? '',
+            jobTitle: p.jobTitle ?? null,
+            department: p.departmentId ?? null,
+            location,
+            employmentStatus,
+            startDate,
+            avatarUrl: null, // Would come from user profile
+            manager: null, // Would require additional lookup
+        };
+    });
+
+    // Apply filters
+    if (query) {
+        const lowerQuery = query.toLowerCase();
+        employees = employees.filter(
+            (employee) =>
+                employee.displayName.toLowerCase().includes(lowerQuery) ||
+                employee.email.toLowerCase().includes(lowerQuery) ||
+                Boolean(employee.jobTitle?.toLowerCase().includes(lowerQuery)) ||
+                Boolean(employee.department?.toLowerCase().includes(lowerQuery)),
+        );
+    }
+
+    if (department) {
+        employees = employees.filter((employee) => employee.department === department);
+    }
+
+    if (status) {
+        employees = employees.filter((employee) => employee.employmentStatus === status);
+    }
+
+    // Sort
+    employees.sort((a, b) => {
+        let aValue: string | Date | null = null;
+        let bValue: string | Date | null = null;
+
+        switch (sortBy) {
+            case 'firstName':
+                aValue = a.firstName;
+                bValue = b.firstName;
+                break;
+            case 'lastName':
+                aValue = a.lastName;
+                bValue = b.lastName;
+                break;
+            case 'department':
+                aValue = a.department ?? '';
+                bValue = b.department ?? '';
+                break;
+            case 'jobTitle':
+                aValue = a.jobTitle ?? '';
+                bValue = b.jobTitle ?? '';
+                break;
+            case 'startDate':
+                aValue = a.startDate;
+                bValue = b.startDate;
+                break;
+        }
+
+        if (aValue === null && bValue === null) { return 0; }
+        if (aValue === null) { return sortOrder === 'asc' ? 1 : -1; }
+        if (bValue === null) { return sortOrder === 'asc' ? -1 : 1; }
+
+        if (aValue instanceof Date && bValue instanceof Date) {
+            return sortOrder === 'asc'
+                ? aValue.getTime() - bValue.getTime()
+                : bValue.getTime() - aValue.getTime();
+        }
+
+        const comparison = String(aValue).localeCompare(String(bValue));
+        return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    // Paginate
+    const total = employees.length;
+    const totalPages = Math.ceil(total / pageSize);
+    const start = (page - 1) * pageSize;
+    const paginatedEmployees = employees.slice(start, start + pageSize);
+
+    return {
+        employees: paginatedEmployees,
+        total,
+        page,
+        pageSize,
+        totalPages,
+    };
+}
+
+/**
+ * Get filter options for employee directory
+ */
+export async function getEmployeeFilterOptions(): Promise<EmployeeFilterOptions> {
+    const headerStore = await headers();
+    const { authorization } = await getSessionContext(
+        {},
+        {
+            headers: headerStore,
+            requiredPermissions: { organization: ['read'] },
+            auditSource: 'action:hr:employees:filter-options',
+        },
+    );
+
+    const peopleService = getPeopleService();
+    const result = await peopleService.listEmployeeProfiles({
+        authorization,
+        payload: {},
+    });
+
+    // Extract unique departments and locations
+    const departments = new Set<string>();
+    const locations = new Set<string>();
+
+    for (const profile of result.profiles) {
+        if (profile.departmentId) { departments.add(profile.departmentId); }
+        if (profile.location && typeof profile.location === 'string') {
+            locations.add(profile.location);
+        }
+    }
+
+    return {
+        departments: Array.from(departments).sort(),
+        locations: Array.from(locations).sort(),
+        statuses: [
+            { value: 'ACTIVE', label: 'Active' },
+            { value: 'INACTIVE', label: 'Inactive' },
+            { value: 'ON_LEAVE', label: 'On Leave' },
+            { value: 'OFFBOARDING', label: 'Offboarding' },
+            { value: 'TERMINATED', label: 'Terminated' },
+            { value: 'ARCHIVED', label: 'Archived' },
+        ],
+    };
+}
+
+/**
+ * Get employee count stats
+ */
+export async function getEmployeeStats(): Promise<{
+    total: number;
+    active: number;
+    onLeave: number;
+    newThisMonth: number;
+}> {
+    const headerStore = await headers();
+    const { authorization } = await getSessionContext(
+        {},
+        {
+            headers: headerStore,
+            requiredPermissions: { organization: ['read'] },
+            auditSource: 'action:hr:employees:stats',
+        },
+    );
+
+    const peopleService = getPeopleService();
+    const result = await peopleService.listEmployeeProfiles({
+        authorization,
+        payload: {},
+    });
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return {
+        total: result.profiles.length,
+        active: result.profiles.filter((p) => p.employmentStatus === 'ACTIVE').length,
+        onLeave: result.profiles.filter((p) => p.employmentStatus === 'ON_LEAVE').length,
+        newThisMonth: result.profiles.filter((p) => {
+            if (!p.startDate) { return false; }
+            const startDate = p.startDate instanceof Date ? p.startDate : new Date(p.startDate);
+            return startDate >= startOfMonth;
+        }).length,
+    };
 }

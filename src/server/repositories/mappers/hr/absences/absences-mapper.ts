@@ -24,7 +24,7 @@ export function mapPrismaAbsenceTypeConfigToDomain(record: PrismaAbsenceTypeConf
     label: record.label,
     tracksBalance: record.tracksBalance,
     isActive: record.isActive,
-    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    metadata: record.metadata ?? undefined,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };
@@ -59,7 +59,7 @@ export function mapPrismaAbsenceSettingsToDomain(record: PrismaAbsenceSettings):
     orgId: record.orgId,
     hoursInWorkDay: Number(record.hoursInWorkDay),
     roundingRule: record.roundingRule ?? undefined,
-    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    metadata: record.metadata ?? undefined,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };
@@ -101,7 +101,7 @@ export function mapPrismaUnplannedAbsenceToDomain(
     approverUserId: record.approverUserId ?? undefined,
     dataClassification: record.dataClassification,
     residencyTag: record.residencyTag,
-    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    metadata: record.metadata ?? undefined,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
     attachments: record.attachments?.map(mapPrismaAbsenceAttachmentToDomain) ?? undefined,
@@ -192,7 +192,7 @@ function mapPrismaAbsenceAttachmentToDomain(record: PrismaAbsenceAttachment): Ab
     checksum: record.checksum ?? undefined,
     uploadedByUserId: record.uploadedByUserId,
     uploadedAt: record.uploadedAt,
-    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    metadata: record.metadata ?? undefined,
     dataClassification: record.dataClassification,
     residencyTag: record.residencyTag,
   };
@@ -206,7 +206,7 @@ function mapPrismaReturnRecordToDomain(record: PrismaAbsenceReturnRecord): Retur
     comments: record.comments ?? undefined,
     submittedByUserId: record.submittedByUserId,
     submittedAt: record.submittedAt,
-    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    metadata: record.metadata ?? undefined,
     dataClassification: record.dataClassification,
     residencyTag: record.residencyTag,
   };
@@ -221,7 +221,7 @@ function mapPrismaDeletionAuditToDomain(
     reason: record.reason,
     deletedByUserId: record.deletedByUserId,
     deletedAt: record.deletedAt,
-    metadata: record.metadata as Prisma.JsonValue | null | undefined ?? undefined,
+    metadata: record.metadata ?? undefined,
     dataClassification: record.dataClassification,
     residencyTag: record.residencyTag,
   };

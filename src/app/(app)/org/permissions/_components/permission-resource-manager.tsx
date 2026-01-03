@@ -42,6 +42,10 @@ export function PermissionResourceManager(props: { resources: PermissionResource
         }
     }, [pending, router, state.status]);
 
+    useEffect(() => {
+        formReference.current?.setAttribute('aria-busy', pending ? 'true' : 'false');
+    }, [pending]);
+
     const resourceError = state.fieldErrors?.resource;
     const actionsError = state.fieldErrors?.actions;
     const descriptionError = state.fieldErrors?.description;
@@ -150,7 +154,6 @@ export function PermissionResourceManager(props: { resources: PermissionResource
                 ref={formReference}
                 action={action}
                 className="space-y-4 rounded-xl border bg-[hsl(var(--muted)/0.2)] p-4"
-                aria-busy={pending}
             >
                 <div>
                     <p className="text-sm font-semibold text-[hsl(var(--foreground))]">Add resource</p>

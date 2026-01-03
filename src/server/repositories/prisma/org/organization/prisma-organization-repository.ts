@@ -7,10 +7,13 @@ import type {
 import type { OrganizationData } from '@/server/types/leave-types';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import { mapOrganizationToData } from '@/server/repositories/mappers/org/organization-mapper';
-import type { LeaveYearStartDate, OrganizationContactDetails } from '@/server/types/org/organization-settings';
+import type { LeaveYearStartDate } from '@/server/types/org/organization-settings';
 import { normalizeLeaveYearStartDate } from '@/server/types/org/leave-year-start-date';
 
 const ORGANIZATION_NOT_FOUND_MESSAGE = 'Organization not found';
+
+import { organizationContactDetailsSchema } from '@/server/validators/org/organization-validators';
+import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 
 function parseMonthDayToAnchorDate(value: LeaveYearStartDate): Date {
     const match = /^\d{2}-\d{2}$/.exec(value);
@@ -120,6 +123,17 @@ export class PrismaOrganizationRepository
             throw new Error('Invalid incorporationDate value');
         }
 
+        // Validate contact details if present
+        let contactDetailsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
+        if (updates.contactDetails !== undefined) {
+            if (updates.contactDetails === null) {
+                contactDetailsJson = Prisma.JsonNull;
+            } else {
+                const validatedContactDetails = organizationContactDetailsSchema.parse(updates.contactDetails);
+                contactDetailsJson = toPrismaInputJson(validatedContactDetails as unknown as Prisma.InputJsonValue);
+            }
+        }
+
         const next = await this.prisma.organization.update({
             where: { id: orgId },
             data: {
@@ -134,12 +148,7 @@ export class PrismaOrganizationRepository
                 incorporationDate,
                 registeredOfficeAddress:
                     updates.registeredOfficeAddress === undefined ? undefined : updates.registeredOfficeAddress,
-                contactDetails:
-                    updates.contactDetails === undefined
-                        ? undefined
-                        : updates.contactDetails === null
-                            ? Prisma.JsonNull
-                            : (updates.contactDetails as unknown as OrganizationContactDetails as Prisma.InputJsonValue),
+                contactDetails: contactDetailsJson,
             },
         });
 

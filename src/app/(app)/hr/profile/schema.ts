@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 const optionalText = (max: number) => z.string().trim().max(max);
 const optionalEmail = z.email().trim().max(200).or(z.literal(''));
-const optionalUrl = z.string().trim().url('Enter a valid URL.').or(z.literal(''));
+const optionalUrl = z
+    .string()
+    .trim()
+    .pipe(z.url({ message: 'Enter a valid URL.' }))
+    .or(z.literal(''));
 
 export const selfProfileFormSchema = z.object({
     profileId: z.uuid(),

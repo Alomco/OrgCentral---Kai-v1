@@ -63,6 +63,7 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
     const onboardingTemplateError = state.fieldErrors?.onboardingTemplateId;
 
     const feedbackReference = useRef<HTMLDivElement | null>(null);
+    const formReference = useRef<HTMLFormElement | null>(null);
     const previousStatus = useRef(state.status);
 
     useEffect(() => {
@@ -71,6 +72,10 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
         }
         previousStatus.current = state.status;
     }, [pending, state.status]);
+
+    useEffect(() => {
+        formReference.current?.setAttribute('aria-busy', pending ? 'true' : 'false');
+    }, [pending]);
 
     const initialIncludeTemplate = useMemo(
         () => state.values.includeTemplate ?? Boolean(state.values.onboardingTemplateId),
@@ -212,7 +217,7 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
             <CardContent className="space-y-4">
                 <InviteEmployeeFeedback state={state} feedbackReference={feedbackReference} />
 
-                <form action={action} className="space-y-4" aria-busy={pending}>
+                <form ref={formReference} action={action} className="space-y-4">
                     {formBody}
                 </form>
             </CardContent>

@@ -11,7 +11,7 @@ const toPrismaPriority = (priority: HRNotificationDTO['priority']): $Enums.Notif
   priority as $Enums.NotificationPriority;
 
 export function mapPrismaHRNotificationToDomain(record: PrismaHRNotification): HRNotificationDTO {
-  const metadata = record.metadata as Prisma.JsonValue | null | undefined;
+  const metadata = record.metadata;
   return {
     id: record.id,
     orgId: record.orgId,

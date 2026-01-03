@@ -43,6 +43,10 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
         }
     }, [pending, router, state.status]);
 
+    useEffect(() => {
+        formReference.current?.setAttribute('aria-busy', pending ? 'true' : 'false');
+    }, [pending]);
+
     const nameError = state.fieldErrors?.name;
     const categoryError = state.fieldErrors?.categoryKey;
     const versionError = state.fieldErrors?.version;
@@ -61,7 +65,6 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
                 ref={formReference}
                 action={action}
                 className="space-y-4"
-                aria-busy={pending}
             >
                 <fieldset disabled={pending} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">

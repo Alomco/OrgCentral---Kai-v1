@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { headers as nextHeaders } from 'next/headers';
+
+export const metadata: Metadata = {
+    title: 'HR Dashboard',
+    description: 'Your personal HR dashboard for managing tasks and viewing policies.',
+};
 import {
     Calendar,
     FileText,

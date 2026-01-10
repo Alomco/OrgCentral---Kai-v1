@@ -18,9 +18,7 @@ const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
 
 const PAY_SCHEDULE_LABELS: Record<string, string> = {
     MONTHLY: 'Monthly',
-    WEEKLY: 'Weekly',
-    BIWEEKLY: 'Bi-weekly',
-    ANNUAL: 'Annual',
+    BI_WEEKLY: 'Bi-weekly',
 };
 
 const LEAVE_TYPE_LABELS: Record<string, string> = {
@@ -50,7 +48,7 @@ function formatCurrency(amount: number, currency = 'GBP'): string {
 }
 
 function formatDate(dateString: string | undefined): string {
-    if (!dateString) {return '—';}
+    if (!dateString) {return 'N/A';}
     try {
         return new Date(dateString).toLocaleDateString('en-GB', {
             day: 'numeric',
@@ -99,7 +97,7 @@ function ReviewField({ label, value }: { label: string; value: React.ReactNode }
     return (
         <div className="flex justify-between py-1.5">
             <span className="text-sm text-muted-foreground">{label}</span>
-            <span className="text-sm font-medium">{value ?? '—'}</span>
+            <span className="text-sm font-medium">{value ?? 'N/A'}</span>
         </div>
     );
 }
@@ -224,14 +222,14 @@ export function ReviewStep({ values, checklistTemplates = [], onEditStep }: Revi
                 </CardHeader>
                 <CardContent>
                     <ul className="space-y-1.5 text-sm text-muted-foreground">
-                        <li>• An invitation email will be sent to <strong>{values.email}</strong></li>
-                        <li>• The employee will create an account and accept the invitation</li>
-                        <li>• Their profile will be set up with the configured details</li>
+                        <li>- An invitation email will be sent to <strong>{values.email}</strong></li>
+                        <li>- The employee will create an account and accept the invitation</li>
+                        <li>- Their profile will be set up with the configured details</li>
                         {values.includeTemplate && selectedTemplate && (
-                            <li>• The onboarding checklist will be assigned automatically</li>
+                            <li>- The onboarding checklist will be assigned automatically</li>
                         )}
                         {selectedLeaveTypes.length > 0 && (
-                            <li>• Leave balances will be initialized for the assigned leave types</li>
+                            <li>- Leave balances will be initialized for the assigned leave types</li>
                         )}
                     </ul>
                 </CardContent>

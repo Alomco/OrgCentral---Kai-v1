@@ -28,6 +28,7 @@ export type LeaveRequestMetadata = Prisma.JsonObject & {
     totalDays?: number;
     isHalfDay?: boolean;
     managerComments?: string | null;
+    departmentId?: string | null;
 };
 
 export type LeaveBalanceMetadata = Prisma.JsonObject & {
@@ -70,7 +71,7 @@ interface LeaveMapperConfig {
 }
 
 export function mapPrismaLeaveRequestToDomain(
-    record: PrismaLeaveRequest,
+    record: PrismaLeaveRequest & { _count?: { attachments?: number } },
     config?: LeaveMapperConfig,
 ): LeaveRequest {
     const metadata = cloneLeaveRequestMetadata(record.metadata);
@@ -93,6 +94,7 @@ export function mapPrismaLeaveRequestToDomain(
         isHalfDay: metadata.isHalfDay ?? false,
         coveringEmployeeId: metadata.coveringEmployee ?? undefined,
         coveringEmployeeName: metadata.coveringEmployee ?? undefined,
+        departmentId: metadata.departmentId ?? null,
         status: STATUS_TO_DOMAIN[record.status],
         createdAt: record.createdAt.toISOString(),
         createdBy: record.userId,
@@ -106,6 +108,7 @@ export function mapPrismaLeaveRequestToDomain(
         cancelledAt: undefined,
         cancellationReason: undefined,
         managerComments: metadata.managerComments ?? undefined,
+        attachmentCount: record._count?.attachments ?? 0,
     };
 }
 
@@ -139,6 +142,7 @@ export function buildLeaveRequestMetadata(input: {
     isHalfDay: boolean;
     managerComments?: string;
     leaveType: string;
+    departmentId?: string | null;
 }): LeaveRequestMetadata & { leaveType: string } {
     return {
         leaveType: input.leaveType,
@@ -148,6 +152,7 @@ export function buildLeaveRequestMetadata(input: {
         totalDays: input.totalDays,
         isHalfDay: input.isHalfDay,
         managerComments: input.managerComments,
+        departmentId: input.departmentId ?? null,
     } satisfies LeaveRequestMetadata & { leaveType: string };
 }
 

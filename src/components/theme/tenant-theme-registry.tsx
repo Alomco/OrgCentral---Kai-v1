@@ -1,13 +1,19 @@
 import type { ReactNode } from 'react';
 
-import { getTenantTheme, getTenantThemeWithContext, type TenantThemeCacheContext } from '@/server/theme/get-tenant-theme';
+import { getTenantTheme, type TenantThemeCacheContext } from '@/server/theme/get-tenant-theme';
 import { themeTokenKeys, type ThemeTokenKey, type ThemeTokenMap } from '@/server/theme/tokens';
 
-export interface TenantThemeRegistryProps {
-    orgId?: string | null;
-    cacheContext?: TenantThemeCacheContext;
-    children?: ReactNode;
-}
+export type TenantThemeRegistryProps =
+    | {
+        orgId: string;
+        cacheContext: TenantThemeCacheContext;
+        children?: ReactNode;
+    }
+    | {
+        orgId?: null;
+        cacheContext?: TenantThemeCacheContext;
+        children?: ReactNode;
+    };
 
 /**
  * All theme tokens that can be customized per tenant.
@@ -30,11 +36,13 @@ export async function TenantThemeRegistry({
     cacheContext,
     children,
 }: TenantThemeRegistryProps) {
-    const theme = cacheContext
-        ? await getTenantThemeWithContext(orgId, cacheContext)
-        : await getTenantTheme(orgId);
-
     const resolvedOrgId = orgId ?? 'default';
+
+    if (resolvedOrgId !== 'default' && !cacheContext) {
+        throw new Error('TenantThemeRegistry requires cacheContext when an orgId is provided.');
+    }
+
+    const theme = await getTenantTheme(resolvedOrgId === 'default' ? null : resolvedOrgId, cacheContext);
 
     const cssVariables = buildCssVariables(theme.tokens, tenantOverrideKeys);
     const darkCssVariables = buildCssVariables(theme.darkTokens, tenantOverrideKeys);

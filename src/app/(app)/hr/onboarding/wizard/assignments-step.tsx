@@ -97,7 +97,7 @@ export function AssignmentsStep({
                             >
                                 Select all
                             </button>
-                            <span className="text-xs text-muted-foreground">·</span>
+                            <span className="text-xs text-muted-foreground">|</span>
                             <button
                                 type="button"
                                 onClick={handleClearAllLeaveTypes}

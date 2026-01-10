@@ -75,10 +75,68 @@ export function ChartTooltipContent({
 
   const nestLabel = payload.length === 1 && indicator !== "dot"
 
+  const renderIndicator = (indicatorColor: string | undefined) => {
+    const resolvedColor = indicatorColor ?? "var(--foreground)"
+
+    if (indicator === "line") {
+      return (
+        <svg
+          aria-hidden="true"
+          focusable="false"
+          viewBox="0 0 12 10"
+          className="h-2.5 w-3"
+        >
+          <line
+            x1="1"
+            x2="11"
+            y1="5"
+            y2="5"
+            stroke={resolvedColor}
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      )
+    }
+
+    if (indicator === "dashed") {
+      return (
+        <svg
+          aria-hidden="true"
+          focusable="false"
+          viewBox="0 0 12 10"
+          className={cn("h-2.5 w-3", nestLabel && "my-0.5")}
+        >
+          <line
+            x1="1"
+            x2="11"
+            y1="5"
+            y2="5"
+            stroke={resolvedColor}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeDasharray="3 2"
+          />
+        </svg>
+      )
+    }
+
+    return (
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        viewBox="0 0 12 12"
+        className="h-2.5 w-2.5"
+      >
+        <circle cx="6" cy="6" r="5" fill={resolvedColor} stroke={resolvedColor} />
+      </svg>
+    )
+  }
+
   return (
     <div
       className={cn(
-        "border-border/50 bg-background grid min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl",
+        "border-border/50 bg-background grid min-w-32 max-w-[min(320px,calc(100vw-16px))] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl",
         className
       )}
     >
@@ -107,24 +165,7 @@ export function ChartTooltipContent({
                       <itemConfig.icon />
                     ) : (
                       !hideIndicator && (
-                        <div
-                          className={cn(
-                            "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                            {
-                              "h-2.5 w-2.5": indicator === "dot",
-                              "w-1": indicator === "line",
-                              "w-0 border-[1.5px] border-dashed bg-transparent":
-                                indicator === "dashed",
-                              "my-0.5": nestLabel && indicator === "dashed",
-                            }
-                          )}
-                          style={
-                            {
-                              "--color-bg": indicatorColor,
-                              "--color-border": indicatorColor,
-                            } as React.CSSProperties
-                          }
-                        />
+                        <>{renderIndicator(indicatorColor)}</>
                       )
                     )}
                     <div

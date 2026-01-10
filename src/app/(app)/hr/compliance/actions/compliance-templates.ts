@@ -1,13 +1,17 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { PrismaComplianceTemplateRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-template-repository';
 
 import { toFieldErrors } from '../../_components/form-errors';
+import {
+    COMPLIANCE_TEMPLATES_NOT_AUTHORIZED_MESSAGE,
+    COMPLIANCE_TEMPLATES_PATH,
+    FIELD_ERROR_MESSAGE,
+    getComplianceTemplateSession,
+} from './compliance-template-action-helpers';
 import {
     complianceTemplateCreateSchema,
     complianceTemplateUpdateSchema,
@@ -26,31 +30,13 @@ export type {
 } from '../compliance-template-form-utils';
 
 const complianceTemplateRepository = new PrismaComplianceTemplateRepository();
-const COMPLIANCE_TEMPLATES_PATH = '/hr/compliance';
-const FIELD_ERROR_MESSAGE = 'Check the highlighted fields and try again.';
-const COMPLIANCE_TEMPLATES_AUDIT_SOURCE_PREFIX = 'ui:hr:compliance:templates';
-const COMPLIANCE_TEMPLATE_RESOURCE_TYPE = 'hr.compliance.template';
-const COMPLIANCE_TEMPLATES_NOT_AUTHORIZED_MESSAGE = 'Not authorized to manage compliance templates.';
-const ORG_PERMISSION_UPDATE = 'update' as const;
 
 export async function createComplianceTemplateAction(
     previous: ComplianceTemplateCreateState,
     formData: FormData,
 ): Promise<ComplianceTemplateCreateState> {
-    let session: Awaited<ReturnType<typeof getSessionContext>>;
-    try {
-        const headerStore = await headers();
-        session = await getSessionContext(
-            {},
-            {
-                headers: headerStore,
-                requiredPermissions: { organization: [ORG_PERMISSION_UPDATE] },
-                auditSource: `${COMPLIANCE_TEMPLATES_AUDIT_SOURCE_PREFIX}:create`,
-                action: 'create',
-                resourceType: COMPLIANCE_TEMPLATE_RESOURCE_TYPE,
-            },
-        );
-    } catch {
+    const session = await getComplianceTemplateSession('create');
+    if (!session) {
         return {
             status: 'error',
             message: COMPLIANCE_TEMPLATES_NOT_AUTHORIZED_MESSAGE,
@@ -137,20 +123,8 @@ export async function updateComplianceTemplateAction(
     _previous: ComplianceTemplateInlineState,
     formData: FormData,
 ): Promise<ComplianceTemplateInlineState> {
-    let session: Awaited<ReturnType<typeof getSessionContext>>;
-    try {
-        const headerStore = await headers();
-        session = await getSessionContext(
-            {},
-            {
-                headers: headerStore,
-                requiredPermissions: { organization: [ORG_PERMISSION_UPDATE] },
-                auditSource: `${COMPLIANCE_TEMPLATES_AUDIT_SOURCE_PREFIX}:update`,
-                action: 'update',
-                resourceType: COMPLIANCE_TEMPLATE_RESOURCE_TYPE,
-            },
-        );
-    } catch {
+    const session = await getComplianceTemplateSession('update');
+    if (!session) {
         return {
             status: 'error',
             message: COMPLIANCE_TEMPLATES_NOT_AUTHORIZED_MESSAGE,
@@ -216,20 +190,8 @@ export async function deleteComplianceTemplateAction(
     _previous: ComplianceTemplateInlineState,
     formData: FormData,
 ): Promise<ComplianceTemplateInlineState> {
-    let session: Awaited<ReturnType<typeof getSessionContext>>;
-    try {
-        const headerStore = await headers();
-        session = await getSessionContext(
-            {},
-            {
-                headers: headerStore,
-                requiredPermissions: { organization: [ORG_PERMISSION_UPDATE] },
-                auditSource: `${COMPLIANCE_TEMPLATES_AUDIT_SOURCE_PREFIX}:delete`,
-                action: 'delete',
-                resourceType: COMPLIANCE_TEMPLATE_RESOURCE_TYPE,
-            },
-        );
-    } catch {
+    const session = await getComplianceTemplateSession('delete');
+    if (!session) {
         return {
             status: 'error',
             message: COMPLIANCE_TEMPLATES_NOT_AUTHORIZED_MESSAGE,

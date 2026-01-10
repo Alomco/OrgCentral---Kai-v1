@@ -29,6 +29,10 @@ export function buildInitialTimeEntryFormState(
             clockOut: values?.clockOut ?? '',
             breakDuration: values?.breakDuration ?? 0,
             project: values?.project ?? '',
+            projectCode: values?.projectCode ?? '',
+            tasks: values?.tasks ?? '',
+            billable: values?.billable ?? 'off',
+            overtimeReason: values?.overtimeReason ?? '',
             notes: values?.notes ?? '',
         },
     };

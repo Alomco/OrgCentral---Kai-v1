@@ -69,7 +69,7 @@ export function PolicyAdminUpdateForm(props: {
     const message = state.status === 'idle' ? null : state.message;
 
     return (
-        <form action={action} className="space-y-3" aria-busy={pending}>
+        <form action={action} className="space-y-3">
             <input type="hidden" name="policyId" value={props.policy.id} />
 
             <fieldset disabled={pending} className="space-y-3">

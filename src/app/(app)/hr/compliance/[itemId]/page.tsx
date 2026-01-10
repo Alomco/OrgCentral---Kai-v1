@@ -5,8 +5,6 @@ import {
     FileText,
     User,
     Clock,
-    CheckCircle,
-    AlertTriangle,
     Upload,
 } from 'lucide-react';
 
@@ -23,40 +21,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+import { formatDate, getStatusDetails } from './compliance-item-utils';
+
 const MOCK_DUE_DATE = new Date('2026-01-15T00:00:00Z');
 const MOCK_CREATED_AT = new Date('2025-12-01T00:00:00Z');
 
 interface ComplianceItemDetailPageProps {
     params: Promise<{ itemId: string }>;
-}
-
-function getStatusDetails(status: string): {
-    label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
-    icon: typeof CheckCircle;
-} {
-    switch (status) {
-        case 'COMPLETED':
-            return { label: 'Completed', variant: 'default', icon: CheckCircle };
-        case 'PENDING':
-            return { label: 'Pending', variant: 'secondary', icon: Clock };
-        case 'OVERDUE':
-            return { label: 'Overdue', variant: 'destructive', icon: AlertTriangle };
-        case 'EXPIRED':
-            return { label: 'Expired', variant: 'destructive', icon: AlertTriangle };
-        default:
-            return { label: status, variant: 'outline', icon: Clock };
-    }
-}
-
-function formatDate(date: Date | string | null | undefined): string {
-    if (!date) { return '—'; }
-    const d = date instanceof Date ? date : new Date(date);
-    return d.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-    });
 }
 
 export default async function ComplianceItemDetailPage({

@@ -1,4 +1,5 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
+import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { headers } from 'next/headers';
 
 import { registerOrgCacheTag } from '@/server/lib/cache-tags';
@@ -37,7 +38,7 @@ export async function getOrgProfile(context: OrgContext): Promise<OrgProfile> {
         orgId: string,
     ): Promise<OrgProfile> {
         'use cache';
-        cacheLife('minutes');
+        cacheLife(CACHE_LIFE_SHORT);
         registerOrgCacheTag(
             authorization.orgId,
             ORG_PROFILE_CACHE_SCOPE,

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 
 export const EMPLOYEE_DETAIL_TABS = [
     { id: 'overview', label: 'Overview' },
+    { id: 'timeline', label: 'Timeline' },
     { id: 'compliance', label: 'Compliance' },
     { id: 'time-off', label: 'Time off' },
     { id: 'development', label: 'Development' },

@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Paintbrush } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useRegisterDevelopmentAction } from './toolbar';
 
 export interface DevelopmentThemeWidgetProps {
     orgId: string;
@@ -102,56 +104,67 @@ export function DevelopmentThemeWidget({ orgId, enabled }: DevelopmentThemeWidge
         setPreset('server');
     }, []);
 
+    const component = useMemo(() => (
+        <div className="fixed bottom-4 right-20 z-(--z-dev-widget) animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="w-[320px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border bg-card text-foreground shadow-xl backdrop-blur">
+                <div className="flex items-start justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                            <div className="text-sm font-semibold">Dev theme</div>
+                            {badge}
+                        </div>
+                        <div className="mt-1 truncate text-xs text-muted-foreground">org {shortOrgId}</div>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon-sm" onClick={() => setOpen(false)} aria-label="Close dev theme widget">
+                        ×
+                    </Button>
+                </div>
+                <Separator />
+                <div className="space-y-3 px-4 py-3 text-sm">
+                    <label className="space-y-1">
+                        <div className="text-xs font-medium text-muted-foreground">Theme preset</div>
+                        <select
+                            className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                            value={preset}
+                            onChange={(event) => {
+                                const next = event.target.value === 'demo' ? 'demo' : 'server';
+                                setPreset(next);
+                            }}
+                        >
+                            <option value="server">Server (tenant)</option>
+                            <option value="demo">Demo override</option>
+                        </select>
+                    </label>
+
+                    <div className="flex items-center justify-between gap-2">
+                        <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
+                            Reset
+                        </Button>
+                        <div className="text-xs text-muted-foreground">Dev super admin only</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    ), [badge, shortOrgId, preset, handleReset]); // Memoized content
+
+    const action = useMemo(() => {
+        if (!visible) { return null; }
+        return {
+            id: "dev-theme",
+            label: "Dev Theme",
+            icon: <Paintbrush className="h-4 w-4" />,
+            onClick: () => setOpen(p => !p),
+            isActive: open,
+            order: 20,
+            component: component
+        };
+    }, [visible, open, component]);
+
+    useRegisterDevelopmentAction(action);
+
     if (!visible) {
         return null;
     }
 
-    return (
-        <div className="fixed bottom-4 right-4 z-50">
-            {open ? (
-                <div className="w-[320px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border bg-card text-foreground shadow-xl backdrop-blur">
-                    <div className="flex items-start justify-between gap-3 px-4 py-3">
-                        <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                                <div className="text-sm font-semibold">Dev theme</div>
-                                {badge}
-                            </div>
-                            <div className="mt-1 truncate text-xs text-muted-foreground">org {shortOrgId}</div>
-                        </div>
-                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => setOpen(false)} aria-label="Close dev theme widget">
-                            ×
-                        </Button>
-                    </div>
-                    <Separator />
-                    <div className="space-y-3 px-4 py-3 text-sm">
-                        <label className="space-y-1">
-                            <div className="text-xs font-medium text-muted-foreground">Theme preset</div>
-                            <select
-                                className="h-9 w-full rounded-md border bg-background px-2 text-sm"
-                                value={preset}
-                                onChange={(event) => {
-                                    const next = event.target.value === 'demo' ? 'demo' : 'server';
-                                    setPreset(next);
-                                }}
-                            >
-                                <option value="server">Server (tenant)</option>
-                                <option value="demo">Demo override</option>
-                            </select>
-                        </label>
-
-                        <div className="flex items-center justify-between gap-2">
-                            <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
-                                Reset
-                            </Button>
-                            <div className="text-xs text-muted-foreground">Dev super admin only</div>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <Button type="button" variant="secondary" onClick={() => setOpen(true)}>
-                    Dev theme
-                </Button>
-            )}
-        </div>
-    );
+    return null; // Rendered by DevToolbar
 }

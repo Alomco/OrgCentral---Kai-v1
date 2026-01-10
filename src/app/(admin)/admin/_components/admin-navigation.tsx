@@ -38,7 +38,7 @@ export function AdminNavigation(props: AdminNavigationProps) {
         .map(({ href, label }) => ({ href, label }));
 
     return (
-        <header className="sticky top-0 z-40 border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <header className="sticky top-0 [z-index:var(--z-sticky)] border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
             <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-6">
                 <div className="flex items-center gap-6">
                     <Link

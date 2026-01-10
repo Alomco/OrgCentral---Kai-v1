@@ -11,7 +11,7 @@ import { SessionRedirect } from '@/components/auth/SessionRedirect';
 export default function Home() {
   // Show landing page - SessionRedirect handles auth check in Suspense
   return (
-    <div className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+    <div className="bg-background text-foreground transition-colors duration-300">
       <Suspense fallback={null}>
         <SessionRedirect />
       </Suspense>

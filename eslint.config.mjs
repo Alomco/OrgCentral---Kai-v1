@@ -41,6 +41,7 @@ const eslintConfig = defineConfig([
   {
     files: ["**/*.{ts,tsx}"],
     rules: {
+      "max-lines": ["error", 250],
       "@typescript-eslint/consistent-type-imports": [
         "error",
         { prefer: "type-imports", fixStyle: "inline-type-imports" },
@@ -193,12 +194,14 @@ const eslintConfig = defineConfig([
     },
   },
   globalIgnores([
+    "node_modules/**", // vendor libraries stay untouched
+    "components.json", // shadcn-ui registry config
     ".next/**",
     ".tmp/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "src/components/ui/**",
+    "src/components/ui/**", // shadcn-ui generated components
     "src/hooks/use-mobile.ts",
     "**/*.test.*",
     "**/*.spec.*",

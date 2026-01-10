@@ -1,16 +1,11 @@
 import type { Prisma, Membership as PrismaMembership, Organization } from '@prisma/client';
 import { MembershipStatus } from '@prisma/client';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
-import {
-  getModelDelegate,
-  type PrismaClientBase,
-  buildMembershipMetadataJson,
-} from '@/server/repositories/prisma/helpers/prisma-utils';
+import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import type {
   IUserRepository,
   UserListFilters,
   UserPagedQuery,
-  UserSortInput,
 } from '@/server/repositories/contracts/org/users/user-repository-contract';
 import { mapPrismaUserToDomain } from '@/server/repositories/mappers/org/users/user-mapper';
 import { mapPrismaMembershipToDomain } from '@/server/repositories/mappers/org/membership/membership-mapper';
@@ -19,6 +14,14 @@ import type { User } from '@/server/types/hr-types';
 import type { Membership } from '@/server/types/membership';
 import type { UserFilters, UserCreationData, UserUpdateData } from './prisma-user-repository.types';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import {
+  addUserToOrganization as addUserToOrganizationTx,
+  countUsersInOrganization as countUsersInOrganizationTx,
+  getUsersInOrganization as getUsersInOrganizationTx,
+  getUsersInOrganizationPaged as getUsersInOrganizationPagedTx,
+  removeUserFromOrganization as removeUserFromOrganizationTx,
+  upsertUserMemberships as upsertUserMembershipsTx,
+} from './prisma-user-repository.memberships';
 
 export class PrismaUserRepository extends OrgScopedPrismaRepository implements IUserRepository {
 
@@ -133,37 +136,7 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
   }
 
   async updateUserMemberships(context: RepositoryAuthorizationContext, userId: string, memberships: Membership[]): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      for (const mem of memberships) {
-        if (mem.organizationId !== context.orgId) {
-          continue;
-        }
-
-        const primaryRoleId = await resolvePrimaryRoleId(tx, context.orgId, mem.roles);
-        const now = new Date();
-
-        await getModelDelegate(tx, 'membership').upsert({
-          where: { orgId_userId: { orgId: context.orgId, userId } as Prisma.MembershipOrgIdUserIdCompoundUniqueInput },
-          update: {
-            roleId: primaryRoleId ?? undefined,
-            metadata: buildMembershipMetadataJson(context.tenantScope),
-            updatedBy: context.userId,
-          },
-          create: {
-            orgId: context.orgId,
-            userId,
-            status: MembershipStatus.ACTIVE,
-            roleId: primaryRoleId ?? undefined,
-            metadata: buildMembershipMetadataJson(context.tenantScope),
-            invitedBy: null,
-            invitedAt: now,
-            activatedAt: now,
-            createdBy: context.userId,
-            updatedBy: context.userId,
-          },
-        });
-      }
-    });
+    await upsertUserMembershipsTx(this.prisma, context, userId, memberships);
   }
 
   async addUserToOrganization(
@@ -173,64 +146,15 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     organizationName: string,
     roles: string[],
   ): Promise<void> {
-    void organizationName;
-    if (organizationId !== context.orgId) {
-      return;
-    }
-    const primaryRoleId = await resolvePrimaryRoleId(this.prisma, organizationId, roles);
-    await getModelDelegate(this.prisma, 'membership').upsert({
-      where: { orgId_userId: { orgId: organizationId, userId } as Prisma.MembershipOrgIdUserIdCompoundUniqueInput },
-      create: {
-        orgId: organizationId,
-        userId,
-        status: MembershipStatus.ACTIVE,
-        roleId: primaryRoleId ?? undefined,
-        metadata: buildMembershipMetadataJson(context.tenantScope),
-        createdBy: context.userId,
-      },
-      update: {
-        roleId: primaryRoleId ?? undefined,
-        metadata: buildMembershipMetadataJson(context.tenantScope),
-        updatedBy: context.userId,
-      },
-    });
+    await addUserToOrganizationTx(this.prisma, context, userId, organizationId, organizationName, roles);
   }
 
   async removeUserFromOrganization(context: RepositoryAuthorizationContext, userId: string, organizationId: string): Promise<void> {
-    if (organizationId !== context.orgId) {
-      return;
-    }
-    await getModelDelegate(this.prisma, 'membership').delete({
-      where: { orgId_userId: { orgId: organizationId, userId } as Prisma.MembershipOrgIdUserIdCompoundUniqueInput },
-    });
+    await removeUserFromOrganizationTx(this.prisma, context, userId, organizationId);
   }
 
   async getUsersInOrganization(context: RepositoryAuthorizationContext, organizationId: string): Promise<UserData[]> {
-    if (organizationId !== context.orgId) {
-      return [];
-    }
-    const memberships = await getModelDelegate(this.prisma, 'membership').findMany({
-      where: { orgId: organizationId },
-      include: { user: true, role: { select: { name: true } } },
-    });
-    const results: UserData[] = [];
-    for (const mem of memberships) {
-      const user = mem.user;
-      const domainUser = mapPrismaUserToDomain(user);
-      const domainMembership: Membership = mapPrismaMembershipToDomain(mem);
-      results.push({
-        id: domainUser.id,
-        email: domainUser.email,
-        displayName: domainUser.displayName ?? '',
-        roles: [],
-        memberships: [domainMembership],
-        memberOf: [domainMembership.organizationId],
-        rolesByOrg: { [domainMembership.organizationId]: domainMembership.roles },
-        createdAt: domainUser.createdAt.toISOString(),
-        updatedAt: domainUser.updatedAt.toISOString(),
-      });
-    }
-    return results;
+    return getUsersInOrganizationTx(this.prisma, context, organizationId);
   }
 
   async countUsersInOrganization(
@@ -238,13 +162,7 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     organizationId: string,
     filters?: UserListFilters,
   ): Promise<number> {
-    if (organizationId !== context.orgId) {
-      return 0;
-    }
-    const whereClause = buildUserMembershipWhere(organizationId, filters);
-    return getModelDelegate(this.prisma, 'membership').count({
-      where: whereClause,
-    });
+    return countUsersInOrganizationTx(this.prisma, context, organizationId, filters);
   }
 
   async getUsersInOrganizationPaged(
@@ -252,117 +170,7 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     organizationId: string,
     query: UserPagedQuery,
   ): Promise<UserData[]> {
-    if (organizationId !== context.orgId) {
-      return [];
-    }
-
-    const safePage = Math.max(1, Math.floor(query.page));
-    const safePageSize = Math.max(1, Math.floor(query.pageSize));
-    const skip = (safePage - 1) * safePageSize;
-
-    const memberships = await getModelDelegate(this.prisma, 'membership').findMany({
-      where: buildUserMembershipWhere(organizationId, query),
-      include: { user: true, role: { select: { name: true } } },
-      orderBy: buildUserMembershipOrderBy(query.sort),
-      skip,
-      take: safePageSize,
-    });
-
-    const results: UserData[] = [];
-    for (const mem of memberships) {
-      const user = mem.user;
-      const domainUser = mapPrismaUserToDomain(user);
-      const domainMembership: Membership = mapPrismaMembershipToDomain(mem as PrismaMembership & { org?: Organization | null });
-      results.push({
-        id: domainUser.id,
-        email: domainUser.email,
-        displayName: domainUser.displayName ?? '',
-        roles: [],
-        memberships: [domainMembership],
-        memberOf: [domainMembership.organizationId],
-        rolesByOrg: { [domainMembership.organizationId]: domainMembership.roles },
-        createdAt: domainUser.createdAt.toISOString(),
-        updatedAt: domainUser.updatedAt.toISOString(),
-      });
-    }
-    return results;
+    return getUsersInOrganizationPagedTx(this.prisma, context, organizationId, query);
   }
 }
 
-async function resolvePrimaryRoleId(
-  prisma: PrismaClientBase,
-  orgId: string,
-  roles: string[],
-): Promise<string | null> {
-  if (!roles.length) {
-    return null;
-  }
-  const roleName = roles[0];
-  const role = await getModelDelegate(prisma, 'role').findUnique({
-    where: { orgId_name: { orgId, name: roleName } },
-    select: { id: true },
-  });
-  return role?.id ?? null;
-}
-
-function buildUserMembershipWhere(
-  organizationId: string,
-  filters?: UserListFilters,
-): Prisma.MembershipWhereInput {
-  const searchValue = filters?.search?.trim() ?? '';
-  const roleValue = filters?.role?.trim() ?? '';
-  const whereClause: Prisma.MembershipWhereInput = {
-    orgId: organizationId,
-  };
-
-  if (filters?.status) {
-    whereClause.status = filters.status;
-  }
-
-  if (roleValue) {
-    whereClause.role = { name: roleValue };
-  }
-
-  if (searchValue) {
-    whereClause.user = {
-      OR: [
-        { email: { contains: searchValue, mode: 'insensitive' } },
-        { displayName: { contains: searchValue, mode: 'insensitive' } },
-      ],
-    };
-  }
-
-  return whereClause;
-}
-
-function buildUserMembershipOrderBy(
-  sort?: UserSortInput,
-): Prisma.MembershipOrderByWithRelationInput[] {
-  const direction = sort?.direction ?? 'asc';
-
-  if (!sort) {
-    return [{ user: { email: 'asc' } }];
-  }
-
-  switch (sort.key) {
-    case 'name':
-      return [
-        { user: { displayName: direction } },
-        { user: { email: 'asc' } },
-      ];
-    case 'email':
-      return [{ user: { email: direction } }];
-    case 'status':
-      return [
-        { status: direction },
-        { user: { email: 'asc' } },
-      ];
-    case 'role':
-      return [
-        { role: { name: direction } },
-        { user: { email: 'asc' } },
-      ];
-    default:
-      return [{ user: { email: 'asc' } }];
-  }
-}

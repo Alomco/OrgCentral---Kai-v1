@@ -36,7 +36,7 @@ export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps
     return (
         <div className="space-y-6">
             {/* 🎨 Theme Preset Selector */}
-            <Card className="overflow-hidden border-0 bg-linear-to-br from-white/90 to-white/70 shadow-xl backdrop-blur-xl dark:from-slate-900/90 dark:to-slate-900/70">
+            <Card className="overflow-hidden border-0 bg-background/80 shadow-xl backdrop-blur-xl">
                 <CardHeader className="border-b border-[hsl(var(--primary)/0.1)] bg-linear-to-r from-[hsl(var(--primary)/0.05)] to-transparent">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white shadow-lg">
@@ -59,7 +59,7 @@ export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps
                                         'hover:border-[hsl(var(--primary)/0.5)] hover:shadow-lg hover:shadow-[hsl(var(--primary)/0.1)]',
                                         currentPresetId === preset.id
                                             ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary)/0.05)] shadow-md'
-                                            : 'border-[hsl(var(--border))] bg-white/50 dark:bg-slate-800/50',
+                                            : 'border-[hsl(var(--border))] bg-card/50',
                                     )}
                                 >
                                     <input
@@ -104,7 +104,7 @@ export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps
             </Card>
 
             {/* 🎯 Custom Color Overrides */}
-            <Card className="overflow-hidden border-0 bg-linear-to-br from-white/90 to-white/70 shadow-xl backdrop-blur-xl dark:from-slate-900/90 dark:to-slate-900/70">
+            <Card className="overflow-hidden border-0 bg-background/80 shadow-xl backdrop-blur-xl">
                 <CardHeader className="border-b border-[hsl(var(--accent)/0.1)] bg-linear-to-r from-[hsl(var(--accent)/0.05)] to-transparent">
                     <CardTitle className="text-lg">Custom Colors</CardTitle>
                     <CardDescription>Fine-tune individual colors (HSL format: &quot;262 83% 58%&quot;)</CardDescription>

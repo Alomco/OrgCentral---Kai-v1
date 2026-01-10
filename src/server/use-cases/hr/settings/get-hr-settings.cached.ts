@@ -1,5 +1,6 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
+import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { IHRSettingsRepository } from '@/server/repositories/contracts/hr/settings/hr-settings-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
@@ -26,7 +27,7 @@ export async function getHrSettingsForUi(input: GetHrSettingsCachedInput): Promi
         cachedInput: GetHrSettingsCachedInput,
     ): Promise<GetHrSettingsCachedResult> {
         'use cache';
-        cacheLife('minutes');
+        cacheLife(CACHE_LIFE_SHORT);
 
         registerHrSettingsCacheTag(cachedInput.authorization);
 

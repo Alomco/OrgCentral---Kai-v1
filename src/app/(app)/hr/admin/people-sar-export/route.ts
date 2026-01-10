@@ -6,8 +6,6 @@ import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resou
 import { runPeopleSarExportJob } from '@/server/services/hr/people/sar/people-sar.jobs';
 import type { PeopleSarExportOptions, SarExportFormat } from '@/server/services/hr/people/sar/people-sar-exporter.types';
 
-export const dynamic = 'force-dynamic';
-
 function parseBoolean(value: string | null, fallback: boolean): boolean {
     if (value === null) {
         return fallback;

@@ -71,7 +71,7 @@ export function EmployeeLifecycleEligibilityCard({
                                         <span>
                                             <span className="font-medium">{policy.name}</span>
                                             <span className="block text-xs text-muted-foreground">
-                                                {policy.policyType.replace(/_/g, ' ').toLowerCase()}
+                                                Type code: {policy.policyType}
                                             </span>
                                         </span>
                                     </label>

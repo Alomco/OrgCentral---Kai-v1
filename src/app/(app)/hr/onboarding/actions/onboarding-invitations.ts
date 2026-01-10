@@ -1,7 +1,6 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
@@ -10,6 +9,9 @@ import { CACHE_SCOPE_ONBOARDING_INVITATIONS } from '@/server/repositories/cache-
 import { PrismaOnboardingInvitationRepository } from '@/server/repositories/prisma/hr/onboarding';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { revokeOnboardingInvitation } from '@/server/use-cases/hr/onboarding/invitations/revoke-onboarding-invitation';
+import { getInvitationEmailDependencies } from '@/server/use-cases/notifications/invitation-email.provider';
+import { resendInvitationEmail } from '@/server/use-cases/notifications/resend-invitation-email';
+import { isInvitationDeliverySuccessful } from '@/server/use-cases/notifications/invitation-email.helpers';
 
 import type { OnboardingRevokeInviteFormState } from '../form-state';
 
@@ -23,7 +25,16 @@ const revokeInviteSchema = z.object({
     reason: z.string().trim().min(1).optional(),
 });
 
+const resendInviteSchema = z.object({
+    token: z.string().trim().min(1),
+});
+
 const onboardingInvitationRepository = new PrismaOnboardingInvitationRepository();
+
+export type ResendOnboardingInvitationActionState =
+    | { status: 'idle' }
+    | { status: 'success'; message: string; invitationUrl: string }
+    | { status: 'error'; message: string };
 
 export async function revokeOnboardingInvitationAction(
     previous: OnboardingRevokeInviteFormState,
@@ -84,12 +95,77 @@ export async function revokeOnboardingInvitationAction(
             session.authorization.dataResidency,
         );
 
-        redirect('/hr/onboarding');
+        return {
+            status: 'success',
+            message: 'Invitation revoked.',
+            values: previous.values,
+        };
     } catch {
         return {
             status: 'error',
             message: 'Unable to revoke invitation.',
             values: previous.values,
         };
+    }
+}
+
+export async function resendOnboardingInvitationAction(
+    _previous: ResendOnboardingInvitationActionState,
+    formData: FormData,
+): Promise<ResendOnboardingInvitationActionState> {
+    void _previous;
+
+    const parsed = resendInviteSchema.safeParse({
+        token: readFormString(formData, 'token'),
+    });
+
+    if (!parsed.success) {
+        return { status: 'error', message: 'Invalid invitation request.' };
+    }
+
+    try {
+        const headerStore = await headers();
+        const { authorization } = await getSessionContext(
+            {},
+            {
+                headers: headerStore,
+                requiredPermissions: { member: ['invite'] },
+                auditSource: 'ui:hr:onboarding:invitations:resend',
+                resourceType: 'hr.onboarding',
+                action: 'resend',
+                resourceAttributes: { token: parsed.data.token },
+            },
+        );
+
+        const dependencies = getInvitationEmailDependencies();
+        const result = await resendInvitationEmail(dependencies, {
+            authorization,
+            invitationToken: parsed.data.token,
+        });
+
+        if (!isInvitationDeliverySuccessful(result.delivery)) {
+            return {
+                status: 'error',
+                message: result.delivery.status === 'skipped'
+                    ? result.delivery.detail ?? 'Email delivery is not configured.'
+                    : 'Invitation email could not be delivered.',
+            };
+        }
+
+        await invalidateOrgCache(
+            authorization.orgId,
+            CACHE_SCOPE_ONBOARDING_INVITATIONS,
+            authorization.dataClassification,
+            authorization.dataResidency,
+        );
+
+        return {
+            status: 'success',
+            message: 'Invitation email resent.',
+            invitationUrl: result.invitationUrl,
+        };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unable to resend invitation.';
+        return { status: 'error', message };
     }
 }

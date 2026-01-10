@@ -40,9 +40,8 @@ export default async function HrOnboardingPage() {
     });
 
     const canInviteMembers =
-        authorization.roleKey === 'hrAdmin' &&
-        (hasPermission(authorization.permissions, 'member', 'invite') ||
-            hasPermission(authorization.permissions, 'organization', 'update'));
+        hasPermission(authorization.permissions, 'member', 'invite') ||
+        hasPermission(authorization.permissions, 'organization', 'update');
     const canManageTemplates = hasPermission(authorization.permissions, 'organization', 'update');
 
     if (!canInviteMembers && !canManageTemplates) {

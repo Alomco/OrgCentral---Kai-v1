@@ -34,14 +34,16 @@ export function ProfilePermissionsCard({
         .sort((a, b) => a.resource.localeCompare(b.resource));
 
     return (
-        <Card className={cn(className)}>
+        <Card className={cn("glass-card", className)} data-ui-surface="container">
             <CardHeader>
                 <CardTitle>Role and access</CardTitle>
                 <CardDescription>Role scope, tenancy, and permission coverage.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{authorization.roleKey}</Badge>
+                    <Badge variant="secondary" className="bg-[hsl(var(--primary)/0.1)] text-primary hover:bg-[hsl(var(--primary)/0.2)]">
+                        {authorization.roleKey}
+                    </Badge>
                     {roleName ? <Badge variant="outline">{roleName}</Badge> : null}
                     {profileRoles.map((role) => (
                         <Badge key={role} variant="outline">{role}</Badge>
@@ -49,26 +51,26 @@ export function ProfilePermissionsCard({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <Badge variant="outline">Org {authorization.orgId}</Badge>
-                    <Badge variant="outline">{authorization.dataResidency}</Badge>
-                    <Badge variant="outline">{authorization.dataClassification}</Badge>
+                    <Badge variant="outline" className="opacity-70">Org {authorization.orgId}</Badge>
+                    <Badge variant="outline" className="opacity-70">{authorization.dataResidency}</Badge>
+                    <Badge variant="outline" className="opacity-70">{authorization.dataClassification}</Badge>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 pt-2">
                     {permissionEntries.length === 0 ? (
                         <div className="text-muted-foreground">No permissions assigned.</div>
                     ) : (
                         permissionEntries.map((entry) => (
                             <div
                                 key={entry.resource}
-                                className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-border/60 px-3 py-2"
+                                className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[hsl(var(--border)/var(--ui-border-opacity))] bg-[hsl(var(--background)/0.3)] px-3 py-2"
                             >
                                 <div className="text-xs font-medium text-muted-foreground">
                                     {formatResource(entry.resource)}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {entry.actions.map((action) => (
-                                        <Badge key={`${entry.resource}:${action}`} variant="secondary">
+                                        <Badge key={`${entry.resource}:${action}`} variant="secondary" className="text-[10px] h-5">
                                             {action}
                                         </Badge>
                                     ))}

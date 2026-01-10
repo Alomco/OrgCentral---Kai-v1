@@ -3,6 +3,7 @@ import { Briefcase } from 'lucide-react';
 
 import type { OrgPermissionMap } from '@/server/security/access-control';
 import { hasPermission } from '@/lib/security/permission-check';
+import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 
 import { HrNavigationLinks, HrUserInfo } from './hr-navigation-links';
 
@@ -15,6 +16,7 @@ const HR_NAVIGATION_ITEMS = [
     { href: '/hr/training', label: 'Training', audience: 'member' },
     { href: '/hr/performance', label: 'Performance', audience: 'member' },
     { href: '/hr/policies', label: 'Policies', audience: 'member' },
+    { href: '/hr/reports', label: 'Reports', audience: 'admin' },
     { href: '/hr/compliance', label: 'Compliance', audience: 'compliance' },
     { href: '/hr/employees', label: 'Employees', audience: 'admin' },
     { href: '/hr/onboarding', label: 'Onboarding', audience: 'onboarding' },
@@ -62,12 +64,15 @@ export function HrNavigation(props: {
                     <HrNavigationLinks items={items} />
                 </div>
 
-                {/* Right: User Info */}
-                <HrUserInfo
-                    organizationLabel={props.organizationLabel}
-                    userEmail={props.userEmail}
-                    roleKey={props.roleKey}
-                />
+                {/* Right: Theme + User Info */}
+                <div className="flex items-center gap-2">
+                    <ThemeSwitcher />
+                    <HrUserInfo
+                        organizationLabel={props.organizationLabel}
+                        userEmail={props.userEmail}
+                        roleKey={props.roleKey}
+                    />
+                </div>
             </div>
         </header>
     );

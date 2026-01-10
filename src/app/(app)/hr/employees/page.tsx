@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { headers as nextHeaders } from 'next/headers';
 import Link from 'next/link';
-import { Users, Briefcase, Clock, TrendingUp } from 'lucide-react';
+import { Users, Briefcase, Clock, TrendingUp, Download } from 'lucide-react';
 
 import {
     Breadcrumb,
@@ -13,6 +13,7 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 
@@ -56,6 +57,14 @@ export default async function HrEmployeesPage() {
                 title="Employees"
                 description="Manage your organization's employee records and workforce data"
                 icon={<Users className="h-5 w-5" />}
+                actions={(
+                    <Button asChild variant="outline" size="sm">
+                        <Link href="/hr/employees/export">
+                            <Download className="mr-2 h-4 w-4" />
+                            Export CSV
+                        </Link>
+                    </Button>
+                )}
             />
 
             {/* Stats Overview */}

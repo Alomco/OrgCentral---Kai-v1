@@ -1,5 +1,6 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
+import { CACHE_LIFE_LONG } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import { AuthorizationError } from '@/server/errors';
 import type { IChecklistTemplateRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-template-repository-contract';
@@ -51,7 +52,7 @@ export async function getChecklistTemplatesForUi(
         cachedInput: GetChecklistTemplatesForUiInput,
     ): Promise<GetChecklistTemplatesForUiResult> {
         'use cache';
-        cacheLife('hours');
+        cacheLife(CACHE_LIFE_LONG);
 
         registerOrgCacheTag(
             cachedInput.authorization.orgId,

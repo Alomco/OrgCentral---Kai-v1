@@ -15,8 +15,6 @@ import {
     formatEmploymentType,
 } from '../_components/employee-formatters';
 
-export const dynamic = 'force-dynamic';
-
 function formatCsvDate(value: Date | string | null | undefined): string {
     if (!value) {
         return '';

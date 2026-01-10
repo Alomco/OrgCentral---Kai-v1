@@ -1,5 +1,6 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
+import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_HR_POLICIES } from '@/server/repositories/cache-scopes';
@@ -26,7 +27,7 @@ function resolvePolicyRepository(): IHRPolicyRepository {
 export async function getHrPolicyForUi(input: GetHrPolicyForUiInput): Promise<GetHrPolicyForUiResult> {
     async function getPolicyCached(cachedInput: GetHrPolicyForUiInput): Promise<GetHrPolicyForUiResult> {
         'use cache';
-        cacheLife('minutes');
+        cacheLife(CACHE_LIFE_SHORT);
 
         registerOrgCacheTag(
             cachedInput.authorization.orgId,

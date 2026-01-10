@@ -25,12 +25,19 @@ export class PrismaPerformanceRepository extends BasePrismaRepository implements
     private readonly orgId: string;
     private readonly reviews: ReviewDelegate;
     private readonly goals: GoalDelegate;
-    private static readonly DEFAULT_CLASSIFICATION: DataClassificationLevel = 'OFFICIAL';
-    private static readonly DEFAULT_RESIDENCY: DataResidencyZone = 'UK_ONLY';
+    private readonly classification: DataClassificationLevel;
+    private readonly residency: DataResidencyZone;
 
-    constructor(orgId: string, options: BasePrismaRepositoryOptions = {}) {
+    constructor(
+        orgId: string,
+        classification: DataClassificationLevel,
+        residency: DataResidencyZone,
+        options: BasePrismaRepositoryOptions = {},
+    ) {
         super(options);
         this.orgId = orgId;
+        this.classification = classification;
+        this.residency = residency;
         this.reviews = this.prisma.performanceReview;
         this.goals = this.prisma.performanceGoal;
     }
@@ -45,8 +52,8 @@ export class PrismaPerformanceRepository extends BasePrismaRepository implements
         registerOrgCacheTag(
             this.orgId,
             reviewScope,
-            PrismaPerformanceRepository.DEFAULT_CLASSIFICATION,
-            PrismaPerformanceRepository.DEFAULT_RESIDENCY,
+            this.classification,
+            this.residency,
         );
         return mapPrismaPerformanceReviewToDomain(record);
     }
@@ -61,8 +68,8 @@ export class PrismaPerformanceRepository extends BasePrismaRepository implements
         registerOrgCacheTag(
             this.orgId,
             reviewScope,
-            PrismaPerformanceRepository.DEFAULT_CLASSIFICATION,
-            PrismaPerformanceRepository.DEFAULT_RESIDENCY,
+            this.classification,
+            this.residency,
         );
         return records.map(mapPrismaPerformanceReviewToDomain);
     }
@@ -82,8 +89,8 @@ export class PrismaPerformanceRepository extends BasePrismaRepository implements
         registerOrgCacheTag(
             this.orgId,
             goalScope,
-            PrismaPerformanceRepository.DEFAULT_CLASSIFICATION,
-            PrismaPerformanceRepository.DEFAULT_RESIDENCY,
+            this.classification,
+            this.residency,
         );
 
         return records.map(mapPrismaPerformanceGoalToDomain);

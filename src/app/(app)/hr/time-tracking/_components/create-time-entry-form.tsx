@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useId } from 'react';
+import { useActionState, useId, useRef } from 'react';
 import { AlertCircle, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
@@ -24,6 +25,7 @@ export function CreateTimeEntryForm({ authorization, initialState }: CreateTimeE
     const formId = useId();
     const boundAction = createTimeEntryAction.bind(null, authorization);
     const [state, formAction, isPending] = useActionState(boundAction, initialState);
+    const billableReference = useRef<HTMLInputElement | null>(null);
 
     const isSuccess = state.status === 'success';
     const isError = state.status === 'error';
@@ -92,13 +94,13 @@ export function CreateTimeEntryForm({ authorization, initialState }: CreateTimeE
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor={`${formId}-break`}>Break (minutes)</Label>
+                            <Label htmlFor={`${formId}-break`}>Break (hours)</Label>
                             <Input
                                 id={`${formId}-break`}
                                 name="breakDuration"
                                 type="number"
                                 min="0"
-                                step="5"
+                                step="0.25"
                                 defaultValue={state.values.breakDuration}
                             />
                         </div>
@@ -112,6 +114,62 @@ export function CreateTimeEntryForm({ authorization, initialState }: CreateTimeE
                                 defaultValue={state.values.project}
                             />
                         </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor={`${formId}-projectCode`}>Project code (optional)</Label>
+                            <Input
+                                id={`${formId}-projectCode`}
+                                name="projectCode"
+                                placeholder="Budget or cost center"
+                                defaultValue={state.values.projectCode}
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
+                            <div className="space-y-1">
+                                <Label htmlFor={`${formId}-billable`}>Billable time</Label>
+                                <p className="text-xs text-muted-foreground">Marks work that is client billable.</p>
+                            </div>
+                            <input
+                                ref={billableReference}
+                                type="hidden"
+                                name="billable"
+                                value={state.values.billable}
+                            />
+                            <Switch
+                                id={`${formId}-billable`}
+                                defaultChecked={state.values.billable === 'on'}
+                                onCheckedChange={(checked) => {
+                                    if (billableReference.current) {
+                                        billableReference.current.value = checked ? 'on' : 'off';
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor={`${formId}-tasks`}>Tasks (optional)</Label>
+                        <Textarea
+                            id={`${formId}-tasks`}
+                            name="tasks"
+                            rows={2}
+                            placeholder="Design review, API testing, client sync"
+                            defaultValue={state.values.tasks}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor={`${formId}-overtimeReason`}>Overtime reason (optional)</Label>
+                        <Textarea
+                            id={`${formId}-overtimeReason`}
+                            name="overtimeReason"
+                            rows={2}
+                            placeholder="Explain overtime if applicable"
+                            defaultValue={state.values.overtimeReason}
+                        />
                     </div>
 
                     <div className="space-y-2">

@@ -51,7 +51,7 @@ export const onboardingJobStepSchema = z.object({
         ),
     annualSalary: z.coerce.number().min(0, 'Salary must be positive').optional(),
     currency: z.string().length(3, 'Currency must be a 3-letter code').optional(),
-    paySchedule: z.enum(['MONTHLY', 'WEEKLY', 'BIWEEKLY', 'ANNUAL']).optional(),
+    paySchedule: z.enum(['MONTHLY', 'BI_WEEKLY']).optional(),
     managerEmployeeNumber: z.string().trim().max(64).optional(),
 });
 
@@ -64,6 +64,14 @@ export const onboardingAssignmentsStepSchema = z.object({
     eligibleLeaveTypes: z.array(z.string().trim().min(1)).max(20).optional(),
     onboardingTemplateId: z.uuid().optional(),
     includeTemplate: z.preprocess(booleanFromFormValue, z.boolean()).optional(),
+}).superRefine((values, context) => {
+    if (values.includeTemplate && !values.onboardingTemplateId) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Select a checklist template or turn off the toggle.',
+            path: ['onboardingTemplateId'],
+        });
+    }
 });
 
 export type OnboardingAssignmentsStepValues = z.infer<typeof onboardingAssignmentsStepSchema>;
@@ -89,6 +97,14 @@ export const onboardingWizardSchema = z.object({
     eligibleLeaveTypes: onboardingAssignmentsStepSchema.shape.eligibleLeaveTypes,
     onboardingTemplateId: onboardingAssignmentsStepSchema.shape.onboardingTemplateId,
     includeTemplate: onboardingAssignmentsStepSchema.shape.includeTemplate,
+}).superRefine((values, context) => {
+    if (values.includeTemplate && !values.onboardingTemplateId) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Select a checklist template or turn off the toggle.',
+            path: ['onboardingTemplateId'],
+        });
+    }
 });
 
 export type OnboardingWizardValues = z.infer<typeof onboardingWizardSchema>;

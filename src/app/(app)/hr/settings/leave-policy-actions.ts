@@ -1,12 +1,10 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { LEAVE_POLICY_TYPES } from '@/server/types/leave-types';
 
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import {
     PrismaLeaveBalanceRepository,
     PrismaLeavePolicyRepository,
@@ -19,6 +17,11 @@ import {
 } from '@/server/use-cases/hr/leave-policies/update-leave-policy';
 import { deleteLeavePolicy } from '@/server/use-cases/hr/leave-policies/delete-leave-policy';
 import { toFieldErrors } from '../_components/form-errors';
+import {
+    HR_SETTINGS_PATH,
+    NOT_AUTHORIZED_TO_MANAGE_LEAVE_POLICIES_MESSAGE,
+    getLeavePolicySession,
+} from './leave-policy-action-helpers';
 import {
     createLeavePolicySchema,
     defaultCreateValues,
@@ -37,9 +40,6 @@ const leavePolicyRepository = new PrismaLeavePolicyRepository();
 const leaveBalanceRepository = new PrismaLeaveBalanceRepository();
 const leaveRequestRepository = new PrismaLeaveRequestRepository();
 
-const NOT_AUTHORIZED_TO_MANAGE_LEAVE_POLICIES_MESSAGE = 'Not authorized to manage leave policies.';
-const HR_SETTINGS_PATH = '/hr/settings';
-
 function coerceLeavePolicyType(
     value: string,
     fallback: (typeof LEAVE_POLICY_TYPES)[number],
@@ -51,18 +51,8 @@ export async function createLeavePolicyAction(
     previous: LeavePolicyCreateState,
     formData: FormData,
 ): Promise<LeavePolicyCreateState> {
-    let session: Awaited<ReturnType<typeof getSessionContext>>;
-    try {
-        const headerStore = await headers();
-        session = await getSessionContext(
-            {},
-            {
-                headers: headerStore,
-                requiredPermissions: { organization: ['update'] },
-                auditSource: 'ui:hr:leave-policies:create',
-            },
-        );
-    } catch {
+    const session = await getLeavePolicySession('create');
+    if (!session) {
         return {
             status: 'error',
             message: NOT_AUTHORIZED_TO_MANAGE_LEAVE_POLICIES_MESSAGE,
@@ -128,18 +118,8 @@ export async function updateLeavePolicyAction(
     _previous: LeavePolicyInlineState,
     formData: FormData,
 ): Promise<LeavePolicyInlineState> {
-    let session: Awaited<ReturnType<typeof getSessionContext>>;
-    try {
-        const headerStore = await headers();
-        session = await getSessionContext(
-            {},
-            {
-                headers: headerStore,
-                requiredPermissions: { organization: ['update'] },
-                auditSource: 'ui:hr:leave-policies:update',
-            },
-        );
-    } catch {
+    const session = await getLeavePolicySession('update');
+    if (!session) {
         return {
             status: 'error',
             message: NOT_AUTHORIZED_TO_MANAGE_LEAVE_POLICIES_MESSAGE,
@@ -217,18 +197,8 @@ export async function deleteLeavePolicyAction(
     _previous: LeavePolicyInlineState,
     formData: FormData,
 ): Promise<LeavePolicyInlineState> {
-    let session: Awaited<ReturnType<typeof getSessionContext>>;
-    try {
-        const headerStore = await headers();
-        session = await getSessionContext(
-            {},
-            {
-                headers: headerStore,
-                requiredPermissions: { organization: ['update'] },
-                auditSource: 'ui:hr:leave-policies:delete',
-            },
-        );
-    } catch {
+    const session = await getLeavePolicySession('delete');
+    if (!session) {
         return {
             status: 'error',
             message: NOT_AUTHORIZED_TO_MANAGE_LEAVE_POLICIES_MESSAGE,

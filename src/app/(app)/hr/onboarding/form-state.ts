@@ -7,6 +7,7 @@ export interface OnboardingInviteFormState {
     status: OnboardingInviteFormStatus;
     message?: string;
     token?: string;
+    invitationUrl?: string;
     fieldErrors?: FieldErrors<OnboardingInviteFormValues>;
     values: OnboardingInviteFormValues;
 }
@@ -17,7 +18,7 @@ export function buildInitialOnboardingInviteFormState(
     return { status: 'idle', values };
 }
 
-export type OnboardingRevokeInviteFormStatus = 'idle' | 'error';
+export type OnboardingRevokeInviteFormStatus = 'idle' | 'success' | 'error';
 
 export interface OnboardingRevokeInviteFormValues {
     token: string;

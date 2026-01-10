@@ -1,8 +1,13 @@
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getLeaveRequestsForUi } from '@/server/use-cases/hr/leave/get-leave-requests.cached';
+import { LeaveRequestAttachments } from './leave-request-attachments';
+import { appLogger } from '@/server/logging/structured-logger';
+import { LeaveRequestActions } from './leave-request-actions';
+import { canApproveLeave, canManageLeave } from '@/server/security/authorization/hr-guards/leave';
 
 import { formatHumanDate } from '../../_components/format-date';
 import { leaveRequestStatusBadgeVariant } from '../../_components/hr-badge-variants';
@@ -12,6 +17,12 @@ export interface LeaveRequestsPanelProps {
     employeeId?: string;
     title?: string;
     description?: string;
+    approverChain?: {
+        primary: string;
+        fallback?: string;
+        slaDays?: number;
+        notes?: string;
+    };
 }
 
 function formatDate(value: string): string {
@@ -28,9 +39,11 @@ export async function LeaveRequestsPanel({
     employeeId,
     title,
     description,
+    approverChain,
 }: LeaveRequestsPanelProps) {
     const resolvedTitle = title ?? 'Requests';
     const resolvedDescription = description ?? 'Recent leave requests linked to your profile.';
+    const slaDaysLabel = approverChain?.slaDays ? approverChain.slaDays.toLocaleString() : null;
 
     if (!employeeId) {
         return (
@@ -43,8 +56,23 @@ export async function LeaveRequestsPanel({
         );
     }
 
-    const result = await getLeaveRequestsForUi({ authorization, employeeId });
-    const requests = result.requests;
+    let requests: Awaited<ReturnType<typeof getLeaveRequestsForUi>>['requests'] = [];
+    let loadError: string | null = null;
+    try {
+        const result = await getLeaveRequestsForUi({ authorization, employeeId });
+        requests = result.requests;
+    } catch (error) {
+        loadError = error instanceof Error ? error.message : 'Unable to load leave requests.';
+        appLogger.error('hr.leave.requests.load.failed', {
+            orgId: authorization.orgId,
+            employeeId,
+            error: loadError,
+        });
+        requests = [];
+    }
+
+    const approver = canApproveLeave(authorization);
+    const manager = canManageLeave(authorization);
 
     return (
         <Card>
@@ -53,8 +81,16 @@ export async function LeaveRequestsPanel({
                 <CardDescription>{resolvedDescription}</CardDescription>
             </CardHeader>
             <CardContent>
+                {loadError ? (
+                    <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                        {loadError}
+                    </div>
+                ) : null}
                 {requests.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">No leave requests yet.</div>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                        <div>No leave requests yet. Submit a request on the left to track status and approvals here.</div>
+                        <div className="text-xs">You will see submission time, approver SLA, and evidence links once created.</div>
+                    </div>
                 ) : (
                     <div className="overflow-auto">
                         <Table>
@@ -64,7 +100,10 @@ export async function LeaveRequestsPanel({
                                     <TableHead>Dates</TableHead>
                                     <TableHead className="text-right">Days</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead>Evidence</TableHead>
                                     <TableHead>Submitted</TableHead>
+                                    <TableHead>Approver/SLA</TableHead>
+                                    {(approver || manager) && <TableHead className="text-right">Actions</TableHead>}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -82,9 +121,43 @@ export async function LeaveRequestsPanel({
                                                 {request.status}
                                             </Badge>
                                         </TableCell>
+                                        <TableCell>
+                                            <LeaveRequestAttachments authorization={authorization} requestId={request.id} />
+                                        </TableCell>
                                         <TableCell className="text-muted-foreground">
                                             {request.submittedAt ? formatDate(request.submittedAt) : '—'}
                                         </TableCell>
+                                        <TableCell>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Badge variant="outline">
+                                                            {approverChain?.primary ?? 'Manager'}
+                                                            {slaDaysLabel ? ` · ${slaDaysLabel}d SLA` : ''}
+                                                        </Badge>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>
+                                                            Primary approver: {approverChain?.primary ?? 'manager'}
+                                                            {approverChain?.fallback ? ` (fallback ${approverChain.fallback})` : ''}.
+                                                            {slaDaysLabel ? ` Target decision: ${slaDaysLabel} business days.` : ''}
+                                                        </p>
+                                                        {approverChain?.notes ? <p className="text-xs text-muted-foreground mt-1">{approverChain.notes}</p> : null}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </TableCell>
+                                        {(approver || manager) && (
+                                            <TableCell className="text-right">
+                                                <LeaveRequestActions
+                                                    requestId={request.id}
+                                                    status={request.status}
+                                                    isActor={request.userId === authorization.userId}
+                                                    canApprove={approver}
+                                                    canManage={manager}
+                                                />
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 ))}
                             </TableBody>

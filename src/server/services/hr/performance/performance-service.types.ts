@@ -9,7 +9,7 @@ import type {
 
 export interface PerformanceServiceDependencies {
     /** Factory so repositories stay tenant-scoped and mockable in tests. */
-    repositoryFactory: (orgId: string) => PerformanceRepository;
+    repositoryFactory: (authorization: RepositoryAuthorizationContext) => PerformanceRepository;
 }
 
 export interface GetPerformanceReviewInput {

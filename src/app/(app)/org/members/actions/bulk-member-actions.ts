@@ -30,6 +30,7 @@ export async function bulkMemberAction(
     formData: FormData,
 ): Promise<MemberActionState> {
     void _previous;
+    const requestId = randomUUID();
     const headerStore = await headers();
 
     const userIds = formData
@@ -45,11 +46,11 @@ export async function bulkMemberAction(
     });
 
     if (!parsed.success) {
-        return { status: 'error', message: 'Select at least one member and a bulk action.' };
+        return { status: 'error', message: 'Select at least one member and a bulk action.', requestId };
     }
 
     if (parsed.data.intent === BULK_MEMBER_INTENT_UPDATE_ROLES && !parsed.data.roles) {
-        return { status: 'error', message: 'Select a role for bulk updates.' };
+        return { status: 'error', message: 'Select a role for bulk updates.', requestId };
     }
 
     const { authorization } = await getSessionContext(
@@ -90,11 +91,13 @@ export async function bulkMemberAction(
         return {
             status: 'error',
             message: `Updated ${String(successCount)} members; ${String(failureCount)} failed.`,
+            requestId,
         };
     }
 
     return {
         status: 'success',
         message: `Updated ${String(successCount)} members.`,
+        requestId,
     };
 }

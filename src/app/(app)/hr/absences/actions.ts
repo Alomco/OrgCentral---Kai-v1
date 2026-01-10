@@ -8,6 +8,8 @@ import { getAbsenceService } from '@/server/services/hr/absences/absence-service
 import type { CancelAbsenceFormState, ReportAbsenceFormState } from './form-state';
 import { cancelAbsenceSchema, reportAbsenceSchema } from './schema';
 
+const ABSENCES_PATH = '/hr/absences';
+
 function formDataString(value: FormDataEntryValue | null): string {
     return typeof value === 'string' ? value : '';
 }
@@ -61,7 +63,7 @@ export async function reportAbsenceAction(
             },
         });
 
-        revalidatePath('/hr/absences');
+        revalidatePath(ABSENCES_PATH);
 
         return {
             status: 'success',
@@ -116,7 +118,7 @@ export async function cancelAbsenceAction(
             payload: { reason: parsed.data.reason },
         });
 
-        revalidatePath('/hr/absences');
+        revalidatePath(ABSENCES_PATH);
 
         return {
             status: 'success',
@@ -131,5 +133,41 @@ export async function cancelAbsenceAction(
             values: parsed.data,
         };
     }
+}
+
+export async function approveAbsenceAction(
+    authorization: RepositoryAuthorizationContext,
+    absenceId: string,
+    comments?: string,
+): Promise<void> {
+    const service = getAbsenceService();
+    await service.approveAbsence({
+        authorization,
+        absenceId,
+        payload: {
+            status: 'APPROVED',
+            reason: comments?.trim() ? comments.trim() : undefined,
+        },
+    });
+
+    revalidatePath(ABSENCES_PATH);
+}
+
+export async function rejectAbsenceAction(
+    authorization: RepositoryAuthorizationContext,
+    absenceId: string,
+    reason: string,
+): Promise<void> {
+    const service = getAbsenceService();
+    await service.approveAbsence({
+        authorization,
+        absenceId,
+        payload: {
+            status: 'REJECTED',
+            reason: reason.trim(),
+        },
+    });
+
+    revalidatePath(ABSENCES_PATH);
 }
 

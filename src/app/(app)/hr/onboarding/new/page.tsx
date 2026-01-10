@@ -16,9 +16,12 @@ import {
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 import { hasPermission } from '@/lib/security/permission-check';
 import { getChecklistTemplatesForUi } from '@/server/use-cases/hr/onboarding/templates/get-checklist-templates.cached';
+import { listEmployeeDirectoryForUi } from '@/server/use-cases/hr/people/list-employee-directory.cached';
+import type { EmployeeProfile } from '@/server/types/hr-types';
 
 import { HrPageHeader } from '../../_components/hr-page-header';
 import { OnboardingWizardPanel } from '../_components/onboarding-wizard-panel';
+import type { ManagerOption } from '../wizard/wizard.types';
 
 function WizardSkeleton() {
     return (
@@ -27,6 +30,40 @@ function WizardSkeleton() {
             <Skeleton className="h-[400px] w-full" />
         </div>
     );
+}
+
+function buildManagerOptions(profiles: EmployeeProfile[]): ManagerOption[] {
+    const options = profiles
+        .filter((profile) => profile.employeeNumber.trim().length > 0)
+        .map((profile) => ({
+            employeeNumber: profile.employeeNumber,
+            displayName: resolveManagerLabel(profile),
+            email: profile.email ?? profile.personalEmail ?? null,
+        }));
+
+    return options.sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
+function resolveManagerLabel(profile: EmployeeProfile): string {
+    const displayName = profile.displayName?.trim();
+    if (displayName) {
+        return displayName;
+    }
+
+    const name = [profile.firstName, profile.lastName]
+        .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
+        .join(' ')
+        .trim();
+    if (name) {
+        return name;
+    }
+
+    const email = profile.email?.trim() ?? profile.personalEmail?.trim();
+    if (email) {
+        return email;
+    }
+
+    return profile.employeeNumber;
 }
 
 export default async function OnboardingWizardPage() {
@@ -38,15 +75,26 @@ export default async function OnboardingWizardPage() {
     });
 
     const canInviteMembers =
-        authorization.roleKey === 'hrAdmin' &&
-        (hasPermission(authorization.permissions, 'member', 'invite') ||
-            hasPermission(authorization.permissions, 'organization', 'update'));
+        hasPermission(authorization.permissions, 'member', 'invite') ||
+        hasPermission(authorization.permissions, 'organization', 'update');
 
     if (!canInviteMembers) {
         redirect('/access-denied');
     }
 
     const templatesResult = await getChecklistTemplatesForUi({ authorization });
+    let managers: ManagerOption[] = [];
+    try {
+        const managerResult = await listEmployeeDirectoryForUi({
+            authorization,
+            page: 1,
+            pageSize: 200,
+            filters: { employmentStatus: 'ACTIVE' },
+        });
+        managers = buildManagerOptions(managerResult.profiles);
+    } catch {
+        managers = [];
+    }
 
     return (
         <div className="space-y-6">
@@ -80,6 +128,7 @@ export default async function OnboardingWizardPage() {
                 <Suspense fallback={<WizardSkeleton />}>
                     <OnboardingWizardPanel
                         checklistTemplates={templatesResult.templates}
+                        managers={managers}
                         canManageTemplates={templatesResult.canManageTemplates}
                     />
                 </Suspense>

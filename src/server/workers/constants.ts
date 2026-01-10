@@ -8,6 +8,7 @@ export const WORKER_QUEUE_NAMES = {
     HR_TRAINING_REMINDER: 'hr-training-reminder',
     HR_ONBOARDING_REMINDER: 'hr-onboarding-reminder',
     HR_PEOPLE_RETENTION: 'hr-people-retention',
+    HR_INTEGRATIONS_SYNC: 'hr-integrations-sync',
     NOTIFICATIONS_DISPATCH: 'notifications-dispatcher',
     ORG_ROLE_UPDATES: 'org-role-updates',
 } as const;
@@ -22,6 +23,7 @@ export const WORKER_CACHE_SCOPES = {
     HR_ONBOARDING: 'hr:onboarding',
     NOTIFICATIONS: 'notifications',
     PEOPLE_RETENTION: 'hr:people:retention',
+    HR_INTEGRATIONS: 'hr:integrations',
 } as const satisfies Record<string, CacheScope>;
 
 export type WorkerCacheScope = (typeof WORKER_CACHE_SCOPES)[keyof typeof WORKER_CACHE_SCOPES];

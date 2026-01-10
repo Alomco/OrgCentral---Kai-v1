@@ -1,5 +1,6 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
+import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { TimeEntry } from '@/server/types/hr-ops-types';
@@ -21,7 +22,7 @@ export async function getTimeEntriesForUi(
         cachedInput: GetTimeEntriesForUiInput,
     ): Promise<GetTimeEntriesForUiResult> {
         'use cache';
-        cacheLife('minutes');
+        cacheLife(CACHE_LIFE_SHORT);
 
         const service = getTimeTrackingService();
         const result = await service.listTimeEntries({

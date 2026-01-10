@@ -2,10 +2,6 @@ import { PerformanceService, type PerformanceServiceDependencies } from './perfo
 import { PrismaPerformanceRepository } from '@/server/repositories/prisma/hr/performance';
 import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
-import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
-
-const DEFAULT_CLASSIFICATION: DataClassificationLevel = 'OFFICIAL';
-const DEFAULT_RESIDENCY: DataResidencyZone = 'UK_ONLY';
 
 export interface PerformanceServiceProviderOptions {
     overrides?: Partial<PerformanceServiceDependencies>;
@@ -18,8 +14,10 @@ export function getPerformanceService(options: PerformanceServiceProviderOptions
     const prismaOptions = options.prismaOptions;
 
     const defaults: PerformanceServiceDependencies = {
-        repositoryFactory: (orgId: string) =>
-            new PrismaPerformanceRepository(orgId, {
+        repositoryFactory: (authorization) => {
+            const { orgId, dataClassification, dataResidency } = authorization;
+
+            return new PrismaPerformanceRepository(orgId, dataClassification, dataResidency, {
                 ...(prismaOptions ?? {}),
                 onAfterWrite: prismaOptions?.onAfterWrite ?? (async (tenantId: string, scopes?: string[]) => {
                     if (!scopes?.length) {
@@ -27,11 +25,12 @@ export function getPerformanceService(options: PerformanceServiceProviderOptions
                     }
                     await Promise.all(
                         scopes.map((scope) =>
-                            invalidateOrgCache(tenantId, scope, DEFAULT_CLASSIFICATION, DEFAULT_RESIDENCY),
+                            invalidateOrgCache(tenantId, scope, dataClassification, dataResidency),
                         ),
                     );
                 }),
-            }),
+            });
+        },
     };
 
     if (!options.overrides || Object.keys(options.overrides).length === 0) {

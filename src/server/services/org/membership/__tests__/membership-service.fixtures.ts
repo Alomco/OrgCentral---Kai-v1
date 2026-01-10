@@ -1,3 +1,7 @@
+/**
+ * TODO: Refactor this file (currently > 250 LOC).
+ * Action: Split into smaller modules and ensure adherence to SOLID principles, Dependency Injection, and Design Patterns.
+ */
 import type { IInvitationRepository, InvitationCreateInput, InvitationRecord, InvitationStatusUpdate } from '@/server/repositories/contracts/auth/invitations';
 import type { IMembershipRepository, MembershipCreationInput, MembershipCreationResult } from '@/server/repositories/contracts/org/membership';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';

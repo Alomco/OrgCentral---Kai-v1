@@ -79,6 +79,34 @@ export {
 } from './submit-leave-request';
 
 export {
+    addLeaveAttachments,
+    type AddLeaveAttachmentsDependencies,
+    type AddLeaveAttachmentsInput,
+    type AddLeaveAttachmentsResult,
+} from './add-leave-attachments';
+
+export {
+    listLeaveAttachments,
+    type ListLeaveAttachmentsDependencies,
+    type ListLeaveAttachmentsInput,
+    type ListLeaveAttachmentsResult,
+} from './list-leave-attachments';
+
+export {
+    getLeaveAttachment,
+    type GetLeaveAttachmentDependencies,
+    type GetLeaveAttachmentInput,
+    type GetLeaveAttachmentResult,
+} from './get-leave-attachment';
+
+export {
+    presignLeaveAttachmentDownload,
+    type PresignLeaveAttachmentDownloadDependencies,
+    type PresignLeaveAttachmentDownloadInput,
+    type PresignLeaveAttachmentDownloadResult,
+} from './presign-leave-attachment-download';
+
+export {
     createLeaveBalanceWithPolicy,
     type CreateLeaveBalanceDependencies,
     type CreateLeaveBalanceInput,

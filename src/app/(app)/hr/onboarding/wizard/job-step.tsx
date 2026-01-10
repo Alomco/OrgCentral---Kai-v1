@@ -7,27 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FieldError } from '../../_components/field-error';
 import type { OnboardingWizardValues } from './wizard.schema';
 import type { FieldErrors } from '../../_components/form-errors';
+import type { ManagerOption } from './wizard.types';
+import { ManagerSelect } from './manager-select';
 
-const EMPLOYMENT_TYPES = [
-    { value: 'FULL_TIME', label: 'Full-time' },
-    { value: 'PART_TIME', label: 'Part-time' },
-    { value: 'CONTRACT', label: 'Contract' },
-    { value: 'TEMPORARY', label: 'Temporary' },
-    { value: 'INTERN', label: 'Intern' },
-] as const;
-
-const PAY_SCHEDULES = [
-    { value: 'MONTHLY', label: 'Monthly' },
-    { value: 'WEEKLY', label: 'Weekly' },
-    { value: 'BIWEEKLY', label: 'Bi-weekly' },
-    { value: 'ANNUAL', label: 'Annual' },
-] as const;
-
-const CURRENCIES = [
-    { value: 'GBP', label: 'GBP (£)' },
-    { value: 'USD', label: 'USD ($)' },
-    { value: 'EUR', label: 'EUR (€)' },
-] as const;
+import { CURRENCIES, EMPLOYMENT_TYPES, PAY_SCHEDULES } from './job-step-options';
 
 export interface Department {
     id: string;
@@ -39,6 +22,7 @@ export interface JobStepProps {
     fieldErrors?: FieldErrors<OnboardingWizardValues>;
     onValuesChange: (updates: Partial<OnboardingWizardValues>) => void;
     departments?: Department[];
+    managers?: ManagerOption[];
     disabled?: boolean;
 }
 
@@ -47,6 +31,7 @@ export function JobStep({
     fieldErrors,
     onValuesChange,
     departments = [],
+    managers = [],
     disabled = false,
 }: JobStepProps) {
     const jobTitleError = fieldErrors?.jobTitle;
@@ -154,24 +139,13 @@ export function JobStep({
                         <FieldError id="wizard-startDate-error" message={startDateError} />
                     </div>
 
-                    <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor="wizard-managerEmployeeNumber">Manager (employee number)</Label>
-                        <Input
-                            id="wizard-managerEmployeeNumber"
-                            type="text"
-                            value={values.managerEmployeeNumber ?? ''}
-                            onChange={(event) => onValuesChange({ managerEmployeeNumber: event.target.value || undefined })}
-                            aria-invalid={Boolean(managerError)}
-                            aria-describedby={managerError ? 'wizard-managerEmployeeNumber-error' : undefined}
-                            disabled={disabled}
-                            placeholder="EMP-MGR-001"
-                            className="sm:max-w-xs"
-                        />
-                        <FieldError id="wizard-managerEmployeeNumber-error" message={managerError} />
-                        <p className="text-xs text-muted-foreground">
-                            The employee number of this person&apos;s direct manager.
-                        </p>
-                    </div>
+                    <ManagerSelect
+                        value={values.managerEmployeeNumber}
+                        error={managerError}
+                        managers={managers}
+                        disabled={disabled}
+                        onChange={(value) => onValuesChange({ managerEmployeeNumber: value })}
+                    />
                 </div>
             </div>
 

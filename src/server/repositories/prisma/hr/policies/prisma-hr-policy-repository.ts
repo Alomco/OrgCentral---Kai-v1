@@ -6,10 +6,6 @@ import type { HRPolicy } from '@/server/types/hr-ops-types';
 import { AuthorizationError } from '@/server/errors';
 import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_HR_POLICIES } from '@/server/repositories/cache-scopes';
-import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
-
-const DEFAULT_CLASSIFICATION: DataClassificationLevel = 'OFFICIAL';
-const DEFAULT_RESIDENCY: DataResidencyZone = 'UK_ONLY';
 
 export class PrismaHRPolicyRepository extends BasePrismaRepository implements IHRPolicyRepository {
   async createPolicy(
@@ -53,7 +49,9 @@ export class PrismaHRPolicyRepository extends BasePrismaRepository implements IH
     if (!rec) {
       return null;
     }
-    registerOrgCacheTag(orgId, CACHE_SCOPE_HR_POLICIES, rec.dataClassification, rec.residencyTag);
+    if (rec.dataClassification === 'OFFICIAL') {
+      registerOrgCacheTag(orgId, CACHE_SCOPE_HR_POLICIES, rec.dataClassification, rec.residencyTag);
+    }
     return mapPrismaHRPolicyToDomain(rec);
   }
 
@@ -62,18 +60,18 @@ export class PrismaHRPolicyRepository extends BasePrismaRepository implements IH
     if (filters?.status) { where.status = filters.status; }
     if (filters?.category) { where.category = filters.category; }
     const recs = await this.prisma.hRPolicy.findMany({ where, orderBy: { effectiveDate: 'desc' } });
-    if (recs.length === 0) {
-      registerOrgCacheTag(orgId, CACHE_SCOPE_HR_POLICIES, DEFAULT_CLASSIFICATION, DEFAULT_RESIDENCY);
-      return [];
-    }
+
     for (const policy of recs) {
-      registerOrgCacheTag(
-        orgId,
-        CACHE_SCOPE_HR_POLICIES,
-        policy.dataClassification,
-        policy.residencyTag,
-      );
+      if (policy.dataClassification === 'OFFICIAL') {
+        registerOrgCacheTag(
+          orgId,
+          CACHE_SCOPE_HR_POLICIES,
+          policy.dataClassification,
+          policy.residencyTag,
+        );
+      }
     }
+
     return recs.map(mapPrismaHRPolicyToDomain);
   }
 }

@@ -35,7 +35,7 @@ export default function LandingNav() {
         <header
             className={cn(
                 landingFont.className,
-                "fixed top-0 w-full z-50 py-4 transition-all duration-300",
+                "fixed top-0 w-full [z-index:var(--z-sticky)] py-4 transition-all duration-300",
                 isScrolled && "bg-slate-50/95 backdrop-blur-xl border-b border-slate-200/20 shadow-sm"
             )}
         >

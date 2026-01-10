@@ -2,6 +2,8 @@
 
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getTimeTrackingService } from '@/server/services/hr/time-tracking/time-tracking-service.provider';
+import { revalidatePath } from 'next/cache';
+import { calculateTotalHours } from '@/server/use-cases/hr/time-tracking/utils';
 
 import type { TimeEntryFormState } from './form-state';
 import { createTimeEntrySchema } from './schema';
@@ -21,6 +23,10 @@ export async function createTimeEntryAction(
         clockOut: formData.get('clockOut'),
         breakDuration: formData.get('breakDuration'),
         project: formData.get('project'),
+        projectCode: formData.get('projectCode'),
+        tasks: formData.get('tasks'),
+        billable: formData.get('billable'),
+        overtimeReason: formData.get('overtimeReason'),
         notes: formData.get('notes'),
     };
 
@@ -42,6 +48,10 @@ export async function createTimeEntryAction(
                 clockOut: formDataString(raw.clockOut),
                 breakDuration: Number(raw.breakDuration ?? 0),
                 project: formDataString(raw.project),
+                projectCode: formDataString(raw.projectCode),
+                tasks: formDataString(raw.tasks),
+                billable: formDataString(raw.billable) === 'on' ? 'on' : 'off',
+                overtimeReason: formDataString(raw.overtimeReason),
                 notes: formDataString(raw.notes),
             },
         };
@@ -54,6 +64,17 @@ export async function createTimeEntryAction(
         const clockOutTime = parsed.data.clockOut
             ? new Date(`${dateString}T${parsed.data.clockOut}:00`)
             : undefined;
+        const tasks = parsed.data.tasks
+            ? parsed.data.tasks
+                .split(',')
+                .map((value) => value.trim())
+                .filter(Boolean)
+            : undefined;
+        const breakDurationHours = parsed.data.breakDuration ?? 0;
+        const totalHours = clockOutTime
+            ? calculateTotalHours(clockInTime, clockOutTime, breakDurationHours)
+            : undefined;
+        const overtimeHours = totalHours ? Math.max(0, totalHours - 8) : 0;
 
         await service.createTimeEntry({
             authorization,
@@ -62,9 +83,17 @@ export async function createTimeEntryAction(
                 date: new Date(dateString),
                 clockIn: clockInTime,
                 clockOut: clockOutTime,
-                breakDuration: parsed.data.breakDuration ?? 0,
+                breakDuration: breakDurationHours,
+                totalHours,
                 project: parsed.data.project,
+                tasks,
                 notes: parsed.data.notes,
+                metadata: {
+                    billable: parsed.data.billable === 'on',
+                    projectCode: parsed.data.projectCode ?? null,
+                    overtimeHours: overtimeHours > 0 ? Number(overtimeHours.toFixed(2)) : null,
+                    overtimeReason: parsed.data.overtimeReason ?? null,
+                },
             },
         });
 
@@ -77,6 +106,10 @@ export async function createTimeEntryAction(
                 clockOut: '',
                 breakDuration: 0,
                 project: '',
+                projectCode: '',
+                tasks: '',
+                billable: 'off',
+                overtimeReason: '',
                 notes: '',
             },
         };
@@ -88,4 +121,40 @@ export async function createTimeEntryAction(
             values: parsed.data,
         };
     }
+}
+
+export async function approveTimeEntryAction(
+    authorization: RepositoryAuthorizationContext,
+    entryId: string,
+    comments?: string,
+): Promise<void> {
+    const service = getTimeTrackingService();
+    await service.approveTimeEntry({
+        authorization,
+        entryId,
+        payload: {
+            status: 'APPROVED',
+            comments: comments?.trim() ? comments.trim() : undefined,
+        },
+    });
+
+    revalidatePath('/hr/time-tracking');
+}
+
+export async function rejectTimeEntryAction(
+    authorization: RepositoryAuthorizationContext,
+    entryId: string,
+    comments?: string,
+): Promise<void> {
+    const service = getTimeTrackingService();
+    await service.approveTimeEntry({
+        authorization,
+        entryId,
+        payload: {
+            status: 'REJECTED',
+            comments: comments?.trim() ? comments.trim() : undefined,
+        },
+    });
+
+    revalidatePath('/hr/time-tracking');
 }

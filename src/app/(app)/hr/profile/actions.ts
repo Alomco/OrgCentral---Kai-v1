@@ -42,7 +42,78 @@ function buildSelfProfileCandidate(formData: FormData) {
         emergencyContactPhone: readFormString(formData, 'emergencyContactPhone'),
         emergencyContactEmail: readFormString(formData, 'emergencyContactEmail'),
         photoUrl: readFormString(formData, 'photoUrl'),
+        skills: readFormString(formData, 'skills'),
+        certifications: readFormString(formData, 'certifications'),
     };
+}
+
+function parseSkillsInput(value: string): string[] {
+    return Array.from(
+        new Set(
+            value
+                .split(/[\n,]/)
+                .map((entry) => entry.trim())
+                .filter((entry) => entry.length > 0),
+        ),
+    );
+}
+
+interface CertificationInput {
+    name: string;
+    issuer: string;
+    dateObtained: string;
+    expiryDate?: string;
+}
+
+function parseCertificationsInput(value: string): {
+    certifications: CertificationInput[];
+    error?: string;
+} {
+    const lines = value
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+
+    if (lines.length === 0) {
+        return { certifications: [] };
+    }
+
+    const certifications: CertificationInput[] = [];
+    const invalidLines: number[] = [];
+
+    lines.forEach((line, index) => {
+        const parts = line.split('|').map((part) => part.trim());
+        const name = parts[0] ?? '';
+        const issuer = parts[1] ?? '';
+        const dateObtained = parts[2] ?? '';
+        const expiryDate = parts[3] ?? '';
+
+        if (!name || !issuer || !dateObtained) {
+            invalidLines.push(index + 1);
+            return;
+        }
+
+        const record: CertificationInput = {
+            name,
+            issuer,
+            dateObtained,
+        };
+
+        if (expiryDate) {
+            record.expiryDate = expiryDate;
+        }
+
+        certifications.push(record);
+    });
+
+    if (invalidLines.length > 0) {
+        return {
+            certifications: [],
+            error: 'Each certification needs name, issuer, and date obtained (one per line).',
+        };
+    }
+
+    return { certifications };
 }
 
 export async function updateSelfProfileAction(
@@ -66,7 +137,8 @@ export async function updateSelfProfileAction(
         const headerStore = await headers();
         session = await getSessionContext({}, {
             headers: headerStore,
-            requiredPermissions: { employeeProfile: ['update'] },
+            // We rely on the service layer to enforce ownership/ABAC for self-profile updates
+            // rather than a global "update all profiles" permission check here.
             auditSource: 'ui:hr:profile:update',
         });
     } catch {
@@ -74,6 +146,19 @@ export async function updateSelfProfileAction(
             status: 'error',
             message: UNAUTHORIZED_MESSAGE,
             values: previous.values,
+        };
+    }
+
+    const parsedSkills = parseSkillsInput(parsed.data.skills);
+    const certificationsResult = parseCertificationsInput(parsed.data.certifications);
+    if (certificationsResult.error) {
+        return {
+            status: 'error',
+            message: FIELD_CHECK_MESSAGE,
+            fieldErrors: {
+                certifications: certificationsResult.error,
+            },
+            values: parsed.data,
         };
     }
 
@@ -101,6 +186,8 @@ export async function updateSelfProfileAction(
             parsed.data.emergencyContactEmail,
         ),
         photoUrl: normalizeOptionalText(parsed.data.photoUrl),
+        skills: parsedSkills,
+        certifications: certificationsResult.certifications,
     });
 
     try {

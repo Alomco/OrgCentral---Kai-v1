@@ -1,5 +1,6 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
+import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { AbsenceTypeConfig } from '@/server/types/hr-ops-types';
@@ -27,7 +28,7 @@ export async function listAbsenceTypeConfigsForUi(
         cachedInput: ListAbsenceTypeConfigsForUiInput,
     ): Promise<ListAbsenceTypeConfigsForUiResult> {
         'use cache';
-        cacheLife('minutes');
+        cacheLife(CACHE_LIFE_SHORT);
 
         const result = await listAbsenceTypeConfigs(
             { typeConfigRepository: resolveRepository() },

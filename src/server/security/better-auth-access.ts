@@ -1,6 +1,7 @@
 import { createAccessControl } from 'better-auth/plugins/access';
 import type { OrgPermissionMap, OrgRoleKey } from './access-control';
-import { ROLE_PERMISSION_STATEMENTS, ROLE_TEMPLATES } from './role-templates';
+import { ROLE_PERMISSION_STATEMENTS } from './role-permission-statements';
+import { ROLE_TEMPLATES } from './role-templates';
 
 export const orgAccessControl = createAccessControl(ROLE_PERMISSION_STATEMENTS);
 

@@ -29,6 +29,7 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
             // ensure we don't pass explicit `null` to a string union
             managerComments: request.managerComments ?? undefined,
             leaveType: request.leaveType,
+            departmentId: request.departmentId ?? null,
         });
 
         await this.prisma.leaveRequest.create({
@@ -115,7 +116,10 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
 
     async getLeaveRequest(tenant: TenantScope, requestId: string, options?: LeaveRequestReadOptions) {
         const { orgId } = tenant;
-        const record = await this.prisma.leaveRequest.findUnique({ where: { id: requestId } });
+        const record = await this.prisma.leaveRequest.findUnique({
+            where: { id: requestId },
+            include: { _count: { select: { attachments: true } } },
+        });
         if (record?.orgId !== orgId) {
             return null;
         }
@@ -129,6 +133,7 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
                 orgId,
                 userId: employeeId,
             },
+            include: { _count: { select: { attachments: true } } },
             orderBy: { createdAt: 'desc' },
         });
         return records.map((record) => mapPrismaLeaveRequestToDomain(record, { hoursPerDay: options?.hoursPerDay }));
@@ -147,6 +152,7 @@ export class PrismaLeaveRequestRepository extends BasePrismaRepository implement
                 startDate: filters?.startDate ? { gte: filters.startDate } : undefined,
                 endDate: filters?.endDate ? { lte: filters.endDate } : undefined,
             },
+            include: { _count: { select: { attachments: true } } },
             orderBy: { createdAt: 'desc' },
         });
         return records.map((record) => mapPrismaLeaveRequestToDomain(record, { hoursPerDay: options?.hoursPerDay }));

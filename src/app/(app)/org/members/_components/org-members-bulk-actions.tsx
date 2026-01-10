@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useSyncExternalStore } from 'react';
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +14,8 @@ interface SelectionSnapshot {
     selected: number;
     total: number;
 }
+
+let cachedSelectionSnapshot: SelectionSnapshot = { selected: 0, total: 0 };
 
 function subscribeToSelectionChanges(onStoreChange: () => void): () => void {
     if (typeof document === 'undefined') {
@@ -45,7 +47,15 @@ function getSelectableMembers(): HTMLInputElement[] {
 function getSelectionSnapshot(): SelectionSnapshot {
     const items = getSelectableMembers();
     const selected = items.filter((item) => item.checked).length;
-    return { selected, total: items.length };
+    const total = items.length;
+    if (
+        cachedSelectionSnapshot.selected === selected &&
+        cachedSelectionSnapshot.total === total
+    ) {
+        return cachedSelectionSnapshot;
+    }
+    cachedSelectionSnapshot = { selected, total };
+    return cachedSelectionSnapshot;
 }
 
 export function OrgMembersBulkActions({
@@ -61,13 +71,25 @@ export function OrgMembersBulkActions({
         () => ({ selected: 0, total: 0 }),
     );
     const [clientMessage, setClientMessage] = useState<string | null>(null);
+    const lastRefreshReference = useRef<string | null>(null);
     const allSelected = selection.total > 0 && selection.selected === selection.total;
 
+    const status = state.status;
+    const requestId = status === 'success' ? state.requestId : null;
+
     useEffect(() => {
-        if (state.status === 'success') {
-            router.refresh();
+        if (status !== 'success') {
+            return;
         }
-    }, [state.status, router]);
+        if (!requestId) {
+            return;
+        }
+        if (lastRefreshReference.current === requestId) {
+            return;
+        }
+        lastRefreshReference.current = requestId;
+        router.refresh();
+    }, [status, requestId, router]);
 
     const visibleClientMessage = state.status === 'idle' ? clientMessage : null;
 

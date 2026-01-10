@@ -1,7 +1,6 @@
-'use server';
+import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
-import { cacheLife } from 'next/cache';
-
+import { CACHE_LIFE_LONG } from '@/server/repositories/cache-profiles';
 import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import { appLogger } from '@/server/logging/structured-logger';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
@@ -19,8 +18,10 @@ export interface TenantThemeCacheContext {
     residency: DataResidencyZone;
 }
 
-const DEFAULT_CLASSIFICATION: DataClassificationLevel = 'OFFICIAL';
-const DEFAULT_RESIDENCY: DataResidencyZone = 'UK_ONLY';
+const DEFAULT_ANONYMOUS_CONTEXT: TenantThemeCacheContext = {
+    classification: 'OFFICIAL',
+    residency: 'UK_ONLY',
+};
 
 /**
  * Get the theme repository instance (uses default Prisma client)
@@ -52,58 +53,68 @@ function resolveThemeFromSettings(
     };
 }
 
-/**
- * Get tenant theme with database lookup and caching
- */
-export async function getTenantTheme(orgId?: string | null): Promise<TenantTheme> {
-    'use cache';
-    cacheLife('hours');
+function resolveCacheContext(orgId: string, context?: TenantThemeCacheContext): TenantThemeCacheContext {
+    if (orgId === 'default') {
+        return context ?? DEFAULT_ANONYMOUS_CONTEXT;
+    }
 
-    const resolvedOrgId = orgId ?? 'default';
-    registerOrgCacheTag(resolvedOrgId, CACHE_SCOPE_TENANT_THEME, DEFAULT_CLASSIFICATION, DEFAULT_RESIDENCY);
+    if (!context) {
+        throw new Error('getTenantTheme requires classification and residency for org-scoped requests.');
+    }
 
-    // For default/anonymous users, use default theme
-    if (resolvedOrgId === 'default') {
+    return context;
+}
+
+async function loadTenantTheme(orgId: string): Promise<TenantTheme> {
+    if (orgId === 'default') {
         return resolveThemeFromSettings('default', null);
     }
 
     try {
         const repo = getThemeRepository();
-        const orgSettings = await repo.getTheme(resolvedOrgId);
-        return resolveThemeFromSettings(resolvedOrgId, orgSettings);
+        const orgSettings = await repo.getTheme(orgId);
+        return resolveThemeFromSettings(orgId, orgSettings);
     } catch (error) {
         appLogger.warn('theme.load.failed', {
-            orgId: resolvedOrgId,
+            orgId,
             error: error instanceof Error ? error.message : String(error),
         });
-        return resolveThemeFromSettings(resolvedOrgId, null);
+        return resolveThemeFromSettings(orgId, null);
     }
+}
+
+async function getCachedTenantTheme(
+    orgId: string,
+    context: TenantThemeCacheContext,
+): Promise<TenantTheme> {
+    'use cache';
+    cacheLife(CACHE_LIFE_LONG);
+    registerOrgCacheTag(orgId, CACHE_SCOPE_TENANT_THEME, context.classification, context.residency);
+    return loadTenantTheme(orgId);
+}
+
+/**
+ * Get tenant theme with database lookup and caching
+ */
+export async function getTenantTheme(
+    orgId?: string | null,
+    context?: TenantThemeCacheContext,
+): Promise<TenantTheme> {
+    const resolvedOrgId = orgId ?? 'default';
+    const cacheContext = resolveCacheContext(resolvedOrgId, context);
+
+    if (cacheContext.classification !== 'OFFICIAL') {
+        noStore();
+        return loadTenantTheme(resolvedOrgId);
+    }
+
+    return getCachedTenantTheme(resolvedOrgId, cacheContext);
 }
 
 export async function getTenantThemeWithContext(
     orgId: string | null | undefined,
     context: TenantThemeCacheContext,
 ): Promise<TenantTheme> {
-    'use cache';
-    cacheLife('hours');
-
-    const resolvedOrgId = orgId ?? 'default';
-    registerOrgCacheTag(resolvedOrgId, CACHE_SCOPE_TENANT_THEME, context.classification, context.residency);
-
-    if (resolvedOrgId === 'default') {
-        return resolveThemeFromSettings('default', null);
-    }
-
-    try {
-        const repo = getThemeRepository();
-        const orgSettings = await repo.getTheme(resolvedOrgId);
-        return resolveThemeFromSettings(resolvedOrgId, orgSettings);
-    } catch (error) {
-        appLogger.warn('theme.load.failed', {
-            orgId: resolvedOrgId,
-            error: error instanceof Error ? error.message : String(error),
-        });
-        return resolveThemeFromSettings(resolvedOrgId, null);
-    }
+    return getTenantTheme(orgId, context);
 }
 

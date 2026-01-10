@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
-interface TeamMemberPerformance {
+export interface TeamMemberPerformance {
     id: string;
     name: string;
     jobTitle: string;
@@ -71,7 +71,7 @@ export function TeamPerformanceGrid({ teamMembers }: TeamPerformanceGridProps) {
                         Team Performance
                     </CardTitle>
                     <CardDescription>
-                        {completedReviews} of {teamMembers.length} reviews completed • {avgGoalProgress}%
+                        {completedReviews} of {teamMembers.length} reviews completed | {avgGoalProgress}%
                         avg goal progress
                     </CardDescription>
                 </div>
@@ -85,7 +85,7 @@ export function TeamPerformanceGrid({ teamMembers }: TeamPerformanceGridProps) {
                             return (
                                 <Link
                                     key={member.id}
-                                    href={`/hr/employees/${member.id}/performance`}
+                                    href={`/hr/employees/${member.id}?tab=development`}
                                     className="rounded-lg border p-4 transition-colors hover:bg-muted"
                                 >
                                     <div className="flex items-start gap-3">

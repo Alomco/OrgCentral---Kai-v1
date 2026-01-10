@@ -9,6 +9,7 @@ import { EmployeeChecklistsTab } from './employee-checklists-tab';
 import { EmployeeContractTab } from './employee-contract-tab';
 import { EmployeeDevelopmentTab } from './employee-development-tab';
 import { EmployeeLifecycleTab } from './employee-lifecycle-tab';
+import { EmployeeTimelineTab } from './employee-timeline-tab';
 
 export interface EmployeeDetailContentProps {
     authorization: RepositoryAuthorizationContext;
@@ -41,6 +42,10 @@ export function EmployeeDetailContent({ authorization, profile, tab }: EmployeeD
         case 'development':
             return (
                 <EmployeeDevelopmentTab authorization={authorization} profile={profile} />
+            );
+        case 'timeline':
+            return (
+                <EmployeeTimelineTab authorization={authorization} profile={profile} />
             );
         case 'overview':
         default:

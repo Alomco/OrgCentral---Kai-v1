@@ -11,9 +11,11 @@ import {
     ROLE_DASHBOARD_PATHS,
 } from '@/server/ui/auth/role-redirect';
 
-import { AdminNavigation } from '@/app/(admin)/admin/_components/admin-navigation';
-import { AdminShell } from '@/app/(admin)/_components/admin-shell';
+import { DevelopmentNavigationShell } from './_components/development-navigation';
 import { DevelopmentViewSwitcher } from './_components/development-view-switcher';
+import { FloatingParticles } from '@/components/theme/decorative/particles';
+import { GradientOrb } from '@/components/theme/decorative/effects';
+import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 
 export default async function DevelopmentLayout({ children }: { children: ReactNode }) {
     const headerStore = await headers();
@@ -55,23 +57,33 @@ export default async function DevelopmentLayout({ children }: { children: ReactN
                 residency: authorization.dataResidency,
             }}
         >
-            <AdminShell
-                navigation={
-                    <AdminNavigation
-                        organizationId={authorization.orgId}
+            <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+                {/* Background Decoration */}
+                <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                    <FloatingParticles count={6} />
+                    <GradientOrb position="top-right" color="multi" className="opacity-40" />
+                    <GradientOrb position="bottom-left" color="accent" className="opacity-25" />
+                </div>
+
+                {/* Dev Navigation Shell with Sidebar + Topbar */}
+                <div className="relative z-10">
+                    <DevelopmentNavigationShell
                         organizationLabel={branding?.companyName ?? null}
-                        roleKey={authorization.roleKey}
-                        permissions={authorization.permissions}
                         userEmail={userEmail}
-                    />
-                }
-                orbColor="multi"
-                particleCount={8}
-            >
-                <DevelopmentViewSwitcher>
-                    {children}
-                </DevelopmentViewSwitcher>
-            </AdminShell>
+                    >
+                        <DevelopmentViewSwitcher>
+                            {children}
+                        </DevelopmentViewSwitcher>
+                    </DevelopmentNavigationShell>
+                </div>
+
+                {/* Floating Theme Switcher */}
+                <div className="fixed bottom-24 left-6 z-(--z-toast) animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="rounded-full shadow-lg shadow-primary/10 backdrop-blur-md bg-background/50">
+                        <ThemeSwitcher />
+                    </div>
+                </div>
+            </div>
         </TenantThemeRegistry>
     );
 }

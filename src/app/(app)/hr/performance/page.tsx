@@ -15,12 +15,15 @@ import {
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getPerformanceReviewsForUi } from '@/server/use-cases/hr/performance/get-performance-reviews.cached';
+import { listPerformanceGoalsByReviewForUi } from '@/server/use-cases/hr/performance/list-performance-goals-by-review.cached';
+import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
+import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { HrCardSkeleton } from '../_components/hr-card-skeleton';
 import { PerformanceReviewsPanel } from './_components/performance-reviews-panel';
 import { PerformanceStatsCard } from './_components/performance-stats-card';
-import { TeamPerformanceGrid } from './_components/team-performance-grid';
+import { TeamPerformanceGrid, type TeamMemberPerformance } from './_components/team-performance-grid';
 
 export const metadata: Metadata = {
     title: 'Performance',
@@ -91,6 +94,9 @@ export default async function HrPerformancePage() {
     });
 
     const stats = computeStats(reviewsResult.reviews);
+    const teamMembers = managerAuthorization
+        ? await buildTeamPerformance(managerAuthorization)
+        : [];
 
     return (
         <div className="space-y-6">
@@ -130,8 +136,86 @@ export default async function HrPerformancePage() {
 
             {/* Manager View - Team Performance */}
             {isManager ? (
-                <TeamPerformanceGrid teamMembers={[]} />
+                <TeamPerformanceGrid teamMembers={teamMembers} />
             ) : null}
         </div>
     );
+}
+
+async function buildTeamPerformance(
+    authorization: RepositoryAuthorizationContext,
+): Promise<TeamMemberPerformance[]> {
+    const peopleService = getPeopleService();
+    const profilesResult = await peopleService.listEmployeeProfiles({
+        authorization,
+        payload: {},
+    }).catch(() => ({ profiles: [] }));
+
+    const directReports = profilesResult.profiles.filter(
+        (profile) => profile.managerUserId === authorization.userId,
+    );
+
+    const teamMembers: TeamMemberPerformance[] = await Promise.all(
+        directReports.map(async (profile) => {
+            const reviewsResult = await getPerformanceReviewsForUi({
+                authorization,
+                userId: profile.userId,
+            }).catch(() => ({ reviews: [] }));
+
+            const reviews = reviewsResult.reviews.slice().sort(
+                (a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime(),
+            );
+            const latestReview = reviews.at(0);
+
+            let goalProgress = 0;
+            if (latestReview?.id) {
+                const goalsResult = await listPerformanceGoalsByReviewForUi({
+                    authorization,
+                    reviewId: latestReview.id,
+                }).catch(() => ({ goals: [] }));
+
+                const goals = goalsResult.goals;
+                if (goals.length > 0) {
+                    const completed = goals.filter((goal) => goal.status === 'COMPLETED').length;
+                    goalProgress = Math.round((completed / goals.length) * 100);
+                }
+            }
+
+            const status = latestReview?.status ?? 'none';
+            const reviewStatus: TeamMemberPerformance['reviewStatus'] =
+                status === 'completed'
+                    ? 'completed'
+                    : status === 'scheduled'
+                        ? 'scheduled'
+                        : status === 'cancelled'
+                            ? 'none'
+                            : status === 'submitted'
+                                ? 'pending'
+                                : 'pending';
+
+            const name = resolveProfileName(profile);
+
+            return {
+                id: profile.id,
+                name,
+                jobTitle: profile.jobTitle ?? 'Team member',
+                goalProgress,
+                reviewStatus,
+                lastReviewRating: latestReview?.overallRating ?? undefined,
+            };
+        }),
+    );
+
+    return teamMembers;
+}
+
+function resolveProfileName(
+    profile: { displayName?: string | null; firstName?: string | null; lastName?: string | null },
+): string {
+    const displayName = profile.displayName?.trim();
+    if (displayName) {
+        return displayName;
+    }
+    const combined = `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim();
+    return combined.length > 0 ? combined : 'Employee';
 }

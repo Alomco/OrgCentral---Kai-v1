@@ -1,37 +1,30 @@
 'use client';
-
 import { useCallback, useState, useTransition } from 'react';
-import { ArrowLeft, ArrowRight, Loader2, Send, X } from 'lucide-react';
-
+import { X } from 'lucide-react';
 import type { ZodError } from 'zod';
-
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Stepper, useStepper, type StepperStep } from '@/components/ui/stepper';
-
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Stepper, useStepper } from '@/components/ui/stepper';
 import type { ChecklistTemplate } from '@/server/types/onboarding-types';
 import { toFieldErrors } from '../../_components/form-errors';
-
 import { IdentityStep } from './identity-step';
 import { JobStep, type Department } from './job-step';
 import { AssignmentsStep, type LeaveType } from './assignments-step';
 import { ReviewStep } from './review-step';
+import { OnboardingWizardFooter } from './onboarding-wizard-footer';
+import { OnboardingWizardSuccess } from './onboarding-wizard-success';
+import { WIZARD_STEPS } from './onboarding-wizard-steps';
 import { validateWizardStep, type OnboardingWizardValues } from './wizard.schema';
 import { buildInitialWizardState, mergeWizardValues, type OnboardingWizardState } from './wizard.state';
-
-const WIZARD_STEPS: StepperStep[] = [
-    { id: 'identity', title: 'Identity' },
-    { id: 'job', title: 'Job & Comp' },
-    { id: 'assignments', title: 'Assignments' },
-    { id: 'review', title: 'Review' },
-];
-
+import type { ManagerOption, WizardSubmitResult } from './wizard.types';
 export interface OnboardingWizardProps {
     /** Initial form values */
     initialValues?: Partial<OnboardingWizardValues>;
     /** Available departments */
     departments?: Department[];
+    /** Available managers */
+    managers?: ManagerOption[];
     /** Available leave types */
     leaveTypes?: LeaveType[];
     /** Available checklist templates */
@@ -41,7 +34,7 @@ export interface OnboardingWizardProps {
     /** Email existence check function */
     onEmailCheck?: (email: string) => Promise<{ exists: boolean; reason?: string }>;
     /** Submit handler */
-    onSubmit: (values: OnboardingWizardValues) => Promise<{ success: boolean; token?: string; error?: string }>;
+    onSubmit: (values: OnboardingWizardValues) => Promise<WizardSubmitResult>;
     /** Cancel handler */
     onCancel?: () => void;
 }
@@ -49,6 +42,7 @@ export interface OnboardingWizardProps {
 export function OnboardingWizard({
     initialValues,
     departments = [],
+    managers = [],
     leaveTypes,
     checklistTemplates = [],
     canManageTemplates = false,
@@ -138,7 +132,9 @@ export function OnboardingWizard({
                         ...previous,
                         status: 'success',
                         token: result.token,
-                        message: 'Invitation sent successfully!',
+                        invitationUrl: result.invitationUrl,
+                        emailDelivered: result.emailDelivered,
+                        message: result.message ?? 'Invitation sent successfully!',
                     }));
                 } else {
                     setState((previous) => ({
@@ -163,39 +159,14 @@ export function OnboardingWizard({
     // Success state
     if (isSuccess) {
         return (
-            <Card>
-                <CardHeader className="text-center">
-                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                        <Send className="h-6 w-6 text-green-600 dark:text-green-400" />
-                    </div>
-                    <h2 className="text-xl font-semibold">Invitation Sent!</h2>
-                    <p className="text-sm text-muted-foreground">
-                        The onboarding invitation has been sent to {state.values.email}
-                    </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {state.token && (
-                        <div className="rounded-lg border bg-muted/50 p-4">
-                            <p className="mb-2 text-xs font-medium text-muted-foreground">
-                                Invitation token (for manual sharing)
-                            </p>
-                            <code className="block break-all text-sm">{state.token}</code>
-                        </div>
-                    )}
-                    <Alert>
-                        <AlertTitle>Next steps</AlertTitle>
-                        <AlertDescription>
-                            The employee will receive an email with instructions to accept the invitation
-                            and complete their profile setup.
-                        </AlertDescription>
-                    </Alert>
-                </CardContent>
-                <CardFooter className="justify-center">
-                    <Button onClick={onCancel} variant="outline">
-                        Close
-                    </Button>
-                </CardFooter>
-            </Card>
+            <OnboardingWizardSuccess
+                email={state.values.email}
+                token={state.token}
+                invitationUrl={state.invitationUrl}
+                emailDelivered={state.emailDelivered}
+                message={state.message}
+                onCancel={onCancel}
+            />
         );
     }
 
@@ -240,6 +211,7 @@ export function OnboardingWizard({
                         fieldErrors={state.fieldErrors}
                         onValuesChange={handleValuesChange}
                         departments={departments}
+                        managers={managers}
                         disabled={isSubmitting}
                     />
                 )}
@@ -265,38 +237,14 @@ export function OnboardingWizard({
                 )}
             </CardContent>
 
-            <CardFooter className="flex justify-between">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handlePrevious}
-                    disabled={stepper.isFirstStep || isSubmitting}
-                >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                </Button>
-
-                {stepper.isLastStep ? (
-                    <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Sending...
-                            </>
-                        ) : (
-                            <>
-                                <Send className="mr-2 h-4 w-4" />
-                                Send Invitation
-                            </>
-                        )}
-                    </Button>
-                ) : (
-                    <Button type="button" onClick={handleNext} disabled={isSubmitting}>
-                        Next
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                )}
-            </CardFooter>
+            <OnboardingWizardFooter
+                isSubmitting={isSubmitting}
+                isFirstStep={stepper.isFirstStep}
+                isLastStep={stepper.isLastStep}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onSubmit={handleSubmit}
+            />
         </Card>
     );
 }

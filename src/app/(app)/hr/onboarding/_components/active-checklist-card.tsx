@@ -1,7 +1,11 @@
+/**
+ * TODO: Refactor this file (currently > 250 LOC).
+ * Action: Split into smaller modules and ensure adherence to SOLID principles, Dependency Injection, and Design Patterns.
+ */
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Check, CheckCircle2, Circle, Clock, ListChecks, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, ListChecks, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +13,9 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-import type { ChecklistInstance, ChecklistItemProgress } from '@/server/types/onboarding-types';
+import type { ChecklistInstance } from '@/server/types/onboarding-types';
+import { ChecklistItem } from './checklist-item';
+import { formatChecklistDate } from './checklist-utils';
 
 export interface ActiveChecklistCardProps {
     instance: ChecklistInstance;
@@ -21,16 +27,6 @@ export interface ActiveChecklistCardProps {
 export interface ChecklistActionResult {
     success: boolean;
     error?: string;
-}
-
-function formatDate(date: Date | string | null | undefined): string {
-    if (!date) {return '';}
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
 }
 
 export function ActiveChecklistCard({
@@ -85,7 +81,7 @@ export function ActiveChecklistCard({
                                 {instance.templateName ?? 'Onboarding Checklist'}
                             </CardTitle>
                             <CardDescription className="text-xs">
-                                Started {formatDate(instance.startedAt)}
+                                Started {formatChecklistDate(instance.startedAt)}
                             </CardDescription>
                         </div>
                     </div>
@@ -155,99 +151,10 @@ export function ActiveChecklistCard({
                 <CardFooter className="border-t bg-green-50 dark:bg-green-950/20 pt-4">
                     <div className="flex w-full items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400">
                         <CheckCircle2 className="h-4 w-4" />
-                        Completed on {formatDate(instance.completedAt)}
+                        Completed on {formatChecklistDate(instance.completedAt)}
                     </div>
                 </CardFooter>
             )}
         </Card>
-    );
-}
-
-interface ChecklistItemProps {
-    item: ChecklistItemProgress;
-    onToggle?: () => void;
-    isPending?: boolean;
-    disabled?: boolean;
-}
-
-function ChecklistItem({ item, onToggle, isPending, disabled }: ChecklistItemProps) {
-    const isInteractive = Boolean(onToggle);
-
-    const className = cn(
-        'flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors',
-        item.completed && 'bg-muted/50',
-        isInteractive && !disabled && 'cursor-pointer hover:bg-muted/30',
-        disabled && 'cursor-not-allowed opacity-70',
-    );
-
-    if (isInteractive) {
-        return (
-            <button
-                type="button"
-                className={className}
-                onClick={onToggle}
-                disabled={Boolean(disabled)}
-            >
-                <div className="mt-0.5 shrink-0">
-                    {isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    ) : item.completed ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                        <Circle className="h-4 w-4 text-muted-foreground" />
-                    )}
-                </div>
-                <div className="flex-1 space-y-0.5">
-                    <p
-                        className={cn(
-                            'text-sm font-medium',
-                            item.completed && 'text-muted-foreground line-through',
-                        )}
-                    >
-                        {item.task}
-                    </p>
-                    {item.notes && (
-                        <p className="text-xs text-muted-foreground">{item.notes}</p>
-                    )}
-                    {item.completed && item.completedAt && (
-                        <p className="text-xs text-green-600 dark:text-green-400">
-                            Completed {formatDate(item.completedAt)}
-                        </p>
-                    )}
-                </div>
-            </button>
-        );
-    }
-
-    return (
-        <div className={className}>
-            <div className="mt-0.5 shrink-0">
-                {isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                ) : item.completed ? (
-                    <Check className="h-4 w-4 text-green-500" />
-                ) : (
-                    <Circle className="h-4 w-4 text-muted-foreground" />
-                )}
-            </div>
-            <div className="flex-1 space-y-0.5">
-                <p
-                    className={cn(
-                        'text-sm font-medium',
-                        item.completed && 'text-muted-foreground line-through',
-                    )}
-                >
-                    {item.task}
-                </p>
-                {item.notes && (
-                    <p className="text-xs text-muted-foreground">{item.notes}</p>
-                )}
-                {item.completed && item.completedAt && (
-                    <p className="text-xs text-green-600 dark:text-green-400">
-                        Completed {formatDate(item.completedAt)}
-                    </p>
-                )}
-            </div>
-        </div>
     );
 }

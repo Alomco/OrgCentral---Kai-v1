@@ -1,9 +1,16 @@
+'use client';
+
 import Link from 'next/link';
-import { Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { Clock, CheckCircle, ArrowRight } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+
+import { AbsenceApprovalDialog } from './absence-approval-dialog';
+import { approveAbsenceAction, rejectAbsenceAction } from '../actions';
 
 interface PendingAbsence {
     id: string;
@@ -16,9 +23,8 @@ interface PendingAbsence {
 }
 
 interface AbsenceApprovalPanelProps {
+    authorization: RepositoryAuthorizationContext;
     pendingRequests: PendingAbsence[];
-    onApprove?: (id: string) => void;
-    onReject?: (id: string) => void;
 }
 
 function formatDateRange(start: Date, end: Date): string {
@@ -46,11 +52,24 @@ function formatTimeAgo(date: Date): string {
 }
 
 export function AbsenceApprovalPanel({
+    authorization,
     pendingRequests,
-    onApprove,
-    onReject,
 }: AbsenceApprovalPanelProps) {
     const hasRequests = pendingRequests.length > 0;
+    const [selectedRequest, setSelectedRequest] = useState<PendingAbsence | null>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    const handleOpenChange = (open: boolean) => {
+        setDialogOpen(open);
+        if (!open) {
+            setSelectedRequest(null);
+        }
+    };
+
+    const handleReview = (request: PendingAbsence) => {
+        setSelectedRequest(request);
+        setDialogOpen(true);
+    };
 
     return (
         <Card>
@@ -96,32 +115,19 @@ export function AbsenceApprovalPanel({
                                     <span className="text-xs text-muted-foreground">
                                         {formatTimeAgo(request.submittedAt)}
                                     </span>
-                                    <div className="flex gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={() => onReject?.(request.id)}
-                                            title="Reject"
-                                        >
-                                            <XCircle className="h-3.5 w-3.5 text-red-500" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={() => onApprove?.(request.id)}
-                                            title="Approve"
-                                        >
-                                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleReview(request)}
+                                    >
+                                        Review
+                                    </Button>
                                 </div>
                             </div>
                         ))}
                         {pendingRequests.length > 5 ? (
                             <Button variant="ghost" size="sm" className="w-full" asChild>
-                                <Link href="/hr/leave?status=pending">
+                                <Link href="/hr/absences?status=pending">
                                     View all {pendingRequests.length} requests
                                     <ArrowRight className="h-3 w-3 ml-1" />
                                 </Link>
@@ -138,6 +144,17 @@ export function AbsenceApprovalPanel({
                     </div>
                 )}
             </CardContent>
+            <AbsenceApprovalDialog
+                request={selectedRequest}
+                open={dialogOpen}
+                onOpenChange={handleOpenChange}
+                onApprove={(absenceId, comments) =>
+                    approveAbsenceAction(authorization, absenceId, comments)
+                }
+                onReject={(absenceId, reason) =>
+                    rejectAbsenceAction(authorization, absenceId, reason)
+                }
+            />
         </Card>
     );
 }

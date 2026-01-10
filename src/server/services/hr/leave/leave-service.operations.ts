@@ -213,10 +213,16 @@ export async function handleListLeaveRequests(
     input: GetLeaveRequestsInput,
 ): Promise<GetLeaveRequestsResult> {
     const authorization = runtime.coerceAuthorization(input.authorization);
+    const scope = input.employeeId ? 'self' : 'org';
     await runtime.ensureOrgAccess(authorization, {
         action: HR_ACTION.READ,
         resourceType: HR_RESOURCE.HR_LEAVE,
-        resourceAttributes: { filters: input.filters },
+        resourceAttributes: {
+            scope,
+            employeeId: input.employeeId ?? null,
+            targetUserId: input.employeeId ?? authorization.userId,
+            filters: input.filters ?? null,
+        },
     });
     return runtime.runOperation(
         'hr.leave.requests.list',

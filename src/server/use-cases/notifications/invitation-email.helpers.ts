@@ -1,6 +1,7 @@
 import { EntityNotFoundError, InfrastructureError, ValidationError } from '@/server/errors';
 import type { IInvitationRepository, InvitationRecord } from '@/server/repositories/contracts/auth/invitations';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { resolveAuthBaseURL } from '@/server/lib/auth-environment';
 import type {
     NotificationDeliveryAdapter,
     NotificationDeliveryResult,
@@ -56,18 +57,15 @@ export async function deliverInvitationEmail(
         correlationId: input.authorization.correlationId,
     });
 
-    if (delivery.status === 'failed' || delivery.status === 'skipped') {
-        throw new InfrastructureError('Invitation email delivery was not completed.', {
-            provider: delivery.provider,
-            detail: delivery.detail,
-        });
-    }
-
     return {
         invitationToken: invitation.token,
         invitationUrl,
         delivery,
     };
+}
+
+export function isInvitationDeliverySuccessful(delivery: NotificationDeliveryResult): boolean {
+    return delivery.status === 'sent' || delivery.status === 'queued';
 }
 
 function selectEmailAdapter(adapters: NotificationDeliveryAdapter[]): NotificationDeliveryAdapter {
@@ -102,7 +100,7 @@ function buildInvitationUrl(
         return builder(token);
     }
 
-    const baseUrl = process.env.APP_BASE_URL ?? 'https://orgcentral.app';
+    const baseUrl = process.env.APP_BASE_URL ?? resolveAuthBaseURL();
     const normalized = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     return `${normalized}/accept-invitation?token=${encodeURIComponent(token)}`;
 }

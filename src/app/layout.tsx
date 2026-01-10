@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { DevelopmentSecurityWidget } from "@/components/dev/DevelopmentSecurityWidget";
+import { DevelopmentToolbar, DevelopmentToolbarProvider } from "@/components/dev/toolbar";
 import { TenantThemeRegistry } from "@/components/theme/tenant-theme-registry";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { UiStyleProvider } from "@/components/theme/ui-style-provider";
@@ -34,8 +35,15 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>
             <UiStyleProvider>
-              {process.env.NODE_ENV === "development" ? <DevelopmentSecurityWidget /> : null}
-              <TenantThemeRegistry orgId={null}>{children}</TenantThemeRegistry>
+              <DevelopmentToolbarProvider>
+                {process.env.NODE_ENV === "development" ? (
+                  <>
+                    <DevelopmentSecurityWidget />
+                    <DevelopmentToolbar />
+                  </>
+                ) : null}
+                <TenantThemeRegistry orgId={null}>{children}</TenantThemeRegistry>
+              </DevelopmentToolbarProvider>
             </UiStyleProvider>
           </ThemeProvider>
         </Providers>

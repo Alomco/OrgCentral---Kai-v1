@@ -1,8 +1,8 @@
 
 export type MemberActionState =
     | { status: 'idle' }
-    | { status: 'success'; message: string }
-    | { status: 'error'; message: string };
+    | { status: 'success'; message: string; requestId: string }
+    | { status: 'error'; message: string; requestId: string };
 
 export type InviteMemberActionState =
     | { status: 'idle' }

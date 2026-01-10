@@ -1,3 +1,7 @@
+/**
+ * TODO: Refactor this file (currently > 250 LOC).
+ * Action: Split into smaller modules and ensure adherence to SOLID principles, Dependency Injection, and Design Patterns.
+ */
 import type Stripe from 'stripe';
 
 import type { BillingWebhookEvent } from '@/server/services/billing/billing-gateway';
@@ -6,6 +10,17 @@ import {
   toPaymentMethodSummary,
   toSubscriptionSnapshot,
 } from '@/server/services/billing/stripe-billing-gateway.mappers';
+import {
+  getMetadataValue,
+  isCheckoutSessionObject,
+  isInvoiceObject,
+  isPaymentIntent,
+  isPaymentMethodObject,
+  isSetupIntentObject,
+  isSubscriptionObject,
+  resolvePaymentMethodCustomerId,
+  resolveStripeId,
+} from './stripe-billing-gateway.webhooks.helpers';
 
 const PAYMENT_METHOD_ATTACHED = 'payment_method.attached';
 const PAYMENT_METHOD_DETACHED = 'payment_method.detached';
@@ -49,24 +64,6 @@ export function parseStripeWebhookEvent(input: {
   }
 
   return { type: 'ignored', eventType: event.type };
-}
-
-function getMetadataValue(metadata: Stripe.Metadata | null, key: string): string | null {
-  if (!metadata) {
-    return null;
-  }
-  return Object.prototype.hasOwnProperty.call(metadata, key) ? metadata[key] : null;
-}
-
-type PaymentMethodPreviousAttributes = Stripe.Event.Data.PreviousAttributes & {
-  customer?: string | null;
-};
-
-function isPaymentIntent(value: unknown): value is Stripe.PaymentIntent {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-  return 'last_payment_error' in value;
 }
 
 function handleCheckoutEvent(event: Stripe.Event): BillingWebhookEvent | null {
@@ -211,59 +208,4 @@ function handleSetupIntentEvent(event: Stripe.Event): BillingWebhookEvent | null
   }
 
   return null;
-}
-
-function resolvePaymentMethodCustomerId(
-  method: Stripe.PaymentMethod,
-  previousAttributes?: Stripe.Event.Data.PreviousAttributes,
-): string | null {
-  const current = resolveStripeId(method.customer);
-  if (current) {
-    return current;
-  }
-
-  const previousCustomer = (previousAttributes as PaymentMethodPreviousAttributes | undefined)?.customer;
-  return typeof previousCustomer === 'string' ? previousCustomer : null;
-}
-
-type ResolvableStripeId =
-  | string
-  | Stripe.Customer
-  | Stripe.DeletedCustomer
-  | Stripe.PaymentMethod
-  | null
-  | undefined;
-
-function resolveStripeId(value: ResolvableStripeId): string | null {
-  if (!value) {
-    return null;
-  }
-  return typeof value === 'string' ? value : value.id;
-}
-
-function hasObjectType(value: unknown, objectType: string): value is { object: string } {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-  return (value as { object?: string }).object === objectType;
-}
-
-function isCheckoutSessionObject(value: unknown): value is Stripe.Checkout.Session {
-  return hasObjectType(value, 'checkout.session');
-}
-
-function isSubscriptionObject(value: unknown): value is Stripe.Subscription {
-  return hasObjectType(value, 'subscription');
-}
-
-function isInvoiceObject(value: unknown): value is Stripe.Invoice {
-  return hasObjectType(value, 'invoice');
-}
-
-function isPaymentMethodObject(value: unknown): value is Stripe.PaymentMethod {
-  return hasObjectType(value, 'payment_method');
-}
-
-function isSetupIntentObject(value: unknown): value is Stripe.SetupIntent {
-  return hasObjectType(value, 'setup_intent');
 }

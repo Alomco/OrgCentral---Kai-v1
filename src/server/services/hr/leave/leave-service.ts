@@ -43,6 +43,18 @@ import {
     type SubmitLeaveRequestDependencies,
     type SubmitLeaveRequestInput,
     type SubmitLeaveRequestResult,
+    addLeaveAttachments,
+    type AddLeaveAttachmentsDependencies,
+    type AddLeaveAttachmentsInput,
+    type AddLeaveAttachmentsResult,
+    listLeaveAttachments,
+    type ListLeaveAttachmentsDependencies,
+    type ListLeaveAttachmentsInput,
+    type ListLeaveAttachmentsResult,
+    presignLeaveAttachmentDownload,
+    type PresignLeaveAttachmentDownloadDependencies,
+    type PresignLeaveAttachmentDownloadInput,
+    type PresignLeaveAttachmentDownloadResult,
 } from '@/server/use-cases/hr/leave';
 import type { LeaveDecisionContext } from '@/server/use-cases/hr/leave/shared/leave-request-helpers';
 import type { LeaveServiceRuntime } from './leave-service.operations';
@@ -56,6 +68,9 @@ export type LeaveServiceDependencies = ApproveLeaveRequestDependencies &
     GetLeaveBalanceDependencies &
     EnsureEmployeeBalancesDependencies &
     SubmitLeaveRequestDependencies &
+    AddLeaveAttachmentsDependencies &
+    ListLeaveAttachmentsDependencies &
+    PresignLeaveAttachmentDownloadDependencies &
     CreateLeaveBalanceDependencies & {
         hrNotificationService?: HrNotificationServiceContract;
         profileRepository: IEmployeeProfileRepository;
@@ -68,6 +83,42 @@ export class LeaveService extends AbstractHrService {
 
     async submitLeaveRequest(input: SubmitLeaveRequestInput): Promise<SubmitLeaveRequestResult> {
         return handleSubmitLeaveRequest(this.runtime(), input);
+    }
+
+    async addLeaveAttachments(input: AddLeaveAttachmentsInput): Promise<AddLeaveAttachmentsResult> {
+        return this.runOperation('hr.leave.attachments.add', this.coerceAuthorization(input.authorization), { requestId: input.requestId }, () => addLeaveAttachments(this.dependencies, input));
+    }
+
+    async listLeaveAttachments(input: ListLeaveAttachmentsInput): Promise<ListLeaveAttachmentsResult> {
+        const authorization = this.coerceAuthorization(input.authorization);
+        await this.ensureOrgAccess(authorization, {
+            action: HR_ACTION.READ,
+            resourceType: HR_RESOURCE.HR_LEAVE,
+            resourceAttributes: { requestId: input.requestId },
+        });
+
+        return this.runOperation(
+            'hr.leave.attachments.list',
+            authorization,
+            { requestId: input.requestId },
+            () => listLeaveAttachments(this.dependencies, { ...input, authorization }),
+        );
+    }
+
+    async presignLeaveAttachmentDownload(input: PresignLeaveAttachmentDownloadInput): Promise<PresignLeaveAttachmentDownloadResult> {
+        const authorization = this.coerceAuthorization(input.authorization);
+        await this.ensureOrgAccess(authorization, {
+            action: HR_ACTION.READ,
+            resourceType: HR_RESOURCE.HR_LEAVE,
+            resourceAttributes: { attachmentId: input.attachmentId },
+        });
+
+        return this.runOperation(
+            'hr.leave.attachments.presign-download',
+            authorization,
+            { attachmentId: input.attachmentId },
+            () => presignLeaveAttachmentDownload(this.dependencies, { ...input, authorization }),
+        );
     }
 
     async approveLeaveRequest(input: ApproveLeaveRequestInput): Promise<ApproveLeaveRequestResult> {

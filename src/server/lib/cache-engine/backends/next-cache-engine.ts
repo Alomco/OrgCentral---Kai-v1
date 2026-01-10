@@ -1,5 +1,7 @@
 import type { CacheEngine, CacheTagRegistrationOptions } from '@/server/lib/cache-engine/types';
 
+const CACHE_LIFE_BRIEF = 'seconds';
+
 export class NextCacheEngine implements CacheEngine {
     registerTag(tag: string, options?: CacheTagRegistrationOptions): void {
         // Import at call-time to keep the module safe in non-Next runtimes.
@@ -26,7 +28,7 @@ export class NextCacheEngine implements CacheEngine {
             // Non-sensitive data may still choose cacheLife profiles outside the cache engine.
             // Keep a conservative fallback for runtimes that register tags but want short TTL.
             if (options?.shortLived && typeof cacheLife === 'function') {
-                cacheLife('seconds');
+                cacheLife(CACHE_LIFE_BRIEF);
             }
         } catch {
             // best-effort: allow code to run in workers/tests

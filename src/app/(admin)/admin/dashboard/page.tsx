@@ -1,22 +1,14 @@
+/**
+ * TODO: Refactor this file (currently > 250 LOC).
+ * Action: Split into smaller modules and ensure adherence to SOLID principles, Dependency Injection, and Design Patterns.
+ */
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { headers } from 'next/headers';
-import {
-    ShieldCheck,
-    Users,
-    UserPlus,
-    Settings,
-    KeyRound,
-    LayoutDashboard,
-    Briefcase,
-    Wrench,
-    Zap,
-} from 'lucide-react';
+import { Briefcase, LayoutDashboard, ShieldCheck, UserPlus, Wrench, Zap } from 'lucide-react';
 
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { getUserService } from '@/server/services/org/users/user-service.provider';
-import { getRoleService } from '@/server/services/org';
+import { OrgStatsCard, OrgStatsSkeleton } from './org-stats-card';
+import { QUICK_ACTIONS } from './quick-actions';
 import { ThemeCard } from '@/components/theme/cards/theme-card';
 import { ThemeGrid } from '@/components/theme/layout/primitives';
 import { ThemeButton, ThemeBadge } from '@/components/theme/primitives/interactive';
@@ -28,113 +20,6 @@ export const metadata: Metadata = {
     title: 'Global Admin Dashboard - OrgCentral',
     description: 'Platform-wide controls for tenant governance and security.',
 };
-
-// Quick action links for admins
-const QUICK_ACTIONS = [
-    {
-        title: 'Manage Members',
-        description: 'Invite users and manage access',
-        href: '/org/members',
-        icon: Users,
-    },
-    {
-        title: 'Manage Roles',
-        description: 'Create and configure roles',
-        href: '/org/roles',
-        icon: KeyRound,
-    },
-    {
-        title: 'Organization Settings',
-        description: 'Configure org preferences',
-        href: '/org/settings',
-        icon: Settings,
-    },
-    {
-        title: 'HR Dashboard',
-        description: 'Employee and leave management',
-        href: '/hr/dashboard',
-        icon: Briefcase,
-    },
-    {
-        title: 'Dev Tools',
-        description: 'Development utilities',
-        href: '/dev/dashboard',
-        icon: Wrench,
-    },
-] as const;
-
-async function OrgStatsCard() {
-    const headerStore = await headers();
-    const { authorization } = await getSessionContextOrRedirect({}, {
-        headers: headerStore,
-        requiredPermissions: { organization: ['read'] },
-        auditSource: 'ui:admin:stats',
-    });
-
-    const userService = getUserService();
-    const [activeUsers, pendingInvites, roles] = await Promise.all([
-        userService.countUsersInOrganization({ authorization, filters: { status: 'ACTIVE' } }),
-        userService.countUsersInOrganization({ authorization, filters: { status: 'INVITED' } }),
-        getRoleService().listRoles({ authorization }),
-    ]);
-
-    return (
-        <ThemeGrid cols={3} gap="lg">
-            <ThemeCard variant="glass" hover="lift" padding="md">
-                <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Active Members</p>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-3xl font-bold text-foreground">{activeUsers}</h3>
-                            <span className="text-sm font-medium text-green-500">↑ +12%</span>
-                        </div>
-                    </div>
-                    <GradientAccent variant="primary" rounded="lg" className="p-3">
-                        <Users className="h-5 w-5 text-white" />
-                    </GradientAccent>
-                </div>
-            </ThemeCard>
-
-            <ThemeCard variant="glass" hover="lift" padding="md">
-                <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Pending Invites</p>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-3xl font-bold text-foreground">{pendingInvites}</h3>
-                        </div>
-                    </div>
-                    <GradientAccent variant="sunset" rounded="lg" className="p-3">
-                        <UserPlus className="h-5 w-5 text-white" />
-                    </GradientAccent>
-                </div>
-            </ThemeCard>
-
-            <ThemeCard variant="glass" hover="lift" padding="md">
-                <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Total Roles</p>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-3xl font-bold text-foreground">{roles.length}</h3>
-                        </div>
-                    </div>
-                    <GradientAccent variant="accent" rounded="lg" className="p-3">
-                        <KeyRound className="h-5 w-5 text-white" />
-                    </GradientAccent>
-                </div>
-            </ThemeCard>
-        </ThemeGrid>
-    );
-}
-
-function OrgStatsSkeleton() {
-    return (
-        <ThemeGrid cols={3} gap="lg">
-            {[1, 2, 3].map((index) => (
-                <div key={index} className="h-32 animate-pulse bg-muted/20 rounded-xl" />
-            ))}
-        </ThemeGrid>
-    );
-}
 
 export default function AdminDashboardPage() {
     return (

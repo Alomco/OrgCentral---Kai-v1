@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { RefreshCcw, Shield, X } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { DebugSecurityResponse } from "./DevelopmentSecurityWidget.types";
@@ -17,6 +16,7 @@ import {
   renderSessionSection,
   renderTools,
 } from "./DevelopmentSecurityWidget.sections";
+import { useRegisterDevelopmentAction } from "./toolbar";
 
 export function DevelopmentSecurityWidget() {
   const [open, setOpen] = useState(false);
@@ -44,26 +44,7 @@ export function DevelopmentSecurityWidget() {
     }
   }, [isDevelopment]);
 
-  const summary = useMemo(() => {
-    if (!payload?.ok) {
-      return DEBUG_TITLE;
-    }
-    if (!payload.authenticated) {
-      return "Not signed in";
-    }
-    const role = payload.authorization?.roleKey ?? "unknown-role";
-    const org = payload.authorization?.orgId ?? payload.session.session.activeOrganizationId ?? null;
-    return `${role} | org ${truncateId(org)}`;
-  }, [payload]);
-
-  const collapsedBadge = useMemo(() => {
-    if (!payload?.ok || !payload.authenticated) {
-      return null;
-    }
-    const role = payload.authorization?.roleKey ?? "unknown";
-    return <Badge variant="secondary">{role}</Badge>;
-  }, [payload]);
-
+  // Register with DevToolbar
   const handleToggle = useCallback(() => {
     setOpen((previous) => {
       const next = !previous;
@@ -75,6 +56,20 @@ export function DevelopmentSecurityWidget() {
       return next;
     });
   }, [fetchSecurity]);
+
+
+
+  const summary = useMemo(() => {
+    if (!payload?.ok) {
+      return DEBUG_TITLE;
+    }
+    if (!payload.authenticated) {
+      return "Not signed in";
+    }
+    const role = payload.authorization?.roleKey ?? "unknown-role";
+    const org = payload.authorization?.orgId ?? payload.session.session.activeOrganizationId ?? null;
+    return `${role} | org ${truncateId(org)}`;
+  }, [payload]);
 
   const handleCopyJson = useCallback(async () => {
     if (!payload) {
@@ -91,13 +86,13 @@ export function DevelopmentSecurityWidget() {
     window.setTimeout(() => setToast(null), TOAST_SHORT_MS);
   }, []);
 
-  if (!isDevelopment) {
-    return null;
-  }
+  const component = useMemo(() => {
+    if (!isDevelopment) {
+      return null;
+    }
 
-  return (
-    <div className="fixed bottom-4 right-4 z-50">
-      {open ? (
+    return (
+      <div className="fixed bottom-4 right-20 z-(--z-dev-widget) animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="w-[360px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border bg-card text-foreground shadow-xl backdrop-blur">
           <div className="flex items-start justify-between gap-3 px-4 py-3">
             <div className="min-w-0">
@@ -150,13 +145,23 @@ export function DevelopmentSecurityWidget() {
             )}
           </div>
         </div>
-      ) : (
-        <Button type="button" variant="secondary" size="sm" className="rounded-full shadow-lg" onClick={handleToggle}>
-          <Shield className="h-4 w-4" />
-          <span>Security</span>
-          {collapsedBadge ? <span className="ml-1">{collapsedBadge}</span> : null}
-        </Button>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }, [summary, payload, isLoading, toast, fetchSecurity, handleCopyValue, handleCopyJson, isDevelopment]); // handlers are stable
+
+  const action = useMemo(() => ({
+    id: "security",
+    label: "Security",
+    icon: <Shield className="h-4 w-4" />,
+    onClick: handleToggle,
+    isActive: open,
+    order: 10,
+    component,
+    disabled: !isDevelopment
+  }), [handleToggle, open, component, isDevelopment]);
+
+  useRegisterDevelopmentAction(action);
+
+  // No render
+  return null;
 }

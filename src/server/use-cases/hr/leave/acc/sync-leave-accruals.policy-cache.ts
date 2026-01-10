@@ -6,17 +6,22 @@ import { normalizeLeaveType } from './sync-leave-accruals.entitlements';
 
 export class PolicyCache {
     private readonly cache = new Map<string, LeavePolicy>();
+    private readonly primaryLeaveType?: string;
 
     private constructor(
         private readonly policyRepository: ILeavePolicyRepository,
         private readonly tenant: TenantScope,
-    ) { }
+        primaryLeaveType?: string,
+    ) {
+        this.primaryLeaveType = primaryLeaveType?.trim().toLowerCase();
+    }
 
     static async bootstrap(
         policyRepository: ILeavePolicyRepository,
         tenant: TenantScope,
+        primaryLeaveType?: string,
     ): Promise<PolicyCache> {
-        const cache = new PolicyCache(policyRepository, tenant);
+        const cache = new PolicyCache(policyRepository, tenant, primaryLeaveType);
         await cache.warm();
         return cache;
     }
@@ -35,7 +40,12 @@ export class PolicyCache {
             return cached;
         }
 
-        const policyId = await resolveLeavePolicyId({ leavePolicyRepository: this.policyRepository }, this.tenant, leaveType);
+        const policyId = await resolveLeavePolicyId(
+            { leavePolicyRepository: this.policyRepository },
+            this.tenant,
+            leaveType,
+            this.primaryLeaveType ? { primaryLeaveType: this.primaryLeaveType } : undefined,
+        );
         const policy = await this.policyRepository.getLeavePolicy(this.tenant, policyId);
         if (policy) {
             this.add(policy);

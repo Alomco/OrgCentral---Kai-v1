@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 import type { MemberActionState } from '../actions';
@@ -16,16 +16,27 @@ export function MemberActions(props: {
     status: MembershipStatus;
 }) {
     const router = useRouter();
+    const lastRefreshReference = useRef<string | null>(null);
 
     const [rolesState, rolesAction, rolesPending] = useActionState(updateMemberRolesAction, initialState);
     const [suspendState, suspendAction, suspendPending] = useActionState(suspendMemberAction, initialState);
     const [resumeState, resumeAction, resumePending] = useActionState(resumeMemberAction, initialState);
 
+    const rolesRequestId = rolesState.status === 'success' ? rolesState.requestId : null;
+    const suspendRequestId = suspendState.status === 'success' ? suspendState.requestId : null;
+    const resumeRequestId = resumeState.status === 'success' ? resumeState.requestId : null;
+    const activeRequestId = rolesRequestId ?? suspendRequestId ?? resumeRequestId;
+
     useEffect(() => {
-        if (rolesState.status === 'success' || suspendState.status === 'success' || resumeState.status === 'success') {
-            router.refresh();
+        if (!activeRequestId) {
+            return;
         }
-    }, [rolesState.status, suspendState.status, resumeState.status, router]);
+        if (lastRefreshReference.current === activeRequestId) {
+            return;
+        }
+        lastRefreshReference.current = activeRequestId;
+        router.refresh();
+    }, [activeRequestId, router]);
 
     const message =
         rolesState.status !== 'idle'

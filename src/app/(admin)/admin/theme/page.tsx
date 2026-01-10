@@ -27,7 +27,10 @@ export default async function AdminThemePage() {
         },
     );
 
-    const currentTheme = await getTenantTheme(authorization.orgId);
+    const currentTheme = await getTenantTheme(authorization.orgId, {
+        classification: authorization.dataClassification,
+        residency: authorization.dataResidency,
+    });
 
     return (
         <div className="space-y-6 p-6">

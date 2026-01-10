@@ -2,6 +2,7 @@
 
 import { Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
 
 export function ThemeTogglePanel() {
     const { theme, setTheme, resolvedTheme } = useTheme();
@@ -17,31 +18,45 @@ export function ThemeTogglePanel() {
     return (
         <article
             suppressHydrationWarning
-            className="rounded-2xl border border-emerald-900/70 bg-emerald-950/40 p-4 shadow-lg shadow-black/20"
+            className="rounded-xl p-5"
+            data-ui-surface="container"
         >
-            <Sun className="h-5 w-5 text-emerald-200" />
-            <h2 className="mt-3 text-lg font-semibold text-emerald-100">Theme Control</h2>
-            <p className="mt-2 text-sm text-emerald-200/70">
+            {/* Gradient icon box */}
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-primary to-accent text-white shadow-lg shadow-primary/25">
+                <Sun className="h-5 w-5" />
+            </div>
+
+            {/* Clean typography */}
+            <h2 className="mt-4 text-lg font-semibold tracking-tight">Theme Control</h2>
+            <p className="mt-1 text-sm text-muted-foreground/80">
                 Toggle between light, dark, and system themes.
             </p>
+
+            {/* Pill buttons - no borders, use shadows */}
             <div className="mt-4 flex flex-wrap gap-2">
                 {themes.map(({ id, label, icon: Icon }) => (
                     <button
                         key={id}
                         onClick={() => setTheme(id)}
                         disabled={!isMounted}
-                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition ${isMounted && currentTheme === id
-                            ? 'border-emerald-500 bg-emerald-900/50 text-emerald-100'
-                            : 'border-emerald-800 text-emerald-300/70 hover:border-emerald-600 hover:text-emerald-100'
-                            } ${isMounted ? '' : 'opacity-60'}`}
+                        data-ui-surface={isMounted && currentTheme === id ? 'interactive' : undefined}
+                        className={cn(
+                            'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200',
+                            isMounted && currentTheme === id
+                                ? 'bg-primary/15 text-primary shadow-sm shadow-primary/20'
+                                : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                            !isMounted && 'opacity-50'
+                        )}
                     >
                         <Icon className="h-4 w-4" />
                         {label}
                     </button>
                 ))}
             </div>
-            <div className="mt-3">
-                <span className="inline-flex rounded-full border border-emerald-900 px-2.5 py-1 text-xs text-emerald-300/70">
+
+            {/* Status badge - subtle background */}
+            <div className="mt-4">
+                <span className="inline-flex rounded-full bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground">
                     Current: {currentTheme ?? 'loading'}
                 </span>
             </div>

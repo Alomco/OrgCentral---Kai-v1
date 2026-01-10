@@ -4,12 +4,21 @@ import type {
     EmploymentContractCreateInput,
     OnboardingChecklistConfig,
 } from '@/server/types/hr/onboarding-workflows';
-import type { ProfileMutationPayload, EmploymentTypeCode, ContractTypeCode } from '@/server/types/hr/people';
-import { EMPLOYMENT_TYPE_VALUES, CONTRACT_TYPE_VALUES } from '@/server/types/hr/people';
+import type { ProfileMutationPayload } from '@/server/types/hr/people';
 import type { JsonValue } from '@/server/types/hr/people';
 import type { OnboardingInvitation } from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
 import { ValidationError } from '@/server/errors';
 import type { CreateEmployeeProfileInput } from '@/server/use-cases/hr/people/create-employee-profile';
+import {
+    coerceNumber,
+    coerceString,
+    extractStringArray,
+    isJsonValue,
+    isRecord,
+    normalizePaySchedule,
+    resolveContractType,
+    resolveEmploymentType,
+} from './complete-onboarding-invite.normalizers';
 
 export interface OnboardingPayload {
     email?: string;
@@ -18,12 +27,16 @@ export interface OnboardingPayload {
     employeeNumber?: string;
     employmentType?: string;
     jobTitle?: string;
+    departmentId?: string;
+    startDate?: string;
+    managerEmployeeNumber?: string;
+    annualSalary?: number;
+    salaryCurrency?: string;
+    paySchedule?: string;
     eligibleLeaveTypes?: string[];
     onboardingTemplateId?: string;
     roles?: string[];
     contractType?: string;
-    startDate?: string;
-    departmentId?: string;
     location?: string;
     workingPattern?: JsonValue;
     benefits?: JsonValue;
@@ -41,12 +54,16 @@ export function extractOnboardingPayload(invitation: OnboardingInvitation): Onbo
         employeeNumber: coerceString(data.employeeNumber),
         employmentType: coerceString(data.employmentType),
         jobTitle: coerceString(data.jobTitle ?? data.position),
+        departmentId: coerceString(data.departmentId),
+        startDate: coerceString(data.startDate),
+        managerEmployeeNumber: coerceString(data.managerEmployeeNumber),
+        annualSalary: coerceNumber(data.annualSalary ?? data.salary),
+        salaryCurrency: coerceString(data.salaryCurrency ?? data.currency),
+        paySchedule: coerceString(data.paySchedule),
         eligibleLeaveTypes: extractStringArray(data.eligibleLeaveTypes),
         onboardingTemplateId: coerceString(data.onboardingTemplateId),
         roles: extractStringArray(data.roles),
         contractType: coerceString(data.contractType),
-        startDate: coerceString(data.startDate),
-        departmentId: coerceString(data.departmentId),
         location: coerceString(data.location),
         workingPattern: isJsonValue(data.workingPattern) ? data.workingPattern : undefined,
         benefits: isJsonValue(data.benefits) ? data.benefits : undefined,
@@ -72,15 +89,24 @@ export function buildProfileData(params: {
     invitation: OnboardingInvitation;
 }): ProfileMutationPayload['changes'] & { userId: string; employeeNumber: string } {
     const employmentType = resolveEmploymentType(params.payload.employmentType);
+    const profileMetadata = buildProfileMetadata(params.invitation);
+    const metadata = params.payload.managerEmployeeNumber
+        ? { ...(profileMetadata as Record<string, JsonValue | undefined>), managerEmployeeNumber: params.payload.managerEmployeeNumber }
+        : profileMetadata;
     return {
         userId: params.userId,
         employeeNumber: params.employeeNumber,
         employmentType,
         jobTitle: params.payload.jobTitle,
+        departmentId: params.payload.departmentId,
+        startDate: params.payload.startDate,
+        annualSalary: params.payload.annualSalary,
+        salaryCurrency: params.payload.salaryCurrency,
+        paySchedule: normalizePaySchedule(params.payload.paySchedule),
         email: params.payload.email ?? params.invitation.targetEmail,
         displayName: params.payload.displayName,
         eligibleLeaveTypes: params.payload.eligibleLeaveTypes ?? [],
-        metadata: buildProfileMetadata(params.invitation),
+        metadata,
     } satisfies ProfileMutationPayload['changes'] & { userId: string; employeeNumber: string };
 }
 
@@ -157,75 +183,4 @@ function buildProfileMetadata(invitation: OnboardingInvitation): JsonValue {
             : new Date(invitation.createdAt).toISOString(),
         organizationName: invitation.organizationName,
     } satisfies JsonValue;
-}
-
-function resolveEmploymentType(value?: string): EmploymentTypeCode {
-    if (!value) {
-        return 'FULL_TIME';
-    }
-    const normalized = value.replace(/[-\s]/g, '_').toUpperCase();
-    return (EMPLOYMENT_TYPE_VALUES.includes(normalized as EmploymentTypeCode)
-        ? normalized
-        : 'FULL_TIME') as EmploymentTypeCode;
-}
-
-function resolveContractType(
-    value: string | undefined,
-    employmentType: string | undefined,
-): ContractTypeCode | null {
-    if (value) {
-        const normalized = value.replace(/[-\s]/g, '_').toUpperCase();
-        if (CONTRACT_TYPE_VALUES.includes(normalized as ContractTypeCode)) {
-            return normalized as ContractTypeCode;
-        }
-    }
-    const fallback = employmentType?.replace(/[-\s]/g, '_').toUpperCase();
-    if (fallback === 'CONTRACTOR') {
-        return 'AGENCY';
-    }
-    if (fallback === 'INTERN' || fallback === 'APPRENTICE') {
-        return 'APPRENTICESHIP';
-    }
-    return 'PERMANENT';
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function extractStringArray(value: unknown): string[] | undefined {
-    if (!Array.isArray(value)) {
-        return undefined;
-    }
-    const next = value
-        .filter((entry): entry is string => typeof entry === 'string')
-        .map((entry) => entry.trim())
-        .filter((entry) => entry.length > 0);
-    return next.length > 0 ? next : undefined;
-}
-
-function coerceString(value: unknown): string | undefined {
-    if (typeof value !== 'string') {
-        return undefined;
-    }
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function isJsonValue(value: unknown): value is JsonValue {
-    if (
-        value === null ||
-        typeof value === 'string' ||
-        typeof value === 'number' ||
-        typeof value === 'boolean'
-    ) {
-        return true;
-    }
-    if (Array.isArray(value)) {
-        return value.every(isJsonValue);
-    }
-    if (isRecord(value)) {
-        return Object.values(value).every(isJsonValue);
-    }
-    return false;
 }

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getMembershipService } from '@/server/services/org/membership/membership-service.provider';
+import { isInvitationDeliverySuccessful } from '@/server/use-cases/notifications/invitation-email.helpers';
 import { sendInvitationEmail } from '@/server/use-cases/notifications/send-invitation-email';
 import { getInvitationEmailDependencies } from '@/server/use-cases/notifications/invitation-email.provider';
 import { type InviteMemberActionState } from './shared';
@@ -75,14 +76,15 @@ export async function inviteMemberAction(
         if (!result.alreadyInvited) {
             try {
                 const dependencies = getInvitationEmailDependencies();
-                await sendInvitationEmail(dependencies, {
+                const emailResult = await sendInvitationEmail(dependencies, {
                     authorization,
                     invitationToken: result.token,
                 });
-            } catch (error) {
-                message = error instanceof Error
-                    ? `Invitation created, but email delivery failed: ${error.message}`
-                    : 'Invitation created, but email delivery failed.';
+                if (!isInvitationDeliverySuccessful(emailResult.delivery)) {
+                    message = 'Invitation created. Share the invite link with the recipient.';
+                }
+            } catch {
+                message = 'Invitation created. Share the invite link with the recipient.';
             }
         }
 

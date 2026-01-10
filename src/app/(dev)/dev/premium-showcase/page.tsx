@@ -7,6 +7,10 @@
 
 import { Sparkles, Star, Zap, Heart, Settings, User } from 'lucide-react';
 
+// Client Components
+import { InteractiveElementsShowcase } from './_components/interactive-elements-showcase';
+import { ThemeControlPanel } from './_components/theme-control-panel';
+
 // Decorative
 import { RotatingBorderCard, NeonBorderCard, GradientBorderCard } from '@/components/theme/decorative/borders';
 import { FloatingParticles } from '@/components/theme/decorative/particles';
@@ -27,6 +31,9 @@ export default function PremiumShowcasePage() {
             <GradientOrb position="top-right" color="primary" />
             <GradientOrb position="bottom-left" color="accent" />
 
+            {/* Floating Theme Control Panel */}
+            <ThemeControlPanel />
+
             <div className="relative z-10 mx-auto max-w-6xl space-y-12">
                 {/* Header */}
                 <SlideUp>
@@ -40,6 +47,9 @@ export default function PremiumShowcasePage() {
                         </Text>
                     </div>
                 </SlideUp>
+
+                {/* Interactive Elements - Phase 1 */}
+                <InteractiveElementsShowcase />
 
                 <ThemeDivider variant="glow" />
 

@@ -35,21 +35,21 @@ export function AcceptInvitationForm({
         <form action={action} className="space-y-4">
             <input type="hidden" name="token" value={token} />
 
-            <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 text-left text-sm text-slate-700 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60 dark:text-slate-300">
-                <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Invitation details</p>
+            <div className="rounded-2xl border border-border bg-card/70 p-4 text-left text-sm text-muted-foreground shadow-sm">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Invitation details</p>
                 <div className="mt-2 space-y-2 text-sm">
                     <div className="flex items-center justify-between">
-                        <span className="text-slate-500 dark:text-slate-400">Organization</span>
-                        <span className="font-semibold text-slate-900 dark:text-white">{organizationName}</span>
+                        <span className="text-muted-foreground">Organization</span>
+                        <span className="font-semibold text-foreground">{organizationName}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-slate-500 dark:text-slate-400">Invited email</span>
-                        <span className="font-medium text-slate-900 dark:text-white">{targetEmail}</span>
+                        <span className="text-muted-foreground">Invited email</span>
+                        <span className="font-medium text-foreground">{targetEmail}</span>
                     </div>
                     {roleList.length > 0 ? (
                         <div className="flex items-center justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">Role</span>
-                            <span className="font-medium text-slate-900 dark:text-white">{roleList[0]}</span>
+                            <span className="text-muted-foreground">Role</span>
+                            <span className="font-medium text-foreground">{roleList[0]}</span>
                         </div>
                     ) : null}
                 </div>

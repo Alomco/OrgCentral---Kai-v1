@@ -64,6 +64,7 @@ export interface LeaveRequest extends TenantMetadata {
   isHalfDay: boolean;
   coveringEmployeeId?: EmployeeId | null;
   coveringEmployeeName?: string | null;
+  departmentId?: string | null;
   status: LeaveStatus;
   createdAt: TimestampString;
   createdBy: UserId;
@@ -77,6 +78,29 @@ export interface LeaveRequest extends TenantMetadata {
   cancelledAt?: TimestampString;
   cancellationReason?: string;
   managerComments?: string | null;
+  attachmentCount?: number;
+}
+
+export interface LeaveAttachment extends TenantMetadata {
+  id: string;
+  orgId: OrgId;
+  requestId: LeaveRequestId;
+  fileName: string;
+  storageKey: string;
+  contentType: string;
+  fileSize: number;
+  checksum?: string | null;
+  uploadedByUserId: UserId;
+  uploadedAt: TimestampString;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface LeaveAttachmentInput extends Omit<LeaveAttachment, 'id' | 'uploadedAt' | keyof TenantMetadata> {
+  uploadedAt?: TimestampString;
+  dataResidency?: never;
+  dataClassification?: never;
+  auditSource?: never;
+  auditBatchId?: never;
 }
 
 export interface LeaveBalance extends TenantMetadata {

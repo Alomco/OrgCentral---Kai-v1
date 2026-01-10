@@ -2,14 +2,17 @@
 
 import { headers } from 'next/headers';
 
-import { ValidationError } from '@/server/errors';
+import { ValidationError, type ErrorDetails } from '@/server/errors';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ONBOARDING_INVITATIONS } from '@/server/repositories/cache-scopes';
 import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
 import { PrismaOnboardingInvitationRepository } from '@/server/repositories/prisma/hr/onboarding';
 import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
+import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { sendOnboardingInvite } from '@/server/use-cases/hr/onboarding/send-onboarding-invite';
+import { isInvitationDeliverySuccessful } from '@/server/use-cases/notifications/invitation-email.helpers';
+import { resendInvitationEmail } from '@/server/use-cases/notifications/resend-invitation-email';
 import { sendInvitationEmail } from '@/server/use-cases/notifications/send-invitation-email';
 import { getInvitationEmailDependencies } from '@/server/use-cases/notifications/invitation-email.provider';
 
@@ -27,6 +30,68 @@ const invitationRepository = new PrismaOnboardingInvitationRepository();
 const organizationRepository = new PrismaOrganizationRepository({});
 
 const RESOURCE_TYPE = 'hr.onboarding';
+
+interface PendingInvitationDetails {
+    kind: 'pending_invitation';
+    token: string;
+}
+
+function readPendingInvitationToken(details?: ErrorDetails): string | null {
+    const candidate = details as PendingInvitationDetails | undefined;
+    if (candidate?.kind === 'pending_invitation' && candidate.token.trim().length > 0) {
+        return candidate.token;
+    }
+    return null;
+}
+
+interface InvitationEmailFeedback {
+    message: string;
+    invitationUrl?: string;
+}
+
+async function buildSendInviteFeedback(
+    authorization: RepositoryAuthorizationContext,
+    token: string,
+): Promise<InvitationEmailFeedback> {
+    const fallbackMessage = 'Invitation created. Share the invite link with the employee.';
+    try {
+        const dependencies = getInvitationEmailDependencies();
+        const emailResult = await sendInvitationEmail(dependencies, {
+            authorization,
+            invitationToken: token,
+        });
+        return {
+            message: isInvitationDeliverySuccessful(emailResult.delivery)
+                ? 'Invitation created.'
+                : fallbackMessage,
+            invitationUrl: emailResult.invitationUrl,
+        };
+    } catch {
+        return { message: fallbackMessage };
+    }
+}
+
+async function buildResendInviteFeedback(
+    authorization: RepositoryAuthorizationContext,
+    token: string,
+): Promise<InvitationEmailFeedback> {
+    const fallbackMessage = 'Invitation already exists. Share the invite link with the employee.';
+    try {
+        const dependencies = getInvitationEmailDependencies();
+        const resendResult = await resendInvitationEmail(dependencies, {
+            authorization,
+            invitationToken: token,
+        });
+        return {
+            message: isInvitationDeliverySuccessful(resendResult.delivery)
+                ? 'Invitation already exists. Email resent.'
+                : fallbackMessage,
+            invitationUrl: resendResult.invitationUrl,
+        };
+    } catch {
+        return { message: fallbackMessage };
+    }
+}
 
 export async function inviteEmployeeAction(
     previous: OnboardingInviteFormState,
@@ -94,18 +159,7 @@ export async function inviteEmployeeAction(
             },
         );
 
-        let message = 'Invitation created.';
-        try {
-            const dependencies = getInvitationEmailDependencies();
-            await sendInvitationEmail(dependencies, {
-                authorization: session.authorization,
-                invitationToken: result.token,
-            });
-        } catch (error) {
-            message = error instanceof Error
-                ? `Invitation created, but email delivery failed: ${error.message}`
-                : 'Invitation created, but email delivery failed.';
-        }
+        const emailFeedback = await buildSendInviteFeedback(session.authorization, result.token);
 
         await invalidateOrgCache(
             session.authorization.orgId,
@@ -116,8 +170,9 @@ export async function inviteEmployeeAction(
 
         return {
             status: 'success',
-            message,
+            message: emailFeedback.message,
             token: result.token,
+            invitationUrl: emailFeedback.invitationUrl,
             fieldErrors: undefined,
             values: {
                 ...parsed.data,
@@ -128,6 +183,35 @@ export async function inviteEmployeeAction(
             },
         };
     } catch (error) {
+        if (error instanceof ValidationError) {
+            const pendingToken = readPendingInvitationToken(error.details);
+            if (pendingToken) {
+                const emailFeedback = await buildResendInviteFeedback(session.authorization, pendingToken);
+
+                await invalidateOrgCache(
+                    session.authorization.orgId,
+                    CACHE_SCOPE_ONBOARDING_INVITATIONS,
+                    session.authorization.dataClassification,
+                    session.authorization.dataResidency,
+                );
+
+                return {
+                    status: 'success',
+                    message: emailFeedback.message,
+                    token: pendingToken,
+                    invitationUrl: emailFeedback.invitationUrl,
+                    fieldErrors: undefined,
+                    values: {
+                        ...parsed.data,
+                        email: '',
+                        displayName: '',
+                        employeeNumber: '',
+                        jobTitle: '',
+                    },
+                };
+            }
+        }
+
         const message = error instanceof ValidationError
             ? error.message
             : error instanceof Error

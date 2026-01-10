@@ -41,7 +41,7 @@ type OrgUser = z.infer<typeof orgUserSchema>;
 export default async function OrgMembersPage({
     searchParams,
 }: {
-    searchParams?: OrgMembersSearchParams;
+    searchParams?: Promise<OrgMembersSearchParams>;
 }) {
     noStore();
 
@@ -57,7 +57,8 @@ export default async function OrgMembersPage({
     );
 
     const userService: UserServiceContract = getUserService();
-    const query = parseOrgMembersQuery(searchParams ?? {});
+    const resolvedSearchParams = searchParams ? await searchParams : {};
+    const query = parseOrgMembersQuery(resolvedSearchParams);
     const filters = {
         search: query.search.length > 0 ? query.search : undefined,
         status: query.status,

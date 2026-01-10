@@ -1,5 +1,6 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
+import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { TrainingRecord } from '@/server/types/hr-types';
@@ -21,7 +22,7 @@ export async function getTrainingRecordsForUi(
         cachedInput: GetTrainingRecordsForUiInput,
     ): Promise<GetTrainingRecordsForUiResult> {
         'use cache';
-        cacheLife('minutes');
+        cacheLife(CACHE_LIFE_SHORT);
 
         const service = getTrainingService();
         const result = await service.listTrainingRecords({

@@ -16,6 +16,7 @@ import type { ChecklistTemplate } from '@/server/types/onboarding-types';
 import { FieldError } from '../../_components/field-error';
 import { inviteEmployeeAction } from '../actions';
 import type { OnboardingInviteFormState } from '../form-state';
+import { useInviteEmployeeToast } from './invite-employee-toast';
 
 export interface InviteEmployeeFormProps {
     initialState: OnboardingInviteFormState;
@@ -67,7 +68,8 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
     const previousStatus = useRef(state.status);
 
     useEffect(() => {
-        if (!pending && state.status !== 'idle' && previousStatus.current !== state.status) {
+        const priorStatus = previousStatus.current;
+        if (!pending && state.status !== 'idle' && priorStatus !== state.status) {
             feedbackReference.current?.focus();
         }
         previousStatus.current = state.status;
@@ -76,6 +78,8 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
     useEffect(() => {
         formReference.current?.setAttribute('aria-busy', pending ? 'true' : 'false');
     }, [pending]);
+
+    useInviteEmployeeToast(state, pending);
 
     const initialIncludeTemplate = useMemo(
         () => state.values.includeTemplate ?? Boolean(state.values.onboardingTemplateId),
@@ -199,7 +203,7 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
             <div className="flex items-center gap-3">
                 <Button type="submit" disabled={pending}>
                     {pending ? <Spinner className="mr-2" /> : null}
-                    {pending ? 'Creating…' : 'Create invite'}
+                    {pending ? 'Creating...' : 'Create invite'}
                 </Button>
                 <div className="text-xs text-muted-foreground">Invitation creation is never cached.</div>
             </div>

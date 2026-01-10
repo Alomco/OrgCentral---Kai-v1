@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 
-import { ValidationError } from '@/server/errors';
+import { ValidationError, type ErrorDetails } from '@/server/errors';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ONBOARDING_INVITATIONS } from '@/server/repositories/cache-scopes';
 import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
@@ -10,11 +10,11 @@ import { PrismaOnboardingInvitationRepository } from '@/server/repositories/pris
 import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { sendOnboardingInvite } from '@/server/use-cases/hr/onboarding/send-onboarding-invite';
-import { sendInvitationEmail } from '@/server/use-cases/notifications/send-invitation-email';
-import { getInvitationEmailDependencies } from '@/server/use-cases/notifications/invitation-email.provider';
 import { checkExistingOnboardingTarget } from '@/server/use-cases/hr/onboarding/check-existing-onboarding-target';
 
 import { onboardingWizardSchema, type OnboardingWizardValues } from './wizard.schema';
+import type { EmailCheckResult, WizardSubmitResult } from './wizard.types';
+import { attemptInvitationEmail, resendPendingInvitation } from './wizard.email';
 
 const profileRepository = new PrismaEmployeeProfileRepository();
 const invitationRepository = new PrismaOnboardingInvitationRepository();
@@ -22,10 +22,17 @@ const organizationRepository = new PrismaOrganizationRepository({});
 
 const RESOURCE_TYPE = 'hr.onboarding';
 
-export interface WizardSubmitResult {
-    success: boolean;
-    token?: string;
-    error?: string;
+interface PendingInvitationDetails {
+    kind: 'pending_invitation';
+    token: string;
+}
+
+function readPendingInvitationToken(details?: ErrorDetails): string | null {
+    const candidate = details as PendingInvitationDetails | undefined;
+    if (candidate?.kind === 'pending_invitation' && candidate.token.trim().length > 0) {
+        return candidate.token;
+    }
+    return null;
 }
 
 export async function submitOnboardingWizardAction(
@@ -75,23 +82,23 @@ export async function submitOnboardingWizardAction(
                 displayName: parsed.data.displayName,
                 employeeNumber: parsed.data.employeeNumber,
                 jobTitle: parsed.data.jobTitle,
+                departmentId: parsed.data.departmentId,
                 employmentType: parsed.data.employmentType,
+                startDate: parsed.data.startDate,
+                managerEmployeeNumber: parsed.data.managerEmployeeNumber,
+                annualSalary: parsed.data.annualSalary,
+                salaryCurrency: parsed.data.currency,
+                paySchedule: parsed.data.paySchedule,
                 eligibleLeaveTypes: parsed.data.eligibleLeaveTypes ?? [],
                 onboardingTemplateId,
                 roles: [],
             },
         );
 
-        // Try to send the invitation email
-        try {
-            const dependencies = getInvitationEmailDependencies();
-            await sendInvitationEmail(dependencies, {
-                authorization: session.authorization,
-                invitationToken: result.token,
-            });
-        } catch {
-            // Email sending failed but invitation was created
-        }
+        const emailResult = await attemptInvitationEmail(session.authorization, result.token);
+        const message = emailResult.delivered
+            ? 'Invitation created. Email sent.'
+            : 'Invitation created, but the email could not be delivered. Share the invite link manually.';
 
         // Invalidate cache
         await invalidateOrgCache(
@@ -104,9 +111,17 @@ export async function submitOnboardingWizardAction(
         return {
             success: true,
             token: result.token,
+            invitationUrl: emailResult.invitationUrl,
+            emailDelivered: emailResult.delivered,
+            message,
         };
     } catch (error) {
         if (error instanceof ValidationError) {
+            const pendingToken = readPendingInvitationToken(error.details);
+            if (pendingToken) {
+                return resendPendingInvitation(session.authorization, pendingToken);
+            }
+
             return {
                 success: false,
                 error: error.message,
@@ -117,11 +132,6 @@ export async function submitOnboardingWizardAction(
             error: error instanceof Error ? error.message : 'Failed to create invitation.',
         };
     }
-}
-
-export interface EmailCheckResult {
-    exists: boolean;
-    reason?: string;
 }
 
 export async function checkEmailExistsAction(email: string): Promise<EmailCheckResult> {
@@ -155,8 +165,8 @@ export async function checkEmailExistsAction(email: string): Promise<EmailCheckR
 
         if (result.exists) {
             const reason = result.kind === 'profile'
-                ? 'An employee profile with this email already exists.'
-                : 'A pending invitation has already been sent to this email.';
+                ? 'An employee profile with this email already exists. Update the existing profile instead of inviting again.'
+                : 'A pending invitation has already been sent to this email. You can resend it from the invitations list.';
             return { exists: true, reason };
         }
 

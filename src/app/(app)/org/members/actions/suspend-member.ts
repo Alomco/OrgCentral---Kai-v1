@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
@@ -17,6 +18,7 @@ export async function suspendMemberAction(
     formData: FormData,
 ): Promise<MemberActionState> {
     void _previous;
+    const requestId = randomUUID();
     const headerStore = await headers();
 
     const parsed = updateMemberStatusSchema.safeParse({
@@ -24,7 +26,7 @@ export async function suspendMemberAction(
     });
 
     if (!parsed.success) {
-        return { status: 'error', message: 'Invalid suspend input.' };
+        return { status: 'error', message: 'Invalid suspend input.', requestId };
     }
 
     const { authorization } = await getSessionContext(
@@ -41,8 +43,12 @@ export async function suspendMemberAction(
             authorization,
             targetUserId: parsed.data.targetUserId,
         });
-        return { status: 'success', message: 'Member suspended.' };
+        return { status: 'success', message: 'Member suspended.', requestId };
     } catch (error) {
-        return { status: 'error', message: error instanceof Error ? error.message : 'Failed to suspend member.' };
+        return {
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Failed to suspend member.',
+            requestId,
+        };
     }
 }

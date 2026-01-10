@@ -4,10 +4,12 @@
     --ui-surface-container-opacity: clamp(0.82, calc(var(--ui-card-opacity) - 0.08), 0.96);
     --ui-surface-item-opacity: clamp(0.88, calc(var(--ui-card-opacity) - 0.02), 0.98);
     --ui-surface-interactive-opacity: clamp(0.92, calc(var(--ui-card-opacity) + 0.03), 1);
+    --ui-popup-opacity-min: 0.9;
+    --ui-surface-popover-opacity: clamp(var(--ui-popup-opacity-min), calc(var(--ui-card-opacity) + 0.02), 1);
     --ui-surface-container-fill: hsl(var(--card) / var(--ui-surface-container-opacity));
     --ui-surface-item-fill: hsl(var(--card) / var(--ui-surface-item-opacity));
     --ui-surface-interactive-fill: hsl(var(--card) / var(--ui-surface-interactive-opacity));
-    --ui-surface-popover-fill: hsl(var(--popover) / clamp(0.9, calc(var(--ui-card-opacity) + 0.02), 1));
+    --ui-surface-popover-fill: hsl(var(--popover) / var(--ui-surface-popover-opacity));
     --ui-surface-blur: var(--ui-backdrop-blur);
     --ui-surface-item-blur: clamp(0px, calc(var(--ui-backdrop-blur) - 8px), 10px);
     --ui-surface-interactive-blur: clamp(0px, calc(var(--ui-backdrop-blur) - 6px), 12px);

@@ -1,4 +1,4 @@
-import { PrismaLeaveBalanceRepository, PrismaLeavePolicyRepository, PrismaLeaveRequestRepository } from '@/server/repositories/prisma/hr/leave';
+import { PrismaLeaveBalanceRepository, PrismaLeavePolicyRepository, PrismaLeaveRequestRepository, PrismaLeaveAttachmentRepository } from '@/server/repositories/prisma/hr/leave';
 import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
 import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
 import { LeaveService, type LeaveServiceDependencies } from './leave-service';
@@ -8,12 +8,14 @@ import { getNotificationService } from '@/server/services/notifications/notifica
 const leaveRequestRepository = new PrismaLeaveRequestRepository();
 const leaveBalanceRepository = new PrismaLeaveBalanceRepository();
 const leavePolicyRepository = new PrismaLeavePolicyRepository();
+const leaveAttachmentRepository = new PrismaLeaveAttachmentRepository();
 const organizationRepository = new PrismaOrganizationRepository();
 const profileRepository = new PrismaEmployeeProfileRepository();
 const defaultLeaveServiceDependencies: LeaveServiceDependencies = {
     leaveRequestRepository,
     leaveBalanceRepository,
     leavePolicyRepository,
+    leaveAttachmentRepository,
     organizationRepository,
     profileRepository,
     hrNotificationService: getHrNotificationService(),
@@ -36,6 +38,9 @@ export function getLeaveService(overrides?: Partial<LeaveServiceDependencies>): 
 export type LeaveServiceContract = Pick<
     LeaveService,
     | 'submitLeaveRequest'
+    | 'addLeaveAttachments'
+    | 'listLeaveAttachments'
+    | 'presignLeaveAttachmentDownload'
     | 'approveLeaveRequest'
     | 'rejectLeaveRequest'
     | 'cancelLeaveRequest'

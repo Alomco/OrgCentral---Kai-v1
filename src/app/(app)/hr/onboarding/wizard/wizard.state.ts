@@ -8,6 +8,8 @@ export interface OnboardingWizardState {
     currentStep: number;
     message?: string;
     token?: string;
+    invitationUrl?: string;
+    emailDelivered?: boolean;
     fieldErrors?: FieldErrors<OnboardingWizardValues>;
     values: OnboardingWizardValues;
     /** Email collision check result */

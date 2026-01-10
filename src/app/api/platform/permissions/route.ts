@@ -2,8 +2,6 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getAppPermissionsController, createAppPermissionController } from '@/server/api-adapters/platform/permissions-controller';
 import { DefaultErrorMapper } from '@/server/api-adapters/error-mappers/default-error-mapper';
 
-export const dynamic = 'force-dynamic';
-
 export async function GET(request: NextRequest) {
     try {
         const result = await getAppPermissionsController(request);

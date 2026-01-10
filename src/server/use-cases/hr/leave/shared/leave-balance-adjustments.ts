@@ -51,6 +51,23 @@ export async function reconcileBalanceForApproval(
     });
 }
 
+export async function reconcileBalanceForPendingIncrease(
+    deps: ApprovalBalanceDependencies,
+    context: LeaveBalanceAdjustmentContext,
+): Promise<void> {
+    const lookup = resolveBalanceLookup(context.request);
+    const state = await ensureBalanceState(deps, context.authorization.tenantScope, context.request, lookup);
+
+    const newPending = state.pending + context.request.totalDays;
+    const newAvailable = state.totalEntitlement - state.used - newPending;
+
+    await deps.leaveBalanceRepository.updateLeaveBalance(context.authorization.tenantScope, lookup.balanceId, {
+        pending: newPending,
+        available: newAvailable,
+        updatedAt: new Date(),
+    });
+}
+
 export async function reconcileBalanceForPendingReduction(
     deps: BalanceDependencies,
     context: LeaveBalanceAdjustmentContext,

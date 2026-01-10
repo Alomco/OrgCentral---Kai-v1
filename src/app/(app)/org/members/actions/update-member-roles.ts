@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
@@ -18,6 +19,7 @@ export async function updateMemberRolesAction(
     formData: FormData,
 ): Promise<MemberActionState> {
     void _previous;
+    const requestId = randomUUID();
     const headerStore = await headers();
 
     const parsed = updateMemberRolesSchema.safeParse({
@@ -26,7 +28,7 @@ export async function updateMemberRolesAction(
     });
 
     if (!parsed.success) {
-        return { status: 'error', message: 'Invalid role update input.' };
+        return { status: 'error', message: 'Invalid role update input.', requestId };
     }
 
     const { authorization } = await getSessionContext(
@@ -46,8 +48,12 @@ export async function updateMemberRolesAction(
             targetUserId: parsed.data.targetUserId,
             roles,
         });
-        return { status: 'success', message: 'Member roles updated.' };
+        return { status: 'success', message: 'Member roles updated.', requestId };
     } catch (error) {
-        return { status: 'error', message: error instanceof Error ? error.message : 'Failed to update roles.' };
+        return {
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Failed to update roles.',
+            requestId,
+        };
     }
 }

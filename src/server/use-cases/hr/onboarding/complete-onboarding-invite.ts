@@ -1,4 +1,4 @@
-import { EntityNotFoundError } from '@/server/errors';
+import { EntityNotFoundError, ValidationError } from '@/server/errors';
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
 import type { IEmploymentContractRepository } from '@/server/repositories/contracts/hr/people/employment-contract-repository-contract';
 import type {
@@ -10,19 +10,14 @@ import type {
 import type {
     IOnboardingInvitationRepository,
 } from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
-import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
-import type { IMembershipRepository, EmployeeProfilePayload, UserActivationPayload } from '@/server/repositories/contracts/org/membership';
+import type { IMembershipRepository } from '@/server/repositories/contracts/org/membership';
 import type { BillingServiceContract } from '@/server/services/billing/billing-service.provider';
-import { MembershipStatus } from '@prisma/client';
-import { normalizeToken, parseDate } from '@/server/use-cases/shared';
+import { normalizeToken } from '@/server/use-cases/shared';
 import {
     createEmployeeProfile,
     type CreateEmployeeProfileTransactionRunner,
 } from '@/server/use-cases/hr/people/create-employee-profile';
-import { createEmploymentContract } from '@/server/use-cases/hr/people/employment/create-employment-contract';
-import { getEmploymentContractByEmployee } from '@/server/use-cases/hr/people/employment/get-employment-contract-by-employee';
-import { instantiateOnboardingChecklist } from '@/server/use-cases/hr/people/create-employee-profile.helpers';
 import {
     buildAuthorizationForInvite,
     buildChecklistConfig,
@@ -35,6 +30,11 @@ import {
     resolveRoles,
     validateInvitation,
 } from './complete-onboarding-invite.helpers';
+import {
+    ensureMembership,
+    handleExistingProfile,
+    linkProfileIfNeeded,
+} from './complete-onboarding-invite.flow';
 
 export interface CompleteOnboardingInviteInput {
     inviteToken: string;
@@ -102,6 +102,13 @@ export async function completeOnboardingInvite(
         employeeNumber,
     );
 
+    if (existingProfile && existingProfile.userId !== input.userId && !canLinkExistingProfile(existingProfile, invitation.targetEmail)) {
+        throw new ValidationError('Employee number is already assigned to another profile.', {
+            employeeNumber,
+            profileId: existingProfile.id,
+        });
+    }
+
     const linkedProfile = existingProfile
         ? await linkProfileIfNeeded({
             repository: deps.employeeProfileRepository,
@@ -164,120 +171,23 @@ export async function completeOnboardingInvite(
 
 const INVITATION_RESOURCE = 'Onboarding invitation';
 
-async function handleExistingProfile(params: {
-    deps: CompleteOnboardingInviteDependencies;
-    authorization: RepositoryAuthorizationContext;
-    employeeNumber: string;
-    contractData: ReturnType<typeof buildContractData>;
-    onboardingChecklist: ReturnType<typeof buildChecklistConfig>;
-    existingProfile: NonNullable<Awaited<ReturnType<IEmployeeProfileRepository['findByEmployeeNumber']>>>;
-}): Promise<{ contractCreated?: boolean; checklistInstanceId?: string }> {
-    const { deps, authorization, employeeNumber, contractData, onboardingChecklist, existingProfile } = params;
-
-    const canCreateContract = existingProfile.userId === authorization.userId;
-
-    let contractCreated = false;
-    if (contractData && canCreateContract) {
-        if (!deps.employmentContractRepository) {
-            throw new Error('Employment contract repository is required when contract data is provided.');
-        }
-        const contractResult = await getEmploymentContractByEmployee(
-            { employmentContractRepository: deps.employmentContractRepository },
-            { authorization, employeeId: existingProfile.userId },
-        );
-        if (!contractResult.contract) {
-            await createEmploymentContract(
-                { employmentContractRepository: deps.employmentContractRepository },
-                { authorization, contractData },
-            );
-            contractCreated = true;
-        }
+function canLinkExistingProfile(profile: Awaited<ReturnType<IEmployeeProfileRepository['findByEmployeeNumber']>>, targetEmail: string): boolean {
+    if (!profile) {
+        return false;
     }
 
-    let checklistInstanceId: string | undefined;
-    if (onboardingChecklist) {
-        checklistInstanceId = await instantiateOnboardingChecklist({
-            dependencies: createProfileDependencies(deps),
-            authorization,
-            onboardingChecklist,
-            employeeIdentifier: employeeNumber,
-        });
+    const normalizedTarget = targetEmail.trim().toLowerCase();
+    const matchesEmail = [profile.email, profile.personalEmail]
+        .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+        .some((value) => value.trim().toLowerCase() === normalizedTarget);
+
+    if (matchesEmail) {
+        return true;
     }
 
-    return {
-        contractCreated: contractCreated || undefined,
-        checklistInstanceId,
-    };
-}
-
-async function linkProfileIfNeeded(params: {
-    repository: IEmployeeProfileRepository;
-    orgId: string;
-    profile: NonNullable<Awaited<ReturnType<IEmployeeProfileRepository['findByEmployeeNumber']>>>;
-    userId: string;
-}): Promise<NonNullable<Awaited<ReturnType<IEmployeeProfileRepository['findByEmployeeNumber']>>>> {
-    if (params.profile.userId === params.userId) {
-        return params.profile;
+    const metadata = profile.metadata;
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+        return false;
     }
-    await params.repository.linkProfileToUser(params.orgId, params.profile.employeeNumber, params.userId);
-    return {
-        ...params.profile,
-        userId: params.userId,
-    };
-}
-
-async function ensureMembership(params: {
-    authorization: RepositoryAuthorizationContext;
-    membershipRepository: IMembershipRepository;
-    billingService?: BillingServiceContract;
-    invitation: { invitedByUserId?: string | null; targetEmail: string };
-    payload: { displayName?: string; email?: string; roles?: string[] };
-    profile: {
-        jobTitle?: string | null;
-        employmentType: EmployeeProfilePayload['employmentType'];
-        startDate?: Date | string | null;
-        metadata?: EmployeeProfilePayload['metadata'];
-    };
-    userId: string;
-    employeeNumber: string;
-}): Promise<{ alreadyMember: boolean }> {
-    const existing = await params.membershipRepository.findMembership(params.authorization, params.userId);
-    if (existing) {
-        return { alreadyMember: true };
-    }
-
-    const userUpdate = buildUserActivationPayload(params.payload, params.invitation.targetEmail);
-    const profilePayload: EmployeeProfilePayload = {
-        orgId: params.authorization.orgId,
-        userId: params.userId,
-        employeeNumber: params.employeeNumber,
-        jobTitle: params.profile.jobTitle,
-        employmentType: params.profile.employmentType,
-        startDate: parseDate(params.profile.startDate ?? undefined) ?? null,
-        metadata: params.profile.metadata ?? null,
-    };
-
-    await params.membershipRepository.createMembershipWithProfile(params.authorization, {
-        userId: params.userId,
-        invitedByUserId: params.invitation.invitedByUserId ?? undefined,
-        roles: resolveRoles(params.payload.roles),
-        profile: profilePayload,
-        userUpdate,
-    });
-
-    await params.billingService?.syncSeats({ authorization: params.authorization });
-    return { alreadyMember: false };
-}
-
-function buildUserActivationPayload(
-    payload: { displayName?: string; email?: string },
-    fallbackEmail: string,
-): UserActivationPayload {
-    const email = payload.email?.trim() ?? fallbackEmail;
-    const displayName = payload.displayName?.trim() ?? email;
-    return {
-        displayName,
-        email,
-        status: MembershipStatus.ACTIVE,
-    };
+    return (metadata as Record<string, unknown>).preboarding === true;
 }

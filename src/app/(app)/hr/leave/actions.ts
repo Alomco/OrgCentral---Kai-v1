@@ -1,184 +1,133 @@
 'use server';
 
-import { randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import { requireSessionUser } from '@/server/api-adapters/http/session-helpers';
-import { resolveHoursPerDay } from '@/server/domain/leave/hours-per-day-resolver';
-import { PrismaAbsenceSettingsRepository } from '@/server/repositories/prisma/hr/absences';
 import { getLeaveService } from '@/server/services/hr/leave/leave-service.provider';
-import type { LeaveRequest } from '@/server/types/leave-types';
 import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { appLogger } from '@/server/logging/structured-logger';
 
-import { toFieldErrors } from '../_components/form-errors';
-import { leaveRequestFormValuesSchema } from './schema';
+import { readFormString } from './lib/leave-request-helpers';
 import type { LeaveRequestFormState } from './form-state';
+import { handleSubmitLeaveRequest } from './submit-leave-request';
 
-const FIELD_CHECK_MESSAGE = 'Check the highlighted fields and try again.';
+type ActionResult = { status: 'success'; message?: string } | { status: 'error'; message: string };
 
-function readFormString(formData: FormData, key: string): string {
-    const value = formData.get(key);
-    return typeof value === 'string' ? value : '';
-}
+type SessionOptions = Parameters<typeof getSessionContext>[1];
 
-function parseIsoDateInput(value: string): string {
-    const trimmed = value.trim();
-    if (!trimmed) {
-        throw new Error('Date is required.');
-    }
-
-    const date = new Date(`${trimmed}T00:00:00.000Z`);
-    if (Number.isNaN(date.getTime())) {
-        throw new Error('Invalid date.');
-    }
-
-    return date.toISOString();
-}
-
-const absenceSettingsRepository = new PrismaAbsenceSettingsRepository();
-
-function toDateFieldError(field: 'startDate' | 'endDate', error: unknown): Pick<LeaveRequestFormState, 'status' | 'message' | 'fieldErrors'> {
-    return {
-        status: 'error',
-        message: FIELD_CHECK_MESSAGE,
-        fieldErrors: {
-            [field]: error instanceof Error
-                ? error.message
-                : field === 'startDate'
-                    ? 'Invalid start date.'
-                    : 'Invalid end date.',
-        },
-    };
-}
+const REQUEST_ID_REQUIRED = 'Request id is required.';
 
 export async function submitLeaveRequestAction(
     previous: LeaveRequestFormState,
     formData: FormData,
 ): Promise<LeaveRequestFormState> {
-    let session: Awaited<ReturnType<typeof getSessionContext>>;
-    try {
-        const headerStore = await headers();
+    return handleSubmitLeaveRequest(previous, formData);
+}
 
-        session = await getSessionContext(
-            {},
-            {
-                headers: headerStore,
-                requiredPermissions: { employeeProfile: ['read'] },
-                auditSource: 'ui:hr:leave:submit',
-                action: HR_ACTION.CREATE,
-                resourceType: HR_RESOURCE.HR_LEAVE,
-            },
-        );
-    } catch {
-        return {
-            status: 'error',
-            message: 'Not authorized to submit leave requests.',
-            values: previous.values,
-        };
+export async function approveLeaveRequestAction(formData: FormData): Promise<ActionResult> {
+    const requestId = readFormString(formData, 'requestId');
+    if (!requestId) {
+        return { status: 'error', message: REQUEST_ID_REQUIRED };
     }
 
-    const candidate = {
-        leaveType: readFormString(formData, 'leaveType'),
-        startDate: readFormString(formData, 'startDate'),
-        endDate: readFormString(formData, 'endDate') || undefined,
-        totalDays: formData.get('totalDays'),
-        isHalfDay: formData.get('isHalfDay'),
-        reason: readFormString(formData, 'reason') || undefined,
-    };
+    return runLeaveMutation({
+        requestId,
+        sessionOptions: {
+            requiredAnyPermissions: [{ [HR_RESOURCE.HR_LEAVE]: ['approve'] }],
+            auditSource: 'ui:hr:leave:approve',
+            action: HR_ACTION.APPROVE,
+        },
+        mutate: async (service, authorization) => {
+            await service.approveLeaveRequest({ authorization, requestId, approverId: authorization.userId });
+        },
+        successMessage: 'Request approved.',
+        errorMessage: 'Unable to approve request.',
+        logEvent: 'hr.leave.ui.approve.failed',
+    });
+}
 
-    const parsed = leaveRequestFormValuesSchema.safeParse(candidate);
-    if (!parsed.success) {
-        return {
-            status: 'error',
-            message: FIELD_CHECK_MESSAGE,
-            fieldErrors: toFieldErrors(parsed.error),
-            values: {
-                ...previous.values,
-                leaveType: typeof candidate.leaveType === 'string' ? candidate.leaveType : previous.values.leaveType,
-                startDate: typeof candidate.startDate === 'string' ? candidate.startDate : previous.values.startDate,
-                endDate: typeof candidate.endDate === 'string' ? candidate.endDate : previous.values.endDate,
-                reason: typeof candidate.reason === 'string' ? candidate.reason : previous.values.reason,
-                totalDays: previous.values.totalDays,
-                isHalfDay: previous.values.isHalfDay,
-            },
-        };
+export async function rejectLeaveRequestAction(formData: FormData): Promise<ActionResult> {
+    const requestId = readFormString(formData, 'requestId');
+    const reason = readFormString(formData, 'reason');
+    if (!requestId) {
+        return { status: 'error', message: REQUEST_ID_REQUIRED };
+    }
+    if (!reason || reason.trim().length < 5) {
+        return { status: 'error', message: 'Provide a rejection reason (5+ chars).' };
     }
 
+    return runLeaveMutation({
+        requestId,
+        sessionOptions: {
+            requiredAnyPermissions: [{ [HR_RESOURCE.HR_LEAVE]: ['approve'] }],
+            auditSource: 'ui:hr:leave:reject',
+            action: HR_ACTION.APPROVE,
+        },
+        mutate: async (service, authorization) => {
+            await service.rejectLeaveRequest({ authorization, requestId, rejectedBy: authorization.userId, reason });
+        },
+        successMessage: 'Request rejected.',
+        errorMessage: 'Unable to reject request.',
+        logEvent: 'hr.leave.ui.reject.failed',
+    });
+}
+
+export async function cancelLeaveRequestAction(formData: FormData): Promise<ActionResult> {
+    const requestId = readFormString(formData, 'requestId');
+    const reason = readFormString(formData, 'reason');
+    if (!requestId) {
+        return { status: 'error', message: REQUEST_ID_REQUIRED };
+    }
+
+    return runLeaveMutation({
+        requestId,
+        sessionOptions: {
+            requiredPermissions: { organization: ['read'] },
+            auditSource: 'ui:hr:leave:cancel',
+            action: HR_ACTION.CANCEL,
+        },
+        mutate: async (service, authorization) => {
+            await service.cancelLeaveRequest({ authorization, requestId, cancelledBy: authorization.userId, reason });
+        },
+        successMessage: 'Request cancelled.',
+        errorMessage: 'Unable to cancel request.',
+        logEvent: 'hr.leave.ui.cancel.failed',
+    });
+}
+
+async function runLeaveMutation(params: {
+    requestId: string;
+    sessionOptions: Pick<SessionOptions, 'requiredAnyPermissions' | 'requiredPermissions' | 'auditSource' | 'action'>;
+    mutate: (
+        service: ReturnType<typeof getLeaveService>,
+        authorization: Awaited<ReturnType<typeof getSessionContext>>['authorization'],
+    ) => Promise<void>;
+    successMessage: string;
+    errorMessage: string;
+    logEvent: string;
+}): Promise<ActionResult> {
+    const { requestId, sessionOptions, mutate, successMessage, errorMessage, logEvent } = params;
+
     try {
-        const { userId } = requireSessionUser(session.session);
-
-        let startDate: string;
-        let endDate: string;
-
-        try {
-            startDate = parseIsoDateInput(parsed.data.startDate);
-        } catch (error) {
-            return {
-                ...toDateFieldError('startDate', error),
-                values: parsed.data,
-            };
-        }
-
-        if (parsed.data.endDate) {
-            try {
-                endDate = parseIsoDateInput(parsed.data.endDate);
-            } catch (error) {
-                return {
-                    ...toDateFieldError('endDate', error),
-                    values: parsed.data,
-                };
-            }
-        } else {
-            endDate = startDate;
-        }
-
-        const hoursPerDay = await resolveHoursPerDay(absenceSettingsRepository, session.authorization.orgId);
-
-        const requestId = randomUUID();
-        const employeeName = session.session.user.name.length > 0
-            ? session.session.user.name
-            : session.session.user.email;
-
-        const request: Omit<LeaveRequest, 'createdAt'> & { hoursPerDay: number } = {
-            id: requestId,
-            orgId: session.authorization.orgId,
-            employeeId: session.authorization.userId,
-            userId: session.authorization.userId,
-            employeeName,
-            leaveType: parsed.data.leaveType,
-            startDate,
-            endDate,
-            reason: parsed.data.reason,
-            totalDays: parsed.data.totalDays,
-            isHalfDay: Boolean(parsed.data.isHalfDay),
-            status: 'submitted',
-            createdBy: userId,
-            submittedAt: new Date().toISOString(),
-            hoursPerDay,
-            dataResidency: session.authorization.dataResidency,
-            dataClassification: session.authorization.dataClassification,
-            auditSource: session.authorization.auditSource || 'ui:hr:leave:submit',
-        };
+        const { authorization } = await getSessionContext({}, {
+            headers: await headers(),
+            ...sessionOptions,
+            auditSource: sessionOptions.auditSource,
+            action: sessionOptions.action,
+            resourceType: HR_RESOURCE.HR_LEAVE,
+            resourceAttributes: { requestId },
+        });
 
         const service = getLeaveService();
-        await service.submitLeaveRequest({ authorization: session.authorization, request });
-
-        return {
-            status: 'success',
-            message: 'Leave request submitted.',
-            fieldErrors: undefined,
-            values: {
-                ...parsed.data,
-                reason: '',
-            },
-        };
+        await mutate(service, authorization);
+        revalidatePath('/hr/leave');
+        return { status: 'success', message: successMessage };
     } catch (error) {
-        return {
-            status: 'error',
-            message: error instanceof Error ? error.message : 'Unable to submit leave request.',
-            fieldErrors: undefined,
-            values: previous.values,
-        };
+        appLogger.error(logEvent, {
+            requestId,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        return { status: 'error', message: errorMessage };
     }
 }

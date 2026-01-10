@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
@@ -17,6 +18,7 @@ export async function resumeMemberAction(
     formData: FormData,
 ): Promise<MemberActionState> {
     void _previous;
+    const requestId = randomUUID();
     const headerStore = await headers();
 
     const parsed = updateMemberStatusSchema.safeParse({
@@ -24,7 +26,7 @@ export async function resumeMemberAction(
     });
 
     if (!parsed.success) {
-        return { status: 'error', message: 'Invalid resume input.' };
+        return { status: 'error', message: 'Invalid resume input.', requestId };
     }
 
     const { authorization } = await getSessionContext(
@@ -41,8 +43,12 @@ export async function resumeMemberAction(
             authorization,
             targetUserId: parsed.data.targetUserId,
         });
-        return { status: 'success', message: 'Member resumed.' };
+        return { status: 'success', message: 'Member resumed.', requestId };
     } catch (error) {
-        return { status: 'error', message: error instanceof Error ? error.message : 'Failed to resume member.' };
+        return {
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Failed to resume member.',
+            requestId,
+        };
     }
 }

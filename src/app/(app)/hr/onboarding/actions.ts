@@ -5,6 +5,7 @@ import {
 } from './actions/invite-employee';
 import {
     revokeOnboardingInvitationAction as revokeOnboardingInvitationActionImpl,
+    resendOnboardingInvitationAction as resendOnboardingInvitationActionImpl,
 } from './actions/onboarding-invitations';
 import {
     createChecklistTemplateAction as createChecklistTemplateActionImpl,
@@ -34,6 +35,12 @@ export async function revokeOnboardingInvitationAction(
     ...args: Parameters<typeof revokeOnboardingInvitationActionImpl>
 ): Promise<Awaited<ReturnType<typeof revokeOnboardingInvitationActionImpl>>> {
     return revokeOnboardingInvitationActionImpl(...args);
+}
+
+export async function resendOnboardingInvitationAction(
+    ...args: Parameters<typeof resendOnboardingInvitationActionImpl>
+): Promise<Awaited<ReturnType<typeof resendOnboardingInvitationActionImpl>>> {
+    return resendOnboardingInvitationActionImpl(...args);
 }
 
 export async function createChecklistTemplateAction(

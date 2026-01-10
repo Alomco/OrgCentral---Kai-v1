@@ -10,6 +10,11 @@ import {
     createEmptyPolicyDraft,
     parsePolicyTemplate,
 } from './abac-policy-utils';
+import {
+    dedupe,
+    getPolicyConditions,
+    getPolicyField,
+} from './abac-policy-editor-utils';
 
 interface AbacPolicyEditorOptions {
     initialPolicies: AbacPolicy[];
@@ -229,33 +234,4 @@ export function useAbacPolicyEditor({
         exportPolicies,
         importPolicies,
     };
-}
-
-function getPolicyField(
-    localId: string,
-    field: 'actions' | 'resources',
-    drafts: PolicyDraft[],
-): string[] {
-    const draft = drafts.find((item) => item.localId === localId);
-    if (!draft) {
-        return [];
-    }
-    return field === 'actions' ? draft.actions : draft.resources;
-}
-
-function getPolicyConditions(
-    localId: string,
-    scope: ConditionScope,
-    drafts: PolicyDraft[],
-): ConditionDraft[] {
-    const draft = drafts.find((item) => item.localId === localId);
-    if (!draft) {
-        return [];
-    }
-    return scope === 'subject' ? draft.subjectConditions : draft.resourceConditions;
-}
-
-function dedupe(values: string[]): string[] {
-    const trimmed = values.map((value) => value.trim()).filter((value) => value.length > 0);
-    return Array.from(new Set(trimmed));
 }

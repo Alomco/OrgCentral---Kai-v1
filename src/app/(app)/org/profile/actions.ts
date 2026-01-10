@@ -1,3 +1,7 @@
+/**
+ * TODO: Refactor this file (currently > 250 LOC).
+ * Action: Split into smaller modules and ensure adherence to SOLID principles, Dependency Injection, and Design Patterns.
+ */
 "use server";
 import { headers } from 'next/headers';
 import { z } from 'zod';
@@ -8,13 +12,18 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { updateOrganizationProfile } from '@/server/use-cases/org/organization/update-profile';
 import {
     organizationProfileUpdateSchema,
-    type OrganizationProfileUpdateInput,
 } from '@/server/validators/org/organization-profile';
 import {
     normalizeNullableText,
-    normalizeOptionalText,
     normalizeRequiredText,
 } from './profile-form-utils';
+import {
+    assignContactErrors,
+    buildContactDetails,
+    collectFieldErrors,
+    contactGroupSchema,
+    readContactGroup,
+} from './contact-helpers';
 
 export interface OrgProfileActionState {
     status: 'idle' | 'success' | 'error';
@@ -39,106 +48,12 @@ const orgProfileCoreFormSchema = organizationProfileUpdateSchema
             .optional(),
     });
 
-const contactGroupSchema = z
-    .object({
-        name: z.string().trim().min(1, 'Name is required').max(120).optional(),
-        email: z.email('Enter a valid email address').max(254).optional(),
-        phone: z.string().trim().min(1).max(64).optional(),
-    })
-    .strict()
-    .superRefine((value, context) => {
-        const hasAny = Boolean(value.name ?? value.email ?? value.phone);
-        if (!hasAny) {
-            return;
-        }
-
-        if (!value.name) {
-            context.addIssue({ code: 'custom', message: 'Name is required', path: ['name'] });
-        }
-        if (!value.email) {
-            context.addIssue({ code: 'custom', message: 'Email is required', path: ['email'] });
-        }
-    });
-
-type ContactGroupInput = z.infer<typeof contactGroupSchema>;
-type ContactParseResult = ReturnType<typeof contactGroupSchema.safeParse>;
-
-function collectFieldErrors(error: z.ZodError): Partial<Record<string, string[]>> {
-    const out: Partial<Record<string, string[]>> = {};
-    for (const issue of error.issues) {
-        const key = typeof issue.path[0] === 'string' ? issue.path[0] : undefined;
-        if (!key) {
-            continue;
-        }
-        (out[key] ??= []).push(issue.message);
-    }
-    return out;
-}
-
-function readContactGroup(formData: FormData, prefix: 'primary' | 'finance'): ContactGroupInput {
-    const toKey = (field: 'Name' | 'Email' | 'Phone') => `${prefix}Contact${field}`;
-    return {
-        name: normalizeOptionalText(formData.get(toKey('Name'))),
-        email: normalizeOptionalText(formData.get(toKey('Email'))),
-        phone: normalizeOptionalText(formData.get(toKey('Phone'))),
-    };
-}
-
-function assignContactErrors(
-    fieldErrors: Record<string, string[]>,
-    prefix: 'primary' | 'finance',
-    parsed: ContactParseResult,
-): void {
-    if (parsed.success) {
-        return;
-    }
-    const errors = collectFieldErrors(parsed.error);
-    const toKey = (field: 'Name' | 'Email' | 'Phone') => `${prefix}Contact${field}`;
-
-    if (errors.name?.length) {
-        fieldErrors[toKey('Name')] = errors.name;
-    }
-    if (errors.email?.length) {
-        fieldErrors[toKey('Email')] = errors.email;
-    }
-    if (errors.phone?.length) {
-        fieldErrors[toKey('Phone')] = errors.phone;
-    }
-}
-
-function buildContactDetails(
-    primaryParsed: ContactParseResult,
-    financeParsed: ContactParseResult,
-    hasAnyContactInput: boolean,
-): OrganizationProfileUpdateInput['contactDetails'] {
-    if (!hasAnyContactInput) {
-        return null;
-    }
-    return {
-        primaryBusinessContact: toContactInfo(primaryParsed),
-        accountsFinanceContact: toContactInfo(financeParsed),
-    };
-}
-
 function toErrorState(fieldErrors: Record<string, string[]>): OrgProfileActionState {
     return {
         status: 'error',
         message: FIELD_ERROR_MESSAGE,
         fieldErrors,
     };
-}
-
-type ContactInfoOutput = NonNullable<OrganizationProfileUpdateInput['contactDetails']>['primaryBusinessContact'];
-
-function toContactInfo(parsed: ContactParseResult): ContactInfoOutput | undefined {
-    if (!parsed.success) {
-        return undefined;
-    }
-    const { name, email, phone } = parsed.data;
-    if (!name || !email) {
-        return undefined;
-    }
-    return phone ? { name, email, phone } : { name, email };
 }
 
 export async function updateOrgProfileAction(

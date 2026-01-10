@@ -27,6 +27,8 @@ export const selfProfileFormSchema = z.object({
     emergencyContactPhone: optionalText(40),
     emergencyContactEmail: optionalEmail,
     photoUrl: optionalUrl,
+    skills: optionalText(1000),
+    certifications: optionalText(2000),
 });
 
 export type SelfProfileFormValues = z.infer<typeof selfProfileFormSchema>;

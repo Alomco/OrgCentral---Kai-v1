@@ -1,41 +1,28 @@
-import { ValidationError } from '@/server/errors';
-import { EntityNotFoundError } from '@/server/errors';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { AcceptInvitationResult } from '@/server/use-cases/auth/accept-invitation';
-import { acceptInvitation, type AcceptInvitationDependencies } from '@/server/use-cases/auth/accept-invitation';
 import type { ServiceExecutionContext } from '@/server/services/abstract-base-service';
 import type { MembershipStatus } from '@prisma/client';
 import { MembershipStatus as PrismaMembershipStatus } from '@prisma/client';
 import type { Membership } from '@/server/types/membership';
 import { AbstractOrgService } from '@/server/services/org/abstract-org-service';
 import { assertDependency } from '@/server/use-cases/shared';
-import { updateMembershipRoles as updateMembershipRolesUseCase } from '@/server/use-cases/org/membership/update-membership-roles';
 import { updateMembershipStatus as updateMembershipStatusUseCase } from '@/server/use-cases/org/membership/update-membership-status';
-import { normalizeRoles } from '@/server/use-cases/shared';
-import { buildAuthorizationContext, invalidateIdentityCache } from './membership-service.helpers';
-import type { BillingServiceContract } from '@/server/services/billing/billing-service.provider';
+import { invalidateIdentityCache } from './membership-service.helpers';
 import {
-    enforceInviteRolePolicy,
     ORG_MEMBERSHIP_RESOURCE_TYPE,
     recordMembershipAuditEvent,
 } from './membership-service.policy';
-
-import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
-import { appLogger } from '@/server/logging/structured-logger';
-
-export type MembershipServiceDependencies = AcceptInvitationDependencies & {
-    billingService?: BillingServiceContract;
-    notificationComposer?: NotificationComposerContract;
-};
-
-export interface AcceptInvitationServiceInput {
-    token: string;
-    actor: {
-        userId: string;
-        email: string;
-    };
-    correlationId?: string;
-}
+import type {
+    AcceptInvitationExecutor,
+    AcceptInvitationServiceInput,
+    MembershipServiceDependencies,
+} from './membership-service.types';
+import {
+    handleBulkUpdateMembershipRoles,
+    handleInviteMember,
+    handleUpdateMembershipRoles,
+    runInvitationAcceptance,
+} from './membership-service.handlers';
 
 export class MembershipService extends AbstractOrgService {
     private readonly dependencies: MembershipServiceDependencies;
@@ -46,38 +33,17 @@ export class MembershipService extends AbstractOrgService {
     }
 
     async acceptInvitation(input: AcceptInvitationServiceInput): Promise<AcceptInvitationResult> {
-        const invitation = await this.dependencies.invitationRepository.findByToken(input.token.trim());
-        if (!invitation) {
-            throw new EntityNotFoundError('Invitation', { token: input.token });
-        }
-
-        const authorization = await buildAuthorizationContext({
-            organizationRepository: this.dependencies.organizationRepository,
-            orgId: invitation.organizationId,
-            userId: input.actor.userId,
-            correlationId: input.correlationId,
-        });
-
-        const context: ServiceExecutionContext = this.buildContext(authorization, {
-            correlationId: authorization.correlationId,
-        });
-
-        const deps: AcceptInvitationDependencies = {
-            invitationRepository: this.dependencies.invitationRepository,
-            userRepository: this.dependencies.userRepository,
-            membershipRepository: this.dependencies.membershipRepository,
-            organizationRepository: this.dependencies.organizationRepository,
-            generateEmployeeNumber: this.dependencies.generateEmployeeNumber,
-            employeeProfileRepository: this.dependencies.employeeProfileRepository,
-            checklistTemplateRepository: this.dependencies.checklistTemplateRepository,
-            checklistInstanceRepository: this.dependencies.checklistInstanceRepository,
+        const executor: AcceptInvitationExecutor = {
+            buildContext: (authorization, options) => this.buildContext(authorization, options),
+            execute: (context, action, handler) => this.executeInServiceContext(context, action, handler),
         };
 
-        const result = await this.executeInServiceContext(context, 'identity.accept-invitation', () =>
-            acceptInvitation(deps, input),
-        );
-        await this.dependencies.billingService?.syncSeats({ authorization });
-        return result;
+        return runInvitationAcceptance({
+            dependencies: this.dependencies,
+            ensureOrgAccess: this.ensureOrgAccess.bind(this),
+            buildContext: executor.buildContext,
+            executeInServiceContext: executor.execute,
+        }, input);
     }
 
     async updateMembershipRoles(input: {
@@ -85,62 +51,12 @@ export class MembershipService extends AbstractOrgService {
         targetUserId: string;
         roles: string[];
     }): Promise<Membership> {
-        await this.ensureOrgAccess(input.authorization, {
-            action: 'org.membership.update-roles',
-            resourceType: ORG_MEMBERSHIP_RESOURCE_TYPE,
-            resourceAttributes: {
-                targetUserId: input.targetUserId,
-                roles: input.roles,
-            },
-        });
-
-        const context: ServiceExecutionContext = this.buildContext(input.authorization, {
-            correlationId: input.authorization.correlationId,
-            metadata: { targetUserId: input.targetUserId },
-        });
-
-        return this.executeInServiceContext(context, 'identity.update-roles', async () => {
-            const { membership } = await updateMembershipRolesUseCase(
-                { userRepository: this.dependencies.userRepository },
-                {
-                    authorization: input.authorization,
-                    targetUserId: input.targetUserId,
-                    roles: input.roles,
-                },
-            );
-            await invalidateIdentityCache(input.authorization);
-            await recordMembershipAuditEvent(
-                input.authorization,
-                input.targetUserId,
-                {
-                    targetUserId: input.targetUserId,
-                    roles: membership.roles,
-                },
-                'roles.updated',
-            );
-
-            if (this.dependencies.notificationComposer) {
-                await this.dependencies.notificationComposer
-                    .composeAndSend({
-                        authorization: input.authorization,
-                        notification: {
-                            userId: input.targetUserId,
-                            title: 'Roles Updated',
-                            body: `Your roles in ${input.authorization.orgId} have been updated to: ${input.roles.join(', ')}.`,
-                            topic: 'system-announcement',
-                            priority: 'medium',
-                        },
-                        abac: {
-                            action: 'notification.compose',
-                            resourceType: 'notification',
-                            resourceAttributes: { targetUserId: input.targetUserId },
-                        },
-                    })
-                    .catch(() => undefined);
-            }
-
-            return membership;
-        });
+        return handleUpdateMembershipRoles({
+            dependencies: this.dependencies,
+            ensureOrgAccess: this.ensureOrgAccess.bind(this),
+            buildContext: this.buildContext.bind(this),
+            executeInServiceContext: this.executeInServiceContext.bind(this),
+        }, input);
     }
 
     async bulkUpdateMembershipRoles(input: {
@@ -148,70 +64,12 @@ export class MembershipService extends AbstractOrgService {
         targetUserIds: string[];
         roles: string[];
     }): Promise<void> {
-        await this.ensureOrgAccess(input.authorization, {
-            action: 'org.membership.bulk-update-roles',
-            resourceType: ORG_MEMBERSHIP_RESOURCE_TYPE,
-            resourceAttributes: {
-                targetUserIds: input.targetUserIds,
-                roles: input.roles,
-            },
-        });
-
-        const context: ServiceExecutionContext = this.buildContext(input.authorization, {
-            correlationId: input.authorization.correlationId,
-            metadata: { userCount: input.targetUserIds.length },
-        });
-
-        await this.executeInServiceContext(context, 'identity.bulk-update-roles', async () => {
-            const updates = input.targetUserIds.map(async (targetUserId) => {
-                const { membership } = await updateMembershipRolesUseCase(
-                    { userRepository: this.dependencies.userRepository },
-                    {
-                        authorization: input.authorization,
-                        targetUserId,
-                        roles: input.roles,
-                    },
-                );
-
-                // Prepare notification but don't send yet
-                return { targetUserId, membership };
-            });
-
-            // Run updates in parallel (since we are under batch limit)
-            const results = await Promise.all(updates);
-
-            // 1. Invalidate Cache ONCE
-            await invalidateIdentityCache(input.authorization);
-
-            // 2. Send Notifications in parallel
-            const composer = this.dependencies.notificationComposer;
-            if (composer) {
-                const notifications = results.map(({ targetUserId }) =>
-                    composer.composeAndSend({
-                        authorization: input.authorization,
-                        notification: {
-                            userId: targetUserId,
-                            title: 'Roles Updated',
-                            body: `Your roles in ${input.authorization.orgId} have been updated to: ${input.roles.join(', ')}.`,
-                            topic: 'system-announcement',
-                            priority: 'medium',
-                        },
-                        abac: {
-                            action: 'notification.compose',
-                            resourceType: 'notification',
-                            resourceAttributes: { targetUserId },
-                        },
-                    }).catch((error: unknown) => {
-                        appLogger.error('org.membership.role-update.notification-failed', {
-                            error,
-                            targetUserId,
-                            orgId: input.authorization.orgId,
-                        });
-                    })
-                );
-                await Promise.all(notifications);
-            }
-        });
+        await handleBulkUpdateMembershipRoles({
+            dependencies: this.dependencies,
+            ensureOrgAccess: this.ensureOrgAccess.bind(this),
+            buildContext: this.buildContext.bind(this),
+            executeInServiceContext: this.executeInServiceContext.bind(this),
+        }, input);
     }
 
     async inviteMember(input: {
@@ -219,67 +77,12 @@ export class MembershipService extends AbstractOrgService {
         email: string;
         roles: string[];
     }): Promise<{ token: string; alreadyInvited: boolean }> {
-        await this.ensureOrgAccess(input.authorization, {
-            action: 'org.invitation.create',
-            resourceType: 'org.invitation',
-            resourceAttributes: {
-                email: input.email,
-                roles: input.roles,
-            },
-            requiredPermissions: { member: ['invite'] },
-        });
-
-        const invitationRepository = this.dependencies.invitationRepository;
-        const organizationRepository = this.dependencies.organizationRepository;
-        assertDependency(invitationRepository, 'invitationRepository');
-
-        const normalizedEmail = input.email.trim().toLowerCase();
-        const roles = normalizeRoles(input.roles);
-        const normalizedRoles = roles.length > 0 ? roles : ['member'];
-        enforceInviteRolePolicy(input.authorization, normalizedRoles);
-
-        const existing = await invitationRepository.getActiveInvitationByEmail(
-            input.authorization.orgId,
-            normalizedEmail,
-        );
-
-        if (existing) {
-            return { token: existing.token, alreadyInvited: true };
-        }
-
-        const organization = await organizationRepository?.getOrganization(input.authorization.orgId);
-        const organizationName = organization?.name ?? input.authorization.orgId;
-
-        const context: ServiceExecutionContext = this.buildContext(input.authorization, {
-            correlationId: input.authorization.correlationId,
-            metadata: { email: normalizedEmail, roles },
-        });
-
-        return this.executeInServiceContext(context, 'identity.invite-member', async () => {
-            if (!normalizedEmail) {
-                throw new ValidationError('Email is required to invite a member.', { email: input.email });
-            }
-
-            const invitation = await invitationRepository.createInvitation({
-                orgId: input.authorization.orgId,
-                organizationName,
-                targetEmail: normalizedEmail,
-                invitedByUserId: input.authorization.userId,
-                onboardingData: {
-                    email: normalizedEmail,
-                    displayName: '',
-                    roles: normalizedRoles,
-                },
-                metadata: {
-                    auditSource: input.authorization.auditSource,
-                    correlationId: input.authorization.correlationId,
-                    dataResidency: input.authorization.dataResidency,
-                    dataClassification: input.authorization.dataClassification,
-                },
-            });
-
-            return { token: invitation.token, alreadyInvited: false };
-        });
+        return handleInviteMember({
+            dependencies: this.dependencies,
+            ensureOrgAccess: this.ensureOrgAccess.bind(this),
+            buildContext: this.buildContext.bind(this),
+            executeInServiceContext: this.executeInServiceContext.bind(this),
+        }, input);
     }
 
     async suspendMembership(input: {
@@ -338,3 +141,8 @@ export class MembershipService extends AbstractOrgService {
         });
     }
 }
+
+export type {
+    MembershipServiceDependencies,
+    AcceptInvitationServiceInput,
+} from './membership-service.types';

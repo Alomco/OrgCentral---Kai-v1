@@ -1,4 +1,4 @@
-import { MembershipStatus, type Prisma } from '@prisma/client';
+import { MembershipStatus } from '@/server/types/prisma';
 import type { InvitationRecord } from '@/server/repositories/contracts/auth/invitations/invitation-repository.types';
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
 import type { IChecklistTemplateRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-template-repository-contract';
@@ -6,6 +6,7 @@ import type { IChecklistInstanceRepository } from '@/server/repositories/contrac
 import type { EmployeeProfilePayload, UserActivationPayload } from '@/server/repositories/contracts/org/membership';
 import type { EmployeeProfileDTO } from '@/server/types/hr/people';
 import type { ChecklistItemProgress, ChecklistTemplateItem } from '@/server/types/onboarding-types';
+import type { JsonValue } from '@/server/types/json';
 import { normalizeEmploymentType, parseDate, generateEmployeeNumber as sharedGenerateEmployeeNumber } from '@/server/use-cases/shared';
 
 export type EmployeeNumberGenerator = () => string;
@@ -140,10 +141,13 @@ function coerceProfileStartDate(value: Date | string | null | undefined): Date |
     return undefined;
 }
 
-function mergeProfileMetadata(existing: unknown, record: InvitationRecord): Prisma.JsonValue {
+function mergeProfileMetadata(
+    existing: JsonValue | null | undefined,
+    record: InvitationRecord,
+): JsonValue {
     const invitationMetadata = buildInvitationMetadata(record);
     if (isPlainObject(existing)) {
-        return { ...existing, invitation: invitationMetadata } as Prisma.JsonValue;
+        return { ...existing, invitation: invitationMetadata };
     }
     if (existing === null || existing === undefined) {
         return { invitation: invitationMetadata };
@@ -151,10 +155,10 @@ function mergeProfileMetadata(existing: unknown, record: InvitationRecord): Pris
     return {
         legacyMetadata: existing,
         invitation: invitationMetadata,
-    } as Prisma.JsonValue;
+    };
 }
 
-function buildInvitationMetadata(record: InvitationRecord): Prisma.JsonValue {
+function buildInvitationMetadata(record: InvitationRecord): JsonValue {
     return {
         source: 'invitation-onboarding',
         templateId: record.onboardingData.onboardingTemplateId ?? null,
@@ -162,8 +166,8 @@ function buildInvitationMetadata(record: InvitationRecord): Prisma.JsonValue {
     };
 }
 
-function cloneOnboardingPayload(record: InvitationRecord): Prisma.JsonValue {
-    return JSON.parse(JSON.stringify(record.onboardingData)) as Prisma.JsonValue;
+function cloneOnboardingPayload(record: InvitationRecord): JsonValue {
+    return JSON.parse(JSON.stringify(record.onboardingData)) as JsonValue;
 }
 
 function mapTemplateItemsToProgress(items: ChecklistTemplateItem[]): ChecklistItemProgress[] {
@@ -185,7 +189,9 @@ function normalizeTemplateId(value?: string | null): string | undefined {
     return trimmed.length > 0 ? trimmed : undefined;
 }
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
+function isPlainObject(
+    value: JsonValue | null | undefined,
+): value is Record<string, JsonValue | undefined> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 

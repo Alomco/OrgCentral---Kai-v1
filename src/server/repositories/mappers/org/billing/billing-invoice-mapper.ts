@@ -1,8 +1,6 @@
-import type { BillingInvoice } from '@prisma/client';
+import type { BillingInvoiceData, BillingInvoiceRecord } from '@/server/types/billing-types';
 
-import type { BillingInvoiceData } from '@/server/types/billing-types';
-
-export function mapBillingInvoiceToData(invoice: BillingInvoice): BillingInvoiceData {
+export function mapBillingInvoiceToData(invoice: BillingInvoiceRecord): BillingInvoiceData {
   return {
     id: invoice.id,
     orgId: invoice.orgId,

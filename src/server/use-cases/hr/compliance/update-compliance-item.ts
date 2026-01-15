@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 import type { ComplianceLogItem } from '@/server/types/compliance-types';
 import type {
     ComplianceItemUpdateInput,
@@ -48,7 +48,7 @@ export async function updateComplianceItem(
         dueDate: input.updates.dueDate ?? undefined,
         reviewedBy: input.updates.reviewedBy ?? undefined,
         reviewedAt: input.updates.reviewedAt ?? undefined,
-        metadata: input.updates.metadata as Prisma.JsonValue | undefined,
+        metadata: input.updates.metadata as PrismaJsonValue | undefined,
     };
 
     if (payload.dueDate === undefined && computedDueDate) {

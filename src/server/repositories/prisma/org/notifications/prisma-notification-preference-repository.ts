@@ -1,4 +1,3 @@
-import { Prisma, type NotificationPreference as PrismaNotificationPreference } from '@prisma/client';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import type { INotificationPreferenceRepository } from '@/server/repositories/contracts/org/notifications/notification-preference-repository-contract';
 import {
@@ -10,6 +9,7 @@ import type {
   NotificationPreferenceCreationData,
   NotificationPreferenceUpdateData,
 } from './prisma-notification-preference-repository.types';
+import { Prisma, type PrismaInputJsonValue, type PrismaNotificationPreference } from '@/server/types/prisma';
 
 export class PrismaNotificationPreferenceRepository
   extends OrgScopedPrismaRepository
@@ -65,8 +65,8 @@ export class PrismaNotificationPreferenceRepository
       userId: preference.userId,
       channel: preference.channel,
       enabled: preference.enabled,
-      quietHours: preference.quietHours === null ? Prisma.JsonNull : (preference.quietHours),
-      metadata: preference.metadata === null ? Prisma.JsonNull : (preference.metadata),
+      quietHours: preference.quietHours === null ? Prisma.JsonNull : (preference.quietHours as PrismaInputJsonValue),
+      metadata: preference.metadata === null ? Prisma.JsonNull : (preference.metadata as PrismaInputJsonValue),
     });
   }
 

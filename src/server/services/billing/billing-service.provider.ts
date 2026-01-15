@@ -1,58 +1,60 @@
-import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
-import { PrismaMembershipRepository } from '@/server/repositories/prisma/org/membership/prisma-membership-repository';
-import {
-  PrismaBillingInvoiceRepository,
-  PrismaOrganizationSubscriptionRepository,
-  PrismaPaymentMethodRepository,
-} from '@/server/repositories/prisma/org/billing';
-import { resolveBillingConfig } from '@/server/services/billing/billing-config';
-import { StripeBillingGateway } from '@/server/services/billing/stripe-billing-gateway';
 import { BillingService, type BillingServiceDependencies } from '@/server/services/billing/billing-service';
+import { resolveBillingConfig, type BillingConfig } from '@/server/services/billing/billing-config';
+import { StripeBillingGateway } from '@/server/services/billing/stripe-billing-gateway';
+import type { BillingGateway } from '@/server/services/billing/billing-gateway';
+import {
+    buildBillingRepositoryDependencies,
+    type BillingRepositoryDependencyOptions,
+    type BillingRepositoryDependencyOverrides,
+} from '@/server/repositories/providers/billing/billing-service-dependencies';
 
 let sharedService: BillingService | null = null;
 
+export interface BillingServiceOverrides extends BillingRepositoryDependencyOverrides {
+    billingConfig?: BillingConfig;
+    billingGateway?: BillingGateway;
+    orgSettingsLoader?: BillingServiceDependencies['orgSettingsLoader'];
+}
+
+export interface BillingServiceDependencyOptions
+    extends Omit<BillingRepositoryDependencyOptions, 'overrides'> {
+    overrides?: BillingServiceOverrides;
+}
+
 export function resolveBillingService(
-  overrides?: Partial<BillingServiceDependencies>,
-  options?: { prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'> },
+  overrides?: BillingServiceOverrides,
+  options?: Omit<BillingServiceDependencyOptions, 'overrides'>,
 ): BillingService | null {
-  const billingConfig = overrides?.billingConfig ?? resolveBillingConfig();
-  if (!billingConfig) {
+  try {
+    const billingConfig = overrides?.billingConfig ?? resolveBillingConfig();
+    if (!billingConfig) {
+      throw new Error('Billing is not configured.');
+    }
+    const dependencies: BillingServiceDependencies = {
+      ...buildBillingRepositoryDependencies({
+        prismaOptions: options?.prismaOptions,
+        overrides,
+      }),
+      billingConfig,
+      billingGateway: overrides?.billingGateway ?? new StripeBillingGateway(billingConfig),
+      orgSettingsLoader: overrides?.orgSettingsLoader,
+    };
+
+    if (!overrides || Object.keys(overrides).length === 0) {
+      sharedService ??= new BillingService(dependencies);
+      return sharedService;
+    }
+
+    return new BillingService(dependencies);
+  } catch {
+    // Return null if billing is not configured
     return null;
   }
-
-  const prismaClient = options?.prismaOptions?.prisma ?? defaultPrismaClient;
-  const repoOptions = {
-    prisma: prismaClient,
-    trace: options?.prismaOptions?.trace,
-    onAfterWrite: options?.prismaOptions?.onAfterWrite,
-  } satisfies BasePrismaRepositoryOptions;
-
-  const defaultDependencies: BillingServiceDependencies = {
-    subscriptionRepository: new PrismaOrganizationSubscriptionRepository(repoOptions),
-    membershipRepository: new PrismaMembershipRepository(repoOptions),
-    organizationRepository: new PrismaOrganizationRepository({ prisma: prismaClient }),
-    paymentMethodRepository: new PrismaPaymentMethodRepository(repoOptions),
-    billingInvoiceRepository: new PrismaBillingInvoiceRepository(repoOptions),
-    billingGateway: new StripeBillingGateway(billingConfig),
-    billingConfig,
-  };
-
-  if (!overrides || Object.keys(overrides).length === 0) {
-    sharedService ??= new BillingService(defaultDependencies);
-    return sharedService;
-  }
-
-  return new BillingService({
-    ...defaultDependencies,
-    ...overrides,
-  });
 }
 
 export function getBillingService(
-  overrides?: Partial<BillingServiceDependencies>,
-  options?: { prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'> },
+  overrides?: BillingServiceDependencyOptions['overrides'],
+  options?: Omit<BillingServiceDependencyOptions, 'overrides'>,
 ): BillingService {
   const service = resolveBillingService(overrides, options);
   if (!service) {

@@ -1,4 +1,4 @@
-import { RoleScope } from '@prisma/client';
+import { RoleScope } from '@/server/types/prisma';
 import type { OrgPermissionMap } from './access-control';
 import type { OrgRoleKey } from './role-constants';
 import { ROLE_PERMISSION_STATEMENTS } from './role-permission-statements';

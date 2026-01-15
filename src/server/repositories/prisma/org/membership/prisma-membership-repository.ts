@@ -1,4 +1,9 @@
-import { Prisma, type MembershipStatus } from '@prisma/client';
+import {
+    PrismaTypes,
+    type MembershipStatus,
+    type PrismaInputJsonValue,
+    type PrismaTransaction,
+} from '@/server/types/prisma';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import type {
     EmployeeProfilePayload,
@@ -38,7 +43,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
         if (!membership) {
             return null;
         }
-        this.assertTenantRecord(membership, context.orgId);
+        this.assertTenantRecord(membership, context);
 
         // Prefer optional chain for clarity and to preserve property access safety
         return {
@@ -55,11 +60,11 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
     ): Promise<MembershipCreationResult> {
         const tenantOrgWhere = { orgId: context.orgId, userId: input.userId } as const;
         const profileData = this.mapProfilePayload({ ...input.profile, orgId: context.orgId });
-        await runTransaction(this.prisma, async (tx: Prisma.TransactionClient) => {
+        await runTransaction(this.prisma, async (tx: PrismaTransaction) => {
             const primaryRoleId = await resolvePrimaryRoleId(tx, context.orgId, input.roles);
             const baseMetadata = buildMembershipMetadataJson(context.tenantScope) as unknown as Record<
                 string,
-                Prisma.InputJsonValue
+                PrismaInputJsonValue
             >;
             await getModelDelegate(tx, 'membership').create({
                 data: {
@@ -71,7 +76,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
                     activatedAt: new Date(),
                     createdBy: input.invitedByUserId ?? '',
                     roleId: primaryRoleId ?? undefined,
-                    metadata: toPrismaInputJson(baseMetadata) ?? Prisma.JsonNull,
+                    metadata: toJsonNullInput(baseMetadata),
                 },
             });
 
@@ -106,11 +111,11 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
 
         const existingMetadata =
             existing?.metadata && typeof existing.metadata === 'object' && !Array.isArray(existing.metadata)
-                ? (existing.metadata as Record<string, Prisma.InputJsonValue>)
+                ? (existing.metadata as Record<string, PrismaInputJsonValue>)
                 : {};
         const baseMetadata = buildMembershipMetadataJson(context.tenantScope) as unknown as Record<
             string,
-            Prisma.InputJsonValue
+            PrismaInputJsonValue
         >;
         const nextMetadata = {
             ...existingMetadata,
@@ -120,7 +125,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
             where: { orgId_userId: { orgId: context.orgId, userId } },
             data: {
                 status: nextStatus,
-                metadata: toPrismaInputJson(nextMetadata) ?? Prisma.JsonNull,
+                metadata: toJsonNullInput(nextMetadata),
                 updatedBy: context.userId,
             },
         });
@@ -138,7 +143,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
         const employmentTypeInput =
             typeof payload.employmentType === 'string' ? payload.employmentType : null;
         const employmentType = coerceEmploymentType(employmentTypeInput);
-        const metadataValue = toPrismaInputJson(payload.metadata);
+        const metadataValue = toJsonNullInput(payload.metadata);
         return {
             orgId: payload.orgId,
             userId: payload.userId,
@@ -159,7 +164,7 @@ interface EmployeeProfilePersistence {
     jobTitle: string | null;
     employmentType: SafeEmploymentType;
     startDate: Date | null;
-    metadata: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined;
+    metadata: PrismaInputJsonValue | typeof PrismaTypes.JsonNull | undefined;
 }
 
 // Delegate helper functions and runTransaction are provided by helper module `prisma-utils`
@@ -177,6 +182,16 @@ function coerceEmploymentType(value: string | null | undefined): SafeEmploymentT
         return value as SafeEmploymentType;
     }
     return DEFAULT_EMPLOYMENT_TYPE;
+}
+
+function toJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): PrismaInputJsonValue | typeof PrismaTypes.JsonNull | undefined {
+    const resolved = toPrismaInputJson(value);
+    if (resolved === PrismaTypes.DbNull) {
+        return PrismaTypes.JsonNull;
+    }
+    return resolved as PrismaInputJsonValue | typeof PrismaTypes.JsonNull | undefined;
 }
 
 async function resolvePrimaryRoleId(

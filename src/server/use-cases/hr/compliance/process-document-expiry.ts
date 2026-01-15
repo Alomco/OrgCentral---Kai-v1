@@ -1,9 +1,9 @@
 import { differenceInCalendarDays } from 'date-fns';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
-import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
+import type { NotificationComposerContract } from '@/server/repositories/contracts/notifications/notification-composer-contract';
 import { getNotificationComposerService } from '@/server/services/platform/notifications/notification-composer.provider';
-import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
+import { buildPeopleServiceDependencies } from '@/server/repositories/providers/hr/people-service-dependencies';
 
 export interface DocumentExpiryPayload {
     dryRun?: boolean;
@@ -35,8 +35,12 @@ interface WorkPermitData {
 export function buildDocumentExpiryDependencies(
     overrides: Partial<DocumentExpiryDependencies> = {},
 ): DocumentExpiryDependencies {
+    const { profileRepo } = buildPeopleServiceDependencies({
+        overrides: { profileRepo: overrides.employeeProfileRepository },
+    });
+
     return {
-        employeeProfileRepository: overrides.employeeProfileRepository ?? new PrismaEmployeeProfileRepository(),
+        employeeProfileRepository: profileRepo,
         notificationComposer: overrides.notificationComposer ?? getNotificationComposerService(),
         now: overrides.now ?? (() => new Date()),
     };

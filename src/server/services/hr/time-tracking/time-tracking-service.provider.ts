@@ -1,25 +1,25 @@
-import { PrismaTimeEntryRepository } from '@/server/repositories/prisma/hr/time-tracking';
 import { TimeTrackingService, type TimeTrackingServiceDependencies } from './time-tracking-service';
+import { buildTimeTrackingServiceDependencies, type TimeTrackingServiceDependencyOptions } from '@/server/repositories/providers/hr/time-tracking-service-dependencies';
 
-const timeEntryRepository = new PrismaTimeEntryRepository();
-
-const defaultTimeTrackingServiceDependencies: TimeTrackingServiceDependencies = {
-    timeEntryRepository,
-};
-
-const sharedTimeTrackingService = new TimeTrackingService(defaultTimeTrackingServiceDependencies);
+const sharedTimeTrackingService = (() => {
+    const dependencies = buildTimeTrackingServiceDependencies();
+    return new TimeTrackingService(dependencies);
+})();
 
 export function getTimeTrackingService(
     overrides?: Partial<TimeTrackingServiceDependencies>,
+    options?: TimeTrackingServiceDependencyOptions,
 ): TimeTrackingService {
     if (!overrides || Object.keys(overrides).length === 0) {
         return sharedTimeTrackingService;
     }
 
-    return new TimeTrackingService({
-        ...defaultTimeTrackingServiceDependencies,
-        ...overrides,
+    const dependencies = buildTimeTrackingServiceDependencies({
+        prismaOptions: options?.prismaOptions,
+        overrides,
     });
+
+    return new TimeTrackingService(dependencies);
 }
 
 export type TimeTrackingServiceContract = Pick<
@@ -34,4 +34,3 @@ export interface TimeTrackingServiceProvider {
 export const defaultTimeTrackingServiceProvider: TimeTrackingServiceProvider = {
     service: getTimeTrackingService(),
 };
-

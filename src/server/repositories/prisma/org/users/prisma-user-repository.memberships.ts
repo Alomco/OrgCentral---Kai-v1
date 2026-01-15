@@ -1,5 +1,5 @@
-import { MembershipStatus } from '@prisma/client';
-import type { Prisma, PrismaClient } from '@prisma/client';
+import type { Prisma } from '@/server/types/prisma';
+import { MembershipStatus, type PrismaClientInstance, type PrismaTransaction } from '@/server/types/prisma';
 import { getModelDelegate, buildMembershipMetadataJson, runTransaction } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { mapPrismaUserToDomain } from '@/server/repositories/mappers/org/users/user-mapper';
 import { mapPrismaMembershipToDomain } from '@/server/repositories/mappers/org/membership/membership-mapper';
@@ -12,9 +12,9 @@ import {
   buildUserMembershipWhere,
   resolvePrimaryRoleId,
 } from './prisma-user-repository.helpers';
-export type PrismaUserClient = PrismaClient;
+export type PrismaUserClient = PrismaClientInstance;
 
-function getMembershipDelegate(client: PrismaClient | Prisma.TransactionClient) {
+function getMembershipDelegate(client: PrismaClientInstance | PrismaTransaction) {
   return getModelDelegate(client, 'membership');
 }
 type MembershipRecord = Prisma.MembershipGetPayload<{ include: { user: true; role: { select: { name: true } } } }>;

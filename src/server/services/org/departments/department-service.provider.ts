@@ -1,14 +1,14 @@
-import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
-import { PrismaDepartmentRepository } from '@/server/repositories/prisma/org/departments/prisma-department-repository';
 import { DepartmentService, type DepartmentServiceDependencies } from './department-service';
+import { buildDepartmentServiceDependencies, type DepartmentServiceDependencyOptions } from '@/server/repositories/providers/org/department-service-dependencies';
+
+type ProviderPrismaOptions = DepartmentServiceDependencyOptions['prismaOptions'];
 
 export interface DepartmentServiceProviderOptions {
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    prismaOptions?: ProviderPrismaOptions;
 }
 
 export class DepartmentServiceProvider {
-    private readonly prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    private readonly prismaOptions?: ProviderPrismaOptions;
     private readonly defaultDependencies: DepartmentServiceDependencies;
     private readonly sharedService: DepartmentService;
 
@@ -23,25 +23,22 @@ export class DepartmentServiceProvider {
             return this.sharedService;
         }
 
-        const deps = this.createDependencies(this.prismaOptions);
+        const deps = this.createDependencies(this.prismaOptions, overrides);
 
-        return new DepartmentService({
-            departmentRepository: overrides.departmentRepository ?? deps.departmentRepository,
-        });
+        return new DepartmentService(deps);
     }
 
     private createDependencies(
-        prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>,
+        prismaOptions?: ProviderPrismaOptions,
+        overrides?: Partial<DepartmentServiceDependencies>,
     ): DepartmentServiceDependencies {
-        const prismaClient = prismaOptions?.prisma ?? defaultPrismaClient;
-        const repoOptions = {
-            prisma: prismaClient,
-            trace: prismaOptions?.trace,
-            onAfterWrite: prismaOptions?.onAfterWrite,
-        };
+        const dependencies = buildDepartmentServiceDependencies({
+            prismaOptions: prismaOptions,
+            overrides: overrides,
+        });
 
         return {
-            departmentRepository: new PrismaDepartmentRepository(repoOptions),
+            departmentRepository: dependencies.departmentRepository,
         };
     }
 }
@@ -50,10 +47,10 @@ const defaultDepartmentServiceProvider = new DepartmentServiceProvider();
 
 export function getDepartmentService(
     overrides?: Partial<DepartmentServiceDependencies>,
-    options?: DepartmentServiceProviderOptions,
+    options?: DepartmentServiceDependencyOptions,
 ): DepartmentService {
     const provider = options
-        ? new DepartmentServiceProvider(options)
+        ? new DepartmentServiceProvider({ prismaOptions: options.prismaOptions })
         : defaultDepartmentServiceProvider;
 
     return provider.getService(overrides);

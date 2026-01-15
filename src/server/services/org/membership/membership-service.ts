@@ -1,8 +1,7 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { AcceptInvitationResult } from '@/server/use-cases/auth/accept-invitation';
 import type { ServiceExecutionContext } from '@/server/services/abstract-base-service';
-import type { MembershipStatus } from '@prisma/client';
-import { MembershipStatus as PrismaMembershipStatus } from '@prisma/client';
+import { MembershipStatus } from '@/server/types/prisma';
 import type { Membership } from '@/server/types/membership';
 import { AbstractOrgService } from '@/server/services/org/abstract-org-service';
 import { assertDependency } from '@/server/use-cases/shared';
@@ -95,7 +94,7 @@ export class MembershipService extends AbstractOrgService {
             resourceAttributes: { targetUserId: input.targetUserId },
         });
         await this.updateMembershipStatus(
-            { authorization: input.authorization, targetUserId: input.targetUserId, status: PrismaMembershipStatus.SUSPENDED },
+            { authorization: input.authorization, targetUserId: input.targetUserId, status: MembershipStatus.SUSPENDED },
         );
     }
 
@@ -109,7 +108,7 @@ export class MembershipService extends AbstractOrgService {
             resourceAttributes: { targetUserId: input.targetUserId },
         });
         await this.updateMembershipStatus(
-            { authorization: input.authorization, targetUserId: input.targetUserId, status: PrismaMembershipStatus.ACTIVE },
+            { authorization: input.authorization, targetUserId: input.targetUserId, status: MembershipStatus.ACTIVE },
         );
     }
 

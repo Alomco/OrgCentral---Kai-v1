@@ -1,9 +1,10 @@
 ﻿import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { mcp, organization, username, twoFactor } from "better-auth/plugins";
+import { PrismaClient } from "@prisma/client";
 
-// Dummy prisma client so CLI can infer Prisma adapter.
-const prisma = {} as any;
+// Instantiate a typed Prisma client so the CLI can infer the adapter without using any casts.
+const prisma = new PrismaClient();
 
 export const auth = betterAuth({
   baseURL: "http://localhost:3000",

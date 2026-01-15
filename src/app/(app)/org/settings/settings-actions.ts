@@ -50,7 +50,7 @@ export async function updateInvitePolicy(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['manage'] },
+            requiredPermissions: { 'org.settings': ['update'] },
             auditSource: 'ui:org-settings:invite-policy',
         },
     );
@@ -97,7 +97,7 @@ export async function updateSecuritySettings(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['manage'] },
+            requiredPermissions: { 'org.settings': ['update'] },
             auditSource: 'ui:org-settings:security',
         },
     );
@@ -142,7 +142,7 @@ export async function updateNotificationSettings(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['manage'] },
+            requiredPermissions: { 'org.settings': ['update'] },
             auditSource: 'ui:org-settings:notifications',
         },
     );

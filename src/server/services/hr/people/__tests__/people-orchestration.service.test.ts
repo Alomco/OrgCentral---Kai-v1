@@ -4,8 +4,15 @@ import type { AbsenceServiceContract } from '@/server/services/hr/absences/absen
 import type { ComplianceStatusService } from '@/server/services/hr/compliance/compliance-status-service';
 import type { MembershipServiceContract } from '@/server/services/org/membership/membership-service.provider';
 import type { PeopleService } from '../people-service';
+import type { ComplianceAssignmentServiceContract } from '../people-orchestration.deps';
 import { PeopleOrchestrationService } from '../people-orchestration.service';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { LeaveBalance, LeaveRequest } from '@/server/types/leave-types';
+import type { UnplannedAbsence } from '@/server/types/hr-ops-types';
+import type {
+    CancelLeaveRequestResult,
+    EnsureEmployeeBalancesResult,
+} from '@/server/use-cases/hr/leave';
 
 vi.mock('../helpers/people-orchestration.helpers', () => ({
     registerSummaryCaches: vi.fn(),
@@ -37,14 +44,74 @@ const authorization: RepositoryAuthorizationContext = {
     },
 };
 
+const timestamp = '2025-01-01T00:00:00.000Z';
+
+const buildLeaveRequest = (overrides: Partial<LeaveRequest> = {}): LeaveRequest => ({
+    id: 'req-1',
+    orgId: 'org-1',
+    employeeId: 'EMP-1',
+    userId: 'user-1',
+    employeeName: 'Test User',
+    leaveType: 'annual',
+    startDate: '2025-01-10',
+    endDate: '2025-01-12',
+    totalDays: 3,
+    isHalfDay: false,
+    status: 'submitted',
+    createdAt: timestamp,
+    createdBy: 'user-1',
+    dataResidency: 'UK_ONLY',
+    dataClassification: 'OFFICIAL',
+    auditSource: 'test',
+    ...overrides,
+});
+
+const buildLeaveBalance = (overrides: Partial<LeaveBalance> = {}): LeaveBalance => ({
+    id: 'balance-1',
+    orgId: 'org-1',
+    employeeId: 'EMP-1',
+    leaveType: 'annual',
+    year: 2025,
+    totalEntitlement: 20,
+    used: 0,
+    pending: 0,
+    available: 20,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    dataResidency: 'UK_ONLY',
+    dataClassification: 'OFFICIAL',
+    auditSource: 'test',
+    ...overrides,
+});
+
+const buildAbsence = (overrides: Partial<UnplannedAbsence> = {}): UnplannedAbsence => ({
+    id: 'abs-1',
+    orgId: 'org-1',
+    userId: 'user-1',
+    typeId: 'type-1',
+    startDate: new Date('2025-01-10T00:00:00.000Z'),
+    endDate: new Date('2025-01-11T00:00:00.000Z'),
+    hours: 8,
+    status: 'APPROVED',
+    dataClassification: 'OFFICIAL',
+    residencyTag: 'UK_ONLY',
+    createdAt: new Date('2025-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2025-01-01T00:00:00.000Z'),
+    ...overrides,
+});
+
 const createService = (overrides?: Partial<{
     peopleService: Partial<PeopleService>;
     leaveService: Partial<LeaveServiceContract>;
     absenceService: Partial<AbsenceServiceContract>;
     complianceStatusService: Partial<ComplianceStatusService>;
     membershipService: Partial<MembershipServiceContract>;
-    complianceAssignmentService: Partial<{ assignCompliancePack: (args: any) => Promise<void> }>;
+    complianceAssignmentService: Partial<ComplianceAssignmentServiceContract>;
 }>) => {
+    const leaveRequest = buildLeaveRequest();
+    const leaveBalance = buildLeaveBalance();
+    const absence = buildAbsence();
+
     const peopleService = {
         createEmployeeProfile: vi.fn(async () => ({ profileId: 'profile-1' })),
         createEmploymentContract: vi.fn(async () => ({ contractId: 'contract-1' })),
@@ -57,16 +124,32 @@ const createService = (overrides?: Partial<{
     } as unknown as PeopleService;
 
     const leaveService = {
-        ensureEmployeeBalances: vi.fn(async () => ({})),
-        getLeaveBalance: vi.fn(async () => ({ balances: [] })),
-        listLeaveRequests: vi.fn(async () => ({ requests: [] })),
-        cancelLeaveRequest: vi.fn(async () => ({})),
+        ensureEmployeeBalances: vi.fn(async () => ({
+            success: true,
+            employeeId: leaveRequest.employeeId,
+            year: 2025,
+            ensuredBalances: 0,
+        } satisfies EnsureEmployeeBalancesResult)),
+        getLeaveBalance: vi.fn(async () => ({
+            balances: [leaveBalance],
+            employeeId: leaveBalance.employeeId,
+            year: leaveBalance.year,
+        })),
+        listLeaveRequests: vi.fn(async () => ({
+            requests: [leaveRequest],
+            employeeId: leaveRequest.employeeId,
+        })),
+        cancelLeaveRequest: vi.fn(async () => ({
+            success: true,
+            requestId: leaveRequest.id,
+            cancelledAt: timestamp,
+        } satisfies CancelLeaveRequestResult)),
         ...overrides?.leaveService,
     } as LeaveServiceContract;
 
     const absenceService = {
-        listAbsences: vi.fn(async () => ({ absences: [] })),
-        cancelAbsence: vi.fn(async () => ({})),
+        listAbsences: vi.fn(async () => ({ absences: [absence] })),
+        cancelAbsence: vi.fn(async () => ({ absence })),
         ...overrides?.absenceService,
     } as unknown as AbsenceServiceContract;
 
@@ -80,7 +163,7 @@ const createService = (overrides?: Partial<{
         ...overrides?.membershipService,
     } as unknown as MembershipServiceContract;
 
-    const complianceAssignmentService = {
+    const complianceAssignmentService: ComplianceAssignmentServiceContract = {
         assignCompliancePack: vi.fn(async () => undefined),
         ...overrides?.complianceAssignmentService,
     };
@@ -95,8 +178,12 @@ const createService = (overrides?: Partial<{
     });
 
     // Bypass guard and logger wrappers for unit-level tests.
-    (service as any).ensureOrgAccess = async () => undefined;
-    (service as any).executeInServiceContext = async (_ctx: unknown, _op: string, handler: () => Promise<unknown>) => handler();
+    const serviceBypass = service as unknown as {
+        ensureOrgAccess: () => Promise<void>;
+        executeInServiceContext: (_ctx: unknown, _op: string, handler: () => Promise<unknown>) => Promise<unknown>;
+    };
+    serviceBypass.ensureOrgAccess = async () => undefined;
+    serviceBypass.executeInServiceContext = async (_ctx: unknown, _op: string, handler: () => Promise<unknown>) => handler();
 
     return { service, deps: { peopleService, leaveService, absenceService, complianceStatusService, membershipService } };
 };
@@ -154,15 +241,34 @@ describe('PeopleOrchestrationService', () => {
     it('terminateEmployee cancels pending leave and updates records', async () => {
         const { service, deps } = createService({
             leaveService: {
-                listLeaveRequests: vi.fn(async () => ({ requests: [{ id: 'req-1' }] })),
-                cancelLeaveRequest: vi.fn(async () => ({})),
-                ensureEmployeeBalances: vi.fn(async () => ({})),
-                getLeaveBalance: vi.fn(async () => ({ balances: [] })),
-            } as any,
+                listLeaveRequests: vi.fn(async () => ({
+                    requests: [buildLeaveRequest({ id: 'req-1' })],
+                })),
+                cancelLeaveRequest: vi.fn(async () => ({
+                    success: true,
+                    requestId: 'req-1',
+                    cancelledAt: timestamp,
+                } satisfies CancelLeaveRequestResult)),
+                ensureEmployeeBalances: vi.fn(async () => ({
+                    success: true,
+                    employeeId: 'EMP-1',
+                    year: 2025,
+                    ensuredBalances: 0,
+                } satisfies EnsureEmployeeBalancesResult)),
+                getLeaveBalance: vi.fn(async () => ({
+                    balances: [buildLeaveBalance()],
+                    employeeId: 'EMP-1',
+                    year: 2025,
+                })),
+            },
             absenceService: {
-                listAbsences: vi.fn(async () => ({ absences: [{ id: 'abs-1', status: 'APPROVED' }] })),
-                cancelAbsence: vi.fn(async () => ({})),
-            } as any,
+                listAbsences: vi.fn(async () => ({
+                    absences: [buildAbsence({ id: 'abs-1', status: 'APPROVED' })],
+                })),
+                cancelAbsence: vi.fn(async () => ({
+                    absence: buildAbsence({ id: 'abs-1', status: 'CANCELLED' }),
+                })),
+            },
         });
 
         await service.terminateEmployee({

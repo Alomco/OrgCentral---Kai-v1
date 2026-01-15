@@ -41,7 +41,7 @@ export async function analyzeAbsenceAttachment(
 ) {
     assertPrivilegedOrgAbsenceActor(input.authorization);
 
-    const absence = await deps.absenceRepository.getAbsence(input.authorization.orgId, input.absenceId);
+    const absence = await deps.absenceRepository.getAbsence(input.authorization, input.absenceId);
     if (!absence) {
         throw new EntityNotFoundError('Unplanned absence', { id: input.absenceId });
     }
@@ -59,7 +59,7 @@ export async function analyzeAbsenceAttachment(
     const attachment = selectAttachment(attachments, input.payload.attachmentId);
     assertAttachmentAnalyzable(attachment);
 
-    const absenceType = await deps.typeConfigRepository.getConfig(input.authorization.orgId, absence.typeId);
+    const absenceType = await deps.typeConfigRepository.getConfig(input.authorization, absence.typeId);
     if (!absenceType) {
         throw new EntityNotFoundError('Absence type', { id: absence.typeId });
     }
@@ -100,7 +100,7 @@ export async function analyzeAbsenceAttachment(
         mergeMetadata(store, aiResult.metadata);
     });
 
-    const updated = await deps.absenceRepository.updateAbsence(input.authorization.orgId, absence.id, {
+    const updated = await deps.absenceRepository.updateAbsence(input.authorization, absence.id, {
         metadata: updatedMetadata,
     });
 

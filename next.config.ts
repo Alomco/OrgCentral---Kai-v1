@@ -5,6 +5,14 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const nextConfig: NextConfig = {
   cacheComponents: true,
   serverExternalPackages: ['pino', 'thread-stream'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+    ],
+  },
   experimental: {
     turbopackFileSystemCacheForDev: true,
     ...(isDevelopment ? { serverComponentsHmrCache: false } : {}),

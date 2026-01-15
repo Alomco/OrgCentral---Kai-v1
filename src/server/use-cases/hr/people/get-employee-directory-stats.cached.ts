@@ -3,20 +3,20 @@ import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
-import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people/prisma-employee-profile-repository';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
 import {
   getEmployeeDirectoryStats,
   type EmployeeDirectoryStats,
 } from './get-employee-directory-stats';
+import { createEmployeeProfileRepository } from '@/server/services/hr/people/people-repository.factory';
 
 export interface GetEmployeeDirectoryStatsForUiInput {
   authorization: RepositoryAuthorizationContext;
 }
 
 function resolveEmployeeProfileRepository(): IEmployeeProfileRepository {
-  return new PrismaEmployeeProfileRepository();
+  return createEmployeeProfileRepository();
 }
 
 export async function getEmployeeDirectoryStatsForUi(

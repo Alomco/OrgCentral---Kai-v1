@@ -1,14 +1,12 @@
 import { z } from 'zod';
-import type { WorkerJobEnvelope, WorkerJobMetadata, WorkerJobAuthorization } from '@/server/workers/abstract-org-worker';
+import type {
+    WorkerJobAuthorization,
+    WorkerJobEnvelope,
+    WorkerJobMetadata,
+} from '@/server/workers/abstract-org-worker';
+import type { RoleUpdatePayload } from '@/server/types/role-updates';
 
-export type RoleActionType = 'created' | 'updated' | 'deleted';
-
-export interface RoleUpdatePayload {
-    roleId: string;
-    roleName: string;
-    action: RoleActionType;
-}
-
+export type { RoleUpdatePayload };
 export type RoleUpdateEnvelope = WorkerJobEnvelope<RoleUpdatePayload>;
 
 export const roleUpdateSchema = z.object({

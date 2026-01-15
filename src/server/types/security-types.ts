@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 import { z } from 'zod';
 import type { SecurityEvent } from './hr-types';
 
@@ -8,10 +8,12 @@ export interface PermissionResource {
     resource: string;
     actions: string[];
     description?: string | null;
-    metadata?: Prisma.JsonValue;
+    metadata?: PrismaJsonValue;
     createdAt: Date;
     updatedAt: Date;
 }
+
+export type PermissionResourceRecord = PermissionResource;
 
 export const LogSecurityEventRequestSchema = z.object({
     orgId: z.uuid(),

@@ -25,7 +25,7 @@ export default async function OrgSettingsPage() {
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['manage'] },
+            requiredPermissions: { 'org.settings': ['read'] },
             auditSource: 'ui:org-settings:read',
         },
     );

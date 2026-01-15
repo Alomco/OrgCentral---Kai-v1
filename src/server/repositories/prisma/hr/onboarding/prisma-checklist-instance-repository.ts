@@ -54,8 +54,8 @@ export class PrismaChecklistInstanceRepository
             employeeId: input.employeeId,
             templateId: input.templateId,
             templateName: mapped.templateName ?? null,
-            items: toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
-            metadata: toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+            items: toRequiredJsonNullInput(validatedItems as unknown as Prisma.InputJsonValue),
+            metadata: toRequiredJsonNullInput(mapped.metadata as unknown as Prisma.InputJsonValue),
             status: 'IN_PROGRESS',
             startedAt: new Date(),
             updatedAt: new Date(),
@@ -107,7 +107,7 @@ export class PrismaChecklistInstanceRepository
         let itemsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
         if (mapped.items !== undefined) {
             const validatedItems = z.array(checklistInstanceItemSchema).parse(mapped.items);
-            itemsJson = toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull;
+            itemsJson = toJsonNullInput(validatedItems as unknown as Prisma.InputJsonValue);
         }
 
         const data: ChecklistInstanceUpdateData = stampUpdate({
@@ -115,7 +115,7 @@ export class PrismaChecklistInstanceRepository
             items: itemsJson,
             metadata:
                 mapped.metadata !== undefined
-                    ? toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull
+                    ? toJsonNullInput(mapped.metadata as unknown as Prisma.InputJsonValue)
                     : undefined,
             orgId,
         });
@@ -172,4 +172,20 @@ export class PrismaChecklistInstanceRepository
             PrismaChecklistInstanceRepository.DEFAULT_RESIDENCY,
         );
     }
+}
+
+function toJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
+    const resolved = toPrismaInputJson(value);
+    if (resolved === Prisma.DbNull) {
+        return Prisma.JsonNull;
+    }
+    return resolved as Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined;
+}
+
+function toRequiredJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+    return toJsonNullInput(value) ?? Prisma.JsonNull;
 }

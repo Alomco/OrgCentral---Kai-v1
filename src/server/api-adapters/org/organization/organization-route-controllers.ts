@@ -7,18 +7,10 @@ import {
     organizationCreateSchema,
     type OrganizationCreateInput,
 } from '../../../validators/org/organization-create';
-
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
-import { PrismaRoleRepository } from '@/server/repositories/prisma/org/roles/prisma-role-repository';
-import { PrismaMembershipRepository } from '@/server/repositories/prisma/org/membership/prisma-membership-repository';
-import { PrismaAbacPolicyRepository } from '@/server/repositories/prisma/org/abac/prisma-abac-policy-repository';
-import { PrismaPermissionResourceRepository } from '@/server/repositories/prisma/org/permissions/prisma-permission-resource-repository';
-import { PrismaAbsenceTypeConfigRepository } from '@/server/repositories/prisma/hr/absences/prisma-absence-type-config-repository';
-import { getOrganization as getOrganizationUseCaseImpl } from '@/server/use-cases/org/organization/get-organization';
-import type { GetOrganizationResult } from '@/server/use-cases/org/organization/get-organization';
-import { createOrganizationWithOwner as createOrganizationWithOwnerUseCase } from '@/server/use-cases/org/organization/create-organization-with-owner';
+import { createOrganizationWithOwner } from '@/server/services/org/organization/organization-service';
 import type { CreateOrganizationWithOwnerResult } from '@/server/use-cases/org/organization/create-organization-with-owner';
-import { updateOrganizationProfile as updateOrganizationProfileUseCaseImpl } from '@/server/use-cases/org/organization/update-profile';
+import { fetchOrganization, updateOrganizationProfile } from '@/server/services/org/organization/organization-service';
+import type { GetOrganizationResult } from '@/server/use-cases/org/organization/get-organization';
 import type {
     UpdateOrganizationProfileResult,
 } from '@/server/use-cases/org/organization/update-profile';
@@ -57,14 +49,7 @@ export async function getOrganizationController(
         },
     );
 
-    const repository = new PrismaOrganizationRepository();
-    return getOrganizationUseCaseImpl(
-        { organizationRepository: repository },
-        {
-            authorization,
-            orgId: normalizedOrgId,
-        },
-    );
+    return fetchOrganization(authorization, normalizedOrgId);
 }
 
 export async function updateOrganizationProfileController(
@@ -92,15 +77,7 @@ export async function updateOrganizationProfileController(
         },
     );
 
-    const repository = new PrismaOrganizationRepository();
-    return updateOrganizationProfileUseCaseImpl(
-        { organizationRepository: repository },
-        {
-            authorization,
-            orgId: normalizedOrgId,
-            updates,
-        },
-    );
+    return updateOrganizationProfile(authorization, normalizedOrgId, updates);
 }
 
 export async function createOrganizationController(
@@ -148,24 +125,9 @@ export async function createOrganizationController(
             ? session.user.name.trim()
             : undefined;
 
-    const organizationRepository = new PrismaOrganizationRepository();
-    const roleRepository = new PrismaRoleRepository();
-    const membershipRepository = new PrismaMembershipRepository();
-    const abacPolicyRepository = new PrismaAbacPolicyRepository();
-    const permissionResourceRepository = new PrismaPermissionResourceRepository();
-    const absenceTypeConfigRepository = new PrismaAbsenceTypeConfigRepository();
-
-    return createOrganizationWithOwnerUseCase(
+    return createOrganizationWithOwner(
+        authorization,
         {
-            organizationRepository,
-            roleRepository,
-            membershipRepository,
-            abacPolicyRepository,
-            permissionResourceRepository,
-            absenceTypeConfigRepository,
-        },
-        {
-            authorization,
             actor: {
                 userId: authorization.userId,
                 email,

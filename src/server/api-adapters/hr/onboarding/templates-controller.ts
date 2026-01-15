@@ -1,13 +1,13 @@
 import { ZodError, type ZodType } from 'zod';
-import { PrismaChecklistTemplateRepository } from '@/server/repositories/prisma/hr/onboarding/prisma-checklist-template-repository';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
-import { CACHE_SCOPE_CHECKLIST_TEMPLATES } from '@/server/repositories/cache-scopes';
+import { CACHE_SCOPE_CHECKLIST_TEMPLATES } from '@/server/constants/cache-scopes';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { createChecklistTemplate } from '@/server/use-cases/hr/onboarding/templates/create-checklist-template';
 import { deleteChecklistTemplate } from '@/server/use-cases/hr/onboarding/templates/delete-checklist-template';
 import { listChecklistTemplates } from '@/server/use-cases/hr/onboarding/templates/list-checklist-templates';
 import { updateChecklistTemplate } from '@/server/use-cases/hr/onboarding/templates/update-checklist-template';
 import { ValidationError } from '@/server/errors';
+import { getChecklistTemplateRepository } from '@/server/services/hr/onboarding/onboarding-controller-dependencies';
 import type {
     ChecklistTemplate,
     ChecklistTemplateCreatePayload,
@@ -35,7 +35,7 @@ interface ChecklistTemplateDeleteResult {
     success: true;
 }
 
-const checklistTemplateRepository = new PrismaChecklistTemplateRepository();
+const checklistTemplateRepository = getChecklistTemplateRepository();
 
 async function authorizeTemplateRequest(
     request: Request,

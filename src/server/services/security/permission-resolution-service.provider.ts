@@ -1,16 +1,14 @@
-import { PrismaRoleRepository } from '@/server/repositories/prisma/org/roles';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
-import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
 import { PermissionResolutionService, type PermissionResolutionServiceDependencies } from './permission-resolution-service';
+import { buildPermissionResolutionServiceDependencies, type PermissionResolutionServiceDependencyOptions } from '@/server/repositories/providers/security/permission-resolution-service-dependencies';
 
 let defaultPermissionResolutionServiceProvider: PermissionResolutionServiceProvider | null = null;
 
 export interface PermissionResolutionServiceProviderOptions {
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    prismaOptions?: PermissionResolutionServiceDependencyOptions['prismaOptions'];
 }
 
 export class PermissionResolutionServiceProvider {
-    private readonly prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    private readonly prismaOptions?: PermissionResolutionServiceDependencyOptions['prismaOptions'];
     private readonly sharedService: PermissionResolutionService;
 
     constructor(options?: PermissionResolutionServiceProviderOptions) {
@@ -22,35 +20,33 @@ export class PermissionResolutionServiceProvider {
         if (!overrides || Object.keys(overrides).length === 0) {
             return this.sharedService;
         }
-        const deps = this.createDependencies(this.prismaOptions);
-        return new PermissionResolutionService({
-            roleRepository: overrides.roleRepository ?? deps.roleRepository,
-        });
+        const deps = this.createDependencies(this.prismaOptions, overrides);
+        return new PermissionResolutionService(deps);
     }
 
     private createDependencies(
-        prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>,
+        prismaOptions?: PermissionResolutionServiceDependencyOptions['prismaOptions'],
+        overrides?: Partial<PermissionResolutionServiceDependencies>,
     ): PermissionResolutionServiceDependencies {
-        const prismaClient = prismaOptions?.prisma ?? defaultPrismaClient;
-        const repoOptions = {
-            prisma: prismaClient,
-            trace: prismaOptions?.trace,
-            onAfterWrite: prismaOptions?.onAfterWrite,
-        };
+        const dependencies = buildPermissionResolutionServiceDependencies({
+            prismaOptions: prismaOptions,
+            overrides: overrides,
+        });
+
         return {
-            roleRepository: new PrismaRoleRepository(repoOptions),
+            roleRepository: dependencies.roleRepository,
         };
     }
 }
 
 export function getPermissionResolutionService(
     overrides?: Partial<PermissionResolutionServiceDependencies>,
-    options?: PermissionResolutionServiceProviderOptions,
+    options?: PermissionResolutionServiceDependencyOptions,
 ): PermissionResolutionService {
     // Lazy init to avoid eager graph construction that can trigger circular imports at module load.
     const provider = options
-        ? new PermissionResolutionServiceProvider(options)
+        ? new PermissionResolutionServiceProvider({ prismaOptions: options.prismaOptions })
         : (defaultPermissionResolutionServiceProvider ??=
-              new PermissionResolutionServiceProvider());
+            new PermissionResolutionServiceProvider());
     return provider.getService(overrides);
 }

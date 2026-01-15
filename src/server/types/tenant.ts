@@ -1,7 +1,10 @@
 export type Identifier = string;
 export type OrgId = Identifier;
 
-import type { DataResidencyZone as PrismaDataResidencyZone, DataClassificationLevel as PrismaDataClassificationLevel } from '@prisma/client';
+import type {
+    DataResidencyZone as PrismaDataResidencyZone,
+    DataClassificationLevel as PrismaDataClassificationLevel,
+} from '@/server/types/prisma';
 export const DATA_RESIDENCY_ZONES = ['UK_ONLY', 'UK_AND_EEA', 'GLOBAL_RESTRICTED'] as const;
 export type DataResidencyZone = PrismaDataResidencyZone;
 

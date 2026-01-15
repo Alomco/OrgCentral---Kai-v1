@@ -1,4 +1,5 @@
 import type { IAbsenceTypeConfigRepository } from '@/server/repositories/contracts/hr/absences/absence-type-config-repository-contract';
+import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { toJsonValue } from '@/server/domain/absences/conversions';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 
@@ -33,7 +34,7 @@ export interface SeedDefaultAbsenceTypesDependencies {
 }
 
 export interface SeedDefaultAbsenceTypesInput {
-    orgId: string;
+    authorization: RepositoryAuthorizationContext;
     dataResidency?: DataResidencyZone;
     dataClassification?: DataClassificationLevel;
 }
@@ -42,7 +43,9 @@ export async function seedDefaultAbsenceTypes(
     deps: SeedDefaultAbsenceTypesDependencies,
     input: SeedDefaultAbsenceTypesInput,
 ): Promise<void> {
-    const existing = await deps.typeConfigRepository.getConfigs(input.orgId, { includeInactive: true });
+    const classification = input.dataClassification ?? input.authorization.dataClassification;
+    const residency = input.dataResidency ?? input.authorization.dataResidency;
+    const existing = await deps.typeConfigRepository.getConfigs(input.authorization, { includeInactive: true });
     const existingKeys = new Set(existing.map((type) => type.key));
 
     for (const seed of DEFAULT_ABSENCE_TYPE_SEEDS) {
@@ -50,29 +53,33 @@ export async function seedDefaultAbsenceTypes(
             continue;
         }
 
-        await deps.typeConfigRepository.createConfig(input.orgId, {
-            orgId: input.orgId,
+        await deps.typeConfigRepository.createConfig(input.authorization, {
+            orgId: input.authorization.orgId,
             key: seed.key,
             label: seed.label,
             tracksBalance: seed.tracksBalance ?? true,
             isActive: seed.isActive ?? true,
-            metadata: toJsonValue(buildMetadata(seed, input)),
+            metadata: toJsonValue(buildMetadata(seed, classification, residency)),
         });
     }
 }
 
-function buildMetadata(seed: AbsenceTypeSeed, input: SeedDefaultAbsenceTypesInput): Record<string, unknown> {
+function buildMetadata(
+    seed: AbsenceTypeSeed,
+    dataClassification?: DataClassificationLevel,
+    dataResidency?: DataResidencyZone,
+): Record<string, unknown> {
     const metadata: Record<string, unknown> = {
         seeded: true,
         seedKey: seed.key,
     };
 
-    if (input.dataResidency) {
-        metadata.dataResidency = input.dataResidency;
+    if (dataResidency) {
+        metadata.dataResidency = dataResidency;
     }
 
-    if (input.dataClassification) {
-        metadata.dataClassification = input.dataClassification;
+    if (dataClassification) {
+        metadata.dataClassification = dataClassification;
     }
 
     if (seed.metadata) {

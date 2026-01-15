@@ -2,7 +2,7 @@ import { differenceInCalendarDays } from 'date-fns';
 import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 import type { ComplianceReminderDependencies, ComplianceReminderPayload } from './send-compliance-reminders';
 import type { ComplianceLogItem } from '@/server/types/compliance-types';
-import type { NotificationDispatchContract } from '@/server/services/notifications/notification-service.provider';
+import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 import { emitHrNotification } from '@/server/use-cases/hr/notifications/notification-emitter';
 
 const NOTIFICATION_TYPE_DOCUMENT_EXPIRY = 'document-expiry' as const;

@@ -8,18 +8,34 @@ import { PrismaUserRepository } from '@/server/repositories/prisma/org/users/pri
 import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people/prisma-employee-profile-repository';
 import { PrismaChecklistTemplateRepository } from '@/server/repositories/prisma/hr/onboarding/prisma-checklist-template-repository';
 import { PrismaChecklistInstanceRepository } from '@/server/repositories/prisma/hr/onboarding/prisma-checklist-instance-repository';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
+import type { BasePrismaRepositoryOptions, PrismaOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import type { OrgScopedRepositoryOptions } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
-import type { MembershipServiceDependencies } from '@/server/services/org/membership/membership-service.types';
+import type { IInvitationRepository } from '@/server/repositories/contracts/auth/invitations/invitation-repository-contract';
+import type { IMembershipRepository } from '@/server/repositories/contracts/org/membership/membership-repository-contract';
+import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
+import type { IUserRepository } from '@/server/repositories/contracts/org/users/user-repository-contract';
+import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
+import type { IChecklistTemplateRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-template-repository-contract';
+import type { IChecklistInstanceRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-instance-repository-contract';
+
+export interface MembershipRepositoryDependencies {
+    invitationRepository: IInvitationRepository;
+    membershipRepository: IMembershipRepository;
+    userRepository: IUserRepository;
+    organizationRepository: IOrganizationRepository;
+    employeeProfileRepository: IEmployeeProfileRepository;
+    checklistTemplateRepository: IChecklistTemplateRepository;
+    checklistInstanceRepository: IChecklistInstanceRepository;
+}
 
 export interface MembershipRepositoryDependencyOptions {
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
-    overrides?: Partial<MembershipServiceDependencies>;
+    prismaOptions?: PrismaOptions;
+    overrides?: Partial<MembershipRepositoryDependencies>;
 }
 
 export function buildMembershipRepositoryDependencies(
     options?: MembershipRepositoryDependencyOptions,
-): MembershipServiceDependencies {
+): MembershipRepositoryDependencies {
     const prismaClient = options?.prismaOptions?.prisma ?? defaultPrismaClient;
     const organizationRepo = options?.overrides?.organizationRepository
         ?? new PrismaOrganizationRepository({ prisma: prismaClient });
@@ -48,7 +64,7 @@ export function buildMembershipRepositoryDependencies(
 }
 
 function createIdentityInvalidator(
-    organizationRepo: PrismaOrganizationRepository,
+    organizationRepo: IOrganizationRepository,
 ): NonNullable<BasePrismaRepositoryOptions['onAfterWrite']> {
     return async (orgId, scopes = resolveIdentityCacheScopes()) => {
         const organization = await organizationRepo.getOrganization(orgId);

@@ -7,7 +7,7 @@ import type {
     AddToWaitlistResult,
 } from '@/server/use-cases/auth/add-to-waitlist';
 import { addToWaitlist } from '@/server/use-cases/auth/add-to-waitlist';
-import { PrismaWaitlistRepository } from '@/server/repositories/prisma/auth/waitlist';
+import { createWaitlistRepository } from '@/server/repositories/providers/auth/waitlist-repository-provider';
 
 const AUDIT_SOURCE = 'auth.waitlist-service';
 
@@ -43,7 +43,7 @@ export function getWaitlistService(
 ): WaitlistService {
     if (!sharedService || overrides) {
         const dependencies: WaitlistServiceDependencies = {
-            waitlistRepository: overrides?.waitlistRepository ?? new PrismaWaitlistRepository(),
+            waitlistRepository: overrides?.waitlistRepository ?? createWaitlistRepository(),
         };
         if (!overrides) {
             sharedService = new WaitlistService(dependencies);

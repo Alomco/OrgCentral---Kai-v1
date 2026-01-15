@@ -4,8 +4,8 @@ import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { PeopleListFilters } from '@/server/types/hr/people';
-import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people/prisma-employee-profile-repository';
 import { countEmployeeProfiles } from './count-employee-profiles';
+import { createEmployeeProfileRepository } from '@/server/services/hr/people/people-repository.factory';
 
 export interface CountEmployeeProfilesForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -16,8 +16,8 @@ export interface CountEmployeeProfilesForUiResult {
     count: number;
 }
 
-function resolveEmployeeProfileRepository(): PrismaEmployeeProfileRepository {
-    return new PrismaEmployeeProfileRepository();
+function resolveEmployeeProfileRepository() {
+    return createEmployeeProfileRepository();
 }
 
 export async function countEmployeeProfilesForUi(

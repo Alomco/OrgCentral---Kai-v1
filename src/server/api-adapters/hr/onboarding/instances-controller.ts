@@ -1,9 +1,9 @@
-import { PrismaChecklistInstanceRepository } from '@/server/repositories/prisma/hr/onboarding/prisma-checklist-instance-repository';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getEmployeeChecklists } from '@/server/use-cases/hr/onboarding/instances/get-employee-checklists';
 import { updateChecklistInstance } from '@/server/use-cases/hr/onboarding/instances/update-checklist-instance';
 import type { ChecklistInstance } from '@/server/types/onboarding-types';
 import { parseChecklistInstanceIdentifier } from '@/server/validators/hr/onboarding/checklist-instance-validators';
+import { getChecklistInstanceRepository } from '@/server/services/hr/onboarding/onboarding-controller-dependencies';
 
 interface GetEmployeeChecklistsResult {
     success: true;
@@ -15,7 +15,7 @@ interface UpdateChecklistInstanceResult {
     data: { instance: ChecklistInstance };
 }
 
-const checklistInstanceRepository = new PrismaChecklistInstanceRepository();
+const checklistInstanceRepository = getChecklistInstanceRepository();
 
 async function authorizeRequest(
     request: Request,

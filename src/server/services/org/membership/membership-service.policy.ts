@@ -1,7 +1,7 @@
 import { AuthorizationError } from '@/server/errors';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import type { MembershipStatus } from '@prisma/client';
+import type { MembershipStatus } from '@/server/types/prisma';
 
 export const ORG_MEMBERSHIP_RESOURCE_TYPE = 'org.membership';
 
@@ -48,9 +48,16 @@ export function enforceInviteRolePolicy(
     const primaryRole = roles[0] ?? 'member';
     const roleKey = authorization.roleKey;
 
-    if (roleKey === 'globalAdmin' || roleKey === 'owner') {
+    if (roleKey === 'globalAdmin') {
+        if (!['globalAdmin', 'orgAdmin'].includes(primaryRole)) {
+            throw new AuthorizationError('Global admins may only invite global admins or organization admins.');
+        }
+        return;
+    }
+
+    if (roleKey === 'owner') {
         if (primaryRole !== 'orgAdmin') {
-            throw new AuthorizationError('Global admins may only invite organization admins.');
+            throw new AuthorizationError('Organization owners may only invite organization admins.');
         }
         return;
     }

@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react';
 import { UserPlus, Users, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { listGlobalAdmins, createGlobalAdmin, bootstrapDefaultAdmins } from '../_actions/admin-tools';
+import { listGlobalAdmins, createGlobalAdmin, bootstrapDefaultAdmins, runDevColdStart } from '../_actions/admin-tools';
 
 interface AdminUser {
     id: string;
@@ -18,6 +18,7 @@ export function GlobalAdminPanel() {
     const [email, setEmail] = useState('');
     const [displayName, setDisplayName] = useState('');
     const [message, setMessage] = useState('');
+    const [failures, setFailures] = useState<Array<{ step: string; message: string }>>([]);
     const [isPending, startTransition] = useTransition();
 
     const loadAdmins = () => {
@@ -34,11 +35,13 @@ export function GlobalAdminPanel() {
     const handleCreate = () => {
         if (!email.trim()) {
             setMessage('Email is required');
+            setFailures([]);
             return;
         }
         startTransition(async () => {
             const result = await createGlobalAdmin(email, displayName);
             setMessage(result.message);
+            setFailures([]);
             if (result.success) {
                 setEmail('');
                 setDisplayName('');
@@ -51,6 +54,18 @@ export function GlobalAdminPanel() {
         startTransition(async () => {
             const result = await bootstrapDefaultAdmins();
             setMessage(result.message);
+            setFailures([]);
+            if (result.success) {
+                loadAdmins();
+            }
+        });
+    };
+
+    const handleColdStart = () => {
+        startTransition(async () => {
+            const result = await runDevColdStart();
+            setMessage(result.message);
+            setFailures(result.failures ?? []);
             if (result.success) {
                 loadAdmins();
             }
@@ -60,7 +75,7 @@ export function GlobalAdminPanel() {
     return (
         <article className="rounded-xl p-5" data-ui-surface="container">
             {/* Gradient icon box */}
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/25">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-primary to-accent text-white shadow-lg shadow-primary/25">
                 <Users className="h-5 w-5" />
             </div>
 
@@ -72,16 +87,26 @@ export function GlobalAdminPanel() {
 
             {/* Primary action button - glass style with glow */}
             <div className="mt-4">
-                <button
-                    onClick={handleBootstrap}
-                    disabled={isPending}
-                    className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary shadow-sm shadow-primary/15 transition-all duration-200 hover:bg-primary/20 hover:shadow-md hover:shadow-primary/25 disabled:opacity-50"
-                >
-                    <UserPlus className="h-4 w-4" />
-                    Bootstrap Default Admins
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        onClick={handleBootstrap}
+                        disabled={isPending}
+                        className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary shadow-sm shadow-primary/15 transition-all duration-200 hover:bg-primary/20 hover:shadow-md hover:shadow-primary/25 disabled:opacity-50"
+                    >
+                        <UserPlus className="h-4 w-4" />
+                        Bootstrap Default Admins
+                    </button>
+                    <button
+                        onClick={handleColdStart}
+                        disabled={isPending}
+                        className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-600 shadow-sm shadow-emerald-500/15 transition-all duration-200 hover:bg-emerald-500/20 hover:shadow-md hover:shadow-emerald-500/25 disabled:opacity-50"
+                    >
+                        <RefreshCw className={cn('h-4 w-4', isPending && 'animate-spin')} />
+                        Run Full Cold Start
+                    </button>
+                </div>
                 <p className="mt-1.5 text-xs text-muted-foreground/70">
-                    Creates: bdturag01@gmail.com (Global), aant1563@gmail.com (Dev)
+                    Bootstrap default admins or run full cold start (platform org, roles, permissions, and demo data).
                 </p>
             </div>
 
@@ -116,7 +141,16 @@ export function GlobalAdminPanel() {
             {/* Message toast - accent colored */}
             {message && (
                 <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-sm text-foreground shadow-inner">
-                    {message}
+                    <p className="font-medium">{message}</p>
+                    {failures.length > 0 && (
+                        <ul className="mt-2 space-y-1 text-xs text-rose-600">
+                            {failures.map((failure) => (
+                                <li key={`${failure.step}-${failure.message}`} className="rounded-md bg-rose-500/10 px-2 py-1">
+                                    <span className="font-semibold">{failure.step}</span>: {failure.message}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
             )}
 

@@ -1,12 +1,13 @@
-import { type Prisma, type PrismaClient } from '@prisma/client';
 import type { IEnterpriseSettingsRepository } from '@/server/repositories/contracts/platform/settings/enterprise-settings-repository-contract';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { EnterpriseSettings } from '@/server/types/platform-types';
 import { stampUpdate } from '@/server/repositories/prisma/helpers/timestamps';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { enterpriseSettingsSchema, enterpriseSettingsUpdateSchema } from '@/server/validators/platform/settings-validators';
+import { Prisma } from '@/server/types/prisma';
+import type { PrismaClientInstance, PrismaJsonValue } from '@/server/types/prisma';
 
-type PlatformSettingsDelegate = PrismaClient['platformSetting'];
+type PlatformSettingsDelegate = PrismaClientInstance['platformSetting'];
 type PlatformSettingsUpsertArguments = Prisma.PlatformSettingUpsertArgs;
 
 const SETTINGS_KEY = 'enterprise-general';
@@ -55,7 +56,15 @@ export class PrismaEnterpriseSettingsRepository
         // Ensure the final state is valid according to our schema
         const validated = enterpriseSettingsSchema.parse(merged);
 
-        const metadataJson = toPrismaInputJson(validated as unknown as Prisma.InputJsonValue);
+        const metadata: Record<string, PrismaJsonValue> = {
+            allowSignups: validated.allowSignups,
+            maintenanceMode: validated.maintenanceMode,
+            defaultTrialDays: validated.defaultTrialDays,
+            supportEmail: validated.supportEmail,
+            ...(validated.termsUrl !== undefined ? { termsUrl: validated.termsUrl } : {}),
+            ...(validated.privacyUrl !== undefined ? { privacyUrl: validated.privacyUrl } : {}),
+        };
+        const metadataJson = toPrismaInputJson(metadata) ?? Prisma.JsonNull;
 
         const args: PlatformSettingsUpsertArguments = {
             where: { id: SETTINGS_KEY },

@@ -66,7 +66,7 @@ export async function updateBillingSettings(
     {},
     {
       headers: headerStore,
-      requiredPermissions: { organization: ['manage'] },
+      requiredPermissions: { 'org.settings': ['update'] },
       auditSource: 'ui:org-settings:billing',
     },
   );

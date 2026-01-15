@@ -49,7 +49,7 @@ export class PrismaChecklistTemplateRepository
             orgId: input.orgId,
             name: input.name,
             type: input.type,
-            items: toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+            items: toRequiredJsonNullInput(validatedItems as unknown as Prisma.InputJsonValue),
         });
         const record = await this.templates.create({
             data,
@@ -75,7 +75,7 @@ export class PrismaChecklistTemplateRepository
         let itemsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
         if (mapped.items !== undefined) {
             const validatedItems = z.array(checklistTemplateItemSchema).parse(mapped.items);
-            itemsJson = toPrismaInputJson(validatedItems as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull;
+            itemsJson = toJsonNullInput(validatedItems as unknown as Prisma.InputJsonValue);
         }
 
         const data: ChecklistTemplateUpdateData = stampUpdate({
@@ -134,4 +134,20 @@ export class PrismaChecklistTemplateRepository
         );
         return records.map(mapChecklistTemplateRecordToDomain);
     }
+}
+
+function toJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
+    const resolved = toPrismaInputJson(value);
+    if (resolved === Prisma.DbNull) {
+        return Prisma.JsonNull;
+    }
+    return resolved as Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined;
+}
+
+function toRequiredJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+    return toJsonNullInput(value) ?? Prisma.JsonNull;
 }

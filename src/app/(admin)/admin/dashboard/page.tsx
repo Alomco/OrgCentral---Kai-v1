@@ -12,7 +12,8 @@ import { QUICK_ACTIONS } from './quick-actions';
 import { ThemeCard } from '@/components/theme/cards/theme-card';
 import { ThemeGrid } from '@/components/theme/layout/primitives';
 import { ThemeButton, ThemeBadge } from '@/components/theme/primitives/interactive';
-import { Container, GradientAccent } from '@/components/theme/primitives/surfaces';
+import { GradientAccent } from '@/components/theme/primitives/surfaces';
+import { PageContainer } from '@/components/theme/layout';
 import { GradientOrb } from '@/components/theme/decorative/effects';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function AdminDashboardPage() {
     return (
-        <Container spacing="lg" maxWidth="screen" className="relative overflow-hidden">
+        <PageContainer padding="lg" maxWidth="xl" className="relative overflow-hidden">
             {/* Decorative Background Effects */}
             <GradientOrb position="top-right" color="primary" className="opacity-30" />
             <GradientOrb position="bottom-left" color="accent" className="opacity-20" />
@@ -84,6 +85,67 @@ export default function AdminDashboardPage() {
                 </ThemeGrid>
             </div>
 
+            {/* Governance & Insights */}
+            <div className="mt-8 relative z-10">
+                <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" />
+                    Governance Insights
+                </h2>
+                <ThemeGrid cols={2} gap="md">
+                    <ThemeCard variant="glass" hover="lift" padding="lg" className="h-full">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-semibold text-foreground">Compliance readiness</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Key controls aligned with ISO27001 and DSPT frameworks.
+                                </p>
+                            </div>
+                            <ThemeBadge variant="glow" size="sm">On Track</ThemeBadge>
+                        </div>
+                        <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center justify-between">
+                                <span>Access reviews</span>
+                                <span className="font-medium text-foreground">92% complete</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>Audit trails</span>
+                                <span className="font-medium text-foreground">Enabled</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>Data residency</span>
+                                <span className="font-medium text-foreground">UK-LON</span>
+                            </div>
+                        </div>
+                    </ThemeCard>
+
+                    <ThemeCard variant="glass" hover="lift" padding="lg" className="h-full">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-semibold text-foreground">Access governance</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Track privileged access and policy changes.
+                                </p>
+                            </div>
+                            <ThemeBadge variant="outline" size="sm">Last 24h</ThemeBadge>
+                        </div>
+                        <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                            <div className="flex items-center justify-between">
+                                <span>Privileged role updates</span>
+                                <span className="font-medium text-foreground">3</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>Pending approvals</span>
+                                <span className="font-medium text-foreground">1</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>Security alerts</span>
+                                <span className="font-medium text-foreground">0</span>
+                            </div>
+                        </div>
+                    </ThemeCard>
+                </ThemeGrid>
+            </div>
+
             {/* Invite Member CTA */}
             <div className="mt-8 relative z-10">
                 <ThemeCard variant="gradient" padding="lg">
@@ -140,6 +202,6 @@ export default function AdminDashboardPage() {
                     </div>
                 </ThemeCard>
             </div>
-        </Container>
+        </PageContainer>
     );
 }

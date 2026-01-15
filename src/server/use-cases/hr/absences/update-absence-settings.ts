@@ -32,7 +32,7 @@ export async function updateAbsenceSettings(
     };
 
     const settings = await deps.absenceSettingsRepository.upsertSettings(
-        input.authorization.orgId,
+        input.authorization,
         sanitizedPayload,
     );
 

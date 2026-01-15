@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { AbacPolicy } from '@/server/security/abac-types';
 import { getTenantAbacPolicies } from '@/server/security/abac';
 import { createAuth } from '@/server/lib/auth';
-import { isOrgRoleKey } from '@/server/security/access-control';
+import { isOrgRoleKey, type OrgPermissionMap } from '@/server/security/access-control';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { listSessionOrganizations, type DebugOrgSummary } from '@/server/use-cases/auth/debug-security';
 
@@ -38,10 +38,10 @@ type DebugSecurityResponse =
             dataResidency: string;
             dataClassification: string;
             auditSource: string;
-            correlationId: string;
+            correlationId?: string;
         };
         rbac?: {
-            roleStatements?: Record<string, string[]>;
+            roleStatements?: OrgPermissionMap;
         };
         abac?: {
             policyCount: number;
@@ -120,10 +120,9 @@ export async function GET(request: NextRequest): Promise<Response> {
         const policies = await getTenantAbacPolicies(authorization.orgId);
         const usingFallbackPolicies = policies.some((policy) => policy.id.startsWith('default:abac:'));
 
+        const roleKey = typeof authorization.roleKey === 'string' ? authorization.roleKey : 'custom';
         const roleStatements =
-            typeof authorization.roleKey === 'string' && isOrgRoleKey(authorization.roleKey)
-                ? (authorization.permissions as Record<string, string[]>)
-                : undefined;
+            isOrgRoleKey(roleKey) ? authorization.permissions : undefined;
 
         return noStoreJson<DebugSecurityResponse>({
             ok: true,
@@ -132,7 +131,7 @@ export async function GET(request: NextRequest): Promise<Response> {
             authorization: {
                 orgId: authorization.orgId,
                 userId: authorization.userId,
-                roleKey: authorization.roleKey,
+                roleKey,
                 dataResidency: authorization.dataResidency,
                 dataClassification: authorization.dataClassification,
                 auditSource: authorization.auditSource,

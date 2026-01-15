@@ -1,5 +1,5 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
+import type { NotificationComposerContract } from '@/server/repositories/contracts/notifications/notification-composer-contract';
 import { appLogger } from '@/server/logging/structured-logger';
 
 export async function sendRoleUpdateNotification(

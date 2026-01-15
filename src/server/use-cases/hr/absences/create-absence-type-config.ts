@@ -55,7 +55,7 @@ export async function createAbsenceTypeConfig(
     }
 
     const existing = await deps.typeConfigRepository.getConfigByKey(
-        input.authorization.orgId,
+        input.authorization,
         key,
     );
     if (existing) {
@@ -63,7 +63,7 @@ export async function createAbsenceTypeConfig(
     }
 
     const created = await deps.typeConfigRepository.createConfig(
-        input.authorization.orgId,
+        input.authorization,
         {
             orgId: input.authorization.orgId,
             key,

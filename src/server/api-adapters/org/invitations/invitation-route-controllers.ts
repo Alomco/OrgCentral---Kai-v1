@@ -1,12 +1,8 @@
 import { z } from 'zod';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { readJson } from '@/server/api-adapters/http/request-utils';
-import { PrismaInvitationRepository } from '@/server/repositories/prisma/auth/invitations';
-import { getInvitationEmailDependencies } from '@/server/use-cases/notifications/invitation-email.provider';
-import { resendInvitationEmail } from '@/server/use-cases/notifications/resend-invitation-email';
-import { listOrgInvitations } from '@/server/use-cases/auth/invitations/list-org-invitations';
-import { revokeOrgInvitation } from '@/server/use-cases/auth/invitations/revoke-org-invitation';
 import { ValidationError } from '@/server/errors';
+import { listInvitations, resendInvitation, revokeInvitation } from '@/server/services/org/invitations/invitation-service';
 
 const statusSchema = z.enum(['pending', 'accepted', 'expired', 'declined', 'revoked']);
 
@@ -60,15 +56,7 @@ export async function listInvitationsController(request: Request, orgId: string)
         },
     );
 
-    const invitationRepository = new PrismaInvitationRepository();
-    return listOrgInvitations(
-        { invitationRepository },
-        {
-            authorization,
-            status: parsed.status,
-            limit: parsed.limit,
-        },
-    );
+    return listInvitations(authorization, parsed.status, parsed.limit);
 }
 
 export async function revokeInvitationController(request: Request, orgId: string, token: string) {
@@ -90,15 +78,7 @@ export async function revokeInvitationController(request: Request, orgId: string
         },
     );
 
-    const invitationRepository = new PrismaInvitationRepository();
-    return revokeOrgInvitation(
-        { invitationRepository },
-        {
-            authorization,
-            token: normalizedToken,
-            reason: parsed.reason,
-        },
-    );
+    return revokeInvitation(authorization, normalizedToken, parsed.reason);
 }
 
 export async function resendInvitationController(request: Request, orgId: string, token: string) {
@@ -118,9 +98,5 @@ export async function resendInvitationController(request: Request, orgId: string
         },
     );
 
-    const dependencies = getInvitationEmailDependencies();
-    return resendInvitationEmail(dependencies, {
-        authorization,
-        invitationToken: normalizedToken,
-    });
+    return resendInvitation(authorization, normalizedToken);
 }

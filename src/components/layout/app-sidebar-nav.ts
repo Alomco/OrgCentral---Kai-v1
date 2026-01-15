@@ -51,5 +51,5 @@ export const navItems: NavItem[] = [
             { href: "/org/settings", label: "Settings", icon: Settings },
         ],
     },
-    { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/org/settings", label: "Settings", icon: Settings },
 ]

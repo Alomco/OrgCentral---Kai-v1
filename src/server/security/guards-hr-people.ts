@@ -1,6 +1,8 @@
+import { randomUUID } from 'node:crypto';
 import { requireAbacAllowance } from './authorization/abac-context';
 import { authorizeOrgAccessRbacOnly } from './authorization/engine';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { OrgAccessContext } from '@/server/security/guards';
 import {
     createHrPeopleAuthorizationDefaults,
 } from '@/server/use-cases/hr/people/shared/repository-authorizer-helpers';
@@ -72,7 +74,7 @@ async function assertPeopleAccess(
         roles: authorization.roleName && authorization.roleName !== authorization.roleKey
             ? [authorization.roleKey, authorization.roleName]
             : [authorization.roleKey],
-        guardContext: authorization,
+        guardContext: toOrgAccessContext(authorization),
         resourceAttributes: {
             ...params.resourceAttributes,
             ...(typeof ownerMatchesSubject === 'boolean'
@@ -86,6 +88,25 @@ async function assertPeopleAccess(
     });
 
     return authorization;
+}
+
+function toOrgAccessContext(
+    authorization: RepositoryAuthorizationContext,
+): OrgAccessContext {
+    return {
+        orgId: authorization.orgId,
+        userId: authorization.userId,
+        roleKey: authorization.roleKey,
+        roleName: authorization.roleName ?? null,
+        roleId: authorization.roleId ?? null,
+        roleScope: authorization.roleScope ?? null,
+        permissions: authorization.permissions,
+        dataResidency: authorization.dataResidency,
+        dataClassification: authorization.dataClassification,
+        auditSource: authorization.auditSource,
+        auditBatchId: authorization.auditBatchId,
+        correlationId: authorization.correlationId ?? randomUUID(),
+    };
 }
 
 export function assertPeopleProfileReader(

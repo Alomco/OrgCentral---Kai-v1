@@ -44,7 +44,7 @@ export async function updateAbsenceTypeConfig(
     }
 
     const existing = await deps.typeConfigRepository.getConfig(
-        input.authorization.orgId,
+        input.authorization,
         parsed.data.typeId,
     );
 
@@ -53,7 +53,7 @@ export async function updateAbsenceTypeConfig(
     }
 
     const updated = await deps.typeConfigRepository.updateConfig(
-        input.authorization.orgId,
+        input.authorization,
         parsed.data.typeId,
         {
             label: parsed.data.label.trim(),

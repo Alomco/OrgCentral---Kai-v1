@@ -1,4 +1,3 @@
-import { Prisma, type PrismaClient } from '@prisma/client';
 import type {
     AppPermissionCreateInput,
     AppPermissionUpdateInput,
@@ -14,6 +13,8 @@ import type { AppPermission } from '@/server/types/platform-types';
 import { stampCreate, stampUpdate } from '@/server/repositories/prisma/helpers/timestamps';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { createAppPermissionSchema, updateAppPermissionSchema } from '@/server/validators/platform/permission-validators';
+import { Prisma } from '@/server/types/prisma';
+import type { PrismaClientInstance } from '@/server/types/prisma';
 
 type AppPermissionCreateData = Prisma.AppPermissionUncheckedCreateInput;
 type AppPermissionUpdateData = Prisma.AppPermissionUncheckedUpdateInput;
@@ -21,7 +22,7 @@ type AppPermissionUpdateData = Prisma.AppPermissionUncheckedUpdateInput;
 export class PrismaAppPermissionRepository
     extends BasePrismaRepository
     implements IAppPermissionRepository {
-    private get appPermissions(): PrismaClient['appPermission'] {
+    private get appPermissions(): PrismaClientInstance['appPermission'] {
         return this.prisma.appPermission;
     }
 
@@ -42,7 +43,7 @@ export class PrismaAppPermissionRepository
         const mapped = mapAppPermissionCreateInputToRecord(validated);
 
         // Use explicit cast safely after Zod validation
-        const metadataJson = toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull;
+        const metadataJson = toPrismaInputJson(mapped.metadata) ?? Prisma.JsonNull;
 
         const data: AppPermissionCreateData = stampCreate({
             ...mapped,
@@ -62,7 +63,7 @@ export class PrismaAppPermissionRepository
         const mapped = mapAppPermissionUpdateInputToRecord(validated);
 
         const metadataJson = mapped.metadata !== undefined
-            ? toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull
+            ? toPrismaInputJson(mapped.metadata) ?? Prisma.JsonNull
             : undefined;
 
         const data: AppPermissionUpdateData = stampUpdate({

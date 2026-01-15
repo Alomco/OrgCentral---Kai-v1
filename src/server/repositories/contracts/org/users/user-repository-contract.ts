@@ -8,10 +8,17 @@ import type { UserData } from '@/server/types/leave-types';
 import type { Membership } from '@/server/types/membership';
 import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 
+export interface UserCreationInput {
+  email: string;
+  displayName?: string;
+  authProvider?: string;
+}
+
 export interface IUserRepository {
   findById(userId: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   userExistsByEmail(email: string): Promise<boolean>;
+  create(input: UserCreationInput): Promise<User>;
 
   /**
    * Get user data by ID for a specific tenant

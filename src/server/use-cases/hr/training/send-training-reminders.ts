@@ -1,11 +1,9 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ITrainingRecordRepository } from '@/server/repositories/contracts/hr/training/training-record-repository-contract';
-import { PrismaTrainingRecordRepository } from '@/server/repositories/prisma/hr/training';
+import { buildTrainingServiceDependencies } from '@/server/repositories/providers/hr/training-service-dependencies';
 import type { TrainingRecord } from '@/server/types/hr-types';
-import {
-    getHrNotificationService,
-    type HrNotificationServiceContract,
-} from '@/server/services/hr/notifications/hr-notification-service.provider';
+import { getHrNotificationService } from '@/server/services/hr/notifications/hr-notification-service.provider';
+import type { HrNotificationServiceContract } from '@/server/repositories/contracts/notifications';
 import { emitHrNotification } from '@/server/use-cases/hr/notifications/notification-emitter';
 
 export interface TrainingReminderPayload {
@@ -34,8 +32,12 @@ export interface TrainingReminderResult {
 export function buildTrainingReminderDependencies(
     overrides: Partial<TrainingReminderDependencies> = {},
 ): TrainingReminderDependencies {
+    const { trainingRepository } = buildTrainingServiceDependencies({
+        overrides: { trainingRepository: overrides.trainingRepository },
+    });
+
     return {
-        trainingRepository: overrides.trainingRepository ?? new PrismaTrainingRecordRepository(),
+        trainingRepository,
         notificationService: overrides.notificationService ?? getHrNotificationService(),
         now: overrides.now ?? (() => new Date()),
     };

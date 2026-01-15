@@ -34,7 +34,7 @@ export async function listAbsenceTypeConfigs(
     );
 
     const types = await deps.typeConfigRepository.getConfigs(
-        input.authorization.orgId,
+        input.authorization,
         { includeInactive: input.includeInactive },
     );
 

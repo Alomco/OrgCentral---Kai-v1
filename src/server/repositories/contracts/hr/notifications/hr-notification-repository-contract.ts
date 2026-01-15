@@ -3,16 +3,17 @@ import type {
   HRNotificationDTO,
   HRNotificationListFilters,
 } from '@/server/types/hr/notifications';
+import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 
 export interface IHRNotificationRepository {
-  createNotification(orgId: string, input: HRNotificationCreateDTO): Promise<HRNotificationDTO>;
-  markRead(orgId: string, notificationId: string, readAt?: Date): Promise<HRNotificationDTO>;
-  markAllRead(orgId: string, userId: string, before?: Date): Promise<number>;
+  createNotification(contextOrOrgId: RepositoryAuthorizationContext | string, input: HRNotificationCreateDTO): Promise<HRNotificationDTO>;
+  markRead(contextOrOrgId: RepositoryAuthorizationContext | string, notificationId: string, readAt?: Date): Promise<HRNotificationDTO>;
+  markAllRead(contextOrOrgId: RepositoryAuthorizationContext | string, userId: string, before?: Date): Promise<number>;
   listNotifications(
-    orgId: string,
+    contextOrOrgId: RepositoryAuthorizationContext | string,
     userId: string,
     filters?: HRNotificationListFilters,
   ): Promise<HRNotificationDTO[]>;
-  getUnreadCount(orgId: string, userId: string): Promise<number>;
-  deleteNotification(orgId: string, notificationId: string): Promise<void>;
+  getUnreadCount(contextOrOrgId: RepositoryAuthorizationContext | string, userId: string): Promise<number>;
+  deleteNotification(contextOrOrgId: RepositoryAuthorizationContext | string, notificationId: string): Promise<void>;
 }

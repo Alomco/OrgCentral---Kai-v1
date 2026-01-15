@@ -1,7 +1,7 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaComplianceCategoryRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-category-repository';
+import { buildComplianceRepositoryDependencies } from '@/server/repositories/providers/hr/compliance-repository-dependencies';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ComplianceCategory } from '@/server/types/compliance-types';
@@ -15,8 +15,9 @@ export interface ListComplianceCategoriesForUiResult {
     categories: ComplianceCategory[];
 }
 
-function resolveComplianceCategoryRepository(): PrismaComplianceCategoryRepository {
-    return new PrismaComplianceCategoryRepository();
+function resolveDependencies() {
+    const { complianceCategoryRepository } = buildComplianceRepositoryDependencies();
+    return { complianceCategoryRepository };
 }
 
 export async function listComplianceCategoriesForUi(
@@ -28,10 +29,7 @@ export async function listComplianceCategoriesForUi(
         'use cache';
         cacheLife(CACHE_LIFE_SHORT);
 
-        const categories = await listComplianceCategories(
-            { complianceCategoryRepository: resolveComplianceCategoryRepository() },
-            cachedInput,
-        );
+        const categories = await listComplianceCategories(resolveDependencies(), cachedInput);
 
         return { categories };
     }
@@ -39,10 +37,7 @@ export async function listComplianceCategoriesForUi(
     if (input.authorization.dataClassification !== 'OFFICIAL') {
         noStore();
 
-        const categories = await listComplianceCategories(
-            { complianceCategoryRepository: resolveComplianceCategoryRepository() },
-            input,
-        );
+        const categories = await listComplianceCategories(resolveDependencies(), input);
 
         return { categories };
     }

@@ -1,19 +1,12 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { IComplianceItemRepository } from '@/server/repositories/contracts/hr/compliance/compliance-item-repository-contract';
 import type { IComplianceTemplateRepository } from '@/server/repositories/contracts/hr/compliance/compliance-template-repository-contract';
-import type { ComplianceLogItem } from '@/server/types/compliance-types';
+import { getHrNotificationService } from '@/server/services/hr/notifications/hr-notification-service.provider';
+import type { HrNotificationServiceContract } from '@/server/repositories/contracts/notifications';
+import { getNotificationService } from '@/server/services/notifications/notification-service.provider';
+import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
+import { buildComplianceRepositoryDependencies } from '@/server/repositories/providers/hr/compliance-repository-dependencies';
 import {
-    getHrNotificationService,
-    type HrNotificationServiceContract,
-} from '@/server/services/hr/notifications/hr-notification-service.provider';
-import {
-    getNotificationService,
-    type NotificationDispatchContract,
-} from '@/server/services/notifications/notification-service.provider';
-import { PrismaComplianceItemRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-item-repository';
-import { PrismaComplianceTemplateRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-template-repository';
-import {
-    buildMetadata,
     emitReminder,
     filterByTemplateRules,
     filterTargetUsers,
@@ -46,10 +39,17 @@ export interface ComplianceReminderResult {
 export function buildComplianceReminderDependencies(
     overrides: Partial<ComplianceReminderDependencies> = {},
 ): ComplianceReminderDependencies {
+    const { complianceItemRepository, complianceTemplateRepository } =
+        buildComplianceRepositoryDependencies({
+            overrides: {
+                complianceItemRepository: overrides.complianceItemRepository,
+                complianceTemplateRepository: overrides.complianceTemplateRepository,
+            },
+        });
+
     return {
-        complianceItemRepository: overrides.complianceItemRepository ?? new PrismaComplianceItemRepository(),
-        complianceTemplateRepository:
-            overrides.complianceTemplateRepository ?? new PrismaComplianceTemplateRepository(),
+        complianceItemRepository,
+        complianceTemplateRepository,
         notificationService: overrides.notificationService ?? getHrNotificationService(),
         notificationDispatcher: overrides.notificationDispatcher ?? getNotificationService(),
     };

@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient, ComplianceLogItem as PrismaComplianceLogItem } from '@prisma/client';
+import { Prisma, type PrismaClient, type ComplianceLogItem as PrismaComplianceLogItem } from '@prisma/client';
 import type {
     ComplianceAssignmentInput,
     ComplianceItemUpdateInput,
@@ -66,8 +66,12 @@ export class PrismaComplianceItemRepository
                 return this.complianceLog.create({
                     data: stampCreate({
                         ...data,
-                        attachments: toPrismaInputJson(validatedAttachments as unknown as Prisma.InputJsonValue),
-                        metadata: toPrismaInputJson(data.metadata as unknown as Prisma.InputJsonValue),
+                        attachments: toJsonNullInput(
+                            validatedAttachments as unknown as Prisma.InputJsonValue,
+                        ),
+                        metadata: toJsonNullInput(
+                            data.metadata as unknown as Prisma.InputJsonValue,
+                        ),
                     }) as ComplianceLogCreateData,
                 });
             }),
@@ -119,13 +123,17 @@ export class PrismaComplianceItemRepository
         let attachmentsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
         if (mapped.attachments !== undefined) {
             const validatedAttachments = mapped.attachments ? attachmentSchema.parse(mapped.attachments) : null;
-            attachmentsJson = toPrismaInputJson(validatedAttachments as unknown as Prisma.InputJsonValue);
+            attachmentsJson = toJsonNullInput(
+                validatedAttachments as unknown as Prisma.InputJsonValue,
+            );
         }
 
         const data: ComplianceLogUpdateData = stampUpdate({
             ...mapped,
             attachments: attachmentsJson,
-            metadata: toPrismaInputJson(mapped.metadata as unknown as Prisma.InputJsonValue),
+            metadata: toJsonNullInput(
+                mapped.metadata as unknown as Prisma.InputJsonValue,
+            ),
             orgId,
             userId,
         });
@@ -170,4 +178,14 @@ export class PrismaComplianceItemRepository
         const records = await this.complianceLog.findMany({ where });
         return records.map((r) => mapComplianceLogRecordToDomain(r as unknown as ComplianceLogItemRecord));
     }
+}
+
+function toJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
+    const resolved = toPrismaInputJson(value);
+    if (resolved === Prisma.DbNull) {
+        return Prisma.JsonNull;
+    }
+    return resolved as Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined;
 }

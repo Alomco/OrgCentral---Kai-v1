@@ -1,4 +1,3 @@
-import { Prisma, type PrismaClient } from '@prisma/client';
 import type { IPlatformBrandingRepository } from '@/server/repositories/contracts/platform/branding/platform-branding-repository-contract';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import {
@@ -9,8 +8,10 @@ import type { PlatformBranding } from '@/server/types/branding-types';
 import { stampUpdate } from '@/server/repositories/prisma/helpers/timestamps';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { platformBrandingSchema } from '@/server/validators/platform/branding-validators';
+import { Prisma } from '@/server/types/prisma';
+import type { PrismaClientInstance, PrismaJsonValue } from '@/server/types/prisma';
 
-type PlatformSettingsDelegate = PrismaClient['platformSetting'];
+type PlatformSettingsDelegate = PrismaClientInstance['platformSetting'];
 type PlatformSettingsUpsertArguments = Prisma.PlatformSettingUpsertArgs;
 
 const SETTINGS_KEY = 'platform-branding';
@@ -53,11 +54,7 @@ export class PrismaPlatformBrandingRepository
 
         const validatedUpdates = platformBrandingSchema.partial().parse(updates);
         const mappedPayload = mapPlatformBrandingUpdateToRecord(validatedUpdates).branding;
-
-        const brandingJson =
-            mappedPayload !== undefined
-                ? toPrismaInputJson(mappedPayload as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull
-                : undefined;
+        const brandingJson = this.toBrandingJson(mappedPayload);
 
         const args: PlatformSettingsUpsertArguments = {
             where: { id: SETTINGS_KEY },
@@ -81,11 +78,37 @@ export class PrismaPlatformBrandingRepository
     }
 
     async resetBranding(): Promise<void> {
-        const clearedBranding = toPrismaInputJson(null);
+        const clearedBranding = Prisma.JsonNull;
         await this.delegate.upsert({
             where: { id: SETTINGS_KEY },
             create: { id: SETTINGS_KEY, ...stampUpdate({ branding: clearedBranding }) },
             update: stampUpdate({ branding: clearedBranding }),
         });
+    }
+
+    private toBrandingJson(
+        branding: Partial<PlatformBranding> | null | undefined,
+    ): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
+        if (branding === undefined) {
+            return undefined;
+        }
+        if (branding === null) {
+            return Prisma.JsonNull;
+        }
+
+        const payload: Record<string, PrismaJsonValue> = {};
+        for (const key of Object.keys(branding) as (keyof PlatformBranding)[]) {
+            const value = branding[key];
+            if (value === undefined) {
+                continue;
+            }
+            if (value instanceof Date) {
+                payload[key] = value.toISOString();
+                continue;
+            }
+            payload[key] = value ?? null;
+        }
+
+        return toPrismaInputJson(payload) ?? Prisma.JsonNull;
     }
 }

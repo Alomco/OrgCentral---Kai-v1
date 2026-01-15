@@ -1,11 +1,11 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaEmploymentContractRepository } from '@/server/repositories/prisma/hr/people/prisma-employment-contract-repository';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { EmploymentContract } from '@/server/types/hr-types';
 import { getEmploymentContractByEmployee } from './get-employment-contract-by-employee';
+import { createEmploymentContractRepository } from '@/server/services/hr/people/people-repository.factory';
 
 export interface GetEmploymentContractByEmployeeForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -16,8 +16,8 @@ export interface GetEmploymentContractByEmployeeForUiResult {
     contract: EmploymentContract | null;
 }
 
-function resolveEmploymentContractRepository(): PrismaEmploymentContractRepository {
-    return new PrismaEmploymentContractRepository();
+function resolveEmploymentContractRepository() {
+    return createEmploymentContractRepository();
 }
 
 export async function getEmploymentContractByEmployeeForUi(

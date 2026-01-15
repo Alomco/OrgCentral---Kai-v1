@@ -11,7 +11,7 @@ import type {
     RevokeSessionResult,
 } from '@/server/use-cases/auth/sessions/revoke-session';
 import { revokeSession } from '@/server/use-cases/auth/sessions/revoke-session';
-import { PrismaUserSessionRepository } from '@/server/repositories/prisma/auth/sessions';
+import { createUserSessionRepository } from '@/server/repositories/providers/auth/user-session-repository-provider';
 
 const GET_OPERATION = 'auth.sessions.get';
 const REVOKE_OPERATION = 'auth.sessions.revoke';
@@ -62,7 +62,7 @@ export function getSessionService(
     if (!sharedService || overrides) {
         const dependencies: SessionServiceDependencies = {
             userSessionRepository:
-                overrides?.userSessionRepository ?? new PrismaUserSessionRepository(),
+                overrides?.userSessionRepository ?? createUserSessionRepository(),
         };
 
         if (!overrides) {

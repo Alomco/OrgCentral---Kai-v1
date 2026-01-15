@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultNotificationTemplateResolver } from '@/server/services/notifications/templates/notification-template-registry';
-import type { NotificationDispatchPayload } from '@/server/workers/notifications/dispatch.types';
+import type { NotificationDispatchPayload } from '@/server/types/notification-dispatch';
 
 describe('defaultNotificationTemplateResolver', () => {
     it('renders compliance reminder template', () => {

@@ -73,27 +73,27 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
         // Validate onboarding data
         const validatedOnboardingData = onboardingDataSchema.parse(input.onboardingData);
 
-        const record = await getInvitationDelegate(this.prisma).create({
+        const record = await getInvitationDelegate(this.prisma).create({        
             data: {
                 token,
                 orgId: input.orgId,
                 organizationName: input.organizationName,
                 targetEmail,
                 onboardingData:
-                    toPrismaInputJson(
+                    toJsonNullInput(
                         validatedOnboardingData as unknown as Prisma.InputJsonValue,
-                    ) ?? Prisma.JsonNull,
+                    ),
                 status: 'pending',
                 invitedByUserId: input.invitedByUserId ?? null,
                 expiresAt: input.expiresAt ?? null,
                 metadata:
-                    toPrismaInputJson(
+                    toJsonNullInput(
                         input.metadata as unknown as Prisma.InputJsonValue,
-                    ) ?? Prisma.JsonNull,
+                    ),
                 securityContext:
-                    toPrismaInputJson(
+                    toJsonNullInput(
                         input.securityContext as unknown as Prisma.InputJsonValue,
-                    ) ?? Prisma.JsonNull,
+                    ),
                 ipAddress: input.ipAddress ?? null,
                 userAgent: input.userAgent ?? null,
             },
@@ -139,9 +139,9 @@ export class PrismaInvitationRepository extends BasePrismaRepository implements 
                 revokedByUserId,
                 revokedAt: new Date(),
                 metadata:
-                    toPrismaInputJson(
+                    toJsonNullInput(
                         nextMetadata as unknown as Prisma.InputJsonValue,
-                    ) ?? Prisma.JsonNull,
+                    ),
             },
         });
 
@@ -167,4 +167,14 @@ function getInvitationDelegate(prisma: unknown): InvitationDelegate {
     }
 
     return candidate as InvitationDelegate;
+}
+
+function toJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue | Prisma.JsonNullValueInput {
+    const resolved = toPrismaInputJson(value);
+    if (resolved === undefined || resolved === Prisma.DbNull) {
+        return Prisma.JsonNull;
+    }
+    return resolved as Prisma.InputJsonValue | Prisma.JsonNullValueInput;
 }

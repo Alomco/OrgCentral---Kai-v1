@@ -1,7 +1,6 @@
-import type { PermissionResource } from '@/server/types/security-types';
-import type { PermissionResource as PrismaPermissionResource } from '@prisma/client';
+import type { PermissionResource, PermissionResourceRecord } from '@/server/types/security-types';
 
-export function mapPrismaPermissionResourceToDomain(record: PrismaPermissionResource): PermissionResource {
+export function mapPrismaPermissionResourceToDomain(record: PermissionResourceRecord): PermissionResource {
     return {
         id: record.id,
         orgId: record.orgId,

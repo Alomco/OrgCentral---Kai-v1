@@ -1,4 +1,4 @@
-import type { NotificationDispatchPayload } from '@/server/workers/notifications/dispatch.types';
+import type { NotificationDispatchPayload } from '@/server/types/notification-dispatch';
 
 export interface RenderedNotificationContent {
     subject: string;

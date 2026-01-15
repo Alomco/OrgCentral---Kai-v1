@@ -1,8 +1,20 @@
-import type { HRSettings as PrismaHRSettings } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
+import { Prisma, type HRSettings as PrismaHRSettings } from '@prisma/client';
 import type { HRSettings } from '@/server/types/hr-ops-types';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
-export function mapPrismaHRSettingsToDomain(record: PrismaHRSettings): HRSettings {
+type HRSettingsRecord = PrismaHRSettings;
+type HRSettingsCreateArguments = Prisma.HRSettingsUncheckedCreateInput;
+type HRSettingsUpdateArguments = Prisma.HRSettingsUpdateInput;
+
+const toJsonInput = (
+  value: PrismaJsonValue | null | undefined,
+): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined => {
+  if (value === undefined) { return undefined; }
+  if (value === null) { return Prisma.JsonNull; }
+  return value as Prisma.InputJsonValue;
+};
+
+export function mapPrismaHRSettingsToDomain(record: HRSettingsRecord): HRSettings {
   return {
     orgId: record.orgId,
     leaveTypes: record.leaveTypes,
@@ -17,18 +29,32 @@ export function mapPrismaHRSettingsToDomain(record: PrismaHRSettings): HRSetting
   };
 }
 
-export function mapDomainHRSettingsToPrismaUpsert(
+export function mapDomainHRSettingsToPrismaCreate(
   orgId: string,
   input: Omit<HRSettings, 'orgId' | 'createdAt' | 'updatedAt'>,
-): Prisma.HRSettingsUpsertArgs['create'] {
+): HRSettingsCreateArguments {
   return {
     orgId,
-    leaveTypes: input.leaveTypes ?? undefined,
-    workingHours: input.workingHours ?? undefined,
-    approvalWorkflows: input.approvalWorkflows ?? undefined,
-    overtimePolicy: input.overtimePolicy ?? undefined,
+    leaveTypes: toJsonInput(input.leaveTypes),
+    workingHours: toJsonInput(input.workingHours),
+    approvalWorkflows: toJsonInput(input.approvalWorkflows),
+    overtimePolicy: toJsonInput(input.overtimePolicy),
     dataClassification: input.dataClassification,
     residencyTag: input.residencyTag,
-    metadata: input.metadata ?? undefined,
+    metadata: toJsonInput(input.metadata),
+  };
+}
+
+export function mapDomainHRSettingsToPrismaUpdate(
+  input: Omit<HRSettings, 'orgId' | 'createdAt' | 'updatedAt'>,
+): HRSettingsUpdateArguments {
+  return {
+    leaveTypes: toJsonInput(input.leaveTypes),
+    workingHours: toJsonInput(input.workingHours),
+    approvalWorkflows: toJsonInput(input.approvalWorkflows),
+    overtimePolicy: toJsonInput(input.overtimePolicy),
+    dataClassification: input.dataClassification,
+    residencyTag: input.residencyTag,
+    metadata: toJsonInput(input.metadata),
   };
 }

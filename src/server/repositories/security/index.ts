@@ -2,6 +2,7 @@ export {
     RepositoryAuthorizer,
     withRepositoryAuthorization,
     enforcePermission,
+    getRepositoryAuthorizer,
 } from './repository-authorization';
 export type {
     RepositoryAuthorizationContext,

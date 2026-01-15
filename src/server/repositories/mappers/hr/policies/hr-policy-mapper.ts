@@ -1,94 +1,159 @@
-import type { HRPolicy as PrismaHRPolicy, PolicyAcknowledgment as PrismaPolicyAck } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
 import type { HRPolicy, PolicyAcknowledgment } from '@/server/types/hr-ops-types';
+import type { PrismaJsonValue } from '@/server/types/prisma';
+import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
+import type { Prisma } from '@prisma/client';
 
-export function mapPrismaHRPolicyToDomain(record: PrismaHRPolicy): HRPolicy {
-  return {
-    id: record.id,
-    orgId: record.orgId,
-    title: record.title,
-    content: record.content,
-    category: record.category,
-    version: record.version,
-    effectiveDate: record.effectiveDate,
-    expiryDate: record.expiryDate ?? undefined,
-    applicableRoles: record.applicableRoles,
-    applicableDepartments: record.applicableDepartments,
-    requiresAcknowledgment: record.requiresAcknowledgment,
-    status: record.status,
-    dataClassification: record.dataClassification,
-    residencyTag: record.residencyTag,
-    metadata: record.metadata,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
-  };
+type HRPolicyRecord = Omit<
+    HRPolicy,
+    'expiryDate' | 'applicableRoles' | 'applicableDepartments' | 'metadata'
+> & {
+    expiryDate?: Date | null;
+    applicableRoles?: PrismaJsonValue | null;
+    applicableDepartments?: PrismaJsonValue | null;
+    metadata?: PrismaJsonValue | null;
+};
+
+type HRPolicyCreatePayload = Prisma.HRPolicyUncheckedCreateInput;
+type HRPolicyUpdatePayload = Prisma.HRPolicyUncheckedUpdateManyInput;
+
+type PolicyAcknowledgmentRecord = Omit<PolicyAcknowledgment, 'metadata'> & {
+    metadata?: PrismaJsonValue | null;
+};
+
+type PolicyAckCreatePayload = Prisma.PolicyAcknowledgmentUncheckedCreateInput;
+
+export function mapPrismaHRPolicyToDomain(record: HRPolicyRecord): HRPolicy {
+    return {
+        id: record.id,
+        orgId: record.orgId,
+        title: record.title,
+        content: record.content,
+        category: record.category,
+        version: record.version,
+        effectiveDate: record.effectiveDate,
+        expiryDate: record.expiryDate ?? undefined,
+        applicableRoles: record.applicableRoles ?? undefined,
+        applicableDepartments: record.applicableDepartments ?? undefined,
+        requiresAcknowledgment: record.requiresAcknowledgment,
+        status: record.status,
+        dataClassification: record.dataClassification,
+        residencyTag: record.residencyTag,
+        metadata: record.metadata ?? undefined,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+    };
 }
 
 export function mapDomainHRPolicyToPrismaCreate(
-  orgId: string,
-  input: Omit<HRPolicy, 'id' | 'createdAt' | 'updatedAt' | 'orgId'>,
-): Prisma.HRPolicyUncheckedCreateInput {
-  return {
-    orgId,
-    title: input.title,
-    content: input.content,
-    category: input.category,
-    version: input.version,
-    effectiveDate: input.effectiveDate,
-    expiryDate: input.expiryDate ?? null,
-    applicableRoles: input.applicableRoles ?? undefined,
-    applicableDepartments: input.applicableDepartments ?? undefined,
-    requiresAcknowledgment: input.requiresAcknowledgment,
-    status: input.status,
-    dataClassification: input.dataClassification,
-    residencyTag: input.residencyTag,
-    metadata: input.metadata ?? undefined,
-  };
+    orgId: string,
+    input: Omit<HRPolicy, 'id' | 'createdAt' | 'updatedAt' | 'orgId'>,
+): HRPolicyCreatePayload {
+    return {
+        orgId,
+        title: input.title,
+        content: input.content,
+        category: input.category,
+        version: input.version,
+        effectiveDate: input.effectiveDate,
+        expiryDate: input.expiryDate ?? null,
+        applicableRoles: toPrismaInputJson(input.applicableRoles),
+        applicableDepartments: toPrismaInputJson(input.applicableDepartments),
+        requiresAcknowledgment: input.requiresAcknowledgment,
+        status: input.status,
+        dataClassification: input.dataClassification,
+        residencyTag: input.residencyTag,
+        metadata: toPrismaInputJson(input.metadata),
+    } satisfies HRPolicyCreatePayload;
 }
 
 export function mapDomainHRPolicyToPrismaUpdate(
-  updates: Partial<Pick<HRPolicy, 'title' | 'content' | 'category' | 'version' | 'effectiveDate' | 'expiryDate' | 'applicableRoles' | 'applicableDepartments' | 'requiresAcknowledgment' | 'status' | 'dataClassification' | 'residencyTag' | 'metadata'>>,
-): Prisma.HRPolicyUncheckedUpdateInput {
-  return {
-    title: updates.title ?? undefined,
-    content: updates.content ?? undefined,
-    category: updates.category ?? undefined,
-    version: updates.version ?? undefined,
-    effectiveDate: updates.effectiveDate ?? undefined,
-    expiryDate: updates.expiryDate ?? undefined,
-    applicableRoles: updates.applicableRoles ?? undefined,
-    applicableDepartments: updates.applicableDepartments ?? undefined,
-    requiresAcknowledgment: updates.requiresAcknowledgment ?? undefined,
-    status: updates.status ?? undefined,
-    dataClassification: updates.dataClassification ?? undefined,
-    residencyTag: updates.residencyTag ?? undefined,
-    metadata: updates.metadata ?? undefined,
-  };
+    updates: Partial<
+        Pick<
+            HRPolicy,
+            | 'title'
+            | 'content'
+            | 'category'
+            | 'version'
+            | 'effectiveDate'
+            | 'expiryDate'
+            | 'applicableRoles'
+            | 'applicableDepartments'
+            | 'requiresAcknowledgment'
+            | 'status'
+            | 'dataClassification'
+            | 'residencyTag'
+            | 'metadata'
+        >
+    >,
+): HRPolicyUpdatePayload {
+    const payload: HRPolicyUpdatePayload = {};
+
+    if (updates.title !== undefined) {
+        payload.title = updates.title;
+    }
+    if (updates.content !== undefined) {
+        payload.content = updates.content;
+    }
+    if (updates.category !== undefined) {
+        payload.category = updates.category;
+    }
+    if (updates.version !== undefined) {
+        payload.version = updates.version;
+    }
+    if (updates.effectiveDate !== undefined) {
+        payload.effectiveDate = updates.effectiveDate;
+    }
+    if ('expiryDate' in updates) {
+        payload.expiryDate = updates.expiryDate ?? null;
+    }
+    if (updates.applicableRoles !== undefined) {
+        payload.applicableRoles = toPrismaInputJson(updates.applicableRoles);
+    }
+    if (updates.applicableDepartments !== undefined) {
+        payload.applicableDepartments = toPrismaInputJson(updates.applicableDepartments);
+    }
+    if (updates.requiresAcknowledgment !== undefined) {
+        payload.requiresAcknowledgment = updates.requiresAcknowledgment;
+    }
+    if (updates.status !== undefined) {
+        payload.status = updates.status;
+    }
+    if (updates.dataClassification !== undefined) {
+        payload.dataClassification = updates.dataClassification;
+    }
+    if (updates.residencyTag !== undefined) {
+        payload.residencyTag = updates.residencyTag;
+    }
+    if (updates.metadata !== undefined) {
+        payload.metadata = toPrismaInputJson(updates.metadata);
+    }
+
+    return payload;
 }
 
-export function mapPrismaPolicyAckToDomain(record: PrismaPolicyAck): PolicyAcknowledgment {
-  return {
-    id: record.id,
-    orgId: record.orgId,
-    userId: record.userId,
-    policyId: record.policyId,
-    version: record.version,
-    acknowledgedAt: record.acknowledgedAt,
-    ipAddress: record.ipAddress ?? undefined,
-    metadata: record.metadata,
-  };
+export function mapPrismaPolicyAckToDomain(record: PolicyAcknowledgmentRecord): PolicyAcknowledgment {
+    return {
+        id: record.id,
+        orgId: record.orgId,
+        userId: record.userId,
+        policyId: record.policyId,
+        version: record.version,
+        acknowledgedAt: record.acknowledgedAt,
+        ipAddress: record.ipAddress ?? undefined,
+        metadata: record.metadata ?? undefined,
+    };
 }
 
 export function mapDomainPolicyAckToPrismaCreate(
-  input: Omit<PolicyAcknowledgment, 'id'>,
-): Prisma.PolicyAcknowledgmentUncheckedCreateInput {
-  return {
-    orgId: input.orgId,
-    userId: input.userId,
-    policyId: input.policyId,
-    version: input.version,
-    acknowledgedAt: input.acknowledgedAt,
-    ipAddress: input.ipAddress ?? null,
-    metadata: input.metadata ?? undefined,
-  };
+    input: Omit<PolicyAcknowledgment, 'id'>,
+): PolicyAckCreatePayload {
+    return {
+        orgId: input.orgId,
+        userId: input.userId,
+        policyId: input.policyId,
+        version: input.version,
+        acknowledgedAt: input.acknowledgedAt,
+        ipAddress: input.ipAddress ?? null,
+        metadata: toPrismaInputJson(input.metadata),
+    } satisfies PolicyAckCreatePayload;
 }

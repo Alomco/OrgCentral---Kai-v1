@@ -1,8 +1,5 @@
-import { randomUUID } from 'node:crypto';
-import type { PrismaClient } from '@prisma/client';
-import { MembershipStatus } from '@prisma/client';
 import type { createAuth } from '@/server/lib/auth';
-import { prisma as defaultPrisma } from '@/server/lib/prisma';
+import { prisma } from '@/server/lib/prisma';
 import { requireSessionAuthorization } from '@/server/security/authorization';
 import {
     getMembershipRoleSnapshot,
@@ -11,24 +8,32 @@ import {
     ROLE_DASHBOARD_PATHS,
     sanitizeNextPath,
 } from '@/server/ui/auth/role-redirect';
+import { getAuthOrganizationBridgeService } from '@/server/services/auth/auth-organization-bridge-service.provider';
+import { MembershipStatus } from '@/server/types/prisma';
 
 const DEFAULT_NEXT_PATH = '/dashboard';
 const LOGIN_PATH = '/login';
 const NOT_INVITED_PATH = '/not-invited';
+const DEFAULT_MEMBERSHIP_DATE = new Date(0);
 
 interface SafeNextPath {
     path: string;
     isExplicit: boolean;
 }
 
+interface MembershipLookupRecord {
+    orgId: string;
+    activatedAt: Date | null;
+    invitedAt: Date | null;
+}
+
 export interface PostLoginDependencies {
-    prisma: PrismaClient;
     auth: ReturnType<typeof createAuth>;
 }
 
-export type PostLoginOverrides = {
+export interface PostLoginOverrides {
     auth: PostLoginDependencies['auth'];
-} & Partial<Omit<PostLoginDependencies, 'auth'>>;
+}
 
 export interface PostLoginInput {
     headers: Headers;
@@ -40,19 +45,11 @@ export interface PostLoginResult {
     setActiveHeaders?: Headers;
 }
 
-export function buildPostLoginDependencies(overrides: PostLoginOverrides): PostLoginDependencies {
-    return {
-        prisma: overrides.prisma ?? defaultPrisma,
-        auth: overrides.auth,
-    };
-}
-
 export async function handlePostLogin(
     overrides: PostLoginOverrides,
     input: PostLoginInput,
 ): Promise<PostLoginResult> {
-    const deps = buildPostLoginDependencies(overrides);
-    const session = await deps.auth.api.getSession({ headers: input.headers });
+    const session = await overrides.auth.api.getSession({ headers: input.headers });
     const { path: nextPath, isExplicit } = resolveSafeNextPath(input.requestUrl);
 
     if (!session?.session) {
@@ -65,13 +62,21 @@ export async function handlePostLogin(
     let desiredOrgId: string | null = null;
 
     if (desiredOrgSlug) {
-        desiredOrgId = await resolveOrganizationId(deps.prisma, session.user.id, desiredOrgSlug);
+        const memberships = await listActiveMembershipsForUser(
+            session.user.id,
+            desiredOrgSlug,
+        );
+        desiredOrgId = selectLatestMembershipOrgId(memberships);
     }
 
     desiredOrgId ??= currentActiveOrgId ?? null;
-    desiredOrgId ??= await resolveOrganizationId(deps.prisma, session.user.id, null);
 
-    if (!desiredOrgId) {
+    if (desiredOrgId === null) {
+        const memberships = await listActiveMembershipsForUser(session.user.id);
+        desiredOrgId = selectLatestMembershipOrgId(memberships);
+    }
+
+    if (desiredOrgId === null) {
         return { redirectUrl: buildNotInvitedRedirect(input.requestUrl, nextPath) };
     }
 
@@ -94,9 +99,9 @@ export async function handlePostLogin(
         return { redirectUrl: new URL(redirectPath, input.requestUrl.origin) };
     }
 
-    await ensureAuthOrganizationBridge(deps.prisma, desiredOrgId, session.user.id, membershipSnapshot.roleName);
+    await ensureAuthOrganizationBridge(desiredOrgId, session.user.id, membershipSnapshot.roleName);
 
-    const { headers: setActiveHeaders } = await deps.auth.api.setActiveOrganization({
+    const { headers: setActiveHeaders } = await overrides.auth.api.setActiveOrganization({
         headers: input.headers,
         body: { organizationId: desiredOrgId },
         returnHeaders: true,
@@ -129,79 +134,13 @@ function resolveOptionalOrgSlug(requestUrl: URL): string | null {
     return trimmed.length > 0 ? trimmed : null;
 }
 
-async function resolveOrganizationId(
-    prisma: PrismaClient,
-    userId: string,
-    orgSlug: string | null,
-): Promise<string | null> {
-    if (orgSlug) {
-        const membership = await prisma.membership.findFirst({
-            where: { userId, status: MembershipStatus.ACTIVE, org: { slug: orgSlug } },
-            select: { orgId: true },
-        });
-        return membership?.orgId ?? null;
-    }
-
-    const membership = await prisma.membership.findFirst({
-        where: { userId, status: MembershipStatus.ACTIVE },
-        select: { orgId: true, activatedAt: true, invitedAt: true },
-        orderBy: [
-            { activatedAt: 'desc' },
-            { invitedAt: 'desc' },
-        ],
-    });
-
-    return membership?.orgId ?? null;
-}
-
 async function ensureAuthOrganizationBridge(
-    prisma: PrismaClient,
     orgId: string,
     userId: string,
     roleNameOverride: string | null,
 ): Promise<void> {
-    const organization = await prisma.organization.findUnique({
-        where: { id: orgId },
-        select: { id: true, name: true, slug: true },
-    });
-
-    if (!organization) {
-        return;
-    }
-
-    await prisma.authOrganization.upsert({
-        where: { id: organization.id },
-        update: { name: organization.name, slug: organization.slug },
-        create: {
-            id: organization.id,
-            name: organization.name,
-            slug: organization.slug,
-            metadata: JSON.stringify({ seedSource: 'post-login' }),
-        },
-    });
-
-    const roleName = roleNameOverride ?? 'member';
-
-    const authMember = await prisma.authOrgMember.findFirst({
-        where: { organizationId: organization.id, userId },
-        select: { id: true },
-    });
-
-    if (authMember) {
-        await prisma.authOrgMember.update({
-            where: { id: authMember.id },
-            data: { role: roleName },
-        });
-    } else {
-        await prisma.authOrgMember.create({
-            data: {
-                id: randomUUID(),
-                organizationId: organization.id,
-                userId,
-                role: roleName,
-            },
-        });
-    }
+    const authBridgeService = getAuthOrganizationBridgeService();
+    await authBridgeService.ensureAuthOrganizationBridge(orgId, userId, roleNameOverride);
 }
 
 function buildLoginRedirect(requestUrl: URL, nextPath: string): URL {
@@ -210,4 +149,47 @@ function buildLoginRedirect(requestUrl: URL, nextPath: string): URL {
 
 function buildNotInvitedRedirect(requestUrl: URL, nextPath: string): URL {
     return new URL(`${NOT_INVITED_PATH}?next=${encodeURIComponent(nextPath)}`, requestUrl.origin);
+}
+
+async function listActiveMembershipsForUser(
+    userId: string,
+    orgSlug?: string,
+): Promise<MembershipLookupRecord[]> {
+    return prisma.membership.findMany({
+        where: {
+            userId,
+            status: MembershipStatus.ACTIVE,
+            org: orgSlug ? { slug: orgSlug } : undefined,
+        },
+        select: {
+            orgId: true,
+            activatedAt: true,
+            invitedAt: true,
+        },
+    });
+}
+
+function selectLatestMembershipOrgId(
+    memberships: MembershipLookupRecord[],
+): string | null {
+    if (memberships.length === 0) {
+        return null;
+    }
+
+    let latest = memberships[0];
+    let latestTimestamp = resolveMembershipTimestamp(latest);
+
+    for (const membership of memberships.slice(1)) {
+        const timestamp = resolveMembershipTimestamp(membership);
+        if (timestamp > latestTimestamp) {
+            latest = membership;
+            latestTimestamp = timestamp;
+        }
+    }
+
+    return latest.orgId;
+}
+
+function resolveMembershipTimestamp(membership: MembershipLookupRecord): number {
+    return (membership.activatedAt ?? membership.invitedAt ?? DEFAULT_MEMBERSHIP_DATE).getTime();
 }

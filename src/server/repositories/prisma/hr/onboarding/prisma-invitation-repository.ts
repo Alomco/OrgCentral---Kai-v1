@@ -33,18 +33,18 @@ export class PrismaOnboardingInvitationRepository
         orgId: payload.orgId,
         organizationName: payload.organizationName,
         targetEmail: payload.targetEmail,
-        onboardingData: toPrismaInputJson(
+        onboardingData: toJsonNullInput(
           payload.onboardingData as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined,
-        ) ?? Prisma.JsonNull,
+        ),
         status: 'pending',
         invitedByUserId: payload.invitedByUserId ?? null,
         expiresAt: payload.expiresAt ?? null,
-        metadata: toPrismaInputJson(
+        metadata: toJsonNullInput(
           payload.metadata as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined,
-        ) ?? Prisma.JsonNull,
-        securityContext: toPrismaInputJson(
+        ),
+        securityContext: toJsonNullInput(
           payload.securityContext as Prisma.InputJsonValue | Prisma.JsonValue | null | undefined,
-        ) ?? Prisma.JsonNull,
+        ),
         ipAddress: payload.ipAddress ?? null,
         userAgent: payload.userAgent ?? null,
       },
@@ -172,4 +172,14 @@ export class PrismaOnboardingInvitationRepository
     }
     return record;
   }
+}
+
+function toJsonNullInput(
+  value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue | Prisma.JsonNullValueInput {
+  const resolved = toPrismaInputJson(value);
+  if (resolved === undefined || resolved === Prisma.DbNull) {
+    return Prisma.JsonNull;
+  }
+  return resolved as Prisma.InputJsonValue | Prisma.JsonNullValueInput;
 }

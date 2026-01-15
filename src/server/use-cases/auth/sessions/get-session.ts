@@ -1,5 +1,4 @@
-import { SessionStatus } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
+import { SessionStatus, type PrismaJsonValue } from '@/server/types/prisma';
 import { AuthorizationError } from '@/server/errors';
 import type { IUserSessionRepository } from '@/server/repositories/contracts/auth/sessions';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
@@ -134,7 +133,7 @@ async function syncUserSessionRecord(
 function buildMetadata(
     session: NonNullable<AuthSession>,
     metadataInput: SessionMetadataInput,
-): Prisma.JsonValue | undefined {
+): PrismaJsonValue | undefined {
     const payload: Record<string, unknown> = {
         activeOrganizationId: session.session.activeOrganizationId ?? null,
         residency: metadataInput.dataResidency,

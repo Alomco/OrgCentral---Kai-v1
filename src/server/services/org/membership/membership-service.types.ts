@@ -2,7 +2,7 @@ import type { AcceptInvitationDependencies, AcceptInvitationInput } from '@/serv
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ServiceExecutionContext } from '@/server/services/abstract-base-service';
 import type { BillingServiceContract } from '@/server/services/billing/billing-service.provider';
-import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
+import type { NotificationComposerContract } from '@/server/repositories/contracts/notifications/notification-composer-contract';
 
 export interface MembershipServiceDependencies extends AcceptInvitationDependencies {
     billingService?: BillingServiceContract;

@@ -75,7 +75,7 @@ export async function buildSubmissionContext(
     }
 
     const policy: PolicyContext = {
-        hoursPerDay: await resolveHoursPerDay(absenceSettingsRepository, session.authorization.orgId),
+        hoursPerDay: await resolveHoursPerDay(absenceSettingsRepository, session.authorization),
         existingRequests: existingRequestsResult.requests,
         jurisdiction,
         bankHolidays,

@@ -5,6 +5,7 @@ import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 export default function AbsencesError({
     error,
@@ -30,9 +31,12 @@ export default function AbsencesError({
                             {error.message || 'Failed to load absence data.'}
                         </AlertDescription>
                     </Alert>
-                    <Button onClick={reset} variant="outline">
-                        Try again
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button onClick={reset} variant="outline">
+                            Try again
+                        </Button>
+                        <LogoutButton label="Sign out" variant="outline" size="sm" />
+                    </div>
                 </CardContent>
             </Card>
         </div>

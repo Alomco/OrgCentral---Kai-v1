@@ -1,14 +1,14 @@
-import { PrismaPermissionResourceRepository } from '@/server/repositories/prisma/org/permissions/prisma-permission-resource-repository';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
-import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
 import { PermissionResourceService, type PermissionResourceServiceDependencies } from './permission-resource-service';
+import { buildPermissionResourceServiceDependencies, type PermissionResourceServiceDependencyOptions } from '@/server/repositories/providers/org/permission-resource-service-dependencies';
+
+type ProviderPrismaOptions = PermissionResourceServiceDependencyOptions['prismaOptions'];
 
 export interface PermissionResourceServiceProviderOptions {
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    prismaOptions?: ProviderPrismaOptions;
 }
 
 export class PermissionResourceServiceProvider {
-    private readonly prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    private readonly prismaOptions?: ProviderPrismaOptions;
     private readonly sharedService: PermissionResourceService;
 
     constructor(options?: PermissionResourceServiceProviderOptions) {
@@ -20,22 +20,21 @@ export class PermissionResourceServiceProvider {
         if (!overrides || Object.keys(overrides).length === 0) {
             return this.sharedService;
         }
-        const deps = this.createDependencies(this.prismaOptions);
-        return new PermissionResourceService({
-            permissionRepository: overrides.permissionRepository ?? deps.permissionRepository,
-        });
+        const deps = this.createDependencies(this.prismaOptions, overrides);
+        return new PermissionResourceService(deps);
     }
 
     private createDependencies(
-        prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>,
+        prismaOptions?: ProviderPrismaOptions,
+        overrides?: Partial<PermissionResourceServiceDependencies>,
     ): PermissionResourceServiceDependencies {
-        const prismaClient = prismaOptions?.prisma ?? defaultPrismaClient;
+        const dependencies = buildPermissionResourceServiceDependencies({
+            prismaOptions: prismaOptions,
+            overrides: overrides,
+        });
+
         return {
-            permissionRepository: new PrismaPermissionResourceRepository({
-                prisma: prismaClient,
-                trace: prismaOptions?.trace,
-                onAfterWrite: prismaOptions?.onAfterWrite,
-            }),
+            permissionRepository: dependencies.permissionRepository,
         };
     }
 }
@@ -44,10 +43,10 @@ const defaultPermissionResourceServiceProvider = new PermissionResourceServicePr
 
 export function getPermissionResourceService(
     overrides?: Partial<PermissionResourceServiceDependencies>,
-    options?: PermissionResourceServiceProviderOptions,
+    options?: PermissionResourceServiceDependencyOptions,
 ): PermissionResourceService {
     const provider = options
-        ? new PermissionResourceServiceProvider(options)
+        ? new PermissionResourceServiceProvider({ prismaOptions: options.prismaOptions })
         : defaultPermissionResourceServiceProvider;
     return provider.getService(overrides);
 }

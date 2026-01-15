@@ -1,25 +1,59 @@
-import type { Prisma, HRNotification as PrismaHRNotification, $Enums } from '@prisma/client';
 import type { HRNotificationCreateDTO, HRNotificationDTO } from '@/server/types/hr/notifications';
+import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
+import type { HRNotificationType, NotificationPriority, PrismaInputJsonValue } from '@/server/types/prisma';
 
-const toDomainType = (type: $Enums.HRNotificationType): HRNotificationDTO['type'] => type;
-const toPrismaType = (type: HRNotificationDTO['type']): $Enums.HRNotificationType =>
-  type as $Enums.HRNotificationType;
+interface HRNotificationRecord {
+  id: string;
+  orgId: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: HRNotificationType;
+  priority: NotificationPriority;
+  isRead: boolean;
+  readAt?: Date | null;
+  actionUrl?: string | null;
+  actionLabel?: string | null;
+  scheduledFor?: Date | null;
+  expiresAt?: Date | null;
+  correlationId?: string | null;
+  createdByUserId?: string | null;
+  dataClassification: DataClassificationLevel;
+  residencyTag: DataResidencyZone;
+  metadata?: PrismaInputJsonValue | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-const toDomainPriority = (priority: $Enums.NotificationPriority): HRNotificationDTO['priority'] =>
-  priority;
-const toPrismaPriority = (priority: HRNotificationDTO['priority']): $Enums.NotificationPriority =>
-  priority as $Enums.NotificationPriority;
+interface HRNotificationCreatePayload {
+  orgId: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: HRNotificationType;
+  priority: NotificationPriority;
+  isRead: boolean;
+  readAt?: Date | null;
+  actionUrl?: string | null;
+  actionLabel?: string | null;
+  scheduledFor?: Date | null;
+  expiresAt?: Date | null;
+  correlationId?: string | null;
+  createdByUserId?: string | null;
+  dataClassification: DataClassificationLevel;
+  residencyTag: DataResidencyZone;
+  metadata?: PrismaInputJsonValue;
+}
 
-export function mapPrismaHRNotificationToDomain(record: PrismaHRNotification): HRNotificationDTO {
-  const metadata = record.metadata;
+export function mapPrismaHRNotificationToDomain(record: HRNotificationRecord): HRNotificationDTO {
   return {
     id: record.id,
     orgId: record.orgId,
     userId: record.userId,
     title: record.title,
     message: record.message,
-    type: toDomainType(record.type),
-    priority: toDomainPriority(record.priority),
+    type: record.type,
+    priority: record.priority,
     isRead: record.isRead,
     readAt: record.readAt ?? undefined,
     actionUrl: record.actionUrl ?? undefined,
@@ -30,7 +64,7 @@ export function mapPrismaHRNotificationToDomain(record: PrismaHRNotification): H
     createdByUserId: record.createdByUserId ?? undefined,
     dataClassification: record.dataClassification,
     residencyTag: record.residencyTag,
-    metadata: metadata ?? undefined,
+    metadata: record.metadata ?? undefined,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };
@@ -38,27 +72,34 @@ export function mapPrismaHRNotificationToDomain(record: PrismaHRNotification): H
 
 export function mapDomainHRNotificationToPrismaCreate(
   input: HRNotificationCreateDTO,
-): Prisma.HRNotificationUncheckedCreateInput {
-  const type: $Enums.HRNotificationType = toPrismaType(input.type);
-  const priority: $Enums.NotificationPriority = toPrismaPriority(input.priority);
-  const metadata = input.metadata as Prisma.InputJsonValue | null | undefined;
+): HRNotificationCreatePayload {
   return {
     orgId: input.orgId,
     userId: input.userId,
     title: input.title,
     message: input.message,
-    type,
-    priority,
+    type: input.type,
+    priority: input.priority,
     isRead: input.isRead ?? false,
-    readAt: input.readAt ?? null,
+    readAt: toNullableDate(input.readAt) ?? null,
     actionUrl: input.actionUrl ?? null,
     actionLabel: input.actionLabel ?? null,
-    scheduledFor: input.scheduledFor ?? null,
-    expiresAt: input.expiresAt ?? null,
+    scheduledFor: toNullableDate(input.scheduledFor) ?? null,
+    expiresAt: toNullableDate(input.expiresAt) ?? null,
     correlationId: input.correlationId ?? null,
     createdByUserId: input.createdByUserId ?? null,
     dataClassification: input.dataClassification,
     residencyTag: input.residencyTag,
-    metadata: metadata ?? undefined,
-  };
+    metadata: input.metadata ? (input.metadata as PrismaInputJsonValue) : undefined,
+  } satisfies HRNotificationCreatePayload;
+}
+
+function toNullableDate(value: Date | string | null | undefined): Date | null | undefined {
+  if (value === null) {
+    return null;
+  }
+  if (value === undefined) {
+    return undefined;
+  }
+  return value instanceof Date ? value : new Date(value);
 }

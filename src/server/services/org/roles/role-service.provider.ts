@@ -1,16 +1,16 @@
-import { PrismaRoleRepository } from '@/server/repositories/prisma/org/roles';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
-import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
 import { getNotificationComposerService } from '@/server/services/platform/notifications/notification-composer.provider';
 import { getRoleQueueClient } from '@/server/workers/org/roles/role.queue';
 import { RoleService, type RoleServiceDependencies } from './role-service';
+import { buildRoleServiceDependencies, type RoleServiceDependencyOptions } from '@/server/repositories/providers/org/role-service-dependencies';
+
+type ProviderPrismaOptions = RoleServiceDependencyOptions['prismaOptions'];
 
 export interface RoleServiceProviderOptions {
-  prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+  prismaOptions?: ProviderPrismaOptions;
 }
 
 export class RoleServiceProvider {
-  private readonly prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+  private readonly prismaOptions?: ProviderPrismaOptions;
   private readonly defaultDependencies: RoleServiceDependencies;
   private readonly sharedService: RoleService;
 
@@ -25,29 +25,28 @@ export class RoleServiceProvider {
       return this.sharedService;
     }
 
-    const deps = this.createDependencies(this.prismaOptions);
+    const deps = this.createDependencies(this.prismaOptions, overrides);
 
-    return new RoleService({
-      roleRepository: overrides.roleRepository ?? deps.roleRepository,
-      notificationComposer: overrides.notificationComposer ?? deps.notificationComposer,
-      roleQueue: overrides.roleQueue ?? deps.roleQueue,
-    });
+    return new RoleService(deps);
   }
 
   private createDependencies(
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>,
+    prismaOptions?: ProviderPrismaOptions,
+    overrides?: Partial<RoleServiceDependencies>,
   ): RoleServiceDependencies {
-    const prismaClient = prismaOptions?.prisma ?? defaultPrismaClient;
-    const repoOptions = {
-      prisma: prismaClient,
-      trace: prismaOptions?.trace,
-      onAfterWrite: prismaOptions?.onAfterWrite,
-    };
+    const dependencies = buildRoleServiceDependencies({
+      prismaOptions: prismaOptions,
+      overrides: {
+        notificationComposer: getNotificationComposerService(),
+        roleQueue: getRoleQueueClient(),
+        ...overrides,
+      }
+    });
 
     return {
-      roleRepository: new PrismaRoleRepository(repoOptions),
-      notificationComposer: getNotificationComposerService(),
-      roleQueue: getRoleQueueClient(),
+      roleRepository: dependencies.roleRepository,
+      notificationComposer: dependencies.notificationComposer,
+      roleQueue: dependencies.roleQueue,
     };
   }
 }
@@ -56,9 +55,9 @@ const defaultRoleServiceProvider = new RoleServiceProvider();
 
 export function getRoleService(
   overrides?: Partial<RoleServiceDependencies>,
-  options?: RoleServiceProviderOptions,
+  options?: RoleServiceDependencyOptions,
 ): RoleService {
-  const provider = options ? new RoleServiceProvider(options) : defaultRoleServiceProvider;
+  const provider = options ? new RoleServiceProvider({ prismaOptions: options.prismaOptions }) : defaultRoleServiceProvider;
   return provider.getService(overrides);
 }
 

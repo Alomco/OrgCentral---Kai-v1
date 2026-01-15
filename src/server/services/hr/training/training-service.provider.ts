@@ -1,25 +1,25 @@
-import { PrismaTrainingRecordRepository } from '@/server/repositories/prisma/hr/training';
 import { TrainingService, type TrainingServiceDependencies } from './training-service';
+import { buildTrainingServiceDependencies, type TrainingServiceDependencyOptions } from '@/server/repositories/providers/hr/training-service-dependencies';
 
-const trainingRepository = new PrismaTrainingRecordRepository();
-
-const defaultTrainingServiceDependencies: TrainingServiceDependencies = {
-    trainingRepository,
-};
-
-const sharedTrainingService = new TrainingService(defaultTrainingServiceDependencies);
+const sharedTrainingService = (() => {
+    const dependencies = buildTrainingServiceDependencies();
+    return new TrainingService(dependencies);
+})();
 
 export function getTrainingService(
     overrides?: Partial<TrainingServiceDependencies>,
+    options?: TrainingServiceDependencyOptions,
 ): TrainingService {
     if (!overrides || Object.keys(overrides).length === 0) {
         return sharedTrainingService;
     }
 
-    return new TrainingService({
-        ...defaultTrainingServiceDependencies,
-        ...overrides,
+    const dependencies = buildTrainingServiceDependencies({
+        prismaOptions: options?.prismaOptions,
+        overrides,
     });
+
+    return new TrainingService(dependencies);
 }
 
 export type TrainingServiceContract = Pick<

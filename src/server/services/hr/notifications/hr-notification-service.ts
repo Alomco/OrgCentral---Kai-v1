@@ -94,7 +94,7 @@ export class HrNotificationService extends AbstractHrService {
         });
 
         const notification = await this.executeInServiceContext(context, 'hr.notifications.create', () =>
-            this.repo.createNotification(authorization.orgId, payload),
+            this.repo.createNotification(authorization, payload),
         );
 
         return { notification };
@@ -114,10 +114,10 @@ export class HrNotificationService extends AbstractHrService {
         });
 
         const notifications = await this.executeInServiceContext(context, 'hr.notifications.list', () =>
-            this.repo.listNotifications(authorization.orgId, targetUser, input.filters),
+            this.repo.listNotifications(authorization, targetUser, input.filters),
         );
 
-        const unreadCount: number = await this.repo.getUnreadCount(authorization.orgId, targetUser);
+        const unreadCount: number = await this.repo.getUnreadCount(authorization, targetUser);
 
         return { notifications, unreadCount };
     }
@@ -136,7 +136,7 @@ export class HrNotificationService extends AbstractHrService {
         });
 
         const notification = await this.executeInServiceContext(context, 'hr.notifications.read', () =>
-            this.repo.markRead(authorization.orgId, input.notificationId, readAt),
+            this.repo.markRead(authorization, input.notificationId, readAt),
         );
 
         return { notification };
@@ -159,10 +159,10 @@ export class HrNotificationService extends AbstractHrService {
         });
 
         const updatedCount = await this.executeInServiceContext(context, 'hr.notifications.read-all', () =>
-            this.repo.markAllRead(authorization.orgId, targetUser, before),
+            this.repo.markAllRead(authorization, targetUser, before),
         );
 
-        const unreadCount: number = await this.repo.getUnreadCount(authorization.orgId, targetUser);
+        const unreadCount: number = await this.repo.getUnreadCount(authorization, targetUser);
 
         return { updatedCount, unreadCount };
     }
@@ -180,7 +180,7 @@ export class HrNotificationService extends AbstractHrService {
         });
 
         await this.executeInServiceContext(context, 'hr.notifications.delete', () =>
-            this.repo.deleteNotification(authorization.orgId, input.notificationId),
+            this.repo.deleteNotification(authorization, input.notificationId),
         );
 
         return { success: true };

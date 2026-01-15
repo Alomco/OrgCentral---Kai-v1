@@ -9,9 +9,9 @@ import type {
 import { getInvitationDetails } from '@/server/use-cases/auth/get-invitation-details';
 import { normalizeToken } from '@/server/use-cases/shared';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
-import { PrismaInvitationRepository } from '@/server/repositories/prisma/auth/invitations';
-import { PrismaUserRepository } from '@/server/repositories/prisma/org/users';
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
+import { createInvitationRepository } from '@/server/repositories/providers/auth/invitation-repository-provider';
+import { buildUserServiceDependencies } from '@/server/repositories/providers/org/user-service-dependencies';
+import { buildOrganizationServiceDependencies } from '@/server/repositories/providers/org/organization-service-dependencies';
 import type { InvitationRecord } from '@/server/repositories/contracts/auth/invitations/invitation-repository.types';
 
 const AUDIT_SOURCE = 'auth.invitation-service';
@@ -72,12 +72,14 @@ export function getInvitationService(
     overrides?: Partial<InvitationServiceDependencies>,
 ): InvitationService {
     if (!sharedService || overrides) {
+        const { userRepository } = buildUserServiceDependencies();
+        const { organizationRepository } = buildOrganizationServiceDependencies();
         const dependencies: InvitationServiceDependencies = {
             invitationRepository:
-                overrides?.invitationRepository ?? new PrismaInvitationRepository(),
-            userRepository: overrides?.userRepository ?? new PrismaUserRepository(),
+                overrides?.invitationRepository ?? createInvitationRepository(),
+            userRepository: overrides?.userRepository ?? userRepository,
             organizationRepository:
-                overrides?.organizationRepository ?? new PrismaOrganizationRepository(),
+                overrides?.organizationRepository ?? organizationRepository,
         };
 
         if (!overrides) {

@@ -1,5 +1,5 @@
-import type { PrismaClient } from '@prisma/client';
-import { prisma as defaultPrisma } from '@/server/lib/prisma';
+import type { IPlatformProvisioningRepository } from '@/server/repositories/contracts/platform';
+import { buildPlatformProvisioningServiceDependencies } from '@/server/repositories/providers/platform/platform-provisioning-service-dependencies';
 
 export interface DebugOrgSummary {
     id: string;
@@ -8,7 +8,7 @@ export interface DebugOrgSummary {
 }
 
 export interface DebugSecurityDependencies {
-    prisma: PrismaClient;
+    provisioningRepository: IPlatformProvisioningRepository;
 }
 
 export type DebugSecurityOverrides = Partial<DebugSecurityDependencies>;
@@ -17,22 +17,10 @@ export async function listSessionOrganizations(
     userId: string,
     overrides: DebugSecurityOverrides = {},
 ): Promise<DebugOrgSummary[]> {
-    const prisma = overrides.prisma ?? defaultPrisma;
-    const memberships = await prisma.authOrgMember.findMany({
-        where: { userId },
-        select: {
-            organization: {
-                select: { id: true, slug: true, name: true },
-            },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 15,
-    });
+    const repository =
+        overrides.provisioningRepository ??
+        buildPlatformProvisioningServiceDependencies().provisioningRepository;
+    const organizations = await repository.listUserOrganizations(userId, 15);
 
-    return memberships
-        .map((row) => row.organization)
-        .filter((org): org is DebugOrgSummary => {
-            const { id, slug, name } = org;
-            return Boolean(id && slug && name);
-        });
+    return organizations.map(({ id, slug, name }) => ({ id, slug, name }));
 }

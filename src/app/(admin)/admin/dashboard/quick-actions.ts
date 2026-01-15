@@ -1,34 +1,28 @@
-import { Briefcase, KeyRound, Settings, Users, Wrench } from 'lucide-react';
+import { FileText, KeyRound, Settings, UserPlus } from 'lucide-react';
 
 export const QUICK_ACTIONS = [
     {
-        title: 'Manage Members',
-        description: 'Invite users and manage access',
+        title: 'Invite member',
+        description: 'Add a user and assign access',
         href: '/org/members',
-        icon: Users,
+        icon: UserPlus,
     },
     {
-        title: 'Manage Roles',
-        description: 'Create and configure roles',
+        title: 'Review roles',
+        description: 'Audit role assignments',
         href: '/org/roles',
         icon: KeyRound,
     },
     {
-        title: 'Organization Settings',
-        description: 'Configure org preferences',
+        title: 'View audit log',
+        description: 'Track critical admin activity',
+        href: '/org/permissions',
+        icon: FileText,
+    },
+    {
+        title: 'Manage org settings',
+        description: 'Update policies and preferences',
         href: '/org/settings',
         icon: Settings,
-    },
-    {
-        title: 'HR Dashboard',
-        description: 'Employee and leave management',
-        href: '/hr/dashboard',
-        icon: Briefcase,
-    },
-    {
-        title: 'Dev Tools',
-        description: 'Development utilities',
-        href: '/dev/dashboard',
-        icon: Wrench,
     },
 ] as const;

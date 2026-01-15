@@ -1,9 +1,9 @@
-import { type Prisma } from '@prisma/client';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import type { IAbacPolicyRepository } from '@/server/repositories/contracts/org/abac/abac-policy-repository-contract';
 import type { AbacPolicy } from '@/server/security/abac-types';
 import { normalizeAbacPolicies } from '@/server/security/abac-policy-normalizer';
+import type { PrismaInputJsonValue } from '@/server/types/prisma';
 
 export class PrismaAbacPolicyRepository extends BasePrismaRepository implements IAbacPolicyRepository {
   async getPoliciesForOrg(orgId: string): Promise<AbacPolicy[]> {
@@ -42,7 +42,7 @@ export class PrismaAbacPolicyRepository extends BasePrismaRepository implements 
         const result = await organization.updateMany({
           where: { id: orgId, updatedAt: org.updatedAt },
           data: {
-            settings: updatedSettings as unknown as Prisma.InputJsonValue,
+            settings: updatedSettings as unknown as PrismaInputJsonValue,
           },
         });
         if (result.count === 0) {

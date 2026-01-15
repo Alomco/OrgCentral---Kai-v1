@@ -1,6 +1,8 @@
-import type { Prisma } from '@prisma/client';
-
-type PrismaAction = Prisma.PrismaAction;
+import type {
+    PrismaAction,
+    PrismaInputJsonValue,
+    PrismaJsonValue,
+} from '@/server/types/prisma';
 
 interface MiddlewareParams {
     model?: string;
@@ -10,7 +12,7 @@ interface MiddlewareParams {
 
 type PrismaMiddleware = (params: MiddlewareParams, next: (params: MiddlewareParams) => Promise<unknown>) => Promise<unknown>;
 
-type EncryptableValue = Prisma.InputJsonValue | Prisma.JsonValue | null;
+type EncryptableValue = PrismaInputJsonValue | PrismaJsonValue | null;
 type MaybePromise<T> = T | Promise<T>;
 
 export type EncryptValue = (value: EncryptableValue, path: string) => MaybePromise<EncryptableValue>;

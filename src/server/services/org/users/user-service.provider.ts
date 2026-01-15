@@ -1,15 +1,14 @@
-import { PrismaUserRepository } from '@/server/repositories/prisma/org/users/prisma-user-repository';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
-import { prisma as defaultPrismaClient } from '@/server/lib/prisma';
-
 import { UserService, type UserServiceDependencies } from './user-service';
+import { buildUserServiceDependencies, type UserServiceDependencyOptions } from '@/server/repositories/providers/org/user-service-dependencies';
+
+type ProviderPrismaOptions = UserServiceDependencyOptions['prismaOptions'];
 
 export interface UserServiceProviderOptions {
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    prismaOptions?: ProviderPrismaOptions;
 }
 
 export class UserServiceProvider {
-    private readonly prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    private readonly prismaOptions?: ProviderPrismaOptions;
     private readonly defaultDependencies: UserServiceDependencies;
     private readonly sharedService: UserService;
 
@@ -24,25 +23,22 @@ export class UserServiceProvider {
             return this.sharedService;
         }
 
-        const deps = this.createDependencies(this.prismaOptions);
+        const deps = this.createDependencies(this.prismaOptions, overrides);
 
-        return new UserService({
-            userRepository: overrides.userRepository ?? deps.userRepository,
-        });
+        return new UserService(deps);
     }
 
     private createDependencies(
-        prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>,
+        prismaOptions?: ProviderPrismaOptions,
+        overrides?: Partial<UserServiceDependencies>,
     ): UserServiceDependencies {
-        const prismaClient = prismaOptions?.prisma ?? defaultPrismaClient;
-        const repoOptions = {
-            prisma: prismaClient,
-            trace: prismaOptions?.trace,
-            onAfterWrite: prismaOptions?.onAfterWrite,
-        };
+        const dependencies = buildUserServiceDependencies({
+            prismaOptions: prismaOptions,
+            overrides: overrides,
+        });
 
         return {
-            userRepository: new PrismaUserRepository(repoOptions),
+            userRepository: dependencies.userRepository,
         };
     }
 }
@@ -51,9 +47,9 @@ const defaultUserServiceProvider = new UserServiceProvider();
 
 export function getUserService(
     overrides?: Partial<UserServiceDependencies>,
-    options?: UserServiceProviderOptions,
+    options?: UserServiceDependencyOptions,
 ): UserService {
-    const provider = options ? new UserServiceProvider(options) : defaultUserServiceProvider;
+    const provider = options ? new UserServiceProvider({ prismaOptions: options.prismaOptions }) : defaultUserServiceProvider;
     return provider.getService(overrides);
 }
 

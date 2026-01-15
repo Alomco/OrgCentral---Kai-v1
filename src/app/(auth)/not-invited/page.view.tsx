@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { z } from 'zod';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { Button } from '@/components/ui/button';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 import { TenantThemeRegistry } from '@/components/theme/tenant-theme-registry';
 import styles from './not-invited.module.css';
 import notInvitedImage from '@/assets/errors/not_invited.webp';
@@ -184,6 +185,7 @@ async function NotInvitedContent({ next, tenant }: NotInvitedContentProps) {
                             <Button asChild size="lg" className="px-6 shadow-[0_15px_45px_-22px_hsl(var(--primary)/0.85)] hover:shadow-[0_18px_55px_-20px_hsl(var(--primary)/0.95)] motion-safe:translate-y-0 motion-safe:hover:-translate-y-px">
                                 <Link href={loginHref}>Switch account</Link>
                             </Button>
+                            <LogoutButton label="Sign out" variant="outline" size="lg" className="px-6" />
                             <Button
                                 asChild
                                 variant="ghost"

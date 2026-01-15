@@ -1,11 +1,11 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaChecklistInstanceRepository } from '@/server/repositories/prisma/hr/onboarding/prisma-checklist-instance-repository';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ChecklistInstance } from '@/server/types/onboarding-types';
 import { getActiveChecklistForEmployee } from './get-active-checklist';
+import { getChecklistInstanceRepository } from '@/server/services/hr/onboarding/onboarding-controller-dependencies';
 
 export interface GetActiveChecklistForEmployeeForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -14,10 +14,6 @@ export interface GetActiveChecklistForEmployeeForUiInput {
 
 export interface GetActiveChecklistForEmployeeForUiResult {
     instance: ChecklistInstance | null;
-}
-
-function resolveChecklistInstanceRepository(): PrismaChecklistInstanceRepository {
-    return new PrismaChecklistInstanceRepository();
 }
 
 export async function getActiveChecklistForEmployeeForUi(
@@ -30,7 +26,7 @@ export async function getActiveChecklistForEmployeeForUi(
         cacheLife(CACHE_LIFE_SHORT);
 
         const result = await getActiveChecklistForEmployee(
-            { checklistInstanceRepository: resolveChecklistInstanceRepository() },
+            { checklistInstanceRepository: getChecklistInstanceRepository() },
             cachedInput,
         );
 
@@ -41,7 +37,7 @@ export async function getActiveChecklistForEmployeeForUi(
         noStore();
 
         const result = await getActiveChecklistForEmployee(
-            { checklistInstanceRepository: resolveChecklistInstanceRepository() },
+            { checklistInstanceRepository: getChecklistInstanceRepository() },
             input,
         );
 

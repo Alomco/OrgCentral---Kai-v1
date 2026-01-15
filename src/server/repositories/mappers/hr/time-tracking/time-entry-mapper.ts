@@ -1,8 +1,29 @@
-import type { TimeEntry as PrismaTimeEntry } from '@prisma/client';
 import { Prisma } from '@prisma/client';
-import type { TimeEntry } from '@/server/types/hr-ops-types';
+import type { TimeEntry as DomainTimeEntry } from '@/server/types/hr-ops-types';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
-export function mapPrismaTimeEntryToDomain(record: PrismaTimeEntry): TimeEntry {
+type PrismaTimeEntry = Prisma.TimeEntryGetPayload<Record<string, never>>;
+type TimeEntryCreatePayload = Prisma.TimeEntryUncheckedCreateInput;
+type TimeEntryUpdatePayload = Prisma.TimeEntryUncheckedUpdateManyInput;
+
+const toNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined) { return null; }
+  if (typeof value === 'number') { return value; }
+  if (typeof value === 'object' && 'toNumber' in value && typeof (value as { toNumber: unknown }).toNumber === 'function') {
+    try { return (value as { toNumber: () => number }).toNumber(); } catch { return null; }
+  }
+  return null;
+};
+
+const toJsonInput = (
+  value: PrismaJsonValue | null | undefined,
+): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined => {
+  if (value === undefined) { return undefined; }
+  if (value === null) { return Prisma.JsonNull; }
+  return value as Prisma.InputJsonValue;
+};
+
+export function mapPrismaTimeEntryToDomain(record: PrismaTimeEntry): DomainTimeEntry {
   return {
     id: record.id,
     orgId: record.orgId,
@@ -10,8 +31,8 @@ export function mapPrismaTimeEntryToDomain(record: PrismaTimeEntry): TimeEntry {
     date: record.date,
     clockIn: record.clockIn,
     clockOut: record.clockOut ?? undefined,
-    totalHours: record.totalHours === null ? undefined : Number(record.totalHours),
-    breakDuration: record.breakDuration === null ? undefined : Number(record.breakDuration),
+    totalHours: record.totalHours === null ? undefined : toNumberOrNull(record.totalHours),
+    breakDuration: record.breakDuration === null ? undefined : toNumberOrNull(record.breakDuration),
     project: record.project ?? undefined,
     tasks: record.tasks,
     notes: record.notes ?? undefined,
@@ -28,8 +49,8 @@ export function mapPrismaTimeEntryToDomain(record: PrismaTimeEntry): TimeEntry {
 }
 
 export function mapDomainTimeEntryToPrismaCreate(
-  input: Omit<TimeEntry, 'id' | 'createdAt' | 'updatedAt'>,
-): Prisma.TimeEntryUncheckedCreateInput {
+  input: Omit<DomainTimeEntry, 'id' | 'createdAt' | 'updatedAt'>,
+): TimeEntryCreatePayload {
   return {
     orgId: input.orgId,
     userId: input.userId,
@@ -48,12 +69,12 @@ export function mapDomainTimeEntryToPrismaCreate(
     dataClassification: input.dataClassification,
     residencyTag: input.residencyTag,
     metadata: toJsonInput(input.metadata),
-  };
+  } satisfies TimeEntryCreatePayload;
 }
 
 export function mapDomainTimeEntryToPrismaUpdate(
-  updates: Partial<Pick<TimeEntry, 'clockIn' | 'clockOut' | 'totalHours' | 'breakDuration' | 'project' | 'tasks' | 'notes' | 'status' | 'approvedByOrgId' | 'approvedByUserId' | 'approvedAt' | 'dataClassification' | 'residencyTag' | 'metadata'>>,
-): Prisma.TimeEntryUncheckedUpdateInput {
+  updates: Partial<Pick<DomainTimeEntry, 'clockIn' | 'clockOut' | 'totalHours' | 'breakDuration' | 'project' | 'tasks' | 'notes' | 'status' | 'approvedByOrgId' | 'approvedByUserId' | 'approvedAt' | 'dataClassification' | 'residencyTag' | 'metadata'>>,
+): TimeEntryUpdatePayload {
   return {
     clockIn: updates.clockIn,
     clockOut: updates.clockOut,
@@ -70,16 +91,4 @@ export function mapDomainTimeEntryToPrismaUpdate(
     residencyTag: updates.residencyTag,
     metadata: toJsonInput(updates.metadata),
   };
-}
-
-function toJsonInput(
-  value: Prisma.JsonValue | null | undefined,
-): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return Prisma.DbNull;
-  }
-  return value as Prisma.InputJsonValue;
 }

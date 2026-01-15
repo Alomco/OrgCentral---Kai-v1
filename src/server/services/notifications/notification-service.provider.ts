@@ -1,4 +1,9 @@
 import { NotificationService, type NotificationServiceDependencies } from './notification.service';
+import type {
+    NotificationDeliveryContract,
+    NotificationDispatchContract,
+    NotificationServiceContract,
+} from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 
 const defaultNotificationServiceDependencies: NotificationServiceDependencies = {};
 
@@ -17,6 +22,4 @@ export function getNotificationService(
     });
 }
 
-export type NotificationServiceContract = Pick<NotificationService, 'dispatchNotification' | 'sendNotification'>;
-export type NotificationDispatchContract = Pick<NotificationService, 'dispatchNotification'>;
-export type NotificationDeliveryContract = Pick<NotificationService, 'sendNotification'>;
+export type { NotificationDeliveryContract, NotificationDispatchContract, NotificationServiceContract };

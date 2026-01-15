@@ -30,7 +30,7 @@ export async function OrgStatsCard() {
                     <div className="space-y-2">
                         <p className="text-sm font-medium text-muted-foreground">Active Members</p>
                         <div className="flex items-baseline gap-2">
-                            <h3 className="text-3xl font-bold text-foreground">{activeUsers}</h3>
+                            <p className="text-3xl font-bold text-foreground">{activeUsers}</p>
                             <span className="text-sm font-medium text-green-500">↑ +12%</span>
                         </div>
                     </div>
@@ -45,7 +45,7 @@ export async function OrgStatsCard() {
                     <div className="space-y-2">
                         <p className="text-sm font-medium text-muted-foreground">Pending Invites</p>
                         <div className="flex items-baseline gap-2">
-                            <h3 className="text-3xl font-bold text-foreground">{pendingInvites}</h3>
+                            <p className="text-3xl font-bold text-foreground">{pendingInvites}</p>
                         </div>
                     </div>
                     <GradientAccent variant="sunset" rounded="lg" className="p-3">
@@ -59,7 +59,7 @@ export async function OrgStatsCard() {
                     <div className="space-y-2">
                         <p className="text-sm font-medium text-muted-foreground">Total Roles</p>
                         <div className="flex items-baseline gap-2">
-                            <h3 className="text-3xl font-bold text-foreground">{roles.length}</h3>
+                            <p className="text-3xl font-bold text-foreground">{roles.length}</p>
                         </div>
                     </div>
                     <GradientAccent variant="accent" rounded="lg" className="p-3">

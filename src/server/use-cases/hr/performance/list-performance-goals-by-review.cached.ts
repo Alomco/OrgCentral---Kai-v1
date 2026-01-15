@@ -1,7 +1,7 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaPerformanceRepository } from '@/server/repositories/prisma/hr/performance/prisma-performance-repository';
+import { buildPerformanceServiceDependencies } from '@/server/repositories/providers/hr/performance-service-dependencies';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { PerformanceGoal } from '@/server/domain/hr/performance/types';
@@ -16,12 +16,9 @@ export interface ListPerformanceGoalsByReviewForUiResult {
     goals: PerformanceGoal[];
 }
 
-function resolvePerformanceRepository(authorization: RepositoryAuthorizationContext): PrismaPerformanceRepository {
-    return new PrismaPerformanceRepository(
-        authorization.orgId,
-        authorization.dataClassification,
-        authorization.dataResidency,
-    );
+function resolvePerformanceRepository(authorization: RepositoryAuthorizationContext) {
+    const { repositoryFactory } = buildPerformanceServiceDependencies();
+    return repositoryFactory(authorization);
 }
 
 export async function listPerformanceGoalsByReviewForUi(

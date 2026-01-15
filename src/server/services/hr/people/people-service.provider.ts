@@ -1,38 +1,30 @@
-import { PrismaEmployeeProfileRepository, PrismaEmploymentContractRepository } from '@/server/repositories/prisma/hr/people';
 import { PeopleService } from './people-service';
 import type { PeopleServiceDependencies } from './people-service.types';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
+import { buildPeopleServiceDependencies, type PeopleServiceDependencyOptions } from '@/server/repositories/providers/hr/people-service-dependencies';
 
 export interface PeopleServiceProviderOptions {
-  prismaOptions?: Pick<BasePrismaRepositoryOptions, 'trace' | 'onAfterWrite'>;
+  prismaOptions?: PeopleServiceDependencyOptions['prismaOptions'];
 }
 
-const defaultPrismaOptions: Pick<BasePrismaRepositoryOptions, 'trace' | 'onAfterWrite'> = {};
-const profileRepo = new PrismaEmployeeProfileRepository(defaultPrismaOptions);
-const contractRepo = new PrismaEmploymentContractRepository(defaultPrismaOptions);
-
-const defaultPeopleDependencies: PeopleServiceDependencies = {
-  profileRepo,
-  contractRepo,
-};
-
-const sharedPeopleService = new PeopleService(defaultPeopleDependencies);
+const sharedPeopleService = (() => {
+  const dependencies = buildPeopleServiceDependencies();
+  return new PeopleService(dependencies);
+})();
 
 export function getPeopleService(
   overrides?: Partial<PeopleServiceDependencies>,
-  options?: PeopleServiceProviderOptions,
+  options?: PeopleServiceDependencyOptions,
 ): PeopleService {
   if (!overrides || Object.keys(overrides).length === 0) {
     return sharedPeopleService;
   }
 
-  const prismaOptions = options?.prismaOptions ?? defaultPrismaOptions;
-
-  return new PeopleService({
-    profileRepo: overrides.profileRepo ?? new PrismaEmployeeProfileRepository(prismaOptions),
-    contractRepo: overrides.contractRepo ?? new PrismaEmploymentContractRepository(prismaOptions),
-    ...overrides,
+  const dependencies = buildPeopleServiceDependencies({
+    prismaOptions: options?.prismaOptions,
+    overrides,
   });
+
+  return new PeopleService(dependencies);
 }
 
 export type PeopleServiceContract = Pick<

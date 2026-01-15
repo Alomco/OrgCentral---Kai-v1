@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto';
-import type { Prisma, PrismaClient } from '@prisma/client';
 import {
     ComplianceTier,
     DataClassificationLevel,
@@ -7,30 +5,37 @@ import {
     MembershipStatus,
     OrganizationStatus,
     RoleScope,
-} from '@prisma/client';
+} from '@/server/types/prisma';
 import type { IAbacPolicyRepository } from '@/server/repositories/contracts/org/abac/abac-policy-repository-contract';
 import { resolveRoleTemplate } from '@/server/security/role-templates';
 import { DEFAULT_BOOTSTRAP_POLICIES } from '@/server/security/abac-constants';
 import { setAbacPolicies } from '@/server/use-cases/org/abac/set-abac-policies';
+import { seedPermissionResources } from '@/server/use-cases/org/permissions/seed-permission-resources';
+import { seedDefaultAbsenceTypes } from '@/server/use-cases/hr/absences/seed-default-absence-types';
 import { buildAuthorizationContext } from '@/server/use-cases/shared/builders';
 import type { createAuth } from '@/server/lib/auth';
 import { syncBetterAuthUserToPrisma } from '@/server/lib/auth-sync';
 import { AuthorizationError, ValidationError } from '@/server/errors';
-import { prisma as defaultPrisma } from '@/server/lib/prisma';
-import { PrismaAbacPolicyRepository } from '@/server/repositories/prisma/org/abac/prisma-abac-policy-repository';
+import type {
+    IPlatformProvisioningRepository,
+    PlatformProvisioningConfig,
+} from '@/server/repositories/contracts/platform';
+import type { JsonRecord } from '@/server/types/json';
+import { buildAbacPolicyServiceDependencies } from '@/server/repositories/providers/org/abac-policy-service-dependencies';
+import { buildPlatformProvisioningServiceDependencies } from '@/server/repositories/providers/platform/platform-provisioning-service-dependencies';
+import { buildPermissionResourceServiceDependencies } from '@/server/repositories/providers/org/permission-resource-service-dependencies';
+import { buildAbsenceTypeConfigDependencies } from '@/server/repositories/providers/hr/absence-type-config-service-dependencies';
 import {
     BOOTSTRAP_SEED_SOURCE,
     assertUuid,
     constantTimeEquals,
-    ensureAuthUserIdIsUuid,
-    ensurePlatformAuthOrganization,
     isBootstrapEnabled,
     requireBootstrapSecret,
     resolvePlatformConfig,
 } from './admin-bootstrap.helpers';
 
 export interface AdminBootstrapDependencies {
-    prisma: PrismaClient;
+    provisioningRepository: IPlatformProvisioningRepository;
     abacPolicyRepository: IAbacPolicyRepository;
     auth: ReturnType<typeof createAuth>;
     syncAuthUser?: typeof syncBetterAuthUserToPrisma;
@@ -55,9 +60,16 @@ export interface AdminBootstrapResult {
 export function buildAdminBootstrapDependencies(
     overrides: AdminBootstrapOverrides,
 ): AdminBootstrapDependencies {
+    const provisioningRepository =
+        overrides.provisioningRepository ??
+        buildPlatformProvisioningServiceDependencies().provisioningRepository;
+    const abacPolicyRepository =
+        overrides.abacPolicyRepository ??
+        buildAbacPolicyServiceDependencies().abacPolicyRepository;
+
     return {
-        prisma: overrides.prisma ?? defaultPrisma,
-        abacPolicyRepository: overrides.abacPolicyRepository ?? new PrismaAbacPolicyRepository(),
+        provisioningRepository,
+        abacPolicyRepository,
         auth: overrides.auth,
         syncAuthUser: overrides.syncAuthUser,
     };
@@ -88,7 +100,10 @@ export async function runAdminBootstrap(
     }
 
     const normalizedEmail = userEmail.trim().toLowerCase();
-    const userId = await ensureAuthUserIdIsUuid(deps.prisma, session.user.id, normalizedEmail);
+    const userId = await deps.provisioningRepository.ensureAuthUserIdIsUuid(
+        session.user.id,
+        normalizedEmail,
+    );
     assertUuid(userId, 'User id');
 
     const syncUser = deps.syncAuthUser ?? syncBetterAuthUserToPrisma;
@@ -102,35 +117,26 @@ export async function runAdminBootstrap(
     });
 
     const config = resolvePlatformConfig();
-    const superAdminMetadata: Prisma.InputJsonObject = {
+    const superAdminMetadata: JsonRecord = {
         seedSource: BOOTSTRAP_SEED_SOURCE,
         roles: [config.roleName],
         bootstrapProvider: 'oauth',
     };
 
-    const organization = await deps.prisma.organization.upsert({
-        where: { slug: config.platformOrgSlug },
-        update: {
-            name: config.platformOrgName,
-            regionCode: config.platformRegionCode,
-            tenantId: config.platformTenantId,
-            status: OrganizationStatus.ACTIVE,
-            complianceTier: ComplianceTier.GOV_SECURE,
-            dataResidency: DataResidencyZone.UK_ONLY,
-            dataClassification: DataClassificationLevel.OFFICIAL,
-        },
-        create: {
-            slug: config.platformOrgSlug,
-            name: config.platformOrgName,
-            regionCode: config.platformRegionCode,
-            tenantId: config.platformTenantId,
-            status: OrganizationStatus.ACTIVE,
-            complianceTier: ComplianceTier.GOV_SECURE,
-            dataResidency: DataResidencyZone.UK_ONLY,
-            dataClassification: DataClassificationLevel.OFFICIAL,
-        },
-        select: { id: true, slug: true, name: true, dataResidency: true, dataClassification: true },
-    });
+    const provisioningConfig: PlatformProvisioningConfig = {
+        slug: config.platformOrgSlug,
+        name: config.platformOrgName,
+        regionCode: config.platformRegionCode,
+        tenantId: config.platformTenantId,
+        status: OrganizationStatus.ACTIVE,
+        complianceTier: ComplianceTier.GOV_SECURE,
+        dataResidency: DataResidencyZone.UK_ONLY,
+        dataClassification: DataClassificationLevel.OFFICIAL,
+    };
+
+    const organization = await deps.provisioningRepository.upsertPlatformOrganization(
+        provisioningConfig,
+    );
 
     assertUuid(organization.id, 'Organization id');
 
@@ -158,78 +164,50 @@ export async function runAdminBootstrap(
 
     const permissions = resolveRoleTemplate(config.roleName).permissions as Record<string, string[]>;
 
-    const role = await deps.prisma.role.upsert({
-        where: { orgId_name: { orgId: organization.id, name: config.roleName } },
-        update: {
-            scope: RoleScope.GLOBAL,
-            permissions: permissions as Prisma.InputJsonValue,
-            inheritsRoleIds: [],
-            isSystem: true,
-            isDefault: true,
-        },
-        create: {
-            orgId: organization.id,
-            name: config.roleName,
-            description: 'Platform administrator',
-            scope: RoleScope.GLOBAL,
-            permissions: permissions as Prisma.InputJsonValue,
-            inheritsRoleIds: [],
-            isSystem: true,
-            isDefault: true,
-        },
-        select: { id: true, name: true },
+    const role = await deps.provisioningRepository.upsertPlatformRole({
+        orgId: organization.id,
+        roleName: config.roleName,
+        permissions,
+        scope: RoleScope.GLOBAL,
+        inheritsRoleIds: [],
+        isSystem: true,
+        isDefault: true,
+        description: 'Platform administrator',
     });
 
     const timestamp = new Date();
 
-    await deps.prisma.membership.upsert({
-        where: { orgId_userId: { orgId: organization.id, userId } },
-        update: {
-            roleId: role.id,
-            status: MembershipStatus.ACTIVE,
-            metadata: {
-                ...superAdminMetadata,
-                lastBootstrappedAt: timestamp.toISOString(),
-            },
-            activatedAt: timestamp,
-            updatedBy: userId,
-        },
-        create: {
-            orgId: organization.id,
-            userId,
-            roleId: role.id,
-            status: MembershipStatus.ACTIVE,
-            invitedBy: null,
+    await deps.provisioningRepository.upsertPlatformMembership({
+        orgId: organization.id,
+        userId,
+        roleId: role.id,
+        status: MembershipStatus.ACTIVE,
+        metadata: superAdminMetadata,
+        timestamps: {
             invitedAt: timestamp,
             activatedAt: timestamp,
-            metadata: {
-                ...superAdminMetadata,
-                bootstrappedAt: timestamp.toISOString(),
-            },
-            createdBy: userId,
+            updatedAt: timestamp,
         },
+        auditUserId: userId,
     });
 
-    await ensurePlatformAuthOrganization(deps.prisma, config, organization);
+    await deps.provisioningRepository.ensurePlatformAuthOrganization(
+        provisioningConfig,
+        organization,
+    );
 
-    const existingMember = await deps.prisma.authOrgMember.findFirst({
-        where: { organizationId: organization.id, userId },
-        select: { id: true },
-    });
+    const existingMember = await deps.provisioningRepository.findAuthOrgMember(
+        organization.id,
+        userId,
+    );
 
     if (existingMember) {
-        await deps.prisma.authOrgMember.update({
-            where: { id: existingMember.id },
-            data: { role: config.roleName },
-        });
+        await deps.provisioningRepository.updateAuthOrgMemberRole(existingMember.id, config.roleName);
     } else {
-        await deps.prisma.authOrgMember.create({
-            data: {
-                id: randomUUID(),
-                organizationId: organization.id,
-                userId,
-                role: config.roleName,
-            },
+        await deps.provisioningRepository.createAuthOrgMember({
+            organizationId: organization.id,
+            userId,
+            role: config.roleName,
         });
     }
 
@@ -239,10 +217,52 @@ export async function runAdminBootstrap(
         returnHeaders: true,
     });
 
+    await seedAdminBootstrapData({
+        orgId: organization.id,
+        userId,
+        roleKey: config.roleName,
+        dataResidency: organization.dataResidency,
+        dataClassification: organization.dataClassification,
+    });
+
     return {
         orgId: organization.id,
         role: config.roleName,
-        redirectTo: '/dashboard',
+        redirectTo: '/admin/dashboard',
         setActiveHeaders,
     };
+}
+
+interface AdminBootstrapSeedContext {
+    orgId: string;
+    userId: string;
+    roleKey: string;
+    dataResidency: DataResidencyZone;
+    dataClassification: DataClassificationLevel;
+}
+
+async function seedAdminBootstrapData(context: AdminBootstrapSeedContext): Promise<void> {
+    const { permissionRepository } = buildPermissionResourceServiceDependencies();
+    await seedPermissionResources({ permissionResourceRepository: permissionRepository }, { orgId: context.orgId });
+
+    const { absenceTypeConfigRepository } = buildAbsenceTypeConfigDependencies();
+    const authorization = buildAuthorizationContext({
+        orgId: context.orgId,
+        userId: context.userId,
+        roleKey: context.roleKey,
+        dataResidency: context.dataResidency,
+        dataClassification: context.dataClassification,
+        auditSource: BOOTSTRAP_SEED_SOURCE,
+        tenantScope: {
+            orgId: context.orgId,
+            dataResidency: context.dataResidency,
+            dataClassification: context.dataClassification,
+            auditSource: BOOTSTRAP_SEED_SOURCE,
+        },
+    });
+
+    await seedDefaultAbsenceTypes(
+        { typeConfigRepository: absenceTypeConfigRepository },
+        { authorization, dataResidency: context.dataResidency, dataClassification: context.dataClassification },
+    );
 }

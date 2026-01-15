@@ -1,5 +1,4 @@
 import { err, ok, type Result } from 'neverthrow';
-import { Prisma, type NotificationMessage, type NotificationUrgency, type NotificationTopic } from '@prisma/client';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type {
     NotificationCreateInput,
@@ -19,6 +18,14 @@ import {
 import type { NotificationCacheContext } from '@/server/repositories/notifications/notification-cache';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import { RepositoryAuthorizationError } from '@/server/repositories/security/repository-errors';
+import {
+    Prisma,
+    type NotificationPriority,
+    type NotificationTopic,
+    type NotificationMessage,
+    type PrismaInputJsonValue,
+    type PrismaNullableJsonNullValueInput,
+} from '@/server/types/prisma';
 
 export class NotificationValidationError extends Error { }
 
@@ -46,14 +53,14 @@ const topicFromPrisma: Record<NotificationTopic, NotificationTopicCode> = {
     other: 'other',
 };
 
-const priorityToPrisma: Record<NotificationPriorityCode, NotificationUrgency> = {
+const priorityToPrisma: Record<NotificationPriorityCode, NotificationPriority> = {
     high: 'high',
     low: 'low',
     medium: 'medium',
     urgent: 'urgent',
 };
 
-const priorityFromPrisma: Record<NotificationUrgency, NotificationPriorityCode> = {
+const priorityFromPrisma: Record<NotificationPriority, NotificationPriorityCode> = {
     high: 'high',
     low: 'low',
     medium: 'medium',
@@ -163,18 +170,18 @@ export function mapTopicsToPrisma(topics?: NotificationTopicCode[]): Notificatio
 
 export function mapPrioritiesToPrisma(
     priorities?: NotificationPriorityCode[],
-): NotificationUrgency[] | undefined {
+): NotificationPriority[] | undefined {
     return priorities?.length ? priorities.map((priority) => priorityToPrisma[priority]) : undefined;
 }
 
 function normalizeJsonInput(
     value: unknown,
-): Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue | undefined {
+): PrismaNullableJsonNullValueInput | PrismaInputJsonValue | undefined {
     if (value === undefined) {
         return undefined;
     }
     if (value === null) {
         return Prisma.JsonNull;
     }
-    return value as Prisma.InputJsonValue;
+    return value as PrismaInputJsonValue;
 }

@@ -1,11 +1,11 @@
-import type { StatutoryReport, Prisma } from '@prisma/client';
 import type { IStatutoryReportRepository } from '@/server/repositories/contracts/records/statutory-report-repository-contract';
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { StatutoryReportFilters, StatutoryReportCreationData, StatutoryReportUpdateData } from './prisma-statutory-report-repository.types';
+import type { Prisma, PrismaStatutoryReport } from '@/server/types/prisma';
 
 export class PrismaStatutoryReportRepository extends BasePrismaRepository implements IStatutoryReportRepository {
-  async findById(id: string): Promise<StatutoryReport | null> {
+  async findById(id: string): Promise<PrismaStatutoryReport | null> {
     return getModelDelegate(this.prisma, 'statutoryReport').findUnique({
       where: { id },
     });
@@ -15,7 +15,7 @@ export class PrismaStatutoryReportRepository extends BasePrismaRepository implem
     orgId: string,
     reportType: string,
     period: string
-  ): Promise<StatutoryReport | null> {
+  ): Promise<PrismaStatutoryReport | null> {
     return getModelDelegate(this.prisma, 'statutoryReport').findFirst({
       where: {
         orgId,
@@ -25,7 +25,7 @@ export class PrismaStatutoryReportRepository extends BasePrismaRepository implem
     });
   }
 
-  async findAll(filters?: StatutoryReportFilters): Promise<StatutoryReport[]> {
+  async findAll(filters?: StatutoryReportFilters): Promise<PrismaStatutoryReport[]> {
     const whereClause: Prisma.StatutoryReportWhereInput = {};
 
     if (filters?.orgId) {
@@ -60,7 +60,7 @@ export class PrismaStatutoryReportRepository extends BasePrismaRepository implem
     });
   }
 
-  async create(data: StatutoryReportCreationData): Promise<StatutoryReport> {
+  async create(data: StatutoryReportCreationData): Promise<PrismaStatutoryReport> {
     return getModelDelegate(this.prisma, 'statutoryReport').create({
       data: {
         ...data,
@@ -70,7 +70,7 @@ export class PrismaStatutoryReportRepository extends BasePrismaRepository implem
     });
   }
 
-  async update(id: string, data: StatutoryReportUpdateData): Promise<StatutoryReport> {
+  async update(id: string, data: StatutoryReportUpdateData): Promise<PrismaStatutoryReport> {
     const updateData = {
       ...data,
       metadata: data.metadata !== undefined ? toPrismaInputJson(data.metadata) : undefined,
@@ -81,13 +81,13 @@ export class PrismaStatutoryReportRepository extends BasePrismaRepository implem
     });
   }
 
-  async delete(id: string): Promise<StatutoryReport> {
+  async delete(id: string): Promise<PrismaStatutoryReport> {
     return getModelDelegate(this.prisma, 'statutoryReport').delete({
       where: { id },
     });
   }
 
-  async markAsSubmitted(id: string, submittedByOrgId: string, submittedByUserId: string): Promise<StatutoryReport> {
+  async markAsSubmitted(id: string, submittedByOrgId: string, submittedByUserId: string): Promise<PrismaStatutoryReport> {
     return getModelDelegate(this.prisma, 'statutoryReport').update({
       where: { id },
       data: {

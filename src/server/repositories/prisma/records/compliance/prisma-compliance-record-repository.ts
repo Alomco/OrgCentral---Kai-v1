@@ -1,23 +1,24 @@
-import type { ComplianceRecord, Prisma } from '@prisma/client';
 import type { IComplianceRecordRepository } from '@/server/repositories/contracts/records/compliance-record-repository-contract';
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { ComplianceRecordFilters, ComplianceRecordCreationData, ComplianceRecordUpdateData } from './prisma-compliance-record-repository.types';
+import { Prisma } from '@/server/types/prisma';
+import type { PrismaComplianceRecord } from '@/server/types/prisma';
 
 export class PrismaComplianceRecordRepository extends BasePrismaRepository implements IComplianceRecordRepository {
-  async findById(id: string): Promise<ComplianceRecord | null> {
+  async findById(id: string): Promise<PrismaComplianceRecord | null> {
     return getModelDelegate(this.prisma, 'complianceRecord').findUnique({
       where: { id },
     });
   }
 
-  async findByReferenceNumber(orgId: string, referenceNumber: string): Promise<ComplianceRecord | null> {
+  async findByReferenceNumber(orgId: string, referenceNumber: string): Promise<PrismaComplianceRecord | null> {
     return getModelDelegate(this.prisma, 'complianceRecord').findFirst({
       where: { orgId, referenceNumber },
     });
   }
 
-  async findAll(filters?: ComplianceRecordFilters): Promise<ComplianceRecord[]> {
+  async findAll(filters?: ComplianceRecordFilters): Promise<PrismaComplianceRecord[]> {
     const whereClause: Prisma.ComplianceRecordWhereInput = {};
 
     if (filters?.orgId) {
@@ -63,22 +64,28 @@ export class PrismaComplianceRecordRepository extends BasePrismaRepository imple
     });
   }
 
-  async create(data: ComplianceRecordCreationData): Promise<ComplianceRecord> {
+  async create(data: ComplianceRecordCreationData): Promise<PrismaComplianceRecord> {
     return getModelDelegate(this.prisma, 'complianceRecord').create({
       data: {
         ...data,
         status: data.status ?? 'open',
         priority: data.priority ?? 2,
         submittedAt: data.submittedAt ?? new Date(),
-        metadata: data.metadata ? toPrismaInputJson(data.metadata) as Prisma.InputJsonValue : undefined,
+        metadata:
+          data.metadata === undefined
+            ? undefined
+            : toPrismaInputJson(data.metadata) ?? Prisma.JsonNull,
       },
     });
   }
 
-  async update(id: string, data: ComplianceRecordUpdateData): Promise<ComplianceRecord> {
+  async update(id: string, data: ComplianceRecordUpdateData): Promise<PrismaComplianceRecord> {
     const updateData = {
       ...data,
-      metadata: data.metadata !== undefined ? (toPrismaInputJson(data.metadata) as Prisma.InputJsonValue) : undefined,
+      metadata:
+        data.metadata === undefined
+          ? undefined
+          : toPrismaInputJson(data.metadata) ?? Prisma.JsonNull,
     };
     return getModelDelegate(this.prisma, 'complianceRecord').update({
       where: { id },
@@ -86,13 +93,13 @@ export class PrismaComplianceRecordRepository extends BasePrismaRepository imple
     });
   }
 
-  async delete(id: string): Promise<ComplianceRecord> {
+  async delete(id: string): Promise<PrismaComplianceRecord> {
     return getModelDelegate(this.prisma, 'complianceRecord').delete({
       where: { id },
     });
   }
 
-  async updateStatus(id: string, status: string): Promise<ComplianceRecord> {
+  async updateStatus(id: string, status: string): Promise<PrismaComplianceRecord> {
     return getModelDelegate(this.prisma, 'complianceRecord').update({
       where: { id },
       data: {

@@ -1,4 +1,4 @@
-import { type Prisma } from '@prisma/client';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
 export interface AppPermission {
     id: string;
@@ -6,7 +6,7 @@ export interface AppPermission {
     description?: string;
     category: string;
     isGlobal: boolean;
-    metadata?: Prisma.JsonValue;
+    metadata?: PrismaJsonValue;
     createdAt: Date;
     updatedAt: Date;
 }

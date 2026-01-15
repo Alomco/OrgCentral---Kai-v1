@@ -3,8 +3,7 @@ import type {
     ComplianceItemUpdateInput,
 } from '@/server/repositories/contracts/hr/compliance/compliance-item-repository-contract';
 import type { ComplianceItemStatus, ComplianceLogItem } from '@/server/types/compliance-types';
-import type { JsonValue } from '@/server/repositories/prisma/helpers/prisma-utils';
-import { normalizeMetadata } from '@/server/repositories/mappers/metadata';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
 export interface ComplianceLogItemRecord {
     id: string;
@@ -18,8 +17,8 @@ export interface ComplianceLogItemRecord {
     reviewedBy?: string | null;
     reviewedAt?: Date | string | null;
     notes?: string | null;
-    attachments?: JsonValue | string[] | null;
-    metadata?: JsonValue | null;
+    attachments?: PrismaJsonValue | string[] | null;
+    metadata?: PrismaJsonValue | null;
     createdAt: Date | string;
     updatedAt: Date | string;
 }
@@ -52,8 +51,8 @@ export function mapComplianceLogRecordToDomain(record: ComplianceLogItemRecord):
                     ? record.reviewedAt
                     : new Date(record.reviewedAt),
         notes: record.notes ?? null,
-        attachments: Array.isArray(record.attachments) ? (record.attachments as string[]) : null,
-        metadata: normalizeMetadata(record.metadata),
+        attachments: isStringArray(record.attachments) ? record.attachments : null,
+        metadata: record.metadata ?? undefined,
         createdAt: record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt),
         updatedAt: record.updatedAt instanceof Date ? record.updatedAt : new Date(record.updatedAt),
     };
@@ -91,4 +90,8 @@ export function mapComplianceItemUpdateToRecord(
     if (updates.dueDate !== undefined) { payload.dueDate = updates.dueDate; }
     if (updates.metadata !== undefined) { payload.metadata = updates.metadata; }
     return payload;
+}
+
+function isStringArray(value: PrismaJsonValue | string[] | null | undefined): value is string[] {
+    return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }

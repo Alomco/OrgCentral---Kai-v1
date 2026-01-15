@@ -3,9 +3,9 @@
  * Converts between domain models and Prisma/client models
  */
 import type { Role } from '@/server/types/hr-types';
-import type { Role as PrismaRole } from '@prisma/client';
+import type { RoleRecord } from '@/server/types/hr-types';
 
-export function mapPrismaRoleToDomain(record: PrismaRole): Role {
+export function mapPrismaRoleToDomain(record: RoleRecord): Role {
     return {
         id: record.id,
         orgId: record.orgId,
@@ -21,7 +21,7 @@ export function mapPrismaRoleToDomain(record: PrismaRole): Role {
     };
 }
 
-export function mapDomainRoleToPrisma(input: Role): PrismaRole {
+export function mapDomainRoleToPrisma(input: Role): RoleRecord {
     return {
         id: input.id,
         orgId: input.orgId,

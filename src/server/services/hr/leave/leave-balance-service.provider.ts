@@ -1,20 +1,8 @@
-import { PrismaLeaveBalanceRepository, PrismaLeavePolicyRepository } from '@/server/repositories/prisma/hr/leave';
-import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people/prisma-employee-profile-repository';
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
+import { buildLeaveServiceDependencies } from '@/server/repositories/providers/hr/leave-service-dependencies';
 import type { SyncLeaveAccrualsDependencies } from '@/server/use-cases/hr/leave/acc/sync-leave-accruals';
 import { LeaveBalanceService } from './leave-balance-service';
 
-const leaveBalanceRepository = new PrismaLeaveBalanceRepository();
-const leavePolicyRepository = new PrismaLeavePolicyRepository();
-const profileRepository = new PrismaEmployeeProfileRepository();
-const organizationRepository = new PrismaOrganizationRepository();
-
-const defaultDependencies: SyncLeaveAccrualsDependencies = {
-    leaveBalanceRepository,
-    leavePolicyRepository,
-    profileRepository,
-    organizationRepository,
-};
+const defaultDependencies: SyncLeaveAccrualsDependencies = buildLeaveServiceDependencies();
 
 const sharedService = new LeaveBalanceService(defaultDependencies);
 

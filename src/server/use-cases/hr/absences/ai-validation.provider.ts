@@ -1,19 +1,24 @@
-import { GeminiAbsenceDocumentValidator } from '@/server/lib/ai/gemini-document-validator';
-import { HttpAttachmentDownloader } from '@/server/lib/storage/http-attachment-downloader';
-import {
-    PrismaAbsenceTypeConfigRepository,
-    PrismaUnplannedAbsenceRepository,
-} from '@/server/repositories/prisma/hr/absences';
+import { buildAbsenceServiceDependencies } from '@/server/repositories/providers/hr/absence-service-dependencies';
 import type { AbsenceAiValidationServiceDeps } from '@/server/use-cases/hr/absences/ai-validation.types';
 
 export function buildAbsenceAiValidationDependencies(
     overrides: Partial<AbsenceAiValidationServiceDeps> = {},
 ): AbsenceAiValidationServiceDeps {
+    const { absenceRepository, typeConfigRepository, attachmentDownloader, aiValidator } =
+        buildAbsenceServiceDependencies({
+            overrides: {
+                absenceRepository: overrides.absenceRepository,
+                typeConfigRepository: overrides.typeConfigRepository,
+                attachmentDownloader: overrides.attachmentDownloader,
+                aiValidator: overrides.aiValidator,
+            },
+        });
+
     return {
-        absenceRepository: overrides.absenceRepository ?? new PrismaUnplannedAbsenceRepository(),
-        typeConfigRepository: overrides.typeConfigRepository ?? new PrismaAbsenceTypeConfigRepository(),
-        attachmentDownloader: overrides.attachmentDownloader ?? new HttpAttachmentDownloader(),
-        aiValidator: overrides.aiValidator ?? new GeminiAbsenceDocumentValidator(),
+        absenceRepository,
+        typeConfigRepository,
+        attachmentDownloader,
+        aiValidator,
         auditLogger: overrides.auditLogger,
         now: overrides.now,
     };

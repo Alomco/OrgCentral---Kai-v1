@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client';
-
 import type {
   IBillingInvoiceRepository,
   BillingInvoiceListFilters,
@@ -11,6 +9,7 @@ import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { mapBillingInvoiceToData } from '@/server/repositories/mappers/org/billing/billing-invoice-mapper';
 import { CACHE_SCOPE_BILLING_INVOICES } from '@/server/repositories/cache-scopes';
+import { Prisma } from '@/server/types/prisma';
 
 export class PrismaBillingInvoiceRepository
   extends OrgScopedPrismaRepository
@@ -55,7 +54,7 @@ export class PrismaBillingInvoiceRepository
     if (!record) {
       return null;
     }
-    this.assertTenantRecord(record, context.orgId);
+    this.assertTenantRecord(record, context);
     return mapBillingInvoiceToData(record);
   }
 
@@ -70,7 +69,7 @@ export class PrismaBillingInvoiceRepository
     if (!record) {
       return null;
     }
-    this.assertTenantRecord(record, context.orgId);
+    this.assertTenantRecord(record, context);
     return mapBillingInvoiceToData(record);
   }
 

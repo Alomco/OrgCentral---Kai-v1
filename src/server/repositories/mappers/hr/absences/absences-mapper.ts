@@ -1,13 +1,4 @@
 import type {
-  AbsenceAttachment as PrismaAbsenceAttachment,
-  AbsenceDeletionAudit as PrismaAbsenceDeletionAudit,
-  AbsenceReturnRecord as PrismaAbsenceReturnRecord,
-  AbsenceSettings as PrismaAbsenceSettings,
-  AbsenceTypeConfig as PrismaAbsenceTypeConfig,
-  UnplannedAbsence as PrismaUnplannedAbsence,
-} from '@prisma/client';
-import type { Prisma } from '@prisma/client';
-import type {
   AbsenceAttachment,
   AbsenceDeletionAuditEntry,
   AbsenceSettings,
@@ -15,8 +6,23 @@ import type {
   ReturnToWorkRecord,
   UnplannedAbsence,
 } from '@/server/types/hr-ops-types';
+import { toNumber } from '@/server/domain/absences/conversions';
+import type {
+  AbsenceAttachmentRecord,
+  AbsenceDeletionAuditRecord,
+  AbsenceReturnRecord,
+  AbsenceSettingsCreateArguments,
+  AbsenceSettingsRecord,
+  AbsenceTypeConfigCreatePayload,
+  AbsenceTypeConfigRecord,
+  AbsenceTypeConfigUpdatePayload,
+  UnplannedAbsenceCreatePayload,
+  UnplannedAbsenceRecord,
+  UnplannedAbsenceUpdatePayload,
+} from './absences-records';
+import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 
-export function mapPrismaAbsenceTypeConfigToDomain(record: PrismaAbsenceTypeConfig): AbsenceTypeConfig {
+export function mapPrismaAbsenceTypeConfigToDomain(record: AbsenceTypeConfigRecord): AbsenceTypeConfig {
   return {
     id: record.id,
     orgId: record.orgId,
@@ -32,32 +38,32 @@ export function mapPrismaAbsenceTypeConfigToDomain(record: PrismaAbsenceTypeConf
 
 export function mapDomainAbsenceTypeConfigToPrismaCreate(
   input: Omit<AbsenceTypeConfig, 'id' | 'createdAt' | 'updatedAt'>,
-): Prisma.AbsenceTypeConfigUncheckedCreateInput {
+): AbsenceTypeConfigCreatePayload {
   return {
     orgId: input.orgId,
     key: input.key,
     label: input.label,
     tracksBalance: input.tracksBalance,
     isActive: input.isActive,
-    metadata: input.metadata ?? undefined,
+    metadata: toPrismaInputJson(input.metadata),
   };
 }
 
 export function mapDomainAbsenceTypeConfigToPrismaUpdate(
   updates: Partial<Pick<AbsenceTypeConfig, 'label' | 'tracksBalance' | 'isActive' | 'metadata'>>,
-): Prisma.AbsenceTypeConfigUncheckedUpdateInput {
+): AbsenceTypeConfigUpdatePayload {
   return {
     label: updates.label,
     tracksBalance: updates.tracksBalance,
     isActive: updates.isActive,
-    metadata: updates.metadata ?? undefined,
+    metadata: toPrismaInputJson(updates.metadata),
   };
 }
 
-export function mapPrismaAbsenceSettingsToDomain(record: PrismaAbsenceSettings): AbsenceSettings {
+export function mapPrismaAbsenceSettingsToDomain(record: AbsenceSettingsRecord): AbsenceSettings {
   return {
     orgId: record.orgId,
-    hoursInWorkDay: Number(record.hoursInWorkDay),
+    hoursInWorkDay: toNumber(record.hoursInWorkDay),
     roundingRule: record.roundingRule ?? undefined,
     metadata: record.metadata ?? undefined,
     createdAt: record.createdAt,
@@ -68,19 +74,19 @@ export function mapPrismaAbsenceSettingsToDomain(record: PrismaAbsenceSettings):
 export function mapDomainAbsenceSettingsToPrismaUpsert(
   orgId: string,
   input: Omit<AbsenceSettings, 'orgId' | 'createdAt' | 'updatedAt'>,
-): Prisma.AbsenceSettingsUpsertArgs['create'] {
+): AbsenceSettingsCreateArguments {
   return {
     orgId,
-    hoursInWorkDay: input.hoursInWorkDay,
+    hoursInWorkDay: toNumber(input.hoursInWorkDay),
     roundingRule: input.roundingRule ?? null,
-    metadata: input.metadata ?? undefined,
+    metadata: toPrismaInputJson(input.metadata),
   };
 }
 
-type PrismaUnplannedAbsenceWithRelations = PrismaUnplannedAbsence & {
-  attachments?: PrismaAbsenceAttachment[];
-  returnRecord?: PrismaAbsenceReturnRecord | null;
-  deletionAudit?: PrismaAbsenceDeletionAudit | null;
+type PrismaUnplannedAbsenceWithRelations = UnplannedAbsenceRecord & {
+  attachments?: AbsenceAttachmentRecord[] | null;
+  returnRecord?: AbsenceReturnRecord | null;
+  deletionAudit?: AbsenceDeletionAuditRecord | null;
 };
 
 export function mapPrismaUnplannedAbsenceToDomain(
@@ -93,7 +99,7 @@ export function mapPrismaUnplannedAbsenceToDomain(
     typeId: record.typeId,
     startDate: record.startDate,
     endDate: record.endDate,
-    hours: Number(record.hours),
+    hours: toNumber(record.hours),
     reason: record.reason ?? undefined,
     status: record.status,
     healthStatus: record.healthStatus ?? undefined,
@@ -119,14 +125,14 @@ export function mapPrismaUnplannedAbsenceToDomain(
 
 export function mapDomainUnplannedAbsenceToPrismaCreate(
   input: Omit<UnplannedAbsence, 'id' | 'createdAt' | 'updatedAt'>,
-): Prisma.UnplannedAbsenceUncheckedCreateInput {
+): UnplannedAbsenceCreatePayload {
   return {
     orgId: input.orgId,
     userId: input.userId,
     typeId: input.typeId,
     startDate: input.startDate,
     endDate: input.endDate,
-    hours: input.hours,
+    hours: toNumber(input.hours),
     reason: input.reason ?? null,
     status: input.status,
     healthStatus: input.healthStatus ?? null,
@@ -134,7 +140,7 @@ export function mapDomainUnplannedAbsenceToPrismaCreate(
     approverUserId: input.approverUserId ?? null,
     dataClassification: input.dataClassification,
     residencyTag: input.residencyTag,
-    metadata: input.metadata ?? undefined,
+    metadata: toPrismaInputJson(input.metadata),
     deletionReason: input.deletionReason ?? undefined,
     deletedAt: input.deletedAt ?? undefined,
     deletedByUserId: input.deletedByUserId ?? undefined,
@@ -161,7 +167,7 @@ export function mapDomainUnplannedAbsenceToPrismaUpdate(
       | 'deletedByUserId'
     >
   >,
-): Prisma.UnplannedAbsenceUncheckedUpdateInput {
+): UnplannedAbsenceUpdatePayload {
   return {
     status: updates.status,
     reason: updates.reason ?? undefined,
@@ -170,17 +176,17 @@ export function mapDomainUnplannedAbsenceToPrismaUpdate(
     approverUserId: updates.approverUserId ?? undefined,
     dataClassification: updates.dataClassification,
     residencyTag: updates.residencyTag,
-    metadata: updates.metadata ?? undefined,
+    metadata: toPrismaInputJson(updates.metadata),
     startDate: updates.startDate,
     endDate: updates.endDate,
-    hours: updates.hours,
+    hours: updates.hours === undefined ? undefined : toNumber(updates.hours),
     deletionReason: updates.deletionReason ?? undefined,
     deletedAt: updates.deletedAt ?? undefined,
     deletedByUserId: updates.deletedByUserId ?? undefined,
   };
 }
 
-function mapPrismaAbsenceAttachmentToDomain(record: PrismaAbsenceAttachment): AbsenceAttachment {
+function mapPrismaAbsenceAttachmentToDomain(record: AbsenceAttachmentRecord): AbsenceAttachment {
   return {
     id: record.id,
     orgId: record.orgId,
@@ -198,7 +204,7 @@ function mapPrismaAbsenceAttachmentToDomain(record: PrismaAbsenceAttachment): Ab
   };
 }
 
-function mapPrismaReturnRecordToDomain(record: PrismaAbsenceReturnRecord): ReturnToWorkRecord {
+function mapPrismaReturnRecordToDomain(record: AbsenceReturnRecord): ReturnToWorkRecord {
   return {
     orgId: record.orgId,
     absenceId: record.absenceId,
@@ -213,7 +219,7 @@ function mapPrismaReturnRecordToDomain(record: PrismaAbsenceReturnRecord): Retur
 }
 
 function mapPrismaDeletionAuditToDomain(
-  record: PrismaAbsenceDeletionAudit,
+  record: AbsenceDeletionAuditRecord,
 ): AbsenceDeletionAuditEntry {
   return {
     orgId: record.orgId,

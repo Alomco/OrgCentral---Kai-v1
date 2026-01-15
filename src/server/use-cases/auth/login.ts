@@ -1,7 +1,7 @@
 import type { LoginActionInput, LoginActionResult } from '@/features/auth/login/login-contracts';
 import { auth } from '@/server/lib/auth';
 import { LoginService, type LoginServiceWithCookiesResult } from '@/server/services/auth/login-service';
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
+import { buildOrganizationServiceDependencies } from '@/server/repositories/providers/org/organization-service-dependencies';
 
 export interface LoginUseCaseInput extends LoginActionInput {
     readonly headers: Headers;
@@ -14,7 +14,8 @@ function getLoginService(): LoginService {
         loginServiceInstance ??=
         new LoginService({
             authClient: auth,
-            organizationRepository: new PrismaOrganizationRepository(),
+            organizationRepository:
+                buildOrganizationServiceDependencies().organizationRepository,
         })
     );
 }

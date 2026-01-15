@@ -1,16 +1,3 @@
-/**
- * ✨ Floating Particles Animation
- * 
- * Decorative particle effect with theme colors.
- * CSS-first with reduced-motion support.
- * 
- * @module components/theme/decorative/particles
- */
-
-/* ============================================================================
- * Float Animation
- * ============================================================================ */
-
 @keyframes floatParticle {
     0%, 100% {
         transform: translateY(0) translateX(0) rotate(0deg);
@@ -41,10 +28,6 @@
     }
 }
 
-/* ============================================================================
- * Particle Styles
- * ============================================================================ */
-
 .particleContainer {
     position: absolute;
     inset: 0;
@@ -71,7 +54,6 @@
     background: hsl(var(--secondary) / 0.8);
 }
 
-/* Size variants */
 .particleSm {
     width: 4px;
     height: 4px;
@@ -87,19 +69,13 @@
     height: 8px;
 }
 
-/* Delay variations */
 .delay1 { animation-delay: -1s; }
 .delay2 { animation-delay: -2s; }
 .delay3 { animation-delay: -3s; }
 .delay4 { animation-delay: -4s; }
 
-/* Duration variations */
 .slow { animation-duration: 7s; }
 .fast { animation-duration: 3s; }
-
-/* ============================================================================
- * Reduced Motion
- * ============================================================================ */
 
 @media (prefers-reduced-motion: reduce) {
     .particle {

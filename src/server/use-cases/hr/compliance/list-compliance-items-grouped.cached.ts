@@ -1,8 +1,7 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaComplianceItemRepository } from '@/server/repositories/prisma/hr/compliance';
-import { PrismaComplianceCategoryRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-category-repository';
+import { buildComplianceRepositoryDependencies } from '@/server/repositories/providers/hr/compliance-repository-dependencies';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ComplianceItemsGroup } from './list-compliance-items-grouped';
@@ -19,10 +18,9 @@ export interface ListComplianceItemsGroupedForUiResult {
 }
 
 function resolveDependencies() {
-    return {
-        complianceItemRepository: new PrismaComplianceItemRepository(),
-        complianceCategoryRepository: new PrismaComplianceCategoryRepository(),
-    };
+    const { complianceItemRepository, complianceCategoryRepository } =
+        buildComplianceRepositoryDependencies();
+    return { complianceItemRepository, complianceCategoryRepository };
 }
 
 export async function listComplianceItemsGroupedForUi(

@@ -1,4 +1,4 @@
-import type { MembershipStatus } from '@prisma/client';
+import type { MembershipStatus } from '@/server/types/prisma';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { IMembershipRepository } from '@/server/repositories/contracts/org/membership/membership-repository.types';
 

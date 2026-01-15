@@ -3,8 +3,7 @@
  * Converts between domain models and Prisma/client models
  */
 import type { Membership } from '@/server/types/membership';
-import type { Membership as PrismaMembership } from '@prisma/client';
-import type { Organization } from '@prisma/client';
+import type { MembershipRecord } from '@/server/types/membership';
 
 export interface MembershipMetadata {
     dataResidency?: string;
@@ -14,7 +13,7 @@ export interface MembershipMetadata {
 }
 
 export function mapPrismaMembershipToDomain(
-    record: PrismaMembership & { org?: Organization | null; role?: { name: string } | null },
+    record: MembershipRecord,
 ): Membership {
     const roleName = record.role?.name;
 

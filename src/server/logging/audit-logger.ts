@@ -2,6 +2,7 @@ import { context, trace } from '@opentelemetry/api';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import type { IAuditLogRepository } from '@/server/repositories/contracts/records/audit-log-repository-contract';
 import { PrismaAuditLogRepository } from '@/server/repositories/prisma/records/audit/prisma-audit-log-repository';
+import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
 export interface AuditEventPayload {
     orgId: string;
@@ -29,8 +30,9 @@ export function setAuditLogRepository(repository: IAuditLogRepository): void {
 export async function recordAuditEvent(event: AuditEventPayload): Promise<void> {
     const activeSpan = trace.getSpan(context.active());
     const spanId = event.spanId ?? activeSpan?.spanContext().spanId;
+    const authorization = buildAuditAuthorizationContext(event);
 
-    await auditLogRepository.create({
+    await auditLogRepository.create(authorization, {
         orgId: event.orgId,
         userId: event.userId ?? null,
         eventType: event.eventType,
@@ -49,4 +51,45 @@ export async function recordAuditEvent(event: AuditEventPayload): Promise<void> 
             immutable: event.immutable ?? true,
         },
     });
+}
+
+function buildAuditAuthorizationContext(event: AuditEventPayload): RepositoryAuthorizationContext {
+    const ipValue = event.payload?.ipAddress;
+    const ipAddress = typeof ipValue === 'string' ? ipValue : undefined;
+
+    const dataClassification = event.classification ?? 'OFFICIAL';
+    const dataResidency = event.residencyZone ?? 'UK_ONLY';
+    const auditSource = event.auditSource ?? 'audit_logger';
+
+    return {
+        orgId: event.orgId,
+        dataResidency,
+        dataClassification,
+        auditSource,
+        auditBatchId: event.auditBatchId,
+        tenantScope: {
+            orgId: event.orgId,
+            dataResidency,
+            dataClassification,
+            auditSource,
+            auditBatchId: event.auditBatchId,
+        },
+        userId: event.userId ?? 'system',
+        roleKey: 'custom',
+        sessionId: 'audit-log-session',
+        roles: [],
+        permissions: {},
+        mfaVerified: true,
+        ipAddress: ipAddress ?? '127.0.0.1',
+        userAgent: 'audit-logger',
+        authenticatedAt: new Date(),
+        sessionExpiresAt: new Date(Date.now() + 30 * 60 * 1000),
+        lastActivityAt: new Date(),
+        requiresMfa: false,
+        piiAccessRequired: false,
+        dataBreachRisk: false,
+        sessionToken: 'audit-log-token',
+        authorizedAt: new Date(),
+        authorizationReason: 'system_audit_event',
+    };
 }

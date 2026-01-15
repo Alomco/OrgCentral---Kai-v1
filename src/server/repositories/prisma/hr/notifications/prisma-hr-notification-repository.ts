@@ -2,13 +2,14 @@ import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-r
 import type { IHRNotificationRepository } from '@/server/repositories/contracts/hr/notifications/hr-notification-repository-contract';
 import { mapDomainHRNotificationToPrismaCreate, mapPrismaHRNotificationToDomain } from '@/server/repositories/mappers/hr/notifications/hr-notification-mapper';
 import type {
-  HRNotificationCreateDTO,
-  HRNotificationDTO,
-  HRNotificationListFilters,
+    HRNotificationCreateDTO,
+    HRNotificationDTO,
+    HRNotificationListFilters,
 } from '@/server/types/hr/notifications';
 import type { Prisma, HRNotification, DataClassificationLevel, DataResidencyZone, $Enums } from '@prisma/client';
 import { AuthorizationError } from '@/server/errors';
 import { invalidateHrNotifications, registerHrNotificationTag } from '@/server/lib/cache-tags/hr-notifications';
+import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 
 const toPrismaNotificationTypes = (
     types?: HRNotificationListFilters['types'],
@@ -29,10 +30,13 @@ const toPrismaNotificationPriorities = (
 };
 
 export class PrismaHRNotificationRepository extends BasePrismaRepository implements IHRNotificationRepository {
-    async createNotification(orgId: string, input: HRNotificationCreateDTO): Promise<HRNotificationDTO> {
-        if (input.orgId !== orgId) {
-            throw new AuthorizationError('Cross-tenant notification creation mismatch', { orgId });
+    async createNotification(context: RepositoryAuthorizationContext | string, input: HRNotificationCreateDTO): Promise<HRNotificationDTO> {
+        const authorization = this.normalizeAuthorizationContext(context, 'hr_notification');
+        if (input.orgId !== authorization.orgId) {
+            throw new AuthorizationError('Cross-tenant notification creation mismatch', { orgId: authorization.orgId });
         }
+        this.validateTenantWriteAccess(authorization, authorization.orgId, 'write');
+        this.validatePiiAccess(authorization, 'write', 'hr_notification');
         const isRead = input.isRead ?? false;
         const readAt = input.readAt ?? (isRead ? new Date() : null);
         const data = mapDomainHRNotificationToPrismaCreate({
@@ -41,42 +45,50 @@ export class PrismaHRNotificationRepository extends BasePrismaRepository impleme
             readAt,
         });
         const rec = await this.prisma.hRNotification.create({ data });
-        this.assertTenantRecord(rec, orgId);
+        this.assertTenantRecord(rec, authorization, 'hr_notification');
         const domain = mapPrismaHRNotificationToDomain(rec);
-        await invalidateHrNotifications(this.buildCacheContext(rec));
+        await this.invalidateCacheScoped(authorization, rec);
         return domain;
     }
 
-    async markRead(orgId: string, notificationId: string, readAt?: Date): Promise<HRNotificationDTO> {
-        const rec = await this.prisma.hRNotification.update({
-            where: { id: notificationId },
+    async markRead(context: RepositoryAuthorizationContext | string, notificationId: string, readAt?: Date): Promise<HRNotificationDTO> {
+        const authorization = this.normalizeAuthorizationContext(context, 'hr_notification');
+        await this.prisma.hRNotification.updateMany({
+            where: { id: notificationId, orgId: authorization.orgId },
             data: { isRead: true, readAt: readAt ?? new Date() },
         });
-        this.assertTenantRecord(rec, orgId);
-        const domain = mapPrismaHRNotificationToDomain(rec);
-        await invalidateHrNotifications(this.buildCacheContext(rec));
+        const rec = await this.prisma.hRNotification.findFirst({
+            where: { id: notificationId, orgId: authorization.orgId },
+        });
+        const guarded = this.assertTenantRecord(rec, authorization, 'hr_notification');
+        const domain = mapPrismaHRNotificationToDomain(guarded);
+        await this.invalidateCacheScoped(authorization, guarded);
         return domain;
     }
 
-    async markAllRead(orgId: string, userId: string, before?: Date): Promise<number> {
+    async markAllRead(context: RepositoryAuthorizationContext | string, userId: string, before?: Date): Promise<number> {
+        const authorization = this.normalizeAuthorizationContext(context, 'hr_notification');
         const res = await this.prisma.hRNotification.updateMany({
-            where: { orgId, userId, isRead: false, createdAt: before ? { lte: before } : undefined },
+            where: { orgId: authorization.orgId, userId, isRead: false, createdAt: before ? { lte: before } : undefined },
             data: { isRead: true, readAt: new Date() },
         });
-        const context = await this.resolveCacheContext(orgId, userId);
-        await invalidateHrNotifications(context);
+        const cacheContext = await this.resolveCacheContext(authorization, userId);
+        if (cacheContext) {
+            await invalidateHrNotifications(cacheContext);
+        }
         return res.count;
     }
 
     async listNotifications(
-        orgId: string,
+        context: RepositoryAuthorizationContext | string,
         userId: string,
         filters?: HRNotificationListFilters,
     ): Promise<HRNotificationDTO[]> {
+        const authorization = this.normalizeAuthorizationContext(context, 'hr_notification');
         const typeFilter = toPrismaNotificationTypes(filters?.types);
         const priorityFilter = toPrismaNotificationPriorities(filters?.priorities);
         const where: Prisma.HRNotificationWhereInput = {
-            orgId,
+            orgId: authorization.orgId,
             userId,
             isRead: filters?.unreadOnly ? false : undefined,
             type: typeFilter ? { in: typeFilter } : undefined,
@@ -100,26 +112,30 @@ export class PrismaHRNotificationRepository extends BasePrismaRepository impleme
             take: filters?.limit,
         });
         if (recs.length) {
-            registerHrNotificationTag(this.buildCacheContext(recs[0]));
+            this.registerCacheScoped(authorization, recs[0]);
         }
         return recs.map(mapPrismaHRNotificationToDomain);
     }
 
-    async getUnreadCount(orgId: string, userId: string): Promise<number> {
-        return this.prisma.hRNotification.count({ where: { orgId, userId, isRead: false } });
+    async getUnreadCount(context: RepositoryAuthorizationContext | string, userId: string): Promise<number> {
+        const authorization = this.normalizeAuthorizationContext(context, 'hr_notification');
+        return this.prisma.hRNotification.count({ where: { orgId: authorization.orgId, userId, isRead: false } });
     }
 
-    async deleteNotification(orgId: string, notificationId: string): Promise<void> {
-        const rec = await this.prisma.hRNotification.findUnique({
-            where: { id: notificationId },
+    async deleteNotification(context: RepositoryAuthorizationContext | string, notificationId: string): Promise<void> {
+        const authorization = this.normalizeAuthorizationContext(context, 'hr_notification');
+        const rec = await this.prisma.hRNotification.findFirst({
+            where: { id: notificationId, orgId: authorization.orgId },
             select: { orgId: true },
         });
-        if (rec?.orgId !== orgId) {
+        if (!rec) {
             return;
         }
-        await this.prisma.hRNotification.delete({ where: { id: notificationId } });
-        const context = await this.resolveCacheContext(orgId);
-        await invalidateHrNotifications(context);
+        await this.prisma.hRNotification.deleteMany({ where: { id: notificationId, orgId: authorization.orgId } });
+        const cacheContext = await this.resolveCacheContext(authorization);
+        if (cacheContext) {
+            await invalidateHrNotifications(cacheContext);
+        }
     }
 
     private buildCacheContext(
@@ -133,20 +149,44 @@ export class PrismaHRNotificationRepository extends BasePrismaRepository impleme
         };
     }
 
-    private async resolveCacheContext(orgId: string, userId?: string): Promise<{
+    private async resolveCacheContext(
+        context: RepositoryAuthorizationContext,
+        userId?: string,
+    ): Promise<{
         orgId: string;
         classification: DataClassificationLevel;
         residency: DataResidencyZone;
-    }> {
+    } | null> {
+        if (context.dataClassification !== 'OFFICIAL') {
+            return null;
+        }
+
         const sample = await this.prisma.hRNotification.findFirst({
-            where: { orgId, userId },
+            where: { orgId: context.orgId, userId },
             select: { dataClassification: true, residencyTag: true },
         });
 
         return {
-            orgId,
-            classification: sample?.dataClassification ?? 'OFFICIAL',
-            residency: sample?.residencyTag ?? 'UK_ONLY',
+            orgId: context.orgId,
+            classification: sample?.dataClassification ?? context.dataClassification,
+            residency: sample?.residencyTag ?? context.dataResidency,
         };
+    }
+
+    private registerCacheScoped(context: RepositoryAuthorizationContext, record: HRNotification): void {
+        if (context.dataClassification !== 'OFFICIAL') {
+            return;
+        }
+        registerHrNotificationTag(this.buildCacheContext(record));
+    }
+
+    private async invalidateCacheScoped(
+        context: RepositoryAuthorizationContext,
+        record: Pick<HRNotification, 'orgId' | 'dataClassification' | 'residencyTag'>,
+    ): Promise<void> {
+        if (context.dataClassification !== 'OFFICIAL') {
+            return;
+        }
+        await invalidateHrNotifications(this.buildCacheContext(record));
     }
 }

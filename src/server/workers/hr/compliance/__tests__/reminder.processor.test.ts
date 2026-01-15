@@ -4,7 +4,7 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { IComplianceItemRepository } from '@/server/repositories/contracts/hr/compliance/compliance-item-repository-contract';
 import type { IComplianceTemplateRepository } from '@/server/repositories/contracts/hr/compliance/compliance-template-repository-contract';
 import type { HrNotificationServiceContract } from '@/server/services/hr/notifications/hr-notification-service.provider';
-import type { NotificationDispatchContract } from '@/server/services/notifications/notification-service.provider';
+import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 import { ComplianceReminderProcessor } from '../reminder.processor';
 import { createComplianceItem } from './__fixtures__/compliance-factory';
 

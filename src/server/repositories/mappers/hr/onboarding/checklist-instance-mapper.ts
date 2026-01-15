@@ -7,7 +7,9 @@ import type {
     ChecklistInstanceStatus,
     ChecklistItemProgress,
 } from '@/server/types/onboarding-types';
-import type { JsonValue } from '@/server/repositories/prisma/helpers/prisma-utils';
+import type { PrismaJsonValue } from '@/server/types/prisma';
+
+type JsonRecord = Record<string, PrismaJsonValue>;
 
 export interface ChecklistInstanceRecord {
     id: string;
@@ -16,39 +18,53 @@ export interface ChecklistInstanceRecord {
     templateId: string;
     templateName?: string | null;
     status: ChecklistInstanceStatus;
-    items: ChecklistItemProgress[] | JsonValue | null | undefined;
+    items: PrismaJsonValue | null | undefined;
     startedAt: Date | string;
     completedAt?: Date | string | null;
-    metadata?: JsonValue | null;
+    metadata?: PrismaJsonValue | null;
 }
 
 
-function serializeChecklistItem(item: ChecklistItemProgress): Record<string, unknown> {
+function serializeChecklistItem(item: ChecklistItemProgress): JsonRecord {
+    const completedAt =
+        item.completedAt instanceof Date ? item.completedAt.toISOString() : null;
     return {
         ...item,
-        completedAt: item.completedAt instanceof Date ? item.completedAt.toISOString() : item.completedAt,
+        completedAt,
     };
 }
 
-function deserializeChecklistItem(item: unknown): ChecklistItemProgress {
-    // Basic casting and date restoration
-    const p = item as ChecklistItemProgress;
+function deserializeChecklistItem(item: PrismaJsonValue): ChecklistItemProgress {
+    if (!isJsonRecord(item)) {
+        throw new Error('Invalid checklist item payload');
+    }
+    const task = item.task;
+    const completed = item.completed;
+    if (typeof task !== 'string' || typeof completed !== 'boolean') {
+        throw new Error('Invalid checklist item payload');
+    }
+    const completedAt =
+        typeof item.completedAt === 'string'
+            ? new Date(item.completedAt)
+            : item.completedAt === null
+                ? null
+                : undefined;
+    const notes =
+        typeof item.notes === 'string' ? item.notes : item.notes === null ? null : undefined;
     return {
-        ...p,
-        completedAt: typeof p.completedAt === 'string' ? new Date(p.completedAt) : p.completedAt,
+        task,
+        completed,
+        completedAt,
+        notes,
     };
 }
 
 export function mapChecklistInstanceRecordToDomain(record: ChecklistInstanceRecord): ChecklistInstance {
     const rawItems = Array.isArray(record.items) ? record.items : [];
-     
 
     const items = rawItems.map((item) => deserializeChecklistItem(item));
 
-    const metadata =
-        record.metadata && typeof record.metadata === 'object' && !Array.isArray(record.metadata)
-            ? (record.metadata as Record<string, unknown>)
-            : undefined;
+    const metadata = isJsonRecord(record.metadata) ? record.metadata : undefined;
     return {
         id: record.id,
         orgId: record.orgId,
@@ -68,6 +84,10 @@ export function mapChecklistInstanceRecordToDomain(record: ChecklistInstanceReco
     };
 }
 
+function isJsonRecord(value: PrismaJsonValue | null | undefined): value is JsonRecord {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
 export function mapChecklistInstanceInputToRecord(
     input: ChecklistInstanceCreateInput | ChecklistInstanceItemsUpdate,
 ): Partial<ChecklistInstanceRecord> {
@@ -78,10 +98,10 @@ export function mapChecklistInstanceInputToRecord(
     if ('templateName' in input) { payload.templateName = input.templateName; }
 
     if (input.items) {
-        payload.items = input.items.map(serializeChecklistItem) as unknown as JsonValue;
+        payload.items = input.items.map(serializeChecklistItem);
     }
 
-    if (input.metadata !== undefined) { payload.metadata = input.metadata as unknown as JsonValue; }
+    if (input.metadata !== undefined) { payload.metadata = input.metadata as PrismaJsonValue; }
     return payload;
 }
 

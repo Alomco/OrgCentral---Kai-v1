@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { Prisma, type PrismaClient } from '@prisma/client';
 import type {
     EnterpriseOnboardingInput,
     IEnterpriseAdminRepository,
@@ -19,8 +18,9 @@ import { RepositoryAuthorizationError } from '@/server/repositories/security';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import { CACHE_SCOPE_ENTERPRISE_MANAGED_ORGS } from '@/server/repositories/cache-scopes';
 import { moduleAccessSchema } from '@/server/validators/org/enterprise/enterprise-validators';
+import { Prisma, type PrismaClientInstance, type PrismaInputJsonValue } from '@/server/types/prisma';
 
-type ManagedOrgDelegate = PrismaClient['managedOrganization'];
+type ManagedOrgDelegate = PrismaClientInstance['managedOrganization'];
 type ManagedOrgCreateData = Prisma.ManagedOrganizationUncheckedCreateInput;
 type ManagedOrgUpdateData = Prisma.ManagedOrganizationUncheckedUpdateInput;
 
@@ -44,8 +44,10 @@ export class PrismaEnterpriseAdminRepository
             adminUserId: input.adminUserId,
             orgId: newOrgId,
             id: newOrgId,
-            moduleAccess: toPrismaInputJson(validatedModuleAccess as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
-            metadata: toPrismaInputJson(null),
+            moduleAccess: toJsonNullInput(
+                validatedModuleAccess as unknown as PrismaInputJsonValue,
+            ),
+            metadata: toJsonNullInput(null),
         });
         const record = await this.delegate.create({
             data,
@@ -89,7 +91,9 @@ export class PrismaEnterpriseAdminRepository
         const data: ManagedOrgUpdateData = stampUpdate({
             ...mapModuleAccessUpdateToRecord(input),
             adminUserId: input.adminUserId,
-            moduleAccess: toPrismaInputJson(validatedModuleAccess as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+            moduleAccess: toJsonNullInput(
+                validatedModuleAccess as unknown as PrismaInputJsonValue,
+            ),
         });
         const record = await this.delegate.update({
             where: { id: input.orgId },
@@ -103,4 +107,14 @@ export class PrismaEnterpriseAdminRepository
         );
         return mapManagedOrganizationRecordToDomain(record);
     }
+}
+
+function toJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): PrismaInputJsonValue | typeof Prisma.JsonNull {
+    const resolved = toPrismaInputJson(value);
+    if (resolved === undefined || resolved === Prisma.DbNull) {
+        return Prisma.JsonNull;
+    }
+    return resolved as PrismaInputJsonValue;
 }

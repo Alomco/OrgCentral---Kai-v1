@@ -111,7 +111,7 @@ export function BillingSettingsForm({
                 <p className="text-sm font-semibold text-[hsl(var(--foreground))]">Billing address</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <label className="flex flex-col gap-2">
-                        <span className="text-xs uppercase tracking-wide text-[hsl(var(--muted-foreground))]">Line 1</span>
+                        <span className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--foreground))]">Line 1</span>
                         <input
                             type="text"
                             name="billing-address-line1"
@@ -120,7 +120,7 @@ export function BillingSettingsForm({
                         />
                     </label>
                     <label className="flex flex-col gap-2">
-                        <span className="text-xs uppercase tracking-wide text-[hsl(var(--muted-foreground))]">Line 2</span>
+                        <span className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--foreground))]">Line 2</span>
                         <input
                             type="text"
                             name="billing-address-line2"
@@ -129,7 +129,7 @@ export function BillingSettingsForm({
                         />
                     </label>
                     <label className="flex flex-col gap-2">
-                        <span className="text-xs uppercase tracking-wide text-[hsl(var(--muted-foreground))]">City</span>
+                        <span className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--foreground))]">City</span>
                         <input
                             type="text"
                             name="billing-address-city"
@@ -138,7 +138,7 @@ export function BillingSettingsForm({
                         />
                     </label>
                     <label className="flex flex-col gap-2">
-                        <span className="text-xs uppercase tracking-wide text-[hsl(var(--muted-foreground))]">Postcode</span>
+                        <span className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--foreground))]">Postcode</span>
                         <input
                             type="text"
                             name="billing-address-postcode"
@@ -147,7 +147,7 @@ export function BillingSettingsForm({
                         />
                     </label>
                     <label className="flex flex-col gap-2 sm:col-span-2">
-                        <span className="text-xs uppercase tracking-wide text-[hsl(var(--muted-foreground))]">Country</span>
+                        <span className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--foreground))]">Country</span>
                         <input
                             type="text"
                             name="billing-address-country"

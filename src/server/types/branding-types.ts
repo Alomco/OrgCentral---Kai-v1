@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
 export interface OrgBranding {
     logoUrl?: string | null;
@@ -8,8 +8,15 @@ export interface OrgBranding {
     companyName?: string | null;
     faviconUrl?: string | null;
     customCss?: string | null;
-    metadata?: Prisma.JsonValue;
+    metadata?: PrismaJsonValue;
     updatedAt?: Date | null;
+}
+
+export interface OrgBrandingRecord {
+    orgId: string;
+    branding: OrgBranding | null;
+    updatedAt?: Date | string | null;
+    metadata?: PrismaJsonValue | null;
 }
 
 export interface PlatformBranding {
@@ -19,6 +26,6 @@ export interface PlatformBranding {
     companyName?: string | null;
     customCss?: string | null;
     faviconUrl?: string | null;
-    metadata?: Prisma.JsonValue;
+    metadata?: PrismaJsonValue;
     updatedAt?: Date | null;
 }

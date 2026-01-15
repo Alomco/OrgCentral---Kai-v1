@@ -6,8 +6,7 @@ import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_HR_POLICIES, CACHE_SCOPE_HR_POLICY_ACKNOWLEDGMENTS } from '@/server/repositories/cache-scopes';
 import type { IHRPolicyRepository } from '@/server/repositories/contracts/hr/policies/hr-policy-repository-contract';
 import type { IPolicyAcknowledgmentRepository } from '@/server/repositories/contracts/hr/policies/policy-acknowledgment-repository-contract';
-import { PrismaHRPolicyRepository } from '@/server/repositories/prisma/hr/policies/prisma-hr-policy-repository';
-import { PrismaPolicyAcknowledgmentRepository } from '@/server/repositories/prisma/hr/policies/prisma-policy-acknowledgment-repository';
+import { buildHrPolicyServiceDependencies } from '@/server/repositories/providers/hr/hr-policy-service-dependencies';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { PolicyAcknowledgment } from '@/server/types/hr-ops-types';
 
@@ -24,11 +23,11 @@ export interface GetPolicyAcknowledgmentForUiResult {
 }
 
 function resolvePolicyRepository(): IHRPolicyRepository {
-    return new PrismaHRPolicyRepository();
+    return buildHrPolicyServiceDependencies().policyRepository;
 }
 
 function resolveAcknowledgmentRepository(): IPolicyAcknowledgmentRepository {
-    return new PrismaPolicyAcknowledgmentRepository();
+    return buildHrPolicyServiceDependencies().acknowledgmentRepository;
 }
 
 export async function getPolicyAcknowledgmentForUi(

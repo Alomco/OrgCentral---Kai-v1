@@ -2,7 +2,8 @@
  * Type definitions for leave-related data structures
  */
 
-import type { Identifier, OrgId, TenantMetadata } from './tenant';
+import type { Identifier, OrgId, TenantMetadata, DataResidencyZone, DataClassificationLevel } from './tenant';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 import type { MembershipRole, Membership } from './membership';
 import type { LeaveYearStartDate } from './org/leave-year-start-date';
 
@@ -187,6 +188,31 @@ export interface OrganizationData extends TenantMetadata {
   availablePermissions?: PermissionCode[];
   createdAt: TimestampString;
   updatedAt: TimestampString;
+}
+
+export interface OrganizationRecord {
+  id: OrgId;
+  slug: string;
+  name: string;
+  regionCode: string;
+  dataResidency: DataResidencyZone;
+  dataClassification: DataClassificationLevel;
+  settings: PrismaJsonValue;
+  governanceTags?: PrismaJsonValue | null;
+  address?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  companyType?: string | null;
+  industry?: string | null;
+  employeeCountRange?: string | null;
+  incorporationDate?: Date | null;
+  registeredOfficeAddress?: string | null;
+  contactDetails?: PrismaJsonValue | null;
+  primaryLeaveType?: string | null;
+  leaveYearStartDate?: Date | null;
+  availablePermissions?: PrismaJsonValue | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface UserData {

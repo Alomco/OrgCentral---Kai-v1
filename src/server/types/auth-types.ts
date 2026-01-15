@@ -1,4 +1,4 @@
-import type { InvitationStatus as PrismaInvitationStatus } from '@prisma/client';
+import type { InvitationStatus as PrismaInvitationStatus } from '@/server/types/prisma';
 
 export type InvitationStatus = PrismaInvitationStatus;
 

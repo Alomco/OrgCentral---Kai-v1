@@ -1,36 +1,13 @@
-import { PrismaNotificationRepository } from '@/server/repositories/prisma/notifications/prisma-notification-repository';
-import { PrismaNotificationPreferenceRepository } from '@/server/repositories/prisma/org/notifications';
-import type { NotificationAuditWriter } from '@/server/repositories/contracts/notifications';
-import { recordAuditEvent } from '@/server/logging/audit-logger';
-import { ResendNotificationAdapter } from './adapters/resend-notification-adapter';
+import { NotificationComposerService, type NotificationComposerDependencies } from './notification-composer.service';
+import type { NotificationComposerContract } from '@/server/repositories/contracts/notifications/notification-composer-contract';
+import { buildNotificationComposerServiceDependencies, type NotificationComposerServiceDependencyOptions } from '@/server/repositories/providers/platform/notification-composer-service-dependencies';
 import { NovuNotificationAdapter } from './adapters/novu-notification-adapter';
-import {
-  NotificationComposerService,
-  type NotificationComposerDependencies,
-} from './notification-composer.service';
+import { ResendNotificationAdapter } from './adapters/resend-notification-adapter';
 
-const notificationAuditWriter: NotificationAuditWriter = {
-  async write(envelope) {
-    await recordAuditEvent({
-      orgId: envelope.orgId,
-      userId: envelope.userId,
-      eventType: 'DATA_CHANGE',
-      action: 'notification.audit',
-      resource: 'notification',
-      resourceId: envelope.notificationId,
-      payload: JSON.parse(JSON.stringify(envelope)) as Record<string, unknown>,
-      correlationId: envelope.auditMetadata.correlationId,
-      residencyZone: envelope.residencyTag,
-      classification: envelope.dataClassification,
-      auditSource: envelope.auditMetadata.auditSource,
-    });
-  },
-};
+const defaultRetentionPolicyId =
+  process.env.DEFAULT_NOTIFICATION_RETENTION_POLICY_ID ?? 'notifications';
 
-const notificationRepository = new PrismaNotificationRepository({ auditWriter: notificationAuditWriter });
-const preferenceRepository = new PrismaNotificationPreferenceRepository();
-
-const deliveryAdapters = [
+const createDefaultDeliveryAdapters = () => [
   new ResendNotificationAdapter({
     apiKey: process.env.RESEND_API_KEY,
     fromAddress: process.env.NOTIFICATION_FROM_EMAIL ?? 'OrgCentral <no-reply@orgcentral.test>',
@@ -41,28 +18,37 @@ const deliveryAdapters = [
   }),
 ];
 
-const defaultDependencies: NotificationComposerDependencies = {
-  notificationRepository,
-  preferenceRepository,
-  deliveryAdapters,
-  defaultRetentionPolicyId: process.env.DEFAULT_NOTIFICATION_RETENTION_POLICY_ID ?? 'notifications',
-};
-
-let sharedService: NotificationComposerService | null = null;
+const defaultSharedService = (() => {
+  const dependencies = buildNotificationComposerServiceDependencies();
+  return new NotificationComposerService({
+    ...dependencies,
+    deliveryAdapters: createDefaultDeliveryAdapters(),
+    defaultRetentionPolicyId,
+  });
+})();
 
 export function getNotificationComposerService(
   overrides?: Partial<NotificationComposerDependencies>,
+  options?: NotificationComposerServiceDependencyOptions,
 ): NotificationComposerService {
-  if (!sharedService || (overrides && Object.keys(overrides).length)) {
-    sharedService = new NotificationComposerService({
-      ...defaultDependencies,
-      ...overrides,
-    });
+  // If no overrides are provided, return the shared instance
+  if (!overrides || Object.keys(overrides).length === 0) {
+    return defaultSharedService;
   }
-  return sharedService;
+
+  // If overrides are provided, create a new instance with those overrides
+  const dependencies = buildNotificationComposerServiceDependencies({
+    prismaOptions: options?.prismaOptions,
+    overrides,
+  });
+  return new NotificationComposerService({
+    ...dependencies,
+    deliveryAdapters: overrides.deliveryAdapters ?? createDefaultDeliveryAdapters(),
+    defaultRetentionPolicyId: overrides.defaultRetentionPolicyId ?? defaultRetentionPolicyId,
+    guard: overrides.guard,
+    auditRecorder: overrides.auditRecorder,
+    orgSettingsLoader: overrides.orgSettingsLoader,
+  });
 }
 
-export type NotificationComposerContract = Pick<
-  NotificationComposerService,
-  'composeAndSend' | 'listInbox' | 'markRead' | 'markAllRead' | 'deleteNotification'
->;
+export type { NotificationComposerContract };

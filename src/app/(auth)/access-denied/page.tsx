@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AuthLayout from '@/components/auth/AuthLayout';
 import accessDeniedImage from '@/assets/errors/access_denied.webp';
 import { Button } from '@/components/ui/button';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 export const metadata: Metadata = {
     title: 'Access denied | OrgCentral',
@@ -34,6 +35,7 @@ export default function AccessDeniedPage() {
                         <Button asChild className="px-6 py-2 text-sm font-semibold">
                             <Link href="/login">Switch account</Link>
                         </Button>
+                        <LogoutButton label="Sign out" variant="outline" size="sm" className="px-6 py-2 text-sm font-semibold" />
                         <Button asChild variant="ghost" className="px-6 py-2 text-sm font-semibold">
                             <Link href="mailto:support@orgcentral.test?subject=Access%20request">Request access</Link>
                         </Button>

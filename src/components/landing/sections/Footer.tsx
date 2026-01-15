@@ -30,7 +30,7 @@ export default function Footer() {
 
                 <div className="flex justify-center gap-4 mb-8">
                     {socials.map((social) => (
-                        <a key={social.name} href="#" className="w-12 h-12 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-gradient-to-br hover:from-blue-500 hover:to-purple-500 hover:text-white dark:hover:from-blue-600 dark:hover:to-purple-600 flex items-center justify-center text-slate-600 dark:text-slate-400 font-bold transition-all duration-300" aria-label={social.name}>
+                        <a key={social.name} href="#" className="w-12 h-12 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-linear-to-br hover:from-blue-500 hover:to-purple-500 hover:text-white dark:hover:from-blue-600 dark:hover:to-purple-600 flex items-center justify-center text-slate-600 dark:text-slate-200 font-bold transition-all duration-300" aria-label={social.name}>
                             {social.symbol}
                         </a>
                     ))}

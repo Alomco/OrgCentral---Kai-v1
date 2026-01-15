@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { TenantThemeRegistry } from '@/components/theme/tenant-theme-registry';
+import { SkipLink } from '@/components/ui/skip-link';
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 import { getOrgBranding } from '@/server/branding/get-org-branding';
 import {
@@ -57,6 +58,7 @@ export default async function DevelopmentLayout({ children }: { children: ReactN
                 residency: authorization.dataResidency,
             }}
         >
+            <SkipLink targetId="dev-main-content" />
             <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
                 {/* Background Decoration */}
                 <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -70,6 +72,7 @@ export default async function DevelopmentLayout({ children }: { children: ReactN
                     <DevelopmentNavigationShell
                         organizationLabel={branding?.companyName ?? null}
                         userEmail={userEmail}
+                        mainId="dev-main-content"
                     >
                         <DevelopmentViewSwitcher>
                             {children}

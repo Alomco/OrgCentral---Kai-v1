@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Prisma } from '@prisma/client';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 import { DATA_CLASSIFICATION_LEVELS, DATA_RESIDENCY_ZONES } from '@/server/types/tenant';
 
 export const POLICY_CATEGORY_VALUES = [
@@ -18,7 +18,7 @@ const USER_ID_UUID_MESSAGE = 'userId must be a valid UUID.';
 
 const dateInputSchema = z.coerce.date();
 
-const isJsonValue = (value: unknown): value is Prisma.JsonValue => {
+const isJsonValue = (value: unknown): value is PrismaJsonValue => {
     if (value === null) {
         return true;
     }
@@ -40,7 +40,7 @@ const isJsonValue = (value: unknown): value is Prisma.JsonValue => {
     return false;
 };
 
-const jsonValueSchema = z.custom<Prisma.JsonValue>((value) => isJsonValue(value), {
+const jsonValueSchema = z.custom<PrismaJsonValue>((value) => isJsonValue(value), {
     message: 'Invalid JSON value.',
 });
 

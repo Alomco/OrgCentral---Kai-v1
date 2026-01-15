@@ -8,19 +8,33 @@ import { PrismaLeaveBalanceRepository } from '@/server/repositories/prisma/hr/le
 import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
 import { HttpAttachmentDownloader } from '@/server/lib/storage/http-attachment-downloader';
 import { GeminiAbsenceDocumentValidator } from '@/server/lib/ai/gemini-document-validator';
-import type { AbsenceServiceDependencies } from '@/server/services/hr/absences/absence-service';
 import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import type { OrgScopedRepositoryOptions } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import type { AbsenceAttachmentDownloader, AbsenceDocumentAiValidator } from '@/server/types/absence-ai';
+import type { IAbsenceSettingsRepository } from '@/server/repositories/contracts/hr/absences/absence-settings-repository-contract';
+import type { IAbsenceTypeConfigRepository } from '@/server/repositories/contracts/hr/absences/absence-type-config-repository-contract';
+import type { IUnplannedAbsenceRepository } from '@/server/repositories/contracts/hr/absences/unplanned-absence-repository-contract';
+import type { ILeaveBalanceRepository } from '@/server/repositories/contracts/hr/leave/leave-balance-repository-contract';
+import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
+
+export interface AbsenceRepositoryDependencies {
+    absenceRepository: IUnplannedAbsenceRepository;
+    typeConfigRepository: IAbsenceTypeConfigRepository;
+    absenceSettingsRepository: IAbsenceSettingsRepository;
+    leaveBalanceRepository: ILeaveBalanceRepository;
+    employeeProfileRepository: IEmployeeProfileRepository;
+    attachmentDownloader: AbsenceAttachmentDownloader;
+    aiValidator: AbsenceDocumentAiValidator;
+}
 
 export interface AbsenceServiceDependencyOptions {
     prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
-    overrides?: Partial<AbsenceServiceDependencies>;
+    overrides?: Partial<AbsenceRepositoryDependencies>;
 }
 
 export function buildAbsenceServiceDependencies(
     options?: AbsenceServiceDependencyOptions,
-): AbsenceServiceDependencies {
+): AbsenceRepositoryDependencies {
     const prisma = options?.prismaOptions?.prisma ?? defaultPrismaClient;
     const repoOptions: OrgScopedRepositoryOptions = {
         prisma,

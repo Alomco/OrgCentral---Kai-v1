@@ -4,6 +4,8 @@ trigger: always_on
 
 must maintain:
 <=250 LOC cap (split early)
+maintain my strict lint config.
+practice iso27001-aligned coding.
 single source of truth
 Server Components first
 Minimal "use client" islands

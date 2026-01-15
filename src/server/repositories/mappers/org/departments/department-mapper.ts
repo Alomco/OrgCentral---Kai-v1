@@ -1,7 +1,6 @@
-import type { Department } from '@/server/types/hr-types';
-import type { Department as PrismaDepartment } from '@prisma/client';
+import type { Department, DepartmentRecord } from '@/server/types/hr-types';
 
-export function mapPrismaDepartmentToDomain(record: PrismaDepartment): Department {
+export function mapPrismaDepartmentToDomain(record: DepartmentRecord): Department {
     return {
         id: record.id,
         orgId: record.orgId,
@@ -16,7 +15,7 @@ export function mapPrismaDepartmentToDomain(record: PrismaDepartment): Departmen
     };
 }
 
-export function mapDomainDepartmentToPrisma(input: Department): PrismaDepartment {
+export function mapDomainDepartmentToPrisma(input: Department): DepartmentRecord {
     return {
         id: input.id,
         orgId: input.orgId,

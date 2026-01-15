@@ -1,6 +1,6 @@
-import { PrismaHRNotificationRepository } from '@/server/repositories/prisma/hr/notifications';
 import type { IHRNotificationRepository } from '@/server/repositories/contracts/hr/notifications/hr-notification-repository-contract';
 import { HrNotificationService, type HrNotificationServiceDependencies } from '@/server/services/hr/notifications/hr-notification-service';
+import { createHrNotificationRepository } from '@/server/services/hr/notifications/hr-notification-repository.factory';
 
 export interface HrNotificationCompositionOverrides {
     repository?: IHRNotificationRepository;
@@ -8,7 +8,7 @@ export interface HrNotificationCompositionOverrides {
 
 function buildDependencies(overrides?: HrNotificationCompositionOverrides): HrNotificationServiceDependencies {
     return {
-        hrNotificationRepository: overrides?.repository ?? new PrismaHRNotificationRepository(),
+        hrNotificationRepository: overrides?.repository ?? createHrNotificationRepository(),
     };
 }
 

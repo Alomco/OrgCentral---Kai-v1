@@ -1,4 +1,4 @@
-import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 import { getHrNotificationService } from '@/server/use-cases/hr/notifications/notification-composition';
 import { invalidateHrNotifications } from '@/server/lib/cache-tags/hr-notifications';
 import type { MarkAllNotificationsReadResult } from '@/server/services/hr/notifications/hr-notification-service';

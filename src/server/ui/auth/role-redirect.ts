@@ -1,4 +1,4 @@
-import { RoleScope } from '@prisma/client';
+import { RoleScope } from '@/server/types/prisma';
 
 import { prisma } from '@/server/lib/prisma';
 

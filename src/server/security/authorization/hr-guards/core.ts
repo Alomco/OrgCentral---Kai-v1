@@ -6,9 +6,11 @@
  *
  * @module hr-guards/core
  */
+import { randomUUID } from 'node:crypto';
 import { AuthorizationError } from '@/server/errors';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { OrgPermissionMap } from '@/server/security/access-control';
+import type { OrgAccessContext } from '@/server/security/guards';
 import { requireAbacAllowance } from '../abac-context';
 import { authorizeOrgAccessRbacOnly } from '../engine';
 import { permissionsSatisfy, satisfiesAnyPermissionProfile } from '../permission-utils';
@@ -94,7 +96,7 @@ export async function assertHrAccess(
         roles: authorization.roleName && authorization.roleName !== authorization.roleKey
             ? [authorization.roleKey, authorization.roleName]
             : [authorization.roleKey],
-        guardContext: authorization,
+        guardContext: toOrgAccessContext(authorization),
         resourceAttributes: {
             ...params.resourceAttributes,
             residency: authorization.dataResidency,
@@ -103,6 +105,25 @@ export async function assertHrAccess(
     });
 
     return authorization;
+}
+
+function toOrgAccessContext(
+    authorization: RepositoryAuthorizationContext,
+): OrgAccessContext {
+    return {
+        orgId: authorization.orgId,
+        userId: authorization.userId,
+        roleKey: authorization.roleKey,
+        roleName: authorization.roleName ?? null,
+        roleId: authorization.roleId ?? null,
+        roleScope: authorization.roleScope ?? null,
+        permissions: authorization.permissions,
+        dataResidency: authorization.dataResidency,
+        dataClassification: authorization.dataClassification,
+        auditSource: authorization.auditSource,
+        auditBatchId: authorization.auditBatchId,
+        correlationId: authorization.correlationId ?? randomUUID(),
+    };
 }
 
 // ============================================================================

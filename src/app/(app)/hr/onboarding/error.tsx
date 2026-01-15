@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ErrorRetryButton } from '@/components/error';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 interface ErrorPageProps {
     error: Error & { digest?: string };
@@ -45,8 +46,9 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
                 <CardContent className="text-sm text-muted-foreground">
                     If the problem persists, contact your administrator.
                 </CardContent>
-                <CardFooter className="justify-end border-t">
+                <CardFooter className="flex flex-wrap items-center justify-end gap-2 border-t">
                     <ErrorRetryButton reset={reset} label="Retry" />
+                    <LogoutButton label="Sign out" variant="outline" size="sm" />
                 </CardFooter>
             </Card>
         </div>

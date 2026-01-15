@@ -1,7 +1,7 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaComplianceTemplateRepository } from '@/server/repositories/prisma/hr/compliance';
+import { buildComplianceRepositoryDependencies } from '@/server/repositories/providers/hr/compliance-repository-dependencies';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ComplianceTemplate } from '@/server/types/compliance-types';
@@ -15,8 +15,9 @@ export interface ListComplianceTemplatesForUiResult {
     templates: ComplianceTemplate[];
 }
 
-function resolveComplianceTemplateRepository(): PrismaComplianceTemplateRepository {
-    return new PrismaComplianceTemplateRepository();
+function resolveDependencies() {
+    const { complianceTemplateRepository } = buildComplianceRepositoryDependencies();
+    return { complianceTemplateRepository };
 }
 
 export async function listComplianceTemplatesForUi(
@@ -28,10 +29,7 @@ export async function listComplianceTemplatesForUi(
         'use cache';
         cacheLife(CACHE_LIFE_SHORT);
 
-        const templates = await listComplianceTemplates(
-            { complianceTemplateRepository: resolveComplianceTemplateRepository() },
-            cachedInput,
-        );
+        const templates = await listComplianceTemplates(resolveDependencies(), cachedInput);
 
         return { templates };
     }
@@ -39,10 +37,7 @@ export async function listComplianceTemplatesForUi(
     if (input.authorization.dataClassification !== 'OFFICIAL') {
         noStore();
 
-        const templates = await listComplianceTemplates(
-            { complianceTemplateRepository: resolveComplianceTemplateRepository() },
-            input,
-        );
+        const templates = await listComplianceTemplates(resolveDependencies(), input);
 
         return { templates };
     }

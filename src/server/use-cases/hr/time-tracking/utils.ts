@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
 export type TimeEntryDecisionStatus = 'APPROVED' | 'REJECTED';
 
@@ -30,7 +30,7 @@ export function calculateTotalHours(
 }
 
 export function coerceTimeEntryMetadata(
-    value: Prisma.JsonValue | null | undefined,
+    value: PrismaJsonValue | null | undefined,
 ): TimeEntryMetadata {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
         return {};
@@ -39,12 +39,12 @@ export function coerceTimeEntryMetadata(
 }
 
 export function mutateTimeEntryMetadata(
-    value: Prisma.JsonValue | null | undefined,
+    value: PrismaJsonValue | null | undefined,
     updater: (metadata: TimeEntryMetadata) => void,
-): Prisma.JsonValue {
+): PrismaJsonValue {
     const metadata = coerceTimeEntryMetadata(value);
     updater(metadata);
-    return metadata as Prisma.JsonValue;
+    return metadata as PrismaJsonValue;
 }
 
 export function mergeMetadata(target: TimeEntryMetadata, extra: unknown): void {
@@ -55,10 +55,10 @@ export function mergeMetadata(target: TimeEntryMetadata, extra: unknown): void {
 }
 
 export function appendDecision(
-    value: Prisma.JsonValue | null | undefined,
+    value: PrismaJsonValue | null | undefined,
     decision: TimeEntryDecisionLog,
     extra?: unknown,
-): Prisma.JsonValue {
+): PrismaJsonValue {
     return mutateTimeEntryMetadata(value, (metadata) => {
         mergeMetadata(metadata, extra);
         const history = Array.isArray(metadata.decisionHistory)

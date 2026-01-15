@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { IGuardMembershipRepository } from '@/server/repositories/contracts/security/guard-membership-repository-contract';
 import { PrismaGuardMembershipRepository } from '@/server/repositories/prisma/security/guard/prisma-guard-membership-repository';
-import type { MembershipStatus } from '@prisma/client';
+import type { MembershipStatus } from '@/server/types/prisma';
 
 const ACTIVE_MEMBERSHIP_STATUSES: readonly MembershipStatus[] = ['ACTIVE', 'INVITED'];
 

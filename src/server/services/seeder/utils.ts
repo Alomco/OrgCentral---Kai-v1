@@ -1,8 +1,15 @@
-import { type Prisma, MembershipStatus } from '@prisma/client';
-import { prisma } from '@/server/lib/prisma';
+import type { OrganizationData } from '@/server/types/leave-types';
+import type { EmployeeProfileDTO } from '@/server/types/hr/people';
+import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
+import { buildOrganizationServiceDependencies } from '@/server/repositories/providers/org/organization-service-dependencies';
+import { buildPeopleServiceDependencies } from '@/server/repositories/providers/hr/people-service-dependencies';
+import { buildAuthorizationContext } from '@/server/use-cases/shared/builders';
 
 export const SEEDED_METADATA_KEY = 'devSeeded';
-export const PLATFORM_ORG_SLUG = 'orgcentral-platform';
+const DEFAULT_PLATFORM_ORG_SLUG = 'orgcentral-platform';
+export const PLATFORM_ORG_SLUG = process.env.PLATFORM_ORG_SLUG ?? DEFAULT_PLATFORM_ORG_SLUG;
+export const DEFAULT_SEEDER_USER_ID = 'system-seed';
+export const DEFAULT_SEEDER_AUDIT_SOURCE = 'dev-seeder';
 export const UNKNOWN_ERROR_MESSAGE = 'Unknown error';
 
 export interface SeedResult {
@@ -12,26 +19,49 @@ export interface SeedResult {
 }
 
 export async function getDefaultOrg() {
-    let org = await prisma.organization.findFirst({
-        where: { slug: PLATFORM_ORG_SLUG },
-    });
-    // Fallback for dev: Just take the first org we find
-    org ??= await prisma.organization.findFirst();
-    if (!org) { throw new Error('No organizations found. Please bootstrap an org first.'); }
+    const { organizationRepository } = buildOrganizationServiceDependencies();
+    const org = await organizationRepository.getOrganizationBySlug(PLATFORM_ORG_SLUG);
+    if (!org) {
+        throw new Error('No organizations found. Please bootstrap the platform org first.');
+    }
     return org;
 }
 
-export async function getActiveMembers(orgId: string, limit = 50) {
-    return prisma.membership.findMany({
-        where: { orgId, status: MembershipStatus.ACTIVE },
-        take: limit,
+export async function getActiveMembers(
+    orgId: string,
+    limit = 50,
+): Promise<EmployeeProfileDTO[]> {
+    const { profileRepo } = buildPeopleServiceDependencies();
+    const profiles = await profileRepo.getEmployeeProfilesByOrganization(orgId);
+    return profiles.slice(0, limit);
+}
+
+export function buildSeederAuthorization(
+    org: OrganizationData,
+    userId = DEFAULT_SEEDER_USER_ID,
+    auditSource = DEFAULT_SEEDER_AUDIT_SOURCE,
+): RepositoryAuthorizationContext {
+    return buildAuthorizationContext({
+        orgId: org.id,
+        userId,
+        dataResidency: org.dataResidency,
+        dataClassification: org.dataClassification,
+        auditSource,
+        tenantScope: {
+            orgId: org.id,
+            dataResidency: org.dataResidency,
+            dataClassification: org.dataClassification,
+            auditSource,
+        },
     });
 }
 
-export function getSeededMetadata(extra: Record<string, unknown> = {}): Prisma.InputJsonValue {
+type SeededMetadata = Record<string, boolean | string | number | null>;
+
+export function getSeededMetadata(extra: SeededMetadata = {}): SeededMetadata {
     return {
         [SEEDED_METADATA_KEY]: true,
         seededAt: new Date().toISOString(),
         ...extra,
-    } as Prisma.InputJsonValue;
+    };
 }

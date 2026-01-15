@@ -1,5 +1,5 @@
 import type { InvitationEmailDependencies } from './invitation-email.helpers';
-import { PrismaInvitationRepository } from '@/server/repositories/prisma/auth/invitations';
+import { createInvitationRepository } from '@/server/repositories/providers/auth/invitation-repository-provider';
 import { appLogger } from '@/server/logging/structured-logger';
 import { SenderXNotificationAdapter } from '@/server/services/platform/notifications/adapters/senderx-notification-adapter';
 import type {
@@ -59,7 +59,8 @@ export function getInvitationEmailDependencies(
     overrides?: Partial<InvitationEmailDependencies>,
 ): InvitationEmailDependencies {
     return {
-        invitationRepository: overrides?.invitationRepository ?? new PrismaInvitationRepository(),
+        invitationRepository:
+            overrides?.invitationRepository ?? createInvitationRepository(),
         deliveryAdapters:
             overrides?.deliveryAdapters ?? buildInvitationDeliveryAdapters(),
         invitationLinkBuilder: overrides?.invitationLinkBuilder,

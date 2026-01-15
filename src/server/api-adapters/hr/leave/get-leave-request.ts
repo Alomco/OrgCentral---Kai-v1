@@ -33,7 +33,7 @@ export async function getLeaveRequestController(
         resourceAttributes: { requestId },
     });
 
-    const hoursPerDay = await resolveHoursPerDay(absenceSettingsRepository, authorization.orgId);
+    const hoursPerDay = await resolveHoursPerDay(absenceSettingsRepository, authorization);
     const result = await service.getLeaveRequest({
         authorization,
         requestId,

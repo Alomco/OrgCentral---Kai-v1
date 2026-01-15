@@ -1,14 +1,62 @@
-
 import type { LeaveBalance, LeaveRequest } from '@/server/types/leave-types';
+import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import { calculateTotalDaysFromHours } from '@/server/domain/leave/leave-calculator';
-import type { Prisma, LeaveBalance as PrismaLeaveBalance, LeaveRequest as PrismaLeaveRequest } from '@prisma/client';
+import { toNumber } from '@/server/domain/absences/conversions';
+import type { PrismaDecimal, PrismaJsonObject, PrismaJsonValue } from '@/server/types/prisma';
 
-type JsonLike = Prisma.JsonValue | null | undefined;
+type LeaveRequestStatusCode =
+    | 'DRAFT'
+    | 'SUBMITTED'
+    | 'APPROVED'
+    | 'REJECTED'
+    | 'CANCELLED'
+    | 'PENDING_APPROVAL'
+    | 'AWAITING_MANAGER';
 
-const isJsonObject = (value: JsonLike): value is Prisma.JsonObject =>
+interface LeaveRequestRecord {
+    id: string;
+    orgId: string;
+    residencyTag: DataResidencyZone;
+    dataClassification: DataClassificationLevel;
+    auditSource?: string | null;
+    auditBatchId?: string | null;
+    userId: string;
+    policyId: string;
+    startDate: Date;
+    endDate: Date;
+    reason?: string | null;
+    hours: PrismaDecimal;
+    status: LeaveRequestStatusCode;
+    createdAt: Date;
+    submittedAt?: Date | null;
+    approverUserId?: string | null;
+    decidedAt?: Date | null;
+    metadata?: PrismaJsonValue | null;
+}
+
+interface LeaveBalanceRecord {
+    id: string;
+    orgId: string;
+    residencyTag: DataResidencyZone;
+    dataClassification: DataClassificationLevel;
+    auditSource?: string | null;
+    auditBatchId?: string | null;
+    userId: string;
+    policyId: string;
+    periodStart: Date;
+    accruedHours: PrismaDecimal;
+    usedHours: PrismaDecimal;
+    carriedHours: PrismaDecimal;
+    metadata?: PrismaJsonValue | null;
+    updatedAt: Date;
+}
+
+type JsonLike = PrismaJsonValue | null | undefined;
+
+const isJsonObject = (value: JsonLike): value is PrismaJsonObject =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const cloneJsonObject = (value: JsonLike): Prisma.JsonObject => (
+const cloneJsonObject = (value: JsonLike): PrismaJsonObject => (
     isJsonObject(value) ? { ...value } : {}
 );
 
@@ -20,7 +68,7 @@ const cloneLeaveBalanceMetadata = (value: JsonLike): LeaveBalanceMetadata => (
     cloneJsonObject(value) as LeaveBalanceMetadata
 );
 
-export type LeaveRequestMetadata = Prisma.JsonObject & {
+export type LeaveRequestMetadata = PrismaJsonObject & {
     employeeId?: string;
     employeeName?: string;
     leaveType?: string;
@@ -31,7 +79,7 @@ export type LeaveRequestMetadata = Prisma.JsonObject & {
     departmentId?: string | null;
 };
 
-export type LeaveBalanceMetadata = Prisma.JsonObject & {
+export type LeaveBalanceMetadata = PrismaJsonObject & {
     employeeId?: string;
     leaveType?: string;
     year?: number;
@@ -46,17 +94,17 @@ export type LeaveBalanceMetadata = Prisma.JsonObject & {
     updatedBy?: string;
 };
 
-export const normalizeLeaveBalanceMetadata = (value: Prisma.JsonValue | null): LeaveBalanceMetadata =>
+export const normalizeLeaveBalanceMetadata = (value: PrismaJsonValue | null): LeaveBalanceMetadata =>
     cloneLeaveBalanceMetadata(value);
 
-const STATUS_FROM_DOMAIN: Record<LeaveRequest['status'], PrismaLeaveRequest['status']> = {
+const STATUS_FROM_DOMAIN: Record<LeaveRequest['status'], LeaveRequestStatusCode> = {
     submitted: 'SUBMITTED',
     approved: 'APPROVED',
     rejected: 'REJECTED',
     cancelled: 'CANCELLED',
 };
 
-const STATUS_TO_DOMAIN: Record<PrismaLeaveRequest['status'], LeaveRequest['status']> = {
+const STATUS_TO_DOMAIN: Record<LeaveRequestStatusCode, LeaveRequest['status']> = {
     DRAFT: 'submitted',
     SUBMITTED: 'submitted',
     APPROVED: 'approved',
@@ -71,10 +119,11 @@ interface LeaveMapperConfig {
 }
 
 export function mapPrismaLeaveRequestToDomain(
-    record: PrismaLeaveRequest & { _count?: { attachments?: number } },
+    record: LeaveRequestRecord & { _count?: { attachments?: number } },
     config?: LeaveMapperConfig,
 ): LeaveRequest {
     const metadata = cloneLeaveRequestMetadata(record.metadata);
+    const totalHours = toNumber(record.hours);
 
     return {
         id: record.id,
@@ -90,7 +139,7 @@ export function mapPrismaLeaveRequestToDomain(
         startDate: record.startDate.toISOString(),
         endDate: record.endDate.toISOString(),
         reason: record.reason ?? undefined,
-        totalDays: metadata.totalDays ?? calculateTotalDaysFromHours(Number(record.hours), { hoursPerDay: config?.hoursPerDay }),
+        totalDays: metadata.totalDays ?? calculateTotalDaysFromHours(totalHours, { hoursPerDay: config?.hoursPerDay }),
         isHalfDay: metadata.isHalfDay ?? false,
         coveringEmployeeId: metadata.coveringEmployee ?? undefined,
         coveringEmployeeName: metadata.coveringEmployee ?? undefined,
@@ -112,8 +161,11 @@ export function mapPrismaLeaveRequestToDomain(
     };
 }
 
-export function mapPrismaLeaveBalanceToDomain(record: PrismaLeaveBalance): LeaveBalance {
+export function mapPrismaLeaveBalanceToDomain(record: LeaveBalanceRecord): LeaveBalance {
     const metadata = cloneLeaveBalanceMetadata(record.metadata);
+    const accruedHours = toNumber(record.accruedHours);
+    const usedHours = toNumber(record.usedHours);
+    const carriedHours = toNumber(record.carriedHours);
 
     return {
         id: record.id,
@@ -125,10 +177,10 @@ export function mapPrismaLeaveBalanceToDomain(record: PrismaLeaveBalance): Leave
         employeeId: metadata.employeeId ?? record.userId,
         leaveType: metadata.leaveType ?? record.policyId,
         year: metadata.year ?? record.periodStart.getUTCFullYear(),
-        totalEntitlement: metadata.totalEntitlement ?? Number(record.accruedHours),
-        used: metadata.used ?? Number(record.usedHours),
-        pending: metadata.pending ?? Number(record.carriedHours),
-        available: metadata.available ?? metadata.totalEntitlement ?? Number(record.accruedHours),
+        totalEntitlement: metadata.totalEntitlement ?? accruedHours,
+        used: metadata.used ?? usedHours,
+        pending: metadata.pending ?? carriedHours,
+        available: metadata.available ?? metadata.totalEntitlement ?? accruedHours,
         createdAt: record.periodStart.toISOString(),
         updatedAt: record.updatedAt.toISOString(),
     };
@@ -175,6 +227,6 @@ export function buildLeaveBalanceMetadata(
     } satisfies LeaveBalanceMetadata;
 }
 
-export function mapDomainStatusToPrisma(status: LeaveRequest['status']): PrismaLeaveRequest['status'] {
+export function mapDomainStatusToPrisma(status: LeaveRequest['status']): LeaveRequestStatusCode {
     return STATUS_FROM_DOMAIN[status];
 }

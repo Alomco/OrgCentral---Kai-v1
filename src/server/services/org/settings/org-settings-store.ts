@@ -1,21 +1,19 @@
-import type { Prisma } from '@prisma/client';
-
-import { prisma } from '@/server/lib/prisma';
+import { buildOrganizationServiceDependencies } from '@/server/repositories/providers/org/organization-service-dependencies';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { PrismaInputJsonObject, PrismaJsonValue } from '@/server/types/prisma';
 import { normalizeOrgSettings, type OrgSettings } from './org-settings-model';
 
 export type { OrgSettings } from './org-settings-model';
 
 export const ORG_SETTINGS_CACHE_SCOPE = 'org:settings';
 
-export async function loadOrgSettings(orgId: string): Promise<OrgSettings> {
-    const org = await prisma.organization.findUnique({
-        where: { id: orgId },
-        select: { settings: true },
-    });
+const { organizationRepository } = buildOrganizationServiceDependencies();
 
-    return normalizeOrgSettings(org?.settings ?? {});
+export async function loadOrgSettings(orgId: string): Promise<OrgSettings> {
+    const settings = await organizationRepository.getOrganizationSettings(orgId);
+    const normalizedInput = settings as unknown as PrismaJsonValue | null | undefined;
+    return normalizeOrgSettings(normalizedInput ?? {});
 }
 
 export async function updateOrgSettings(
@@ -30,7 +28,7 @@ export async function updateOrgSettings(
         billing: { ...current.billing, ...(updates.billing ?? {}) },
     };
 
-    const settingsJson: Prisma.InputJsonObject = {
+    const settingsJson: PrismaInputJsonObject = {
         invites: { ...nextSettings.invites },
         security: {
             ...nextSettings.security,
@@ -40,10 +38,7 @@ export async function updateOrgSettings(
         billing: { ...nextSettings.billing },
     };
 
-    await prisma.organization.update({
-        where: { id: authorization.orgId },
-        data: { settings: settingsJson },
-    });
+    await organizationRepository.updateOrganizationSettings(authorization.orgId, settingsJson);
 
     await invalidateOrgCache(
         authorization.orgId,

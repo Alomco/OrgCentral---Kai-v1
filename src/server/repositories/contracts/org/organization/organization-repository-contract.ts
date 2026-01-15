@@ -3,6 +3,7 @@
  * Following SOLID principles with clear separation of concerns
  */
 import type { OrganizationData } from '@/server/types/leave-types';
+import type { PrismaInputJsonObject } from '@/server/types/prisma';
 import type { LeaveYearStartDate } from '@/server/types/org/leave-year-start-date';
 import type { OrganizationContactDetails } from '@/server/types/org/organization-settings';
 
@@ -76,4 +77,7 @@ export interface IOrganizationRepository {
      * Remove a leave type
      */
     removeLeaveType(orgId: string, leaveTypeKey: string): Promise<void>;
+
+    getOrganizationSettings(orgId: string): Promise<PrismaInputJsonObject | null>;
+    updateOrganizationSettings(orgId: string, settings: PrismaInputJsonObject): Promise<void>;
 }

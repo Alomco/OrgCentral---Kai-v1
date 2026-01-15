@@ -4,11 +4,11 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Prisma } from '@prisma/client';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import type { OrgPermissionMap, OrgRoleKey } from '@/server/security/access-control';
 import { resolveRoleTemplate } from '@/server/security/role-templates';
+import type { JsonRecord } from '@/server/types/json';
 
 /**
  * Builds a repository authorization context.
@@ -62,13 +62,13 @@ export function buildAuthorizationContext(
  */
 export function buildMetadata(
     data: Record<string, unknown>,
-): Prisma.JsonObject {
+): JsonRecord {
     return Object.fromEntries(
         Object.entries(data).map(([key, value]) => [
             key,
             value === undefined ? null : value,
         ]),
-    ) as Prisma.JsonObject;
+    ) as JsonRecord;
 }
 
 /**

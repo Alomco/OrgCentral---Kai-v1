@@ -1,7 +1,14 @@
-import type { IntegrationConfig } from '@/server/types/hr-types';
-import { Prisma, type IntegrationConfig as PrismaIntegrationConfig } from '@prisma/client';
+import type { IntegrationConfig, IntegrationConfigRecord } from '@/server/types/hr-types';
+import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
+import { Prisma } from '@/server/types/prisma';
 
-export function mapPrismaIntegrationConfigToDomain(record: PrismaIntegrationConfig): IntegrationConfig {
+type IntegrationConfigCreateInput = Prisma.IntegrationConfigUncheckedCreateInput;
+type IntegrationConfigInput = Omit<IntegrationConfig, 'id' | 'createdAt' | 'updatedAt'> & {
+    createdAt?: Date;
+    updatedAt?: Date;
+};
+
+export function mapPrismaIntegrationConfigToDomain(record: IntegrationConfigRecord): IntegrationConfig {
     return {
         id: record.id,
         orgId: record.orgId,
@@ -9,21 +16,42 @@ export function mapPrismaIntegrationConfigToDomain(record: PrismaIntegrationConf
         credentials: record.credentials,
         settings: record.settings,
         active: record.active,
-        compliance: record.compliance,
+        compliance: record.compliance ?? null,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
     };
 }
 
-export function mapDomainIntegrationConfigToPrisma(input: IntegrationConfig): Prisma.IntegrationConfigUncheckedCreateInput {
-    return {
+export function mapDomainIntegrationConfigToPrisma(input: IntegrationConfigInput): IntegrationConfigCreateInput {
+    const credentials = toJsonNullInput(input.credentials);
+    const settings = toJsonNullInput(input.settings);
+    const compliance =
+        input.compliance === undefined
+            ? undefined
+            : toJsonNullInput(input.compliance);
+    const payload: IntegrationConfigCreateInput = {
         orgId: input.orgId,
         provider: input.provider,
-        credentials: input.credentials as Prisma.InputJsonValue,
-        settings: input.settings as Prisma.InputJsonValue,
+        credentials,
+        settings,
         active: input.active,
-        compliance: input.compliance === null ? Prisma.JsonNull : (input.compliance),
-        createdAt: input.createdAt,
-        updatedAt: input.updatedAt,
+        compliance,
     };
+    if (input.createdAt) {
+        payload.createdAt = input.createdAt;
+    }
+    if (input.updatedAt) {
+        payload.updatedAt = input.updatedAt;
+    }
+    return payload;
+}
+
+function toJsonNullInput(
+    value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue | Prisma.JsonNullValueInput {
+    const resolved = toPrismaInputJson(value);
+    if (resolved === undefined || resolved === Prisma.DbNull) {
+        return Prisma.JsonNull;
+    }
+    return resolved as Prisma.InputJsonValue | Prisma.JsonNullValueInput;
 }

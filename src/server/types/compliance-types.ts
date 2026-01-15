@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
 export type ComplianceSubDocumentType = 'DOCUMENT' | 'COMPLETION_DATE' | 'YES_NO' | 'ACKNOWLEDGEMENT';
 
@@ -14,7 +14,7 @@ export interface ComplianceTemplateItem {
     reminderDaysBeforeExpiry?: number;
     expiryDurationDays?: number;
     isInternalOnly?: boolean;
-    metadata?: Prisma.JsonValue;
+    metadata?: PrismaJsonValue;
 }
 
 export interface ComplianceTemplate {
@@ -26,7 +26,7 @@ export interface ComplianceTemplate {
     items: ComplianceTemplateItem[];
     createdAt: Date;
     updatedAt: Date;
-    metadata?: Prisma.JsonValue;
+    metadata?: PrismaJsonValue;
 }
 
 export interface ComplianceCategory {
@@ -35,7 +35,7 @@ export interface ComplianceCategory {
     key: string;
     label: string;
     sortOrder: number;
-    metadata?: Prisma.JsonValue;
+    metadata?: PrismaJsonValue;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -64,7 +64,7 @@ export interface ComplianceLogItem {
     reviewedAt?: Date | null;
     notes?: string | null;
     attachments?: string[] | null;
-    metadata?: Prisma.JsonValue;
+    metadata?: PrismaJsonValue;
     createdAt: Date;
     updatedAt: Date;
 }

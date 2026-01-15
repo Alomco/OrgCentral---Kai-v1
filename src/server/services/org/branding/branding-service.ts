@@ -1,11 +1,9 @@
 import type { IBrandingRepository } from '@/server/repositories/contracts/org/branding/branding-repository-contract';
 import type { IPlatformBrandingRepository } from '@/server/repositories/contracts/platform/branding/platform-branding-repository-contract';
+import type { BrandingServiceDependencies } from '@/server/repositories/contracts/org/branding/branding-service-dependencies';
 import type { OrgBranding, PlatformBranding } from '@/server/types/branding-types';
 
-export interface BrandingServiceDependencies {
-    orgBrandingRepository: IBrandingRepository;
-    platformBrandingRepository: IPlatformBrandingRepository;
-}
+export type { BrandingServiceDependencies };
 
 export class BrandingService {
     private readonly orgBrandingRepository: IBrandingRepository;

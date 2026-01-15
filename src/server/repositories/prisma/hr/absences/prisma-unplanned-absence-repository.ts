@@ -12,7 +12,8 @@ import type {
   UnplannedAbsence,
 } from '@/server/types/hr-ops-types';
 import type { Prisma, PrismaClient } from '@prisma/client';
-import { AuthorizationError, EntityNotFoundError } from '@/server/errors';
+import { EntityNotFoundError } from '@/server/errors';
+import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 
 const ABSENCE_RELATIONS = {
   attachments: true,
@@ -27,43 +28,50 @@ type AbsenceRecordWithRelations = Prisma.UnplannedAbsenceGetPayload<{
 export class PrismaUnplannedAbsenceRepository extends BasePrismaRepository implements IUnplannedAbsenceRepository {
 
   async createAbsence(
-    orgId: string,
+    contextOrOrgId: RepositoryAuthorizationContext | string,
     input: Omit<UnplannedAbsence, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { status?: UnplannedAbsence['status'] },
   ): Promise<UnplannedAbsence> {
-    const data = mapDomainUnplannedAbsenceToPrismaCreate({ ...input, status: input.status ?? 'REPORTED' });
+    const context = this.normalizeAuthorizationContext(contextOrOrgId, 'unplanned_absence');
+    this.validateTenantWriteAccess(context, input.orgId, 'write');
+    const data = mapDomainUnplannedAbsenceToPrismaCreate({ ...input, orgId: context.orgId, status: input.status ?? 'REPORTED' });
     const rec = await this.prisma.unplannedAbsence.create({ data });
-    if (rec.orgId !== orgId) {
-      throw new AuthorizationError('Cross-tenant absence creation mismatch', { orgId });
-    }
+    this.assertTenantRecord(rec, context, 'unplanned_absence');
+    this.validatePiiAccess(context, 'write', 'unplanned_absence');
     return mapPrismaUnplannedAbsenceToDomain(rec);
   }
 
   async updateAbsence(
-    orgId: string,
+    contextOrOrgId: RepositoryAuthorizationContext | string,
     id: string,
     updates: Parameters<IUnplannedAbsenceRepository['updateAbsence']>[2],
   ): Promise<UnplannedAbsence> {
+    const context = this.normalizeAuthorizationContext(contextOrOrgId, 'unplanned_absence');
+    this.validateTenantWriteAccess(context, context.orgId, 'update');
     const data = mapDomainUnplannedAbsenceToPrismaUpdate(updates);
-    const rec = await this.prisma.unplannedAbsence.update({ where: { id }, data });
-    if (rec.orgId !== orgId) {
-      throw new AuthorizationError('Cross-tenant absence update mismatch', { orgId });
+    await this.prisma.unplannedAbsence.updateMany({ where: { id, orgId: context.orgId }, data });
+    const rec = await this.prisma.unplannedAbsence.findFirst({ where: { id, orgId: context.orgId } });
+    if (!rec) {
+      throw new EntityNotFoundError('Absence', { absenceId: id, orgId: context.orgId });
     }
-    return mapPrismaUnplannedAbsenceToDomain(rec);
+    this.validatePiiAccess(context, 'update', 'unplanned_absence');
+    return mapPrismaUnplannedAbsenceToDomain(this.assertTenantRecord(rec, context, 'unplanned_absence'));
   }
 
-  async getAbsence(orgId: string, id: string): Promise<UnplannedAbsence | null> {
+  async getAbsence(contextOrOrgId: RepositoryAuthorizationContext | string, id: string): Promise<UnplannedAbsence | null> {
+    const context = this.normalizeAuthorizationContext(contextOrOrgId, 'unplanned_absence');
     const rec = await this.prisma.unplannedAbsence.findFirst({
-      where: { id, orgId },
+      where: { id, orgId: context.orgId },
       include: ABSENCE_RELATIONS,
     });
-    return rec ? mapPrismaUnplannedAbsenceToDomain(rec) : null;
+    return rec ? mapPrismaUnplannedAbsenceToDomain(this.assertTenantRecord(rec, context, 'unplanned_absence')) : null;
   }
 
   async listAbsences(
-    orgId: string,
+    contextOrOrgId: RepositoryAuthorizationContext | string,
     filters?: { userId?: string; status?: UnplannedAbsence['status']; includeClosed?: boolean; from?: Date; to?: Date },
   ): Promise<UnplannedAbsence[]> {
-    const where: Prisma.UnplannedAbsenceWhereInput = { orgId };
+    const context = this.normalizeAuthorizationContext(contextOrOrgId, 'unplanned_absence');
+    const where: Prisma.UnplannedAbsenceWhereInput = { orgId: context.orgId };
     const normalizedFilters = filters ?? {};
     const { userId, status, includeClosed, from, to } = normalizedFilters;
 
@@ -94,18 +102,21 @@ export class PrismaUnplannedAbsenceRepository extends BasePrismaRepository imple
       orderBy: { startDate: 'desc' },
       include: ABSENCE_RELATIONS,
     });
-    return recs.map(mapPrismaUnplannedAbsenceToDomain);
+    return recs
+      .map((rec) => this.assertTenantRecord(rec, context, 'unplanned_absence'))
+      .map(mapPrismaUnplannedAbsenceToDomain);
   }
 
-  async recordReturnToWork(orgId: string, id: string, record: ReturnToWorkRecordInput): Promise<UnplannedAbsence> {
+  async recordReturnToWork(contextOrOrgId: RepositoryAuthorizationContext | string, id: string, record: ReturnToWorkRecordInput): Promise<UnplannedAbsence> {
+    const context = this.normalizeAuthorizationContext(contextOrOrgId, 'unplanned_absence');
     return this.prisma.$transaction(async (tx) => {
-      const absence = await this.ensureAbsence(tx, orgId, id);
+      const absence = await this.ensureAbsence(tx, context, id);
       const submittedAt = record.submittedAt ?? new Date();
 
       await tx.absenceReturnRecord.upsert({
         where: { absenceId: id },
         create: {
-          orgId,
+          orgId: context.orgId,
           absenceId: id,
           returnDate: record.returnDate,
           comments: record.comments ?? null,
@@ -126,25 +137,26 @@ export class PrismaUnplannedAbsenceRepository extends BasePrismaRepository imple
         },
       });
 
-      const updated = await tx.unplannedAbsence.update({
-        where: { id },
+      await tx.unplannedAbsence.updateMany({
+        where: { id, orgId: context.orgId },
         data: {
           endDate: record.returnDate,
           status: absence.status === 'CANCELLED' ? absence.status : 'CLOSED',
         },
-        include: ABSENCE_RELATIONS,
       });
 
-      return mapPrismaUnplannedAbsenceToDomain(updated);
+      const updated = await this.ensureAbsence(tx, context, id);
+      return mapPrismaUnplannedAbsenceToDomain(this.assertTenantRecord(updated, context, 'unplanned_absence'));
     });
   }
 
-  async addAttachments(orgId: string, id: string, attachments: readonly AbsenceAttachmentInput[]): Promise<UnplannedAbsence> {
+  async addAttachments(contextOrOrgId: RepositoryAuthorizationContext | string, id: string, attachments: readonly AbsenceAttachmentInput[]): Promise<UnplannedAbsence> {
+    const context = this.normalizeAuthorizationContext(contextOrOrgId, 'unplanned_absence');
     return this.prisma.$transaction(async (tx) => {
-      await this.ensureAbsence(tx, orgId, id);
+      await this.ensureAbsence(tx, context, id);
       await tx.absenceAttachment.createMany({
         data: attachments.map((attachment) => ({
-          orgId,
+          orgId: context.orgId,
           absenceId: id,
           fileName: attachment.fileName,
           storageKey: attachment.storageKey,
@@ -159,33 +171,37 @@ export class PrismaUnplannedAbsenceRepository extends BasePrismaRepository imple
         })),
       });
 
-      const refreshed = await this.ensureAbsence(tx, orgId, id);
+      const refreshed = await this.ensureAbsence(tx, context, id);
       return mapPrismaUnplannedAbsenceToDomain(refreshed);
     });
   }
 
-  async removeAttachment(orgId: string, id: string, attachmentId: string): Promise<UnplannedAbsence> {
+  async removeAttachment(contextOrOrgId: RepositoryAuthorizationContext | string, id: string, attachmentId: string): Promise<UnplannedAbsence> {
+    const context = this.normalizeAuthorizationContext(contextOrOrgId, 'unplanned_absence');
     return this.prisma.$transaction(async (tx) => {
-      await this.ensureAbsence(tx, orgId, id);
+      await this.ensureAbsence(tx, context, id);
       const existing = await tx.absenceAttachment.findFirst({
-        where: { id: attachmentId, absenceId: id, orgId },
+        where: { id: attachmentId, absenceId: id, orgId: context.orgId },
       });
       if (!existing) {
         throw new EntityNotFoundError('Absence attachment', { attachmentId });
       }
-      await tx.absenceAttachment.delete({ where: { id: attachmentId } });
-      const refreshed = await this.ensureAbsence(tx, orgId, id);
+      await tx.absenceAttachment.deleteMany({
+        where: { id: attachmentId, orgId: context.orgId },
+      });
+      const refreshed = await this.ensureAbsence(tx, context, id);
       return mapPrismaUnplannedAbsenceToDomain(refreshed);
     });
   }
 
-  async deleteAbsence(orgId: string, id: string, audit: AbsenceDeletionAuditEntry): Promise<void> {
+  async deleteAbsence(contextOrOrgId: RepositoryAuthorizationContext | string, id: string, audit: AbsenceDeletionAuditEntry): Promise<void> {
+    const context = this.normalizeAuthorizationContext(contextOrOrgId, 'unplanned_absence');
     await this.prisma.$transaction(async (tx) => {
-      await this.ensureAbsence(tx, orgId, id);
+      await this.ensureAbsence(tx, context, id);
       await tx.absenceDeletionAudit.upsert({
         where: { absenceId: id },
         create: {
-          orgId,
+          orgId: context.orgId,
           absenceId: id,
           reason: audit.reason,
           deletedByUserId: audit.deletedByUserId,
@@ -204,8 +220,8 @@ export class PrismaUnplannedAbsenceRepository extends BasePrismaRepository imple
         },
       });
 
-      await tx.unplannedAbsence.update({
-        where: { id },
+      await tx.unplannedAbsence.updateMany({
+        where: { id, orgId: context.orgId },
         data: {
           status: 'CANCELLED',
           deletionReason: audit.reason,
@@ -218,16 +234,17 @@ export class PrismaUnplannedAbsenceRepository extends BasePrismaRepository imple
 
   private async ensureAbsence(
     client: Prisma.TransactionClient | PrismaClient,
-    orgId: string,
+    context: RepositoryAuthorizationContext,
     id: string,
   ): Promise<AbsenceRecordWithRelations> {
     const record = await client.unplannedAbsence.findFirst({
-      where: { id, orgId },
+      where: { id, orgId: context.orgId },
       include: ABSENCE_RELATIONS,
     });
     if (!record) {
       throw new EntityNotFoundError('Absence', { absenceId: id });
     }
+    this.assertTenantRecord(record, context, 'unplanned_absence');
     return record;
   }
 }

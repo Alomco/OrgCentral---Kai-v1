@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils';
 interface DevelopmentNavigationProps {
     organizationLabel: string | null;
     userEmail: string | null;
+    mainId?: string;
+    mainTabIndex?: number;
 }
 
 interface NavItem {
@@ -54,6 +56,9 @@ const QUICK_LINKS: NavItem[] = [
     { href: '/dashboard', label: 'Employee', icon: LayoutDashboard },
 ];
 
+const FOCUS_RING_CLASSES =
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+
 // ============================================================================
 // Top Bar
 // ============================================================================
@@ -66,7 +71,10 @@ export function DevelopmentTopBar({ organizationLabel, userEmail }: DevelopmentN
                 <div className="flex items-center gap-3">
                     <Link
                         href="/dev/dashboard"
-                        className="flex items-center gap-2 text-lg font-semibold"
+                        className={cn(
+                            'flex items-center gap-2 text-lg font-semibold',
+                            FOCUS_RING_CLASSES,
+                        )}
                     >
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-accent text-white shadow-md shadow-primary/20">
                             <Terminal className="h-4 w-4" />
@@ -105,7 +113,7 @@ export function DevelopmentSidebar() {
         <aside className="fixed left-0 top-14 z-(--z-sticky) h-[calc(100vh-3.5rem)] w-56 bg-background/60 backdrop-blur-sm">
             <div className="flex h-full flex-col p-4">
                 {/* Main Navigation */}
-                <nav className="flex-1 space-y-1">
+                <nav aria-label="Developer navigation" className="flex-1 space-y-1">
                     <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground/60">
                         Navigation
                     </p>
@@ -115,20 +123,23 @@ export function DevelopmentSidebar() {
                 </nav>
 
                 {/* Quick Links */}
-                <div className="border-t border-border/30 pt-4">
+                <nav aria-label="Developer quick links" className="border-t border-border/30 pt-4">
                     <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground/60">
                         Quick Links
                     </p>
                     {QUICK_LINKS.map((item) => (
                         <NavLink key={item.href} item={item} compact />
                     ))}
-                </div>
+                </nav>
 
                 {/* Back to App */}
                 <div className="mt-4 pt-4 border-t border-border/30">
                     <Link
                         href="/dashboard"
-                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                        className={cn(
+                            'flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground',
+                            FOCUS_RING_CLASSES,
+                        )}
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Exit Dev Mode
@@ -152,6 +163,7 @@ function NavLink({ item, compact = false }: { item: NavItem; compact?: boolean }
             className={cn(
                 'group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200',
                 'text-muted-foreground hover:bg-primary/10 hover:text-foreground',
+                FOCUS_RING_CLASSES,
                 compact && 'py-1.5'
             )}
         >
@@ -170,12 +182,21 @@ function NavLink({ item, compact = false }: { item: NavItem; compact?: boolean }
 // Combined Shell
 // ============================================================================
 
-export function DevelopmentNavigationShell({ children, organizationLabel, userEmail }: DevelopmentNavigationProps & { children: React.ReactNode }) {
+export function DevelopmentNavigationShell({
+    children,
+    organizationLabel,
+    userEmail,
+    mainId,
+    mainTabIndex,
+}: DevelopmentNavigationProps & { children: React.ReactNode }) {
+    const resolvedMainId = mainId ?? 'dev-main-content';
+    const resolvedTabIndex = typeof mainTabIndex === 'number' ? mainTabIndex : -1;
+
     return (
         <div className="min-h-screen bg-background">
             <DevelopmentTopBar organizationLabel={organizationLabel} userEmail={userEmail} />
             <DevelopmentSidebar />
-            <main className="ml-56 min-h-[calc(100vh-3.5rem)] p-6">
+            <main id={resolvedMainId} tabIndex={resolvedTabIndex} className="ml-56 min-h-[calc(100vh-3.5rem)] p-6">
                 {children}
             </main>
         </div>

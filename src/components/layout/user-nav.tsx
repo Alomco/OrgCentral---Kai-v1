@@ -109,7 +109,7 @@ export function UserNav({ session, authorization }: UserNavProps) {
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer transition-all duration-200 hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20">
-                        <Link href="/settings" className="flex items-center">
+                        <Link href="/org/settings" className="flex items-center">
                             <Settings className="mr-2 h-4 w-4" />
                             <span>Settings</span>
                         </Link>

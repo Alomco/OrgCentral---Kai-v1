@@ -4,6 +4,7 @@ import { LoginService, type LoginServiceInput } from '../login-service';
 import type { LoginServiceDependencies } from '../login-service';
 import type { OrganizationData } from '@/server/types/leave-types';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
+import type { PrismaInputJsonObject } from '@/server/types/prisma';
 import { normalizeLeaveYearStartDate } from '@/server/types/org/leave-year-start-date';
 
 function buildOrganization(overrides?: Partial<OrganizationData>): OrganizationData {
@@ -30,33 +31,44 @@ function buildRepository(): {
     repository: IOrganizationRepository;
     getOrganizationBySlug: ReturnType<typeof vi.fn>;
 } {
-    const getOrganizationBySlug = vi.fn();
+    const getOrganizationBySlug = vi.fn<IOrganizationRepository['getOrganizationBySlug']>();
     const repository: IOrganizationRepository = {
-        getOrganization: vi.fn(),
+        getOrganization: vi.fn<IOrganizationRepository['getOrganization']>(),
         getOrganizationBySlug,
-        getLeaveEntitlements: vi.fn(async () => ({})),
-        updateLeaveSettings: vi.fn(async () => undefined),
-        updateOrganizationProfile: vi.fn(async () => buildOrganization()),
-        createOrganization: vi.fn(async (input) =>
-            buildOrganization({ slug: input.slug, name: input.name, dataResidency: input.dataResidency ?? 'UK_ONLY', dataClassification: input.dataClassification ?? 'OFFICIAL' }),
+        getLeaveEntitlements: vi.fn<IOrganizationRepository['getLeaveEntitlements']>(() => Promise.resolve({})),
+        updateLeaveSettings: vi.fn<IOrganizationRepository['updateLeaveSettings']>(() => Promise.resolve(undefined)),
+        updateOrganizationProfile: vi.fn<IOrganizationRepository['updateOrganizationProfile']>(() => Promise.resolve(buildOrganization())),
+        getOrganizationSettings: vi.fn<IOrganizationRepository['getOrganizationSettings']>(() => Promise.resolve({} as PrismaInputJsonObject)),
+        updateOrganizationSettings: vi.fn<IOrganizationRepository['updateOrganizationSettings']>(() => Promise.resolve(undefined)),
+        createOrganization: vi.fn<IOrganizationRepository['createOrganization']>((input) =>
+            Promise.resolve(
+                buildOrganization({
+                    slug: input.slug,
+                    name: input.name,
+                    dataResidency: input.dataResidency ?? 'UK_ONLY',
+                    dataClassification: input.dataClassification ?? 'OFFICIAL',
+                }),
+            ),
         ),
-        addCustomLeaveType: vi.fn(async () => undefined),
-        removeLeaveType: vi.fn(async () => undefined),
+        addCustomLeaveType: vi.fn<IOrganizationRepository['addCustomLeaveType']>(() => Promise.resolve(undefined)),
+        removeLeaveType: vi.fn<IOrganizationRepository['removeLeaveType']>(() => Promise.resolve(undefined)),
     };
 
     return { repository, getOrganizationBySlug };
 }
 
 type SignInEmailFunction = LoginServiceDependencies['authClient']['api']['signInEmail'];
+type SignInEmailReturn = Awaited<ReturnType<SignInEmailFunction>>;
 
 function buildAuthClient(): {
     client: LoginServiceDependencies['authClient'];
     signInEmail: ReturnType<typeof vi.fn>;
 } {
-    const signInEmail = vi.fn();
+    const signInEmail = vi.fn<SignInEmailFunction>();
+    const signInEmailWithMeta = Object.assign(signInEmail, { options: {}, path: '/auth/sign-in-email' }) as unknown as SignInEmailFunction;
     const client: LoginServiceDependencies['authClient'] = {
         api: {
-            signInEmail: signInEmail as unknown as SignInEmailFunction,
+            signInEmail: signInEmailWithMeta,
         },
     };
 
@@ -114,12 +126,22 @@ describe('LoginService', () => {
     it('delegates to Better Auth when organization exists', async () => {
         getOrganizationBySlug.mockResolvedValueOnce(buildOrganization());
         const signInResult = {
-            user: { id: 'user-1' },
+            redirect: false,
+            token: 'token-1',
             url: '/app',
+            user: {
+                id: 'user-1',
+                email: 'user@example.com',
+                name: 'User One',
+                image: null,
+                emailVerified: true,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
         } as const;
         const input = buildInput();
         const authHeaders = new Headers({ 'set-cookie': 'better-auth.session=abc; Path=/; HttpOnly' });
-        signInEmail.mockResolvedValueOnce({ headers: authHeaders, response: signInResult });
+        signInEmail.mockResolvedValueOnce({ headers: authHeaders, response: signInResult } as unknown as SignInEmailReturn);
 
         const result = await service.signIn(input);
 

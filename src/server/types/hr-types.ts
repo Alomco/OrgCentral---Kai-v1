@@ -1,4 +1,10 @@
-import type { Prisma, $Enums } from '@prisma/client';
+import type {
+  PrismaJsonValue,
+  PrismaMembershipStatus,
+  PrismaNotificationChannel,
+  PrismaRoleScope,
+  PrismaSessionStatus,
+} from '@/server/types/prisma';
 import type { EmployeeProfileDTO, EmploymentContractDTO } from './hr/people';
 
 export type {
@@ -9,7 +15,7 @@ export type {
   PerformanceReviewWithGoals,
 } from '../domain/hr/performance/types';
 
-type JsonValue = Prisma.JsonValue;
+type JsonValue = PrismaJsonValue;
 
 // Training record domain aligned to Prisma schema
 export interface TrainingRecord {
@@ -62,7 +68,7 @@ export interface UserSession {
   id: string;
   userId: string;
   sessionId: string;
-  status: $Enums.SessionStatus;
+  status: PrismaSessionStatus;
   ipAddress?: string | null;
   userAgent?: string | null;
   startedAt: Date;
@@ -86,6 +92,8 @@ export interface Department {
   updatedAt: Date;
 }
 
+export type DepartmentRecord = Department;
+
 // Integration config domain aligned to Prisma schema
 export interface IntegrationConfig {
   id: string;
@@ -99,17 +107,21 @@ export interface IntegrationConfig {
   updatedAt: Date;
 }
 
+export type IntegrationConfigRecord = IntegrationConfig;
+
 // Notification preference domain aligned to Prisma schema
 export interface NotificationPreference {
   id: string;
   orgId: string;
   userId: string;
-  channel: $Enums.NotificationChannel;
+  channel: PrismaNotificationChannel;
   enabled: boolean;
   quietHours?: JsonValue;
   metadata?: JsonValue;
   updatedAt: Date;
 }
+
+export type NotificationPreferenceRecord = NotificationPreference;
 
 // Role domain aligned to Prisma schema
 export interface Role {
@@ -117,7 +129,7 @@ export interface Role {
   orgId: string;
   name: string;
   description?: string | null;
-  scope: $Enums.RoleScope;
+  scope: PrismaRoleScope;
   permissions: JsonValue;
   inheritsRoleIds?: string[];
   isSystem?: boolean;
@@ -126,12 +138,14 @@ export interface Role {
   updatedAt: Date;
 }
 
+export type RoleRecord = Role;
+
 // User domain aligned to Prisma schema
 export interface User {
   id: string;
   email: string;
   displayName?: string | null;
-  status: $Enums.MembershipStatus;
+  status: PrismaMembershipStatus;
   authProvider: string;
   lastLoginAt?: Date | null;
   failedLoginCount: number;
@@ -140,3 +154,5 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type UserRecord = User;

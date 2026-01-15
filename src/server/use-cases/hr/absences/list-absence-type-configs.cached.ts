@@ -4,7 +4,7 @@ import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { AbsenceTypeConfig } from '@/server/types/hr-ops-types';
-import { PrismaAbsenceTypeConfigRepository } from '@/server/repositories/prisma/hr/absences';
+import { buildAbsenceServiceDependencies } from '@/server/repositories/providers/hr/absence-service-dependencies';
 
 import { listAbsenceTypeConfigs } from './list-absence-type-configs';
 
@@ -17,8 +17,9 @@ export interface ListAbsenceTypeConfigsForUiResult {
     types: AbsenceTypeConfig[];
 }
 
-function resolveRepository() {
-    return new PrismaAbsenceTypeConfigRepository();
+function resolveDependencies() {
+    const { typeConfigRepository } = buildAbsenceServiceDependencies();
+    return { typeConfigRepository };
 }
 
 export async function listAbsenceTypeConfigsForUi(
@@ -31,7 +32,7 @@ export async function listAbsenceTypeConfigsForUi(
         cacheLife(CACHE_LIFE_SHORT);
 
         const result = await listAbsenceTypeConfigs(
-            { typeConfigRepository: resolveRepository() },
+            resolveDependencies(),
             cachedInput,
         );
 
@@ -41,7 +42,7 @@ export async function listAbsenceTypeConfigsForUi(
     if (input.authorization.dataClassification !== 'OFFICIAL') {
         noStore();
         const result = await listAbsenceTypeConfigs(
-            { typeConfigRepository: resolveRepository() },
+            resolveDependencies(),
             input,
         );
         return { types: result.types };

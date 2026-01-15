@@ -50,7 +50,7 @@ export async function submitLeaveRequestController(
     const requestId = payload.id ?? randomUUID();
     const actorUserId = payload.userId ?? userId;
     const submittedAt = new Date();
-    const hoursPerDay = await resolveHoursPerDay(absenceSettingsRepository, authorization.orgId);
+    const hoursPerDay = await resolveHoursPerDay(absenceSettingsRepository, authorization);
     const leaveRequest: Omit<LeaveRequest, 'createdAt'> = {
         id: requestId,
         orgId: authorization.orgId,

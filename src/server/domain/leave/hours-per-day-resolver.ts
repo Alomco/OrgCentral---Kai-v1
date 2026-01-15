@@ -1,11 +1,12 @@
 import type { IAbsenceSettingsRepository } from '@/server/repositories/contracts/hr/absences/absence-settings-repository-contract';
+import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 import { DEFAULT_WORKING_HOURS_PER_DAY } from './leave-calculator';
 
 export async function resolveHoursPerDay(
     absenceSettingsRepository: IAbsenceSettingsRepository,
-    orgId: string,
+    authorization: RepositoryAuthorizationContext,
 ): Promise<number> {
-    const settings = await absenceSettingsRepository.getSettings(orgId);
+    const settings = await absenceSettingsRepository.getSettings(authorization);
     if (settings?.hoursInWorkDay) {
         const parsed = typeof settings.hoursInWorkDay === 'number'
             ? settings.hoursInWorkDay

@@ -1,18 +1,18 @@
-import { Prisma } from '@prisma/client';
-import type { EventOutbox } from '@prisma/client';
 import type { IEventOutboxRepository } from '@/server/repositories/contracts/records/event-outbox-repository-contract';
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { EventOutboxFilters, EventOutboxCreationData, EventOutboxUpdateData } from './prisma-event-outbox-repository.types';
+import { Prisma } from '@/server/types/prisma';
+import type { PrismaEventOutbox, PrismaInputJsonValue } from '@/server/types/prisma';
 
 export class PrismaEventOutboxRepository extends BasePrismaRepository implements IEventOutboxRepository {
-  async findById(id: string): Promise<EventOutbox | null> {
+  async findById(id: string): Promise<PrismaEventOutbox | null> {
     return this.prisma.eventOutbox.findUnique({
       where: { id },
     });
   }
 
-  async findAll(filters?: EventOutboxFilters): Promise<EventOutbox[]> {
+  async findAll(filters?: EventOutboxFilters): Promise<PrismaEventOutbox[]> {
     const whereClause: Prisma.EventOutboxWhereInput = {};
 
     if (filters?.orgId) {
@@ -43,7 +43,7 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async findPendingEvents(limit = 100): Promise<EventOutbox[]> {
+  async findPendingEvents(limit = 100): Promise<PrismaEventOutbox[]> {
     return getModelDelegate(this.prisma, 'eventOutbox').findMany({
       where: {
         status: 'pending',
@@ -54,7 +54,7 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async findFailedEvents(limit = 100): Promise<EventOutbox[]> {
+  async findFailedEvents(limit = 100): Promise<PrismaEventOutbox[]> {
     return getModelDelegate(this.prisma, 'eventOutbox').findMany({
       where: {
         status: 'failed',
@@ -65,17 +65,17 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async create(data: EventOutboxCreationData): Promise<EventOutbox> {
+  async create(data: EventOutboxCreationData): Promise<PrismaEventOutbox> {     
     return getModelDelegate(this.prisma, 'eventOutbox').create({
       data: {
         ...data,
         status: data.status ?? 'pending',
-        payload: toPrismaInputJson(data.payload) as Prisma.InputJsonValue,
+        payload: toRequiredJson(data.payload),
       },
     });
   }
 
-  async update(id: string, data: EventOutboxUpdateData): Promise<EventOutbox> {
+  async update(id: string, data: EventOutboxUpdateData): Promise<PrismaEventOutbox> {
     const updateData: Prisma.EventOutboxUpdateInput = {};
     if (data.status !== undefined) {
       updateData.status = data.status;
@@ -101,7 +101,7 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async markAsProcessing(id: string): Promise<EventOutbox> {
+  async markAsProcessing(id: string): Promise<PrismaEventOutbox> {
     return getModelDelegate(this.prisma, 'eventOutbox').update({
       where: { id },
       data: {
@@ -110,7 +110,7 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async markAsProcessed(id: string): Promise<EventOutbox> {
+  async markAsProcessed(id: string): Promise<PrismaEventOutbox> {
     return getModelDelegate(this.prisma, 'eventOutbox').update({
       where: { id },
       data: {
@@ -120,13 +120,14 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async markAsFailed(id: string, error?: Prisma.InputJsonValue | null): Promise<EventOutbox> {
-    const errorString = error ?? null;
+  async markAsFailed(id: string, error?: PrismaInputJsonValue | null): Promise<PrismaEventOutbox> {
+    const errorValue =
+      error === undefined ? Prisma.JsonNull : toPrismaInputJson(error) ?? Prisma.JsonNull;
     return getModelDelegate(this.prisma, 'eventOutbox').update({
       where: { id },
       data: {
         status: 'failed',
-        error: errorString as unknown as Prisma.InputJsonValue | typeof Prisma.JsonNull,
+        error: errorValue,
         retryCount: {
           increment: 1
         }
@@ -134,7 +135,7 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
   }
 
-  async delete(id: string): Promise<EventOutbox> {
+  async delete(id: string): Promise<PrismaEventOutbox> {
     return getModelDelegate(this.prisma, 'eventOutbox').delete({
       where: { id },
     });
@@ -150,4 +151,18 @@ export class PrismaEventOutboxRepository extends BasePrismaRepository implements
     });
     return result.count;
   }
+}
+
+function toRequiredJson(
+  value: Parameters<typeof toPrismaInputJson>[0],
+): Prisma.InputJsonValue {
+  const resolved = toPrismaInputJson(value);
+  if (
+    resolved === undefined
+    || resolved === Prisma.DbNull
+    || resolved === Prisma.JsonNull
+  ) {
+    return {};
+  }
+  return resolved as Prisma.InputJsonValue;
 }

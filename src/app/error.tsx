@@ -9,6 +9,7 @@ import {
     ErrorLinkButton,
     ErrorRetryButton,
 } from '@/components/error';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 interface GlobalErrorProps {
     error: Error & { digest?: string };
@@ -28,6 +29,7 @@ export default function GlobalError({ reset }: GlobalErrorProps) {
                 <ErrorActions>
                     <ErrorRetryButton reset={reset} />
                     <ErrorLinkButton href="/">Go home</ErrorLinkButton>
+                    <LogoutButton label="Sign out" variant="outline" size="sm" />
                 </ErrorActions>
             </ErrorPageLayout>
         </div>

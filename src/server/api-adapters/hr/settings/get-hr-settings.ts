@@ -1,7 +1,7 @@
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getHrSettings } from '@/server/use-cases/hr/settings/get-hr-settings';
 import type { AbsenceSettings } from '@/server/types/hr-ops-types';
-import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 import type { ResolvedHrSettingsControllerDependencies } from './common';
 
 import {
@@ -38,9 +38,7 @@ export async function getHrSettingsController(
 		{ hrSettingsRepository },
 		{ authorization, orgId: authorization.orgId },
 	);
-	const absenceSettings: AbsenceSettings | null = await absenceSettingsRepository.getSettings(
-		authorization.orgId,
-	);
+	const absenceSettings: AbsenceSettings | null = await absenceSettingsRepository.getSettings(authorization);
 
 	return {
 		success: true,

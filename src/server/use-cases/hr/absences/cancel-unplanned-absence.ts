@@ -40,8 +40,7 @@ export async function cancelUnplannedAbsence(
 ): Promise<CancelUnplannedAbsenceResult> {
     assertPrivilegedOrgAbsenceActor(input.authorization);
 
-    const orgId = input.authorization.orgId;
-    const absence = await deps.absenceRepository.getAbsence(orgId, input.absenceId);
+    const absence = await deps.absenceRepository.getAbsence(input.authorization, input.absenceId);
     if (!absence) {
         throw new EntityNotFoundError('Unplanned absence', { id: input.absenceId });
     }
@@ -49,7 +48,7 @@ export async function cancelUnplannedAbsence(
         throw new AbsenceAlreadyClosedError({ absenceId: input.absenceId, status: absence.status });
     }
 
-    const absenceType = await deps.typeConfigRepository.getConfig(orgId, absence.typeId);
+    const absenceType = await deps.typeConfigRepository.getConfig(input.authorization, absence.typeId);
     if (!absenceType) {
         throw new EntityNotFoundError('Absence type', { id: absence.typeId });
     }
@@ -64,7 +63,7 @@ export async function cancelUnplannedAbsence(
         mergeMetadata(store, input.payload.metadata);
     });
 
-    const updated = await deps.absenceRepository.updateAbsence(orgId, absence.id, {
+    const updated = await deps.absenceRepository.updateAbsence(input.authorization, absence.id, {
         status: 'CANCELLED',
         metadata,
     });

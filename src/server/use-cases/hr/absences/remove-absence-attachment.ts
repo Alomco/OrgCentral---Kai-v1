@@ -24,7 +24,7 @@ export async function removeAbsenceAttachment(
     deps: RemoveAbsenceAttachmentDependencies,
     input: RemoveAbsenceAttachmentInput,
 ): Promise<RemoveAbsenceAttachmentResult> {
-    const absence = await deps.absenceRepository.getAbsence(input.authorization.orgId, input.absenceId);
+    const absence = await deps.absenceRepository.getAbsence(input.authorization, input.absenceId);
     if (!absence) {
         throw new EntityNotFoundError('Absence', { absenceId: input.absenceId });
     }
@@ -32,7 +32,7 @@ export async function removeAbsenceAttachment(
     assertActorOrPrivileged(input.authorization, absence.userId);
 
     const updated = await deps.absenceRepository.removeAttachment(
-        input.authorization.orgId,
+        input.authorization,
         input.absenceId,
         input.payload.attachmentId,
     );

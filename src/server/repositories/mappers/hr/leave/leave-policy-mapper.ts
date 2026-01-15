@@ -1,8 +1,36 @@
-import type { Prisma, LeavePolicy as PrismaLeavePolicy } from '@prisma/client';
-import type { LeavePolicy as DomainLeavePolicy, LeavePolicyType, LeaveAccrualFrequency } from '@/server/types/leave-types';
+import type { LeavePolicy as DomainLeavePolicy, LeaveAccrualFrequency, LeavePolicyType } from '@/server/types/leave-types';
 import type { LeavePolicyCreationData, LeavePolicyUpdateData } from '@/server/repositories/prisma/hr/leave/prisma-leave-policy-repository.types';
+import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
+import { Prisma as PrismaValue, type PrismaDecimal, type PrismaInputJsonValue } from '@/server/types/prisma';
+import type { Prisma } from '@prisma/client';
+import { toNumber } from '@/server/domain/absences/conversions';
 
-export function mapCreateToPrisma(input: LeavePolicyCreationData): Prisma.LeavePolicyUncheckedCreateInput {
+interface LeavePolicyRecord {
+    id: string;
+    orgId: string;
+    dataClassification: DataClassificationLevel;
+    residencyTag: DataResidencyZone;
+    auditSource?: string | null;
+    auditBatchId?: string | null;
+    name: string;
+    policyType: LeavePolicyType;
+    accrualFrequency: LeaveAccrualFrequency;
+    accrualAmount?: PrismaDecimal | null;
+    carryOverLimit?: number | null;
+    requiresApproval: boolean;
+    isDefault: boolean;
+    activeFrom: Date;
+    activeTo?: Date | null;
+    statutoryCompliance?: boolean | null;
+    maxConsecutiveDays?: number | null;
+    allowNegativeBalance?: boolean | null;
+    metadata?: PrismaInputJsonValue | null;
+}
+
+type LeavePolicyCreatePayload = Prisma.LeavePolicyUncheckedCreateInput;
+type LeavePolicyUpdatePayload = Prisma.LeavePolicyUncheckedUpdateInput;
+
+export function mapCreateToPrisma(input: LeavePolicyCreationData): LeavePolicyCreatePayload {
     const {
         orgId,
         departmentId,
@@ -30,26 +58,26 @@ export function mapCreateToPrisma(input: LeavePolicyCreationData): Prisma.LeaveP
         departmentId: departmentId ?? undefined,
         name,
         policyType,
-        accrualFrequency,
-        accrualAmount: accrualAmount ?? undefined,
-        carryOverLimit: carryOverLimit ?? undefined,
+        accrualFrequency: accrualFrequency ?? undefined,
+        accrualAmount: accrualAmount ?? null,
+        carryOverLimit: carryOverLimit ?? null,
         requiresApproval: requiresApproval ?? true,
         isDefault: isDefault ?? false,
         activeFrom: activeFrom instanceof Date ? activeFrom : new Date(activeFrom),
-        activeTo: activeTo ? (activeTo instanceof Date ? activeTo : new Date(activeTo)) : undefined,
+        activeTo: activeTo ? (activeTo instanceof Date ? activeTo : new Date(activeTo)) : null,
         statutoryCompliance: statutoryCompliance ?? false,
-        maxConsecutiveDays: maxConsecutiveDays ?? undefined,
+        maxConsecutiveDays: maxConsecutiveDays ?? null,
         allowNegativeBalance: allowNegativeBalance ?? false,
         dataClassification: dataClassification ?? undefined,
         residencyTag: residencyTag ?? undefined,
-        auditSource: auditSource ?? undefined,
-        auditBatchId: auditBatchId ?? undefined,
-        metadata: (metadata ?? undefined) as Prisma.InputJsonValue,
-    } as Prisma.LeavePolicyUncheckedCreateInput;
+        auditSource: auditSource ?? null,
+        auditBatchId: auditBatchId ?? null,
+        metadata: toJsonNullInput(metadata),
+    } satisfies LeavePolicyCreatePayload;
 }
 
-export function buildPrismaLeavePolicyUpdate(updates: Partial<LeavePolicyUpdateData>): Prisma.LeavePolicyUncheckedUpdateInput {
-    const prismaUpdate: Prisma.LeavePolicyUncheckedUpdateInput = {};
+export function buildPrismaLeavePolicyUpdate(updates: Partial<LeavePolicyUpdateData>): LeavePolicyUpdatePayload {
+    const prismaUpdate: LeavePolicyUpdatePayload = {};
 
     if (updates.name !== undefined) {
         prismaUpdate.name = updates.name;
@@ -57,17 +85,17 @@ export function buildPrismaLeavePolicyUpdate(updates: Partial<LeavePolicyUpdateD
     if (updates.policyType !== undefined) {
         prismaUpdate.policyType = updates.policyType;
     }
-    if (Object.prototype.hasOwnProperty.call(updates, 'departmentId')) {
-        prismaUpdate.departmentId = updates.departmentId as string | null;
+    if ('departmentId' in updates) {
+        prismaUpdate.departmentId = updates.departmentId ?? null;
     }
     if (updates.accrualFrequency !== undefined) {
         prismaUpdate.accrualFrequency = updates.accrualFrequency;
     }
-    if (updates.accrualAmount !== undefined) {
-        prismaUpdate.accrualAmount = updates.accrualAmount;
+    if ('accrualAmount' in updates) {
+        prismaUpdate.accrualAmount = updates.accrualAmount ?? null;
     }
-    if (Object.prototype.hasOwnProperty.call(updates, 'carryOverLimit')) {
-        prismaUpdate.carryOverLimit = updates.carryOverLimit as number | null;
+    if ('carryOverLimit' in updates) {
+        prismaUpdate.carryOverLimit = updates.carryOverLimit ?? null;
     }
     if (updates.requiresApproval !== undefined) {
         prismaUpdate.requiresApproval = updates.requiresApproval;
@@ -78,14 +106,14 @@ export function buildPrismaLeavePolicyUpdate(updates: Partial<LeavePolicyUpdateD
     if (updates.activeFrom !== undefined) {
         prismaUpdate.activeFrom = updates.activeFrom;
     }
-    if (updates.activeTo !== undefined) {
-        prismaUpdate.activeTo = updates.activeTo;
+    if ('activeTo' in updates) {
+        prismaUpdate.activeTo = updates.activeTo ?? null;
     }
     if (updates.statutoryCompliance !== undefined) {
         prismaUpdate.statutoryCompliance = updates.statutoryCompliance;
     }
-    if (Object.prototype.hasOwnProperty.call(updates, 'maxConsecutiveDays')) {
-        prismaUpdate.maxConsecutiveDays = updates.maxConsecutiveDays as number | null;
+    if ('maxConsecutiveDays' in updates) {
+        prismaUpdate.maxConsecutiveDays = updates.maxConsecutiveDays ?? null;
     }
     if (updates.allowNegativeBalance !== undefined) {
         prismaUpdate.allowNegativeBalance = updates.allowNegativeBalance;
@@ -96,20 +124,37 @@ export function buildPrismaLeavePolicyUpdate(updates: Partial<LeavePolicyUpdateD
     if (updates.residencyTag !== undefined) {
         prismaUpdate.residencyTag = updates.residencyTag;
     }
-    if (updates.auditSource !== undefined) {
-        prismaUpdate.auditSource = updates.auditSource;
+    if ('auditSource' in updates) {
+        prismaUpdate.auditSource = updates.auditSource ?? null;
     }
-    if (updates.auditBatchId !== undefined) {
-        prismaUpdate.auditBatchId = updates.auditBatchId;
+    if ('auditBatchId' in updates) {
+        prismaUpdate.auditBatchId = updates.auditBatchId ?? null;
     }
-    if (updates.metadata !== undefined) {
-        prismaUpdate.metadata = updates.metadata ? (updates.metadata as Prisma.InputJsonValue) : undefined;
+    if ('metadata' in updates) {
+        prismaUpdate.metadata = toJsonNullInput(updates.metadata);
     }
 
     return prismaUpdate;
 }
 
-export function mapPrismaToDomain(record: PrismaLeavePolicy): DomainLeavePolicy {
+function toJsonNullInput(
+    value: PrismaInputJsonValue | Record<string, unknown> | null | undefined,
+): PrismaInputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
+    if (value === null) {
+        return PrismaValue.JsonNull;
+    }
+    if (value === undefined) {
+        return undefined;
+    }
+    return value as PrismaInputJsonValue;
+}
+
+export function mapPrismaToDomain(record: LeavePolicyRecord): DomainLeavePolicy {
+    const accrualAmount =
+        record.accrualAmount === null || record.accrualAmount === undefined
+            ? null
+            : toNumber(record.accrualAmount);
+
     return {
         id: record.id,
         orgId: record.orgId,
@@ -118,21 +163,21 @@ export function mapPrismaToDomain(record: PrismaLeavePolicy): DomainLeavePolicy 
         auditSource: record.auditSource ?? 'leave-policy',
         auditBatchId: record.auditBatchId ?? undefined,
         name: record.name,
-        policyType: record.policyType as LeavePolicyType,
-        accrualFrequency: record.accrualFrequency as LeaveAccrualFrequency,
-        accrualAmount: record.accrualAmount ? Number(record.accrualAmount) : undefined,
+        policyType: record.policyType,
+        accrualFrequency: record.accrualFrequency,
+        accrualAmount,
         carryOverLimit: record.carryOverLimit ?? undefined,
         requiresApproval: record.requiresApproval,
         isDefault: record.isDefault,
         activeFrom: record.activeFrom.toISOString(),
         activeTo: record.activeTo?.toISOString(),
-        statutoryCompliance: record.statutoryCompliance,
+        statutoryCompliance: record.statutoryCompliance ?? undefined,
         maxConsecutiveDays: record.maxConsecutiveDays ?? undefined,
-        allowNegativeBalance: record.allowNegativeBalance,
-        metadata: record.metadata ?? null,
+        allowNegativeBalance: record.allowNegativeBalance ?? undefined,
+        metadata: toMetadataRecord(record.metadata),
         createdAt: record.activeFrom.toISOString(),
         updatedAt: record.activeTo ? record.activeTo.toISOString() : record.activeFrom.toISOString(),
-    } as DomainLeavePolicy;
+    };
 }
 
 const exported = {
@@ -141,3 +186,18 @@ const exported = {
     mapPrismaToDomain,
 };
 export default exported;
+
+function toMetadataRecord(
+    value: PrismaInputJsonValue | null | undefined,
+): Record<string, unknown> | null | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
+    }
+    if (typeof value === 'object' && !Array.isArray(value)) {
+        return value as Record<string, unknown>;
+    }
+    return null;
+}

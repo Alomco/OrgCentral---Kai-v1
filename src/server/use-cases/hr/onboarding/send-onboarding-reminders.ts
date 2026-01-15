@@ -1,10 +1,9 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { IChecklistInstanceRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-instance-repository-contract';
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
-import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
+import type { NotificationComposerContract } from '@/server/repositories/contracts/notifications/notification-composer-contract';
 import { getNotificationComposerService } from '@/server/services/platform/notifications/notification-composer.provider';
-import { PrismaChecklistInstanceRepository } from '@/server/repositories/prisma/hr/onboarding';
-import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
+import { buildOnboardingServiceDependencies } from '@/server/repositories/providers/hr/onboarding-service-dependencies';
 
 export interface OnboardingReminderPayload {
     dryRun?: boolean;
@@ -33,11 +32,16 @@ const DEFAULT_MIN_DAYS_SINCE_START = 3;
 export function buildOnboardingReminderDependencies(
     overrides: Partial<OnboardingReminderDependencies> = {},
 ): OnboardingReminderDependencies {
+    const repositoryDependencies = buildOnboardingServiceDependencies({
+        overrides: {
+            checklistInstanceRepository: overrides.checklistInstanceRepository,
+            employeeProfileRepository: overrides.employeeProfileRepository,
+        },
+    });
+
     return {
-        checklistInstanceRepository:
-            overrides.checklistInstanceRepository ?? new PrismaChecklistInstanceRepository(),
-        employeeProfileRepository:
-            overrides.employeeProfileRepository ?? new PrismaEmployeeProfileRepository(),
+        checklistInstanceRepository: repositoryDependencies.checklistInstanceRepository,
+        employeeProfileRepository: repositoryDependencies.employeeProfileRepository,
         notificationComposer: overrides.notificationComposer ?? getNotificationComposerService(),
         now: overrides.now ?? (() => new Date()),
         minDaysSinceStart: overrides.minDaysSinceStart ?? DEFAULT_MIN_DAYS_SINCE_START,

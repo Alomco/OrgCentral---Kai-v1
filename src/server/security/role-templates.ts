@@ -1,4 +1,4 @@
-import type { RoleScope } from '@prisma/client';
+import type { RoleScope } from '@/server/types/prisma';
 import type { OrgPermissionMap } from './access-control';
 import type { OrgRoleKey } from './role-constants';
 import { globalAdminTemplate, ownerTemplate } from './role-templates.global';

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { OrganizationData } from '@/server/types/leave-types';
 import type { DataClassificationLevel, DataResidencyZone, TenantScope } from '@/server/types/tenant';
 import { isOrgRoleKey, type OrgPermissionMap, type OrgRoleKey } from '@/server/security/access-control';
-import type { RoleScope } from '@prisma/client';
+import type { RoleScope } from '@/server/types/prisma';
 import {
     authorizeOrgAccessAbacOnly,
     authorizeOrgAccessRbacOnly,

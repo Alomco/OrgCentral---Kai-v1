@@ -1,4 +1,10 @@
-import type { Prisma, DataClassificationLevel, DataResidencyZone, $Enums } from '@prisma/client';
+import type {
+  PrismaDecimal,
+  PrismaHealthStatus,
+  PrismaJsonValue,
+  DataClassificationLevel,
+  DataResidencyZone,
+} from '@/server/types/prisma';
 import type {
   HRNotificationDTO,
   HRNotificationPriorityCode,
@@ -12,16 +18,16 @@ export interface AbsenceTypeConfig {
   label: string;
   tracksBalance: boolean;
   isActive: boolean;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface AbsenceSettings {
   orgId: string;
-  hoursInWorkDay: Prisma.Decimal | number;
+  hoursInWorkDay: PrismaDecimal | number;
   roundingRule?: string | null;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,13 +39,13 @@ export interface UnplannedAbsence {
   typeId: string;
   startDate: Date;
   endDate: Date;
-  hours: Prisma.Decimal | number;
+  hours: PrismaDecimal | number;
   reason?: string | null;
   status: 'REPORTED' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'CLOSED';
-  healthStatus?: $Enums.HealthStatus | null;
+  healthStatus?: PrismaHealthStatus | null;
   approverOrgId?: string | null;
   approverUserId?: string | null;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
   attachments?: AbsenceAttachment[] | null;
   returnToWork?: ReturnToWorkRecord | null;
   deletionAudit?: AbsenceDeletionAuditEntry | null;
@@ -63,7 +69,7 @@ export interface AbsenceAttachment {
   checksum?: string | null;
   uploadedByUserId: string;
   uploadedAt: Date;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
   dataClassification: DataClassificationLevel;
   residencyTag: DataResidencyZone;
 }
@@ -82,7 +88,7 @@ export interface ReturnToWorkRecord {
   submittedAt: Date;
   dataClassification: DataClassificationLevel;
   residencyTag: DataResidencyZone;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
 }
 
 export interface ReturnToWorkRecordInput
@@ -96,7 +102,7 @@ export interface AbsenceDeletionAuditEntry {
   reason: string;
   deletedByUserId: string;
   deletedAt: Date;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
   dataClassification: DataClassificationLevel;
   residencyTag: DataResidencyZone;
 }
@@ -108,10 +114,10 @@ export interface TimeEntry {
   date: Date;
   clockIn: Date;
   clockOut?: Date | null;
-  totalHours?: Prisma.Decimal | number | null;
-  breakDuration?: Prisma.Decimal | number | null;
+  totalHours?: PrismaDecimal | number | null;
+  breakDuration?: PrismaDecimal | number | null;
   project?: string | null;
-  tasks?: Prisma.JsonValue;
+  tasks?: PrismaJsonValue;
   notes?: string | null;
   status: 'ACTIVE' | 'COMPLETED' | 'APPROVED' | 'REJECTED';
   approvedByOrgId?: string | null;
@@ -119,7 +125,7 @@ export interface TimeEntry {
   approvedAt?: Date | null;
   dataClassification: DataClassificationLevel;
   residencyTag: DataResidencyZone;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -141,13 +147,13 @@ export interface HRPolicy {
   version: string;
   effectiveDate: Date;
   expiryDate?: Date | null;
-  applicableRoles?: Prisma.JsonValue;
-  applicableDepartments?: Prisma.JsonValue;
+  applicableRoles?: PrismaJsonValue;
+  applicableDepartments?: PrismaJsonValue;
   requiresAcknowledgment: boolean;
   status: string;
   dataClassification: DataClassificationLevel;
   residencyTag: DataResidencyZone;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -160,7 +166,7 @@ export interface PolicyAcknowledgment {
   version: string;
   acknowledgedAt: Date;
   ipAddress?: string | null;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
 }
 
 export type HRNotification = HRNotificationDTO;
@@ -169,13 +175,13 @@ export type NotificationPriority = HRNotificationPriorityCode;
 
 export interface HRSettings {
   orgId: string;
-  leaveTypes?: Prisma.JsonValue;
-  workingHours?: Prisma.JsonValue;
-  approvalWorkflows?: Prisma.JsonValue;
-  overtimePolicy?: Prisma.JsonValue;
+  leaveTypes?: PrismaJsonValue;
+  workingHours?: PrismaJsonValue;
+  approvalWorkflows?: PrismaJsonValue;
+  overtimePolicy?: PrismaJsonValue;
   dataClassification: DataClassificationLevel;
   residencyTag: DataResidencyZone;
-  metadata?: Prisma.JsonValue;
+  metadata?: PrismaJsonValue;
   createdAt: Date;
   updatedAt: Date;
 }

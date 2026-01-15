@@ -1,4 +1,4 @@
-import { MembershipStatus } from '@prisma/client';
+import { MembershipStatus } from '@/server/types/prisma';
 
 import { AuthorizationError, ValidationError } from '@/server/errors';
 import type { IMembershipRepository } from '@/server/repositories/contracts/org/membership';
@@ -68,10 +68,25 @@ export async function createOrganizationWithOwner(
         { permissionResourceRepository: deps.permissionResourceRepository },
         { orgId: organization.id },
     );
+
+    const seedAuthorization: RepositoryAuthorizationContext = {
+        ...input.authorization,
+        orgId: organization.id,
+        dataResidency: organization.dataResidency,
+        dataClassification: organization.dataClassification,
+        tenantScope: {
+            orgId: organization.id,
+            dataResidency: organization.dataResidency,
+            dataClassification: organization.dataClassification,
+            auditSource: input.authorization.auditSource,
+            auditBatchId: input.authorization.auditBatchId,
+        },
+    };
+
     await seedDefaultAbsenceTypes(
         { typeConfigRepository: deps.absenceTypeConfigRepository },
         {
-            orgId: organization.id,
+            authorization: seedAuthorization,
             dataResidency: organization.dataResidency,
             dataClassification: organization.dataClassification,
         },

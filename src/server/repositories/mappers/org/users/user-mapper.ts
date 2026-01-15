@@ -1,7 +1,8 @@
-import type { User } from '@/server/types/hr-types';
-import type { Prisma, User as PrismaUser } from '@prisma/client';
+import type { User, UserRecord } from '@/server/types/hr-types';
 
-export function mapPrismaUserToDomain(record: PrismaUser): User {
+type UserCreateRecord = Omit<UserRecord, 'id'>;
+
+export function mapPrismaUserToDomain(record: UserRecord): User {
     return {
         id: record.id,
         email: record.email,
@@ -17,7 +18,7 @@ export function mapPrismaUserToDomain(record: PrismaUser): User {
     };
 }
 
-export function mapDomainUserToPrisma(input: User): Prisma.UserUncheckedCreateInput {
+export function mapDomainUserToPrisma(input: User): UserCreateRecord {
     return {
         email: input.email,
         displayName: input.displayName ?? null,

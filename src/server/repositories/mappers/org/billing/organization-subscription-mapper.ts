@@ -1,9 +1,10 @@
-import type { OrganizationSubscription } from '@prisma/client';
-
-import type { OrganizationSubscriptionData } from '@/server/types/billing-types';
+import type {
+  OrganizationSubscriptionData,
+  OrganizationSubscriptionRecord,
+} from '@/server/types/billing-types';
 
 export function mapOrganizationSubscriptionToData(
-  subscription: OrganizationSubscription,
+  subscription: OrganizationSubscriptionRecord,
 ): OrganizationSubscriptionData {
   return {
     id: subscription.id,

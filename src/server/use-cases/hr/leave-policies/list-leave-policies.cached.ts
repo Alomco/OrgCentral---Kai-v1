@@ -1,11 +1,11 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaLeavePolicyRepository } from '@/server/repositories/prisma/hr/leave';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { LeavePolicy } from '@/server/types/leave-types';
 import { listLeavePolicies, type ListLeavePoliciesInput } from './list-leave-policies';
+import { createLeavePolicyRepository } from '@/server/services/hr/leave/leave-repository.factory';
 
 export interface ListLeavePoliciesForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -14,10 +14,6 @@ export interface ListLeavePoliciesForUiInput {
 
 export interface ListLeavePoliciesForUiResult {
     policies: LeavePolicy[];
-}
-
-function resolveLeavePolicyRepository(): PrismaLeavePolicyRepository {
-    return new PrismaLeavePolicyRepository();
 }
 
 export async function listLeavePoliciesForUi(
@@ -30,7 +26,7 @@ export async function listLeavePoliciesForUi(
         cacheLife(CACHE_LIFE_SHORT);
 
         const result = await listLeavePolicies(
-            { leavePolicyRepository: resolveLeavePolicyRepository() },
+            { leavePolicyRepository: createLeavePolicyRepository() },
             { authorization: cachedInput.authorization, payload: cachedInput.payload },
         );
 
@@ -41,7 +37,7 @@ export async function listLeavePoliciesForUi(
         noStore();
 
         const result = await listLeavePolicies(
-            { leavePolicyRepository: resolveLeavePolicyRepository() },
+            { leavePolicyRepository: createLeavePolicyRepository() },
             { authorization: input.authorization, payload: input.payload },
         );
 

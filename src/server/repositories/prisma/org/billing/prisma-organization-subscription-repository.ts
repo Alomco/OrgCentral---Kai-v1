@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client';
-
 import type {
   IOrganizationSubscriptionRepository,
   OrganizationSubscriptionUpsertInput,
@@ -10,6 +8,7 @@ import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { mapOrganizationSubscriptionToData } from '@/server/repositories/mappers/org/billing/organization-subscription-mapper';
 import { CACHE_SCOPE_BILLING_SUBSCRIPTION } from '@/server/repositories/cache-scopes';
+import { PrismaTypes } from '@/server/types/prisma';
 
 const SUBSCRIPTION_NOT_FOUND_MESSAGE = 'Organization subscription not found.';
 
@@ -27,7 +26,7 @@ export class PrismaOrganizationSubscriptionRepository
     if (!subscription) {
       return null;
     }
-    this.assertTenantRecord(subscription, context.orgId);
+    this.assertTenantRecord(subscription, context);
     return mapOrganizationSubscriptionToData(subscription);
   }
 
@@ -65,7 +64,7 @@ export class PrismaOrganizationSubscriptionRepository
     const metadata =
       input.metadata && Object.keys(input.metadata).length > 0
         ? toPrismaInputJson(input.metadata)
-        : Prisma.JsonNull;
+        : PrismaTypes.JsonNull;
 
     const subscription = await getModelDelegate(this.prisma, 'organizationSubscription').upsert({
       where: { orgId: input.orgId },

@@ -4,7 +4,7 @@ import type { ILeavePolicyRepository } from '@/server/repositories/contracts/hr/
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { appLogger } from '@/server/logging/structured-logger';
-import type { NotificationDispatchContract } from '@/server/services/notifications/notification-service.provider';
+import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 import { assertNonEmpty } from '@/server/use-cases/shared';
 import {
     fetchLeaveRequest,

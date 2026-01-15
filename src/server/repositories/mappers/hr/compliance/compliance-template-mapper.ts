@@ -3,8 +3,7 @@ import type {
     ComplianceTemplateUpdateInput,
 } from '@/server/repositories/contracts/hr/compliance/compliance-template-repository-contract';
 import type { ComplianceTemplate, ComplianceTemplateItem } from '@/server/types/compliance-types';
-import type { JsonValue } from '@/server/repositories/prisma/helpers/prisma-utils';
-import { normalizeMetadata } from '@/server/repositories/mappers/metadata';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
 export interface ComplianceTemplateRecord {
     id: string;
@@ -12,10 +11,10 @@ export interface ComplianceTemplateRecord {
     name: string;
     categoryKey?: string | null;
     version?: string | null;
-    items: ComplianceTemplateItem[] | JsonValue | null | undefined;
+    items: ComplianceTemplateItem[] | PrismaJsonValue | null | undefined;
     createdAt: Date | string;
     updatedAt: Date | string;
-    metadata?: JsonValue | null;
+    metadata?: PrismaJsonValue | null;
 }
 
 export function mapComplianceTemplateRecordToDomain(record: ComplianceTemplateRecord): ComplianceTemplate {
@@ -32,7 +31,7 @@ export function mapComplianceTemplateRecordToDomain(record: ComplianceTemplateRe
         items,
         createdAt: record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt),
         updatedAt: record.updatedAt instanceof Date ? record.updatedAt : new Date(record.updatedAt),
-        metadata: normalizeMetadata(record.metadata),
+        metadata: record.metadata ?? undefined,
     };
 }
 

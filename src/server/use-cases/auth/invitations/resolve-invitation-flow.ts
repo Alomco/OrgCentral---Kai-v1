@@ -28,10 +28,6 @@ export async function shouldUseOnboardingFlow(
 
 function hasOnboardingData(invitation: InvitationRecord): boolean {
     const payload = invitation.onboardingData;
-    if (!payload || typeof payload !== 'object') {
-        return false;
-    }
-
     const employeeId = 'employeeId' in payload ? payload.employeeId : undefined;
     const onboardingTemplateId = 'onboardingTemplateId' in payload ? payload.onboardingTemplateId : undefined;
 

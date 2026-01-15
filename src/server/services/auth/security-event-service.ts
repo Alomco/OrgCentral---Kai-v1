@@ -4,8 +4,7 @@ import type { LogSecurityEventInput, LogSecurityEventOutput } from '@/server/typ
 import { logSecurityEvent } from '@/server/use-cases/auth/security/log-security-event';
 import type { ISecurityEventRepository } from '@/server/repositories/contracts/auth/security/security-event-repository-contract';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
-import { PrismaSecurityEventRepository } from '@/server/repositories/prisma/auth/security/prisma-security-event-repository';
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
+import { buildSecurityEventServiceDependencies } from '@/server/repositories/providers/auth/security-event-service-dependencies';
 
 const AUDIT_SOURCE = 'auth.security-event-service';
 
@@ -45,11 +44,12 @@ export function getSecurityEventService(
     overrides?: Partial<SecurityEventServiceDependencies>,
 ): SecurityEventService {
     if (!sharedService || overrides) {
+        const baseDependencies = buildSecurityEventServiceDependencies();
         const dependencies: SecurityEventServiceDependencies = {
             securityEventRepository:
-                overrides?.securityEventRepository ?? new PrismaSecurityEventRepository(),
+                overrides?.securityEventRepository ?? baseDependencies.securityEventRepository,
             organizationRepository:
-                overrides?.organizationRepository ?? new PrismaOrganizationRepository(),
+                overrides?.organizationRepository ?? baseDependencies.organizationRepository,
         };
 
         if (!overrides) {

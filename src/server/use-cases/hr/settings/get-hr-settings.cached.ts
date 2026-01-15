@@ -5,7 +5,7 @@ import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/
 import type { IHRSettingsRepository } from '@/server/repositories/contracts/hr/settings/hr-settings-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { HRSettings } from '@/server/types/hr-ops-types';
-import { PrismaHRSettingsRepository } from '@/server/repositories/prisma/hr/settings';
+import { buildHrSettingsServiceDependencies } from '@/server/repositories/providers/hr/hr-settings-service-dependencies';
 import { getHrSettings } from './get-hr-settings';
 import { registerHrSettingsCacheTag } from './cache-helpers';
 
@@ -19,7 +19,7 @@ export interface GetHrSettingsCachedResult {
 }
 
 function resolveHrSettingsRepository(): IHRSettingsRepository {
-    return new PrismaHRSettingsRepository();
+    return buildHrSettingsServiceDependencies().hrSettingsRepository;
 }
 
 export async function getHrSettingsForUi(input: GetHrSettingsCachedInput): Promise<GetHrSettingsCachedResult> {

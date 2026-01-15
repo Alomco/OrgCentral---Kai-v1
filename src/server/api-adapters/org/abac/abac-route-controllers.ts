@@ -1,12 +1,10 @@
 import { z } from 'zod';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import { PrismaAbacPolicyRepository } from '@/server/repositories/prisma/org/abac/prisma-abac-policy-repository';
-import { getAbacPolicies as getAbacPoliciesUseCase } from '@/server/use-cases/org/abac/get-abac-policies';
-import { setAbacPolicies as setAbacPoliciesUseCase } from '@/server/use-cases/org/abac/set-abac-policies';
 import { ValidationError } from '@/server/errors';
 import { readJson } from '@/server/api-adapters/http/request-utils';
 import { abacPolicySchema } from '@/server/security/abac-policy-normalizer';
+import { getAbacPolicies, setAbacPolicies } from '@/server/services/org/abac/abac-service';
 
 const AUDIT_SOURCE = {
   get: 'api:org:abac:get',
@@ -40,11 +38,7 @@ export async function getOrgAbacPoliciesController(request: Request, orgId: stri
     },
   );
 
-  const repo = new PrismaAbacPolicyRepository();
-  return getAbacPoliciesUseCase(
-    { policyRepository: repo },
-    { authorization },
-  );
+  return getAbacPolicies(authorization);
 }
 
 export async function setOrgAbacPoliciesController(request: Request, orgId: string) {
@@ -69,14 +63,7 @@ export async function setOrgAbacPoliciesController(request: Request, orgId: stri
     },
   );
 
-  const repo = new PrismaAbacPolicyRepository();
-  return setAbacPoliciesUseCase(
-    { policyRepository: repo },
-    {
-      authorization,
-      policies,
-    },
-  );
+  return setAbacPolicies(authorization, policies);
 }
 
 function parseAbacPoliciesPayload(input: AbacPoliciesPayload): AbacPolicyInput[] {

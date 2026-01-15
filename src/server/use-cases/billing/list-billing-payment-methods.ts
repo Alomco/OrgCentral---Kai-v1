@@ -1,6 +1,6 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { PaymentMethodData } from '@/server/types/billing-types';
-import { getBillingService, type BillingServiceContract } from '@/server/services/billing/billing-service.provider';
+import { resolveBillingService, type BillingServiceContract } from '@/server/services/billing/billing-service.provider';
 
 // Use-case: list payment methods for org billing via billing service.
 
@@ -20,7 +20,10 @@ export async function listBillingPaymentMethods(
   dependencies: ListBillingPaymentMethodsDependencies,
   input: ListBillingPaymentMethodsInput,
 ): Promise<ListBillingPaymentMethodsResult> {
-  const service = dependencies.service ?? getBillingService();
+  const service = dependencies.service ?? resolveBillingService();
+  if (!service) {
+    return { paymentMethods: [] };
+  }
   const paymentMethods = await service.listPaymentMethods(input);
   return { paymentMethods };
 }

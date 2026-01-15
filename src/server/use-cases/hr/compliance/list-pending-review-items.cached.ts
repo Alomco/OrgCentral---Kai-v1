@@ -1,7 +1,7 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaComplianceItemRepository } from '@/server/repositories/prisma/hr/compliance';
+import { buildComplianceRepositoryDependencies } from '@/server/repositories/providers/hr/compliance-repository-dependencies';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ComplianceLogItem } from '@/server/types/compliance-types';
@@ -16,8 +16,9 @@ export interface ListPendingReviewComplianceItemsForUiResult {
     items: ComplianceLogItem[];
 }
 
-function resolveComplianceItemRepository(): PrismaComplianceItemRepository {
-    return new PrismaComplianceItemRepository();
+function resolveDependencies() {
+    const { complianceItemRepository } = buildComplianceRepositoryDependencies();
+    return { complianceItemRepository };
 }
 
 export async function listPendingReviewComplianceItemsForUi(
@@ -30,7 +31,7 @@ export async function listPendingReviewComplianceItemsForUi(
         cacheLife(CACHE_LIFE_SHORT);
 
         const items = await listPendingReviewComplianceItems(
-            { complianceItemRepository: resolveComplianceItemRepository() },
+            resolveDependencies(),
             cachedInput,
         );
 
@@ -41,7 +42,7 @@ export async function listPendingReviewComplianceItemsForUi(
         noStore();
 
         const items = await listPendingReviewComplianceItems(
-            { complianceItemRepository: resolveComplianceItemRepository() },
+            resolveDependencies(),
             input,
         );
 

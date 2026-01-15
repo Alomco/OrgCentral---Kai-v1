@@ -23,10 +23,6 @@ interface LoginPageProps {
     searchParams: Promise<LoginSearchParams>;
 }
 
-interface ResolvedLoginPageProps {
-    searchParams: LoginSearchParams;
-}
-
 interface LoginPageCopy {
     title: string;
     subtitle: string;
@@ -66,34 +62,33 @@ async function LoginPageContent({ initialOrgSlug }: LoginPageContentProps) {
     );
 }
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
-    const resolvedSearchParams = await searchParams;
-
+export default function LoginPage({ searchParams }: LoginPageProps) {
     return (
         <Suspense fallback={<LoginPageFallback />}>
-            <LoginGate searchParams={resolvedSearchParams} />
+            <LoginGate searchParams={searchParams} />
         </Suspense>
     );
 }
 
-async function LoginGate({ searchParams }: ResolvedLoginPageProps) {
+async function LoginGate({ searchParams }: LoginPageProps) {
+    const resolvedSearchParams = await searchParams;
     const headerStore = await nextHeaders();
     const session = await auth.api.getSession({
         headers: headerStore,
         query: { disableRefresh: true },
     });
 
-    const initialOrgSlug = extractOrgSlug(searchParams);
+    const initialOrgSlug = extractOrgSlug(resolvedSearchParams);
 
     if (session?.session) {
-        redirect(buildPostLoginRedirect(searchParams, initialOrgSlug));
+        redirect(buildPostLoginRedirect(resolvedSearchParams, initialOrgSlug));
     }
 
     return <LoginPageContent initialOrgSlug={initialOrgSlug} />;
 }
 
 function buildPostLoginRedirect(
-    searchParams: ResolvedLoginPageProps['searchParams'],
+    searchParams: LoginSearchParams,
     initialOrgSlug?: string,
 ): string {
     const params = new URLSearchParams();
@@ -112,13 +107,13 @@ function buildPostLoginRedirect(
     return query ? `/api/auth/post-login?${query}` : '/api/auth/post-login';
 }
 
-function extractNextPath(searchParams: ResolvedLoginPageProps['searchParams']): string | null {
+function extractNextPath(searchParams: LoginSearchParams): string | null {
     const value = searchParams.next;
     const nextParameter = Array.isArray(value) ? value[0] : value;
     return sanitizeNextPath(typeof nextParameter === 'string' ? nextParameter : null);
 }
 
-function extractOrgSlug(searchParams: ResolvedLoginPageProps['searchParams']): string | undefined {
+function extractOrgSlug(searchParams: LoginSearchParams): string | undefined {
     const value = searchParams.org;
     const orgSlug = Array.isArray(value) ? value[0] : value;
     if (typeof orgSlug !== 'string') {

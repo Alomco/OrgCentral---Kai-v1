@@ -1,9 +1,9 @@
-import type { Prisma } from '@prisma/client';
 import type { IPermissionResourceRepository } from '@/server/repositories/contracts/org/permissions/permission-resource-repository-contract';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { mapPrismaPermissionResourceToDomain } from '@/server/repositories/mappers/org/permissions/permission-resource-mapper';
 import type { PermissionResource } from '@/server/types/security-types';
+import type { Prisma, PrismaInputJsonValue } from '@/server/types/prisma';
 
 export class PrismaPermissionResourceRepository
     extends OrgScopedPrismaRepository
@@ -42,7 +42,7 @@ export class PrismaPermissionResourceRepository
             resource: input.resource,
             actions: input.actions,
             description: input.description ?? null,
-            metadata: input.metadata as Prisma.InputJsonValue | undefined,
+            metadata: input.metadata as PrismaInputJsonValue | undefined,
         };
         await getModelDelegate(this.prisma, 'permissionResource').create({ data });
     }
@@ -58,7 +58,7 @@ export class PrismaPermissionResourceRepository
             resource: updates.resource,
             actions: updates.actions,
             ...(updates.description !== undefined ? { description: updates.description } : {}),
-            metadata: updates.metadata as Prisma.InputJsonValue | undefined,
+            metadata: updates.metadata as PrismaInputJsonValue | undefined,
         };
         await getModelDelegate(this.prisma, 'permissionResource').update({ where: { id: resourceId }, data });
     }

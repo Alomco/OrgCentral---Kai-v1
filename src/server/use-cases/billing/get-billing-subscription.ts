@@ -1,6 +1,6 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { OrganizationSubscriptionData } from '@/server/types/billing-types';
-import { getBillingService, type BillingServiceContract } from '@/server/services/billing/billing-service.provider';
+import { resolveBillingService, type BillingServiceContract } from '@/server/services/billing/billing-service.provider';
 
 // Use-case: fetch billing subscription for an organization.
 
@@ -20,7 +20,10 @@ export async function getBillingSubscription(
   dependencies: GetBillingSubscriptionDependencies,
   input: GetBillingSubscriptionInput,
 ): Promise<GetBillingSubscriptionResult> {
-  const service = dependencies.service ?? getBillingService();
+  const service = dependencies.service ?? resolveBillingService();
+  if (!service) {
+    return { subscription: null };
+  }
   const subscription = await service.getSubscription(input);
   return { subscription };
 }

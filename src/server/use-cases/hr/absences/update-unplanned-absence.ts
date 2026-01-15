@@ -29,7 +29,7 @@ export async function updateUnplannedAbsence(
     input: UpdateUnplannedAbsenceInput,
 ): Promise<UpdateUnplannedAbsenceResult> {
     const { absenceRepository } = deps;
-    const current = await absenceRepository.getAbsence(input.authorization.orgId, input.absenceId);
+    const current = await absenceRepository.getAbsence(input.authorization, input.absenceId);
     if (!current) {
         throw new EntityNotFoundError('Absence', { absenceId: input.absenceId });
     }
@@ -44,7 +44,7 @@ export async function updateUnplannedAbsence(
     const endDate = input.payload.endDate ?? current.endDate;
     assertValidDateRange(startDate, endDate);
 
-    const settings = await deps.absenceSettingsRepository.getSettings(input.authorization.orgId);
+    const settings = await deps.absenceSettingsRepository.getSettings(input.authorization);
     const hoursPerDay = resolveHoursPerDay(settings);
     const startChanged = startDate.getTime() !== current.startDate.getTime();
     const endChanged = endDate.getTime() !== current.endDate.getTime();
@@ -91,7 +91,7 @@ export async function updateUnplannedAbsence(
     }
 
     const updated = await absenceRepository.updateAbsence(
-        input.authorization.orgId,
+        input.authorization,
         input.absenceId,
         updates,
     );

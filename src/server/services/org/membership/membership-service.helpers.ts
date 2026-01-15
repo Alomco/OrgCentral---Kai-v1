@@ -17,17 +17,35 @@ export async function buildAuthorizationContext(input: {
     const dataResidency: DataResidencyZone = organization?.dataResidency ?? 'UK_ONLY';
     const auditSource = 'identity.accept-invitation';
     const correlation = input.correlationId ?? randomUUID();
+    const now = new Date();
 
     return {
         orgId: input.orgId,
         userId: input.userId,
         roleKey: 'custom',
-        permissions: {},
         dataResidency,
         dataClassification,
         auditSource,
         auditBatchId: undefined,
         correlationId: correlation,
+        roleName: null,
+        roleId: null,
+        roleScope: null,
+        sessionId: correlation,
+        roles: ['custom'],
+        permissions: {},
+        mfaVerified: false,
+        ipAddress: 'unknown',
+        userAgent: 'unknown',
+        authenticatedAt: now,
+        sessionExpiresAt: new Date(now.getTime() + 30 * 60 * 1000),
+        lastActivityAt: now,
+        requiresMfa: false,
+        piiAccessRequired: false,
+        dataBreachRisk: false,
+        sessionToken: correlation,
+        authorizedAt: now,
+        authorizationReason: 'identity.accept-invitation',
         tenantScope: {
             orgId: input.orgId,
             dataResidency,

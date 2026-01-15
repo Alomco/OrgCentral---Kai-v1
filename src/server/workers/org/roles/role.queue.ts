@@ -1,12 +1,10 @@
-import type { JobsOptions, Queue } from 'bullmq';
+import type { JobsOptions } from 'bullmq';
 import { getSharedQueue } from '@/server/lib/queue';
 import { WORKER_QUEUE_NAMES } from '@/server/lib/worker-constants';
 import type { RoleUpdateEnvelope } from './role-worker.types';
+import type { RoleQueueContract, RoleQueueInput } from '@/server/repositories/contracts/org/roles/role-queue-contract';
 
-export interface RoleQueueClient {
-    queue: Queue;
-    enqueueRoleUpdate(envelope: RoleUpdateEnvelope, options?: JobsOptions): Promise<void>;
-}
+export type RoleQueueClient = RoleQueueContract;
 
 const DEFAULT_JOB_OPTIONS: JobsOptions = {
     removeOnComplete: true,
@@ -14,14 +12,18 @@ const DEFAULT_JOB_OPTIONS: JobsOptions = {
     backoff: { type: 'exponential', delay: 1000 },
 };
 
-export function getRoleQueueClient(): RoleQueueClient {
+export function getRoleQueueClient(): RoleQueueContract {
     const queue = getSharedQueue(WORKER_QUEUE_NAMES.ORG_ROLE_UPDATES, {
         defaultJobOptions: DEFAULT_JOB_OPTIONS,
     });
 
     return {
-        queue,
-        async enqueueRoleUpdate(envelope, jobOptions) {
+        async enqueueRoleUpdate(input: RoleQueueInput, jobOptions?: JobsOptions) {
+            const envelope: RoleUpdateEnvelope = {
+                orgId: input.orgId,
+                authorization: input.authorization,
+                payload: input.payload,
+            };
             await queue.add('role-update', envelope, jobOptions);
         },
     };

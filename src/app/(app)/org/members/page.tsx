@@ -173,7 +173,13 @@ function resolveInviteRoles(roleKey: string, roleNames: string[]): string[] {
     const existing = roleNames.length > 0 ? roleNames : ['member'];
     const merged = new Set(existing);
 
-    if (roleKey === 'globalAdmin' || roleKey === 'owner') {
+    if (roleKey === 'globalAdmin') {
+        merged.add('globalAdmin');
+        merged.add('orgAdmin');
+        return Array.from(merged).filter((role) => role === 'globalAdmin' || role === 'orgAdmin');
+    }
+
+    if (roleKey === 'owner') {
         merged.add('orgAdmin');
         return Array.from(merged).filter((role) => role === 'orgAdmin');
     }

@@ -15,7 +15,7 @@ export function DevelopmentToolbar() {
     }
 
     return (
-        <>
+        <aside aria-label="Developer tools" className="contents">
             {actions.map((action) =>
                 action.isActive && action.component ? <React.Fragment key={`panel-${action.id}`}>{action.component}</React.Fragment> : null,
             )}
@@ -69,6 +69,6 @@ export function DevelopmentToolbar() {
                     {isOpen ? <X className="h-5 w-5" /> : <Hammer className="h-5 w-5" />}
                 </button>
             </div>
-        </>
+        </aside>
     );
 }

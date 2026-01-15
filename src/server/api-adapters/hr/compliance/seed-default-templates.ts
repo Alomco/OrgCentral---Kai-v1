@@ -1,11 +1,10 @@
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import { PrismaComplianceTemplateRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-template-repository';
-import { PrismaComplianceCategoryRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-category-repository';
 import {
     seedDefaultComplianceTemplates,
     type SeedDefaultComplianceTemplatesDependencies,
 } from '@/server/use-cases/hr/compliance/seed-default-templates';
 import { seedComplianceTemplatesQuerySchema } from '@/server/types/hr-compliance-schemas';
+import { resolveComplianceControllerDependencies } from './common';
 
 export interface SeedComplianceTemplatesControllerResult {
     success: true;
@@ -31,9 +30,10 @@ export async function seedComplianceTemplatesController(request: Request): Promi
         },
     );
 
+    const { complianceTemplateRepository, complianceCategoryRepository } = resolveComplianceControllerDependencies();
     const useCaseDeps: SeedDefaultComplianceTemplatesDependencies = {
-        complianceTemplateRepository: new PrismaComplianceTemplateRepository(),
-        complianceCategoryRepository: new PrismaComplianceCategoryRepository(),
+        complianceTemplateRepository,
+        complianceCategoryRepository,
     };
 
     const result = await seedDefaultComplianceTemplates(useCaseDeps, {

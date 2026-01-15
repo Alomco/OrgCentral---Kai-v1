@@ -1,8 +1,6 @@
-import type { PaymentMethod } from '@prisma/client';
+import type { PaymentMethodData, PaymentMethodRecord } from '@/server/types/billing-types';
 
-import type { PaymentMethodData } from '@/server/types/billing-types';
-
-export function mapPaymentMethodToData(method: PaymentMethod): PaymentMethodData {
+export function mapPaymentMethodToData(method: PaymentMethodRecord): PaymentMethodData {
   return {
     id: method.id,
     orgId: method.orgId,

@@ -1,4 +1,3 @@
-import type { Department as PrismaDepartment, Prisma } from '@prisma/client';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import type { IDepartmentRepository } from '@/server/repositories/contracts/org/departments/department-repository-contract';
@@ -11,6 +10,7 @@ import type {
   DepartmentUpdateData,
 } from './prisma-department-repository.types';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { Prisma, PrismaDepartment } from '@/server/types/prisma';
 
 export class PrismaDepartmentRepository extends OrgScopedPrismaRepository implements IDepartmentRepository {
   async findById(id: string): Promise<PrismaDepartment | null> {
@@ -56,7 +56,7 @@ export class PrismaDepartmentRepository extends OrgScopedPrismaRepository implem
     this.tagCache(context, CACHE_SCOPE_DEPARTMENTS);
     const rec = await this.findById(departmentId);
     if (!rec) { return null; }
-    this.assertTenantRecord(rec, context.orgId);
+    this.assertTenantRecord(rec, context);
     return mapPrismaDepartmentToDomain(rec);
   }
 
@@ -91,7 +91,7 @@ export class PrismaDepartmentRepository extends OrgScopedPrismaRepository implem
 
   async updateDepartment(context: RepositoryAuthorizationContext, departmentId: string, updates: Partial<Omit<Department, 'id' | 'orgId' | 'createdAt' | 'headcount'>>): Promise<void> {
     const existing = await this.findById(departmentId);
-    this.assertTenantRecord(existing, context.orgId);
+    this.assertTenantRecord(existing, context);
     const updateData: DepartmentUpdateData = {} as DepartmentUpdateData;
     if (updates.name !== undefined) { updateData.name = updates.name; }
     if (updates.path !== undefined) { updateData.path = updates.path ?? null; }
@@ -105,7 +105,7 @@ export class PrismaDepartmentRepository extends OrgScopedPrismaRepository implem
 
   async deleteDepartment(context: RepositoryAuthorizationContext, departmentId: string): Promise<void> {
     const existing = await this.findById(departmentId);
-    this.assertTenantRecord(existing, context.orgId);
+    this.assertTenantRecord(existing, context);
     await this.delete(departmentId);
     await this.invalidateCache(context, CACHE_SCOPE_DEPARTMENTS);
   }

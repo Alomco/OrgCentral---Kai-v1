@@ -5,7 +5,7 @@ import type { IChecklistTemplateRepository } from '@/server/repositories/contrac
 import type { IChecklistInstanceRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-instance-repository-contract';
 import type { IMembershipRepository, EmployeeProfilePayload, UserActivationPayload } from '@/server/repositories/contracts/org/membership';
 import type { BillingServiceContract } from '@/server/services/billing/billing-service.provider';
-import { MembershipStatus } from '@prisma/client';
+import { MembershipStatus } from '@/server/types/prisma';
 import { parseDate } from '@/server/use-cases/shared';
 import { instantiateOnboardingChecklist } from '@/server/use-cases/hr/people/create-employee-profile.helpers';
 import { createEmploymentContract } from '@/server/use-cases/hr/people/employment/create-employment-contract';

@@ -1,4 +1,3 @@
-import type { IntegrationConfig as PrismaIntegrationConfig, Prisma } from '@prisma/client';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import type { IIntegrationConfigRepository } from '@/server/repositories/contracts/org/integrations/integration-config-repository-contract';
@@ -8,6 +7,7 @@ import {
 } from '@/server/repositories/mappers/org/integrations/integration-config-mapper';
 import type { IntegrationConfig } from '@/server/types/hr-types';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { Prisma, PrismaIntegrationConfig } from '@/server/types/prisma';
 
 export interface IntegrationConfigFilters {
   orgId?: string;
@@ -62,13 +62,13 @@ export class PrismaIntegrationConfigRepository
 
   // --- Contract-facing methods ---
   async createIntegrationConfig(context: RepositoryAuthorizationContext, config: Omit<IntegrationConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
-    const prismaData = mapDomainIntegrationConfigToPrisma({ ...config, orgId: context.orgId } as IntegrationConfig);
+    const prismaData = mapDomainIntegrationConfigToPrisma({ ...config, orgId: context.orgId });
     await this.create(prismaData);
   }
 
   async updateIntegrationConfig(context: RepositoryAuthorizationContext, configId: string, updates: Partial<Omit<IntegrationConfig, 'id' | 'orgId' | 'createdAt'>>): Promise<void> {
     const existing = await this.findById(configId);
-    this.assertTenantRecord(existing, context.orgId);
+    this.assertTenantRecord(existing, context);
     const prismaUpdates = updates as Prisma.IntegrationConfigUpdateInput;
     await this.update(configId, prismaUpdates);
   }
@@ -76,14 +76,14 @@ export class PrismaIntegrationConfigRepository
   async getIntegrationConfig(context: RepositoryAuthorizationContext, configId: string): Promise<IntegrationConfig | null> {
     const rec = await this.findById(configId);
     if (!rec) { return null; }
-    this.assertTenantRecord(rec, context.orgId);
+    this.assertTenantRecord(rec, context);
     return mapPrismaIntegrationConfigToDomain(rec);
   }
 
   async getIntegrationConfigByProvider(context: RepositoryAuthorizationContext, provider: string): Promise<IntegrationConfig | null> {
     const rec = await this.findByOrgAndProvider(context.orgId, provider);
     if (!rec) { return null; }
-    this.assertTenantRecord(rec, context.orgId);
+    this.assertTenantRecord(rec, context);
     return mapPrismaIntegrationConfigToDomain(rec);
   }
 
@@ -97,7 +97,7 @@ export class PrismaIntegrationConfigRepository
 
   async deleteIntegrationConfig(context: RepositoryAuthorizationContext, configId: string): Promise<void> {
     const existing = await this.findById(configId);
-    this.assertTenantRecord(existing, context.orgId);
+    this.assertTenantRecord(existing, context);
     await this.delete(configId);
   }
 }

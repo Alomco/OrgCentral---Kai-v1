@@ -1,24 +1,21 @@
 import { randomUUID } from 'node:crypto';
-import type { Prisma } from '@prisma/client';
+import type { DataClassificationLevel, DataResidencyZone, PrismaInputJsonValue } from '@/server/types/prisma';
 import {
-  ComplianceTier,
-  DataClassificationLevel,
-  DataResidencyZone,
-  MembershipStatus,
-  OrganizationStatus,
-  RoleScope,
-} from '@prisma/client';
-import { prisma } from '@/server/lib/prisma';
-import { PrismaAbacPolicyRepository } from '@/server/repositories/prisma/org/abac/prisma-abac-policy-repository';
+  buildColdStartServiceDependencies,
+  type ColdStartPersistence,
+  type ColdStartServiceDependencies,
+} from '@/server/repositories/providers/platform/bootstrap/cold-start-service-dependencies';
 import { resolveRoleTemplate } from '@/server/security/role-templates';
 import { isOrgRoleKey, type OrgRoleKey } from '@/server/security/access-control';
 import { DEFAULT_BOOTSTRAP_POLICIES } from '@/server/security/abac-constants';
 import { setAbacPolicies } from '@/server/use-cases/org/abac/set-abac-policies';
 import { buildAuthorizationContext } from '@/server/use-cases/shared/builders';
 
-type Json = Prisma.InputJsonValue;
+type Json = PrismaInputJsonValue;
 
 const BOOTSTRAP_ABAC_AUDIT_SOURCE = 'bootstrap:cold-start';
+
+const defaultDependencies = buildColdStartServiceDependencies();
 
 export interface ColdStartConfig {
   platformOrgSlug?: string;
@@ -39,58 +36,43 @@ export interface ColdStartResult {
   developmentAdminUserId: string;
 }
 
-export async function runColdStart(config: ColdStartConfig = {}): Promise<ColdStartResult> {
-  const settings = resolveConfig(config);
+function resolveDependencies(overrides?: Partial<ColdStartServiceDependencies>): ColdStartServiceDependencies {
+  if (!overrides) {
+    return defaultDependencies;
+  }
+  return { ...defaultDependencies, ...overrides };
+}
 
-  const organization = await prisma.organization.upsert({
-    where: { slug: settings.platformOrgSlug },
-    update: {
-      name: settings.platformOrgName,
-      regionCode: settings.platformRegionCode,
-      tenantId: settings.platformTenantId,
-      status: OrganizationStatus.ACTIVE,
-      complianceTier: ComplianceTier.GOV_SECURE,
-      dataResidency: DataResidencyZone.UK_ONLY,
-      dataClassification: DataClassificationLevel.OFFICIAL,
-    },
-    create: {
-      slug: settings.platformOrgSlug,
-      name: settings.platformOrgName,
-      regionCode: settings.platformRegionCode,
-      tenantId: settings.platformTenantId,
-      status: OrganizationStatus.ACTIVE,
-      complianceTier: ComplianceTier.GOV_SECURE,
-      dataResidency: DataResidencyZone.UK_ONLY,
-      dataClassification: DataClassificationLevel.OFFICIAL,
-    },
+export async function runColdStart(
+  config: ColdStartConfig = {},
+  overrides?: Partial<ColdStartServiceDependencies>,
+): Promise<ColdStartResult> {
+  const settings = resolveConfig(config);
+  const dependencies = resolveDependencies(overrides);
+
+  const { persistence } = dependencies;
+
+  const organization = await persistence.upsertOrganization({
+    slug: settings.platformOrgSlug,
+    name: settings.platformOrgName,
+    regionCode: settings.platformRegionCode,
+    tenantId: settings.platformTenantId,
   });
 
   const roleKey: OrgRoleKey = isOrgRoleKey(settings.roleName) ? settings.roleName : 'owner';
   const template = resolveRoleTemplate(roleKey);
 
-  const role = await prisma.role.upsert({
-    where: { orgId_name: { orgId: organization.id, name: settings.roleName } },
-    update: {
-      scope: RoleScope.GLOBAL,
-      permissions: template.permissions,
-      inheritsRoleIds: [],
-      isSystem: template.isSystem ?? true,
-      isDefault: template.isDefault ?? true,
-    },
-    create: {
-      orgId: organization.id,
-      name: settings.roleName,
-      description: 'Platform bootstrap owner role',
-      scope: RoleScope.GLOBAL,
-      permissions: template.permissions,
-      inheritsRoleIds: [],
-      isSystem: template.isSystem ?? true,
-      isDefault: template.isDefault ?? true,
-    },
+  const role = await persistence.upsertRole({
+    orgId: organization.id,
+    roleName: settings.roleName,
+    description: 'Platform bootstrap owner role',
+    permissions: mapPermissionsToFlags(template.permissions),
+    isSystem: template.isSystem ?? true,
+    isDefault: template.isDefault ?? true,
   });
 
-  const globalAdmin = await upsertUser(settings.globalAdminEmail, settings.globalAdminName);
-  const developmentAdmin = await upsertUser(settings.developmentAdminEmail, settings.developmentAdminName);
+  const globalAdmin = await upsertUser(persistence, settings.globalAdminEmail, settings.globalAdminName);
+  const developmentAdmin = await upsertUser(persistence, settings.developmentAdminEmail, settings.developmentAdminName);
 
   await ensureAbacPolicies({
     orgId: organization.id,
@@ -98,11 +80,11 @@ export async function runColdStart(config: ColdStartConfig = {}): Promise<ColdSt
     roleKey,
     dataResidency: organization.dataResidency,
     dataClassification: organization.dataClassification,
-  });
+  }, dependencies);
 
   await Promise.all([
-    ensureMembership(organization.id, globalAdmin.id, role.id, 'bootstrap:global-admin'),
-    ensureMembership(organization.id, developmentAdmin.id, role.id, 'bootstrap:development-admin'),
+    ensureMembership(persistence, organization.id, globalAdmin.id, role.id, 'bootstrap:global-admin'),
+    ensureMembership(persistence, organization.id, developmentAdmin.id, role.id, 'bootstrap:development-admin'),
   ]);
 
   return {
@@ -123,53 +105,47 @@ function resolveConfig(config: ColdStartConfig) {
     globalAdminName: config.globalAdminName ?? process.env.GLOBAL_ADMIN_NAME ?? 'Global Admin',
     developmentAdminEmail: config.developmentAdminEmail ?? process.env.DEV_ADMIN_EMAIL ?? 'dev.admin@example.com',
     developmentAdminName: config.developmentAdminName ?? process.env.DEV_ADMIN_NAME ?? 'Dev Admin',
-    roleName: config.roleName ?? process.env.GLOBAL_ADMIN_ROLE_NAME ?? 'owner',
+    roleName: config.roleName ?? process.env.GLOBAL_ADMIN_ROLE_NAME ?? 'globalAdmin',
   };
 }
 
-async function upsertUser(email: string, displayName: string) {
-  return prisma.user.upsert({
-    where: { email: email.toLowerCase() },
-    update: {
-      displayName,
-      status: MembershipStatus.ACTIVE,
-    },
-    create: {
-      email: email.toLowerCase(),
-      displayName,
-      status: MembershipStatus.ACTIVE,
-    },
+function mapPermissionsToFlags(permissions: Partial<Record<string, readonly string[]>>): Record<string, boolean> {
+  return Object.entries(permissions).reduce<Record<string, boolean>>((accumulator, [resource, actions]) => {
+    if (!actions) {
+      return accumulator;
+    }
+    for (const action of actions) {
+      const key = `${resource}:${action}`;
+      accumulator[key] = true;
+    }
+    return accumulator;
+  }, {});
+}
+
+async function upsertUser(persistence: ColdStartPersistence, email: string, displayName: string) {
+  return persistence.upsertUser({
+    email,
+    displayName,
   });
 }
 
-async function ensureMembership(orgId: string, userId: string, roleId: string, auditSource: string) {
-  const timestamp = new Date();
-  await prisma.membership.upsert({
-    where: { orgId_userId: { orgId, userId } },
-    update: {
-      roleId,
-      status: MembershipStatus.ACTIVE,
-      metadata: {
-        seedSource: auditSource,
-        auditBatchId: randomUUID(),
-      } as Json,
-      activatedAt: timestamp,
-      updatedBy: userId,
-    },
-    create: {
-      orgId,
-      userId,
-      roleId,
-      status: MembershipStatus.ACTIVE,
-      invitedBy: null,
-      invitedAt: timestamp,
-      activatedAt: timestamp,
-      metadata: {
-        seedSource: auditSource,
-        auditBatchId: randomUUID(),
-      } as Json,
-      createdBy: userId,
-    },
+async function ensureMembership(
+  persistence: ColdStartPersistence,
+  orgId: string,
+  userId: string,
+  roleId: string,
+  auditSource: string,
+) {
+  const metadata = {
+    seedSource: auditSource,
+    auditBatchId: randomUUID(),
+  } as Json;
+
+  await persistence.upsertMembership({
+    orgId,
+    userId,
+    roleId,
+    metadata,
   });
 }
 
@@ -181,9 +157,12 @@ interface AbacBootstrapContext {
   dataClassification: DataClassificationLevel;
 }
 
-async function ensureAbacPolicies(context: AbacBootstrapContext): Promise<void> {
-  const repository = new PrismaAbacPolicyRepository();
-  const existing = await repository.getPoliciesForOrg(context.orgId);
+async function ensureAbacPolicies(
+  context: AbacBootstrapContext,
+  dependencies: ColdStartServiceDependencies,
+): Promise<void> {
+  const { policyRepository } = dependencies;
+  const existing = await policyRepository.getPoliciesForOrg(context.orgId);
   if (existing.length > 0) {
     return;
   }
@@ -204,7 +183,7 @@ async function ensureAbacPolicies(context: AbacBootstrapContext): Promise<void> 
   });
 
   await setAbacPolicies(
-    { policyRepository: repository },
+    { policyRepository },
     { authorization, policies: DEFAULT_BOOTSTRAP_POLICIES },
   );
 }

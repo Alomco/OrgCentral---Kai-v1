@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { MembershipStatus, RoleScope } from '@prisma/client';
+import { MembershipStatus, RoleScope } from '@/server/types/prisma';
 
 import type { MembershipCreationInput, MembershipCreationResult } from '@/server/repositories/contracts/org/membership';
 import type { CreateOrganizationInput } from '@/server/repositories/contracts/org/organization/organization-repository-contract';

@@ -1,11 +1,11 @@
 import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
-import { PrismaLeaveAttachmentRepository } from '@/server/repositories/prisma/hr/leave';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { LeaveAttachment } from '@/server/types/leave-types';
 import { getLeaveAttachment } from './get-leave-attachment';
+import { createLeaveAttachmentRepository } from '@/server/services/hr/leave/leave-repository.factory';
 
 export interface GetLeaveAttachmentForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -14,10 +14,6 @@ export interface GetLeaveAttachmentForUiInput {
 
 export interface GetLeaveAttachmentForUiResult {
     attachment: LeaveAttachment;
-}
-
-function resolveLeaveAttachmentRepository(): PrismaLeaveAttachmentRepository {
-    return new PrismaLeaveAttachmentRepository();
 }
 
 export async function getLeaveAttachmentForUi(
@@ -30,7 +26,7 @@ export async function getLeaveAttachmentForUi(
         cacheLife(CACHE_LIFE_SHORT);
 
         const result = await getLeaveAttachment(
-            { leaveAttachmentRepository: resolveLeaveAttachmentRepository() },
+            { leaveAttachmentRepository: createLeaveAttachmentRepository() },
             cachedInput,
         );
 
@@ -41,7 +37,7 @@ export async function getLeaveAttachmentForUi(
         noStore();
 
         const result = await getLeaveAttachment(
-            { leaveAttachmentRepository: resolveLeaveAttachmentRepository() },
+            { leaveAttachmentRepository: createLeaveAttachmentRepository() },
             input,
         );
 

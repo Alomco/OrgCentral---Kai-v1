@@ -38,7 +38,7 @@ export async function reportUnplannedAbsence(
     assertNonEmpty(payload.userId, 'Target member id');
     assertActorOrPrivileged(input.authorization, payload.userId);
 
-    const absenceType = await resolveAbsenceType(deps, orgId, payload);
+    const absenceType = await resolveAbsenceType(deps, input.authorization, payload);
     if (!absenceType.isActive) {
         throw new ValidationError('Selected absence type is not active.');
     }
@@ -55,7 +55,7 @@ export async function reportUnplannedAbsence(
     const endDate = payload.endDate ?? payload.startDate;
     assertValidDateRange(startDate, endDate);
 
-    const hoursInDay = resolveHoursPerDay(await deps.absenceSettingsRepository.getSettings(orgId));
+    const hoursInDay = resolveHoursPerDay(await deps.absenceSettingsRepository.getSettings(input.authorization));
     const hours = calculateAbsenceHours({
         startDate,
         endDate,
@@ -69,7 +69,7 @@ export async function reportUnplannedAbsence(
         employeeName: profile.displayName ?? undefined,
     };
 
-    const absence = await deps.absenceRepository.createAbsence(orgId, {
+    const absence = await deps.absenceRepository.createAbsence(input.authorization, {
         orgId,
         userId: payload.userId,
         typeId: absenceType.id,
@@ -99,11 +99,11 @@ function sanitizePayload(payload: ReportUnplannedAbsencePayload): ReportUnplanne
 
 async function resolveAbsenceType(
     deps: ReportUnplannedAbsenceDependencies,
-    orgId: string,
+    authorization: RepositoryAuthorizationContext,
     payload: ReportUnplannedAbsencePayload,
 ) {
     if (payload.typeId) {
-        const config = await deps.typeConfigRepository.getConfig(orgId, payload.typeId);
+        const config = await deps.typeConfigRepository.getConfig(authorization, payload.typeId);
         if (!config) {
             throw new EntityNotFoundError('Absence type', { typeId: payload.typeId });
         }
@@ -111,7 +111,7 @@ async function resolveAbsenceType(
     }
 
     if (payload.typeKey) {
-        const config = await deps.typeConfigRepository.getConfigByKey(orgId, payload.typeKey);
+        const config = await deps.typeConfigRepository.getConfigByKey(authorization, payload.typeKey);
         if (!config) {
             throw new EntityNotFoundError('Absence type', { typeKey: payload.typeKey });
         }

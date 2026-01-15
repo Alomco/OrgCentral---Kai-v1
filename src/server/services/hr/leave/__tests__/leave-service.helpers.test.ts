@@ -125,7 +125,7 @@ describe('leave-service.helpers', () => {
     it('resolves employee from profile and returns normalized name', async () => {
         const profileRepo = createProfileRepoMock(buildProfile({ displayName: 'Test User' }));
 
-        const result = await resolveEmployeeFromProfile(profileRepo as any, authorization, 'user-1', 'EMP-1');
+        const result = await resolveEmployeeFromProfile(profileRepo, authorization, 'user-1', 'EMP-1');
 
         expect(result).toEqual({ employeeId: 'EMP-1', employeeName: 'Test User' });
         expect(profileRepo.getEmployeeProfileByUser).toHaveBeenCalledWith('org-1', 'user-1');
@@ -135,14 +135,14 @@ describe('leave-service.helpers', () => {
         const profileRepo = createProfileRepoMock(buildProfile({ displayName: 'Test User' }));
 
         await expect(
-            resolveEmployeeFromProfile(profileRepo as any, authorization, 'user-1', 'EMP-2'),
+            resolveEmployeeFromProfile(profileRepo, authorization, 'user-1', 'EMP-2'),
         ).rejects.toBeInstanceOf(ValidationError);
     });
 
     it('ensures employee by employeeNumber', async () => {
         const profileRepo = createProfileRepoMock(buildProfile({}));
 
-        const profile = await ensureEmployeeByEmployeeNumber(profileRepo as any, 'org-1', 'EMP-1');
+        const profile = await ensureEmployeeByEmployeeNumber(profileRepo, 'org-1', 'EMP-1');
 
         expect(profile).toMatchObject({ employeeNumber: 'EMP-1' });
         expect(profileRepo.findByEmployeeNumber).toHaveBeenCalledWith('org-1', 'EMP-1');
@@ -161,7 +161,7 @@ describe('leave-service.helpers', () => {
                 employeeId: 'EMP-1',
                 reason: 'User cancelled',
             },
-            {} as any,
+            undefined,
             logger,
         );
 
@@ -182,7 +182,7 @@ describe('leave-service.helpers', () => {
                 endDate: '2025-01-01',
                 employeeId: 'EMP-1',
             },
-            {} as any,
+            undefined,
             logger,
         );
 

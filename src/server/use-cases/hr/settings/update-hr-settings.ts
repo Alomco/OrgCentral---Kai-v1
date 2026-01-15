@@ -1,7 +1,7 @@
 // Use-case: update HR module settings through settings repositories under tenant guard.
 
 import { z } from 'zod';
-import type { Prisma } from '@prisma/client';
+import type { PrismaJsonObject, PrismaJsonValue } from '@/server/types/prisma';
 import type { IHRSettingsRepository } from '@/server/repositories/contracts/hr/settings/hr-settings-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { HRSettings } from '@/server/types/hr-ops-types';
@@ -55,29 +55,29 @@ function buildDefaultUpsertShape(): HrSettingsUpsertShape {
 		workingHours: {
 			standardHoursPerDay: 8,
 			standardDaysPerWeek: 5,
-		} as Prisma.JsonValue,
+		} as PrismaJsonValue,
 		approvalWorkflows: {},
 		overtimePolicy: {
 			enableOvertime: false,
-		} as Prisma.JsonValue,
+		} as PrismaJsonValue,
 		dataClassification: 'OFFICIAL',
 		residencyTag: 'UK_ONLY',
 		metadata: undefined,
 	};
 }
 
-function toOptionalJsonValue(value: unknown): Prisma.JsonValue | undefined {
+function toOptionalJsonValue(value: unknown): PrismaJsonValue | undefined {
 	return toJsonValue(value);
 }
 
-function isPlainJsonObject(value: Prisma.JsonValue | undefined): value is Prisma.JsonObject {
+function isPlainJsonObject(value: PrismaJsonValue | undefined): value is PrismaJsonObject {
 	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function mergeJsonObject(
-	base: Prisma.JsonValue | undefined,
-	patch: Prisma.JsonValue | undefined,
-): Prisma.JsonValue | undefined {
+	base: PrismaJsonValue | undefined,
+	patch: PrismaJsonValue | undefined,
+): PrismaJsonValue | undefined {
 	if (patch === null) {
 		return null;
 	}

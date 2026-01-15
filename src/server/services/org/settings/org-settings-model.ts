@@ -1,5 +1,5 @@
-import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
 export const invitePolicySchema = z.object({
     open: z.boolean(),
@@ -81,7 +81,7 @@ export const defaultOrgSettings: OrgSettings = {
     },
 };
 
-export function normalizeOrgSettings(value: Prisma.JsonValue | null | undefined): OrgSettings {
+export function normalizeOrgSettings(value: PrismaJsonValue | null | undefined): OrgSettings {
     const parsed = organizationSettingsSchema.safeParse(value ?? {});
     const data = parsed.success ? parsed.data : {};
 

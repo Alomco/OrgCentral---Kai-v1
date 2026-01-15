@@ -1,36 +1,29 @@
-import { PrismaComplianceItemRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-item-repository';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import { ComplianceAssignmentService, type ComplianceAssignmentServiceDependencies } from './compliance-assignment-service';
+import { buildComplianceAssignmentServiceDependencies, type ComplianceAssignmentServiceDependencyOptions } from '@/server/repositories/providers/hr/compliance-assignment-service-dependencies';
 
 export interface ComplianceAssignmentServiceProviderOptions {
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    prismaOptions?: ComplianceAssignmentServiceDependencyOptions['prismaOptions'];
 }
 
-function buildDependencies(
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>,
-): ComplianceAssignmentServiceDependencies {
-    return {
-        complianceItemRepository: new PrismaComplianceItemRepository(prismaOptions),
-    };
-}
-
-const defaultDependencies = buildDependencies();
-const sharedComplianceAssignmentService = new ComplianceAssignmentService(defaultDependencies);
+const sharedComplianceAssignmentService = (() => {
+    const dependencies = buildComplianceAssignmentServiceDependencies();
+    return new ComplianceAssignmentService(dependencies);
+})();
 
 export function getComplianceAssignmentService(
     overrides?: Partial<ComplianceAssignmentServiceDependencies>,
-    options?: ComplianceAssignmentServiceProviderOptions,
+    options?: ComplianceAssignmentServiceDependencyOptions,
 ): ComplianceAssignmentService {
     if (!overrides || Object.keys(overrides).length === 0) {
         return sharedComplianceAssignmentService;
     }
 
-    const deps = buildDependencies(options?.prismaOptions);
-
-    return new ComplianceAssignmentService({
-        ...deps,
-        ...overrides,
+    const dependencies = buildComplianceAssignmentServiceDependencies({
+        prismaOptions: options?.prismaOptions,
+        overrides,
     });
+
+    return new ComplianceAssignmentService(dependencies);
 }
 
 export type ComplianceAssignmentServiceContract = Pick<ComplianceAssignmentService, 'assignCompliancePack'>;

@@ -1,5 +1,4 @@
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
-import type { PrismaClient, NotificationMessage, Prisma } from '@prisma/client';
 import { BasePrismaRepository, type BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import type {
     INotificationRepository,
@@ -17,6 +16,11 @@ import {
     type NotificationCacheContext,
 } from '@/server/repositories/notifications/notification-cache';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type {
+    NotificationMessage,
+    Prisma,
+    PrismaClientInstance,
+} from '@/server/types/prisma';
 import {
     buildCacheContext,
     mapPrioritiesToPrisma,
@@ -27,13 +31,14 @@ import {
     toPrismaCreate,
 } from './prisma-notification-utils';
 import { RepositoryAuthorizationError } from '@/server/repositories/security/repository-errors';
+import type { DataClassificationLevel } from '@/server/types/tenant';
 
 const toRepositoryError = (error: unknown): Error =>
     error instanceof Error ? error : new Error('Notification repository failure');
 
 export interface PrismaNotificationRepositoryOptions extends BasePrismaRepositoryOptions {
     auditWriter?: NotificationAuditWriter;
-    prisma?: PrismaClient;
+    prisma?: PrismaClientInstance;
 }
 
 export class PrismaNotificationRepository
@@ -144,7 +149,7 @@ export class PrismaNotificationRepository
             }),
             toRepositoryError,
         ).map((records) => {
-            if (records.length > 0) {
+            if (records.length > 0 && this.isCacheable(records[0].dataClassification)) {
                 registerNotificationCache(buildCacheContext(records[0]));
             }
             return records.map(toDomain);
@@ -175,27 +180,29 @@ export class PrismaNotificationRepository
         action: 'created' | 'read' | 'deleted',
     ): ResultAsync<NotificationRecord, Error> {
         const cacheContext = buildCacheContext(record);
-        const cachePromise = invalidateNotificationCache(cacheContext);
+        const cachePromise = this.isCacheable(record.dataClassification)
+            ? invalidateNotificationCache(cacheContext)
+            : Promise.resolve();
         const auditPromise = this.auditWriter
             ? this.auditWriter.write(
-                  notificationEnvelopeSchema.parse({
-                      notificationId: record.id,
-                      orgId: record.orgId,
-                      userId: record.userId,
-                      retentionPolicyId: record.retentionPolicyId,
-                      dataClassification: record.dataClassification,
-                      residencyTag: record.residencyTag,
-                      payload: record,
-                      auditMetadata: {
-                          createdByUserId: authorization.userId,
-                          auditSource: authorization.auditSource,
-                          correlationId: authorization.correlationId,
-                          auditBatchId: authorization.auditBatchId,
-                          action,
-                      },
-                      createdAt: new Date(),
-                  }),
-              )
+                notificationEnvelopeSchema.parse({
+                    notificationId: record.id,
+                    orgId: record.orgId,
+                    userId: record.userId,
+                    retentionPolicyId: record.retentionPolicyId,
+                    dataClassification: record.dataClassification,
+                    residencyTag: record.residencyTag,
+                    payload: record,
+                    auditMetadata: {
+                        createdByUserId: authorization.userId,
+                        auditSource: authorization.auditSource,
+                        correlationId: authorization.correlationId,
+                        auditBatchId: authorization.auditBatchId,
+                        action,
+                    },
+                    createdAt: new Date(),
+                }),
+            )
             : Promise.resolve();
 
         return ResultAsync.fromPromise(
@@ -232,5 +239,9 @@ export class PrismaNotificationRepository
             classification: record?.dataClassification ?? authorization.dataClassification,
             residency: record?.residencyTag ?? authorization.dataResidency,
         }));
+    }
+
+    private isCacheable(classification: DataClassificationLevel): boolean {
+        return classification === 'OFFICIAL';
     }
 }

@@ -1,19 +1,20 @@
-import type { Prisma, Membership as PrismaMembership, Organization } from '@prisma/client';
-import { MembershipStatus } from '@prisma/client';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
 import type {
   IUserRepository,
   UserListFilters,
   UserPagedQuery,
+  UserCreationInput,
 } from '@/server/repositories/contracts/org/users/user-repository-contract';
 import { mapPrismaUserToDomain } from '@/server/repositories/mappers/org/users/user-mapper';
 import { mapPrismaMembershipToDomain } from '@/server/repositories/mappers/org/membership/membership-mapper';
 import type { UserData } from '@/server/types/leave-types';
 import type { User } from '@/server/types/hr-types';
 import type { Membership } from '@/server/types/membership';
-import type { UserFilters, UserCreationData, UserUpdateData } from './prisma-user-repository.types';
+import type { UserFilters, UserUpdateData } from './prisma-user-repository.types';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { MembershipStatus } from '@/server/types/prisma';
+import type { Prisma, PrismaMembership, PrismaOrganization } from '@/server/types/prisma';
 import {
   addUserToOrganization as addUserToOrganizationTx,
   countUsersInOrganization as countUsersInOrganizationTx,
@@ -59,7 +60,7 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     return records.map((r) => mapPrismaUserToDomain(r));
   }
 
-  async create(data: UserCreationData): Promise<User> {
+  async create(data: UserCreationInput): Promise<User> {
     const rec = await getModelDelegate(this.prisma, 'user').create({ data: { ...data, status: MembershipStatus.INVITED } });
     return mapPrismaUserToDomain(rec);
   }
@@ -113,7 +114,9 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
 
     const domainUser = mapPrismaUserToDomain(user);
 
-    const domainMemberships = memberships.map((m) => mapPrismaMembershipToDomain(m as PrismaMembership & { org?: Organization | null }));
+    const domainMemberships = memberships.map((m) =>
+      mapPrismaMembershipToDomain(m as PrismaMembership & { org?: PrismaOrganization | null }),
+    );
 
     const rolesByOrg: Record<string, string[]> = {};
     const memberOf: string[] = [];

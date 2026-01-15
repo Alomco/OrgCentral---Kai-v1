@@ -2,20 +2,7 @@ import type {
     EnterpriseOnboardingInput,
     ModuleAccessUpdateInput,
 } from '@/server/repositories/contracts/org/enterprise/enterprise-admin-repository-contract';
-import type { ManagedOrganizationSummary } from '@/server/types/enterprise-types';
-import type { JsonValue } from '@/server/repositories/prisma/helpers/prisma-utils';
-import { normalizeMetadata } from '@/server/repositories/mappers/metadata';
-
-export interface ManagedOrganizationRecord {
-    orgId: string;
-    orgName: string;
-    ownerEmail: string;
-    planId: string;
-    moduleAccess: Record<string, boolean> | JsonValue | null | undefined;
-    metadata?: JsonValue | null;
-    createdAt: Date | string;
-    updatedAt: Date | string;
-}
+import type { ManagedOrganizationSummary, ManagedOrganizationRecord } from '@/server/types/enterprise-types';
 
 export function mapManagedOrganizationRecordToDomain(record: ManagedOrganizationRecord): ManagedOrganizationSummary {
     const moduleAccess =
@@ -28,7 +15,7 @@ export function mapManagedOrganizationRecordToDomain(record: ManagedOrganization
         ownerEmail: record.ownerEmail,
         planId: record.planId,
         moduleAccess,
-        metadata: normalizeMetadata(record.metadata),
+        metadata: record.metadata ?? undefined,
         createdAt: record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt),
         updatedAt: record.updatedAt instanceof Date ? record.updatedAt : new Date(record.updatedAt),
     };

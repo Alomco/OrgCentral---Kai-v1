@@ -1,5 +1,5 @@
-import { PrismaBrandingRepository } from '@/server/repositories/prisma/org/branding/prisma-branding-repository';
 import type { IBrandingRepository } from '@/server/repositories/contracts/org/branding/branding-repository-contract';
+import { buildBrandingRepositoryDependencies } from '@/server/repositories/providers/org/branding-service-dependencies';
 import type { GetOrgBrandingInput, GetOrgBrandingResult } from './get-org-branding';
 import { getOrgBranding } from './get-org-branding';
 import type { UpdateOrgBrandingInput, UpdateOrgBrandingResult } from './update-org-branding';
@@ -19,7 +19,7 @@ function buildBrandingDependencies(overrides?: BrandingCompositionOverrides): Br
     if (overrides?.brandingRepository) {
         return { brandingRepository: overrides.brandingRepository };
     }
-    return { brandingRepository: new PrismaBrandingRepository() };
+    return buildBrandingRepositoryDependencies();
 }
 
 export function getOrgBrandingWithPrisma(

@@ -1,4 +1,4 @@
-import { RoleScope } from '@prisma/client';
+import { RoleScope } from '@/server/types/prisma';
 import { EntityNotFoundError, ValidationError } from '@/server/errors';
 import type { IRoleRepository } from '@/server/repositories/contracts/org/roles/role-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';

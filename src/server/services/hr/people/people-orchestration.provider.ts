@@ -7,18 +7,15 @@ import { getComplianceAssignmentService } from '@/server/services/hr/compliance/
 import type { AbsenceService } from '@/server/services/hr/absences/absence-service';
 import { PeopleOrchestrationService } from './people-orchestration.service';
 import type { PeopleOrchestrationDependencies } from './people-orchestration.deps';
-import { PrismaOnboardingInvitationRepository } from '@/server/repositories/prisma/hr/onboarding';
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
+import { buildPeopleOrchestrationServiceDependencies, type PeopleOrchestrationServiceDependencyOptions } from '@/server/repositories/providers/hr/people-orchestration-service-dependencies';
 
 export interface PeopleOrchestrationProviderOptions {
     absenceService?: AbsenceService;
     overrides?: Partial<PeopleOrchestrationDependencies>;
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    prismaOptions?: PeopleOrchestrationServiceDependencyOptions;
 }
 
 export function getPeopleOrchestrationService(options?: PeopleOrchestrationProviderOptions): PeopleOrchestrationService {
-    const prismaOptions = options?.prismaOptions;
     const peopleService = options?.overrides?.peopleService ?? getPeopleService();
     const leaveService = options?.overrides?.leaveService ?? getLeaveService();
     const complianceStatusService =
@@ -27,12 +24,8 @@ export function getPeopleOrchestrationService(options?: PeopleOrchestrationProvi
     const absenceService = options?.overrides?.absenceService ?? options?.absenceService ?? getAbsenceService();
     const complianceAssignmentService =
         options?.overrides?.complianceAssignmentService ?? getComplianceAssignmentService();
-    const onboardingInvitationRepository =
-        options?.overrides?.onboardingInvitationRepository ??
-        new PrismaOnboardingInvitationRepository(prismaOptions ?? {});
-    const organizationRepository =
-        options?.overrides?.organizationRepository ??
-        new PrismaOrganizationRepository({ prisma: prismaOptions?.prisma, trace: prismaOptions?.trace });
+
+    const repositoryDeps = buildPeopleOrchestrationServiceDependencies(options?.prismaOptions);
 
     const deps: PeopleOrchestrationDependencies = {
         peopleService,
@@ -41,8 +34,8 @@ export function getPeopleOrchestrationService(options?: PeopleOrchestrationProvi
         complianceStatusService,
         membershipService,
         complianceAssignmentService,
-        onboardingInvitationRepository,
-        organizationRepository,
+        onboardingInvitationRepository: repositoryDeps.onboardingInvitationRepository,
+        organizationRepository: repositoryDeps.organizationRepository,
     };
 
     return new PeopleOrchestrationService(deps);

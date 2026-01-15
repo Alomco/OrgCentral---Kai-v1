@@ -1,7 +1,7 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { BillingInvoiceData } from '@/server/types/billing-types';
 import type { BillingInvoiceListFilters } from '@/server/repositories/contracts/org/billing';
-import { getBillingService, type BillingServiceContract } from '@/server/services/billing/billing-service.provider';
+import { resolveBillingService, type BillingServiceContract } from '@/server/services/billing/billing-service.provider';
 
 // Use-case: list billing invoices for an org via billing services.
 
@@ -22,7 +22,10 @@ export async function listBillingInvoices(
   dependencies: ListBillingInvoicesDependencies,
   input: ListBillingInvoicesInput,
 ): Promise<ListBillingInvoicesResult> {
-  const service = dependencies.service ?? getBillingService();
+  const service = dependencies.service ?? resolveBillingService();
+  if (!service) {
+    return { invoices: [] };
+  }
   const invoices = await service.listInvoices(input);
   return { invoices };
 }

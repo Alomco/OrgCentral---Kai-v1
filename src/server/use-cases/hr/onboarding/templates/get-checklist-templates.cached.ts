@@ -4,7 +4,7 @@ import { CACHE_LIFE_LONG } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import { AuthorizationError } from '@/server/errors';
 import type { IChecklistTemplateRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-template-repository-contract';
-import { PrismaChecklistTemplateRepository } from '@/server/repositories/prisma/hr/onboarding';
+import { buildOnboardingServiceDependencies } from '@/server/repositories/providers/hr/onboarding-service-dependencies';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ChecklistTemplate, ChecklistTemplateType } from '@/server/types/onboarding-types';
 
@@ -23,7 +23,7 @@ export interface GetChecklistTemplatesForUiResult {
 }
 
 function resolveChecklistTemplateRepository(): IChecklistTemplateRepository {
-    return new PrismaChecklistTemplateRepository();
+    return buildOnboardingServiceDependencies().checklistTemplateRepository;
 }
 
 async function loadChecklistTemplates(

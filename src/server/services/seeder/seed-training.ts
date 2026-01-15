@@ -1,12 +1,24 @@
 // src/server/services/seeder/seed-training.ts
 import { faker } from '@faker-js/faker';
-import { Prisma } from '@prisma/client';
-import { prisma } from '@/server/lib/prisma';
-import { getDefaultOrg, getActiveMembers, getSeededMetadata, type SeedResult, UNKNOWN_ERROR_MESSAGE } from './utils';
+import { buildTrainingServiceDependencies } from '@/server/repositories/providers/hr/training-service-dependencies';
+import {
+    buildSeederAuthorization,
+    getDefaultOrg,
+    getActiveMembers,
+    getSeededMetadata,
+    type SeedResult,
+    UNKNOWN_ERROR_MESSAGE,
+} from './utils';
+
+const TRAINING_STATUSES = ['completed', 'in_progress', 'assigned'] as const;
+
+type TrainingStatus = (typeof TRAINING_STATUSES)[number];
 
 export async function seedFakeTrainingInternal(count = 10): Promise<SeedResult> {
     try {
         const org = await getDefaultOrg();
+        const authorization = buildSeederAuthorization(org);
+        const { trainingRepository } = buildTrainingServiceDependencies();
         const members = await getActiveMembers(org.id);
         if (!members.length) { return { success: false, message: 'No members.' }; }
 
@@ -14,19 +26,21 @@ export async function seedFakeTrainingInternal(count = 10): Promise<SeedResult> 
         for (let index = 0; index < count; index++) {
             const member = faker.helpers.arrayElement(members);
             const startDate = faker.date.past({ years: 1 });
-
-            await prisma.trainingRecord.create({
-                data: {
-                    orgId: org.id,
-                    userId: member.userId,
-                    courseName: faker.company.catchPhrase(),
-                    provider: faker.company.name(),
-                    startDate,
-                    endDate: faker.date.future({ years: 1, refDate: startDate }),
-                    status: faker.helpers.arrayElement(['completed', 'in_progress', 'assigned']),
-                    cost: new Prisma.Decimal(faker.number.float({ min: 100, max: 2000, fractionDigits: 2 })),
-                    metadata: getSeededMetadata(),
-                }
+            const status: TrainingStatus = faker.helpers.arrayElement(TRAINING_STATUSES);
+            const approved = status === 'completed';
+            await trainingRepository.createTrainingRecord(org.id, {
+                orgId: org.id,
+                userId: member.userId,
+                courseName: faker.company.catchPhrase(),
+                provider: faker.company.name(),
+                startDate,
+                endDate: faker.date.future({ years: 1, refDate: startDate }),
+                status,
+                cost: faker.number.float({ min: 100, max: 2000, fractionDigits: 2 }),
+                approved,
+                approvedAt: approved ? new Date() : null,
+                approvedBy: approved ? authorization.userId : null,
+                metadata: getSeededMetadata(),
             });
             created++;
         }

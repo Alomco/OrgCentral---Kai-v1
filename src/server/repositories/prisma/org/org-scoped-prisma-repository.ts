@@ -1,11 +1,11 @@
-import type { PrismaClient } from '@prisma/client';
 import { BasePrismaRepository, type BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
-import type { RepositoryAuthorizationContext, TenantScopedRecord } from '@/server/repositories/security';
-import { RepositoryAuthorizer, RepositoryAuthorizationError } from '@/server/repositories/security';
+import type { RepositoryAuthorizationContext, TenantScopedRecord } from '@/server/types/repository-authorization';
+import { RepositoryAuthorizer } from '@/server/repositories/security/repository-authorizer';
 import { registerOrgCacheTag, invalidateOrgCache } from '@/server/lib/cache-tags';
+import type { PrismaClientInstance } from '@/server/types/prisma';
 
 export interface OrgScopedRepositoryOptions extends BasePrismaRepositoryOptions {
-    prisma?: PrismaClient;
+    prisma?: PrismaClientInstance;
     authorizer?: RepositoryAuthorizer;
 }
 
@@ -19,25 +19,21 @@ export abstract class OrgScopedPrismaRepository extends BasePrismaRepository {
 
     protected assertTenantRecord<TRecord extends TenantScopedRecord>(
         record: TRecord | null | undefined,
-        orgId: string,
+        contextOrOrg: RepositoryAuthorizationContext | string,
+        resourceType = 'org_scoped_record',
     ): TRecord {
-        if (!record || !record.orgId || record.orgId !== orgId) {
-            throw new RepositoryAuthorizationError('Cross-tenant access detected.');
+        if (typeof contextOrOrg === 'string') {
+            return super.assertTenantRecord(record, contextOrOrg, resourceType);
         }
-        return record;
+        return super.assertTenantRecord(record, contextOrOrg, resourceType);
     }
 
     protected assertOrgRecord<TRecord extends TenantScopedRecord>(
         record: TRecord | null | undefined,
-        orgId: string,
+        contextOrOrg: RepositoryAuthorizationContext | string,
+        resourceType = 'org_scoped_record',
     ): TRecord {
-        if (!record) {
-            throw new RepositoryAuthorizationError('Record not found.');
-        }
-        if (!record.orgId || record.orgId !== orgId) {
-            throw new RepositoryAuthorizationError('Cross-tenant access detected.');
-        }
-        return record;
+        return this.assertTenantRecord(record, contextOrOrg, resourceType);
     }
 
     protected tagCache(context: RepositoryAuthorizationContext, ...tags: string[]): void {

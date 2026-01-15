@@ -21,6 +21,10 @@ interface AdminShellProps {
     className?: string;
     /** Whether to show the theme switcher in the shell (default: true) */
     showThemeSwitcher?: boolean;
+    /** Optional id for skip-link focus target */
+    mainId?: string;
+    /** Tab index for the main focus target (default: -1 when mainId is provided) */
+    mainTabIndex?: number;
 }
 
 export function AdminShell({
@@ -30,7 +34,11 @@ export function AdminShell({
     particleCount = 6,
     className,
     showThemeSwitcher = true,
+    mainId,
+    mainTabIndex,
 }: AdminShellProps) {
+    const resolvedTabIndex = typeof mainTabIndex === 'number' ? mainTabIndex : mainId ? -1 : undefined;
+
     return (
         <div className={cn("relative min-h-screen flex flex-col overflow-hidden bg-background text-foreground transition-colors duration-300", className)}>
             {/* 🌌 Background Decoration */}
@@ -55,7 +63,7 @@ export function AdminShell({
             </div>
 
             {/* 📦 Main Content */}
-            <main className="relative z-10 flex-1 flex flex-col">
+            <main id={mainId} tabIndex={resolvedTabIndex} className="relative z-10 flex-1 flex flex-col">
                 {children}
             </main>
         </div>

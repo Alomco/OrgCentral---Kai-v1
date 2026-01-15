@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client';
-
 import type {
   IPaymentMethodRepository,
   PaymentMethodUpsertInput,
@@ -10,6 +8,7 @@ import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-
 import { getModelDelegate, runTransaction, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { mapPaymentMethodToData } from '@/server/repositories/mappers/org/billing/payment-method-mapper';
 import { CACHE_SCOPE_BILLING_PAYMENT_METHODS } from '@/server/repositories/cache-scopes';
+import { PrismaTypes } from '@/server/types/prisma';
 
 const PAYMENT_METHOD_NOT_FOUND = 'Payment method not found.';
 
@@ -42,7 +41,7 @@ export class PrismaPaymentMethodRepository
     if (!record) {
       return null;
     }
-    this.assertTenantRecord(record, context.orgId);
+    this.assertTenantRecord(record, context);
     return mapPaymentMethodToData(record);
   }
 
@@ -57,7 +56,7 @@ export class PrismaPaymentMethodRepository
     const metadata =
       input.metadata && Object.keys(input.metadata).length > 0
         ? toPrismaInputJson(input.metadata)
-        : Prisma.JsonNull;
+        : PrismaTypes.JsonNull;
 
     const record = await runTransaction(this.prisma, async (tx) => {
       if (input.isDefault) {
@@ -117,7 +116,7 @@ export class PrismaPaymentMethodRepository
     if (!existing) {
       throw new Error(PAYMENT_METHOD_NOT_FOUND);
     }
-    this.assertTenantRecord(existing, context.orgId);
+    this.assertTenantRecord(existing, context);
 
     await runTransaction(this.prisma, async (tx) => {
       await getModelDelegate(tx, 'paymentMethod').updateMany({
@@ -152,7 +151,7 @@ export class PrismaPaymentMethodRepository
     if (!existing) {
       throw new Error(PAYMENT_METHOD_NOT_FOUND);
     }
-    this.assertTenantRecord(existing, context.orgId);
+    this.assertTenantRecord(existing, context);
 
     await getModelDelegate(this.prisma, 'paymentMethod').delete({
       where: { stripePaymentMethodId },

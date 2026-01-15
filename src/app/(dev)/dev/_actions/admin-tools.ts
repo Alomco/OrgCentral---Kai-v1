@@ -10,11 +10,13 @@ import {
     DataClassificationLevel,
 } from '@prisma/client';
 import { prisma } from '@/server/lib/prisma';
+import { AuthorizationError } from '@/server/errors';
 import { resolveRoleTemplate } from '@/server/security/role-templates';
 import { revalidatePath } from 'next/cache';
+import { runFullColdStart } from '@/server/services/platform/bootstrap/full-cold-start';
 
 // Default admin emails
-const PLATFORM_ORG_SLUG = 'orgcentral-platform';
+const PLATFORM_ORG_SLUG = process.env.PLATFORM_ORG_SLUG ?? 'orgcentral-platform';
 const DEFAULT_DEV_ADMIN_EMAIL = 'aant1563@gmail.com';
 const DEFAULT_GLOBAL_ADMIN_EMAIL = 'bdturag01@gmail.com';
 
@@ -84,18 +86,18 @@ export async function createGlobalAdmin(email: string, displayName?: string): Pr
             },
         }) as { id: string };
 
-        // Ensure owner role exists (uses 'owner' to match OrgRoleKey for ABAC)
-        const template = resolveRoleTemplate('owner');
+        // Ensure global admin role exists
+        const template = resolveRoleTemplate('globalAdmin');
         const role = await prisma.role.upsert({
-            where: { orgId_name: { orgId: organization.id, name: 'owner' } },
+            where: { orgId_name: { orgId: organization.id, name: 'globalAdmin' } },
             update: {
                 scope: RoleScope.GLOBAL,
                 permissions: template.permissions as Prisma.InputJsonValue,
             },
             create: {
                 orgId: organization.id,
-                name: 'owner',
-                description: 'Platform owner with full administrative access',
+                name: 'globalAdmin',
+                description: 'Platform global administrator with full access',
                 scope: RoleScope.GLOBAL,
                 permissions: template.permissions as Prisma.InputJsonValue,
             },
@@ -165,5 +167,53 @@ export async function bootstrapDefaultAdmins(): Promise<{
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         return { success: false, message };
+    }
+}
+
+export interface DevColdStartFailure {
+    step: string;
+    message: string;
+}
+
+export interface DevColdStartResult {
+    success: boolean;
+    message: string;
+    failures?: DevColdStartFailure[];
+}
+
+export async function runDevColdStart(): Promise<DevColdStartResult> {
+    try {
+        assertColdStartEnabled();
+        const result = await runFullColdStart({ includeDemoData: true });
+        const failures = result.steps
+            .filter((step) => !step.success)
+            .map((step) => ({ step: step.step, message: step.message }));
+        const summary = result.steps
+            .filter((step) => step.success)
+            .map((step) => step.step)
+            .join(', ');
+
+        revalidatePath('/dev');
+        revalidatePath('/dev/dashboard');
+        revalidatePath('/admin');
+        revalidatePath('/hr');
+
+        return {
+            success: result.success,
+            message: result.success
+                ? `Cold start complete. Steps: ${summary}`
+                : 'Cold start finished with errors.',
+            failures: failures.length ? failures : undefined,
+        };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return { success: false, message };
+    }
+}
+
+function assertColdStartEnabled(): void {
+    const enabled = process.env.NODE_ENV === 'development' || process.env.ENABLE_COLD_START === 'true';
+    if (!enabled) {
+        throw new AuthorizationError('Cold start is disabled.');
     }
 }

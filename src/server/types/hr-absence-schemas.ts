@@ -1,4 +1,4 @@
-import { AbsenceStatus, HealthStatus } from '@prisma/client';
+import { AbsenceStatus, HealthStatus } from '@/server/types/prisma';
 import { z } from 'zod';
 
 const ABSENCE_STATUS_VALUES = Object.values(AbsenceStatus) as [AbsenceStatus, ...AbsenceStatus[]];

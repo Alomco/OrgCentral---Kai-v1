@@ -1,7 +1,7 @@
 import { ComplianceStatusService, type ComplianceStatusServiceDependencies } from '@/server/services/hr/compliance/compliance-status-service';
-import { PrismaComplianceStatusRepository } from '@/server/repositories/prisma/hr/compliance';
+import { createComplianceStatusRepository } from '@/server/repositories/providers/hr/compliance-status-repository-provider';
 
-const complianceStatusRepository = new PrismaComplianceStatusRepository();
+const complianceStatusRepository = createComplianceStatusRepository();
 
 const defaultDependencies: ComplianceStatusServiceDependencies = {
   complianceStatusRepository,

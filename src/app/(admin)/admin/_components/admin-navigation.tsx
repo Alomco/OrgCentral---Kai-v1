@@ -2,27 +2,9 @@ import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
 
 import type { OrgPermissionMap } from '@/server/security/access-control';
-import { hasPermission } from '@/lib/security/permission-check';
 
 import { AdminNavigationLinks, AdminUserInfo } from './admin-navigation-links';
-
-type NavAudience = 'admin' | 'dev';
-
-const ADMIN_NAV_ITEMS = [
-    { href: '/admin/dashboard', label: 'Dashboard', audience: 'admin' },
-    { href: '/org/profile', label: 'Organization', audience: 'admin' },
-    { href: '/org/members', label: 'Members', audience: 'admin' },
-    { href: '/org/roles', label: 'Roles', audience: 'admin' },
-    { href: '/hr/dashboard', label: 'HR', audience: 'admin' },
-    { href: '/dev/dashboard', label: 'Dev Tools', audience: 'dev' },
-] as const;
-
-function canAccessItem(permissions: OrgPermissionMap, audience: NavAudience): boolean {
-    if (audience === 'dev') {
-        return hasPermission(permissions, 'organization', 'governance');
-    }
-    return hasPermission(permissions, 'organization', 'read');
-}
+import { getAdminNavItems } from './admin-nav-items';
 
 export interface AdminNavigationProps {
     organizationId: string;
@@ -33,13 +15,12 @@ export interface AdminNavigationProps {
 }
 
 export function AdminNavigation(props: AdminNavigationProps) {
-    const items = ADMIN_NAV_ITEMS
-        .filter((item) => canAccessItem(props.permissions, item.audience))
+    const items = getAdminNavItems(props.permissions)
         .map(({ href, label }) => ({ href, label }));
 
     return (
-        <header className="sticky top-0 [z-index:var(--z-sticky)] border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-            <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-6">
+        <header className="sticky top-0 [z-index:var(--z-sticky)] border-b border-border/50 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 shadow-sm">
+            <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6">
                 <div className="flex items-center gap-6">
                     <Link
                         href="/admin/dashboard"

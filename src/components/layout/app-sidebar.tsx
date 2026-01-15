@@ -51,83 +51,85 @@ export function AppSidebar({ authorization, organizationLabel }: AppSidebarProps
             collapsible="icon"
             className={styles.sidebar}
         >
-            <SidebarHeader className={styles.sidebarHeader}>
-                <div className={styles.headerInner} data-collapsed={!open}>
-                    <SidebarTrigger className={styles.sidebarTrigger} />
-                    <Link
-                        href="/dashboard"
-                        className={styles.logoLink}
-                        data-collapsed={!open}
-                    >
-                        <span className={styles.logoText}>
-                            {organizationLabel ?? 'OrgCentral'}
-                        </span>
-                    </Link>
-                </div>
-            </SidebarHeader>
+            <nav aria-label="Primary" className="flex h-full flex-col">
+                <SidebarHeader className={styles.sidebarHeader}>
+                    <div className={styles.headerInner} data-collapsed={!open}>
+                        <SidebarTrigger className={styles.sidebarTrigger} />
+                        <Link
+                            href="/dashboard"
+                            className={styles.logoLink}
+                            data-collapsed={!open}
+                        >
+                            <span className={styles.logoText}>
+                                {organizationLabel ?? 'OrgCentral'}
+                            </span>
+                        </Link>
+                    </div>
+                </SidebarHeader>
 
-            <SidebarContent className={styles.sidebarContent}>
-                <Accordion type="multiple" className="w-full">
-                    <SidebarMenu className="space-y-1">
-                        {navItems.map((item) => (
-                            <SidebarMenuItem key={item.href}>
-                                <AppSidebarNavItem item={item} pathname={pathname} open={open} />
-                            </SidebarMenuItem>
-                        ))}
-                    </SidebarMenu>
-                </Accordion>
-            </SidebarContent>
+                <SidebarContent className={styles.sidebarContent}>
+                    <Accordion type="multiple" className="w-full">
+                        <SidebarMenu className="space-y-1">
+                            {navItems.map((item) => (
+                                <SidebarMenuItem key={item.href}>
+                                    <AppSidebarNavItem item={item} pathname={pathname} open={open} />
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </Accordion>
+                </SidebarContent>
 
-            <SidebarFooter className={styles.sidebarFooter}>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton
-                                    size="lg"
-                                    className={styles.tenantButton}
+                <SidebarFooter className={styles.sidebarFooter}>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <SidebarMenuButton
+                                        size="lg"
+                                        className={styles.tenantButton}
+                                    >
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <div className={styles.tenantIcon}>
+                                                <Building className="h-5 w-5" />
+                                            </div>
+                                            <div className={styles.tenantInfo} data-collapsed={!open}>
+                                                <span className={styles.tenantName}>
+                                                    {organizationLabel ?? 'Organization'}
+                                                </span>
+                                                <span className={styles.tenantRole}>
+                                                    {authorization.roleKey}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 group-data-[collapsible=icon]:hidden text-sidebar-foreground/60" />
+                                    </SidebarMenuButton>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
+                                    align="start"
+                                    side={open ? 'bottom' : 'right'}
+                                    sideOffset={4}
                                 >
-                                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <div className={styles.tenantIcon}>
-                                            <Building className="h-5 w-5" />
-                                        </div>
-                                        <div className={styles.tenantInfo} data-collapsed={!open}>
-                                            <span className={styles.tenantName}>
-                                                {organizationLabel ?? 'Organization'}
-                                            </span>
-                                            <span className={styles.tenantRole}>
-                                                {authorization.roleKey}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 group-data-[collapsible=icon]:hidden text-sidebar-foreground/60" />
-                                </SidebarMenuButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
-                                align="start"
-                                side={open ? 'bottom' : 'right'}
-                                sideOffset={4}
-                            >
-                                <DropdownMenuItem className="gap-2" asChild>
-                                    <Link href="/org/profile">
-                                        <Building className="h-4 w-4" />
-                                        <span className="flex-1">Organization</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                {isAdmin ? (
                                     <DropdownMenuItem className="gap-2" asChild>
-                                        <Link href="/admin">
-                                            <ShieldCheck className="h-4 w-4" />
-                                            <span>Admin Portal</span>
+                                        <Link href="/org/profile">
+                                            <Building className="h-4 w-4" />
+                                            <span className="flex-1">Organization</span>
                                         </Link>
                                     </DropdownMenuItem>
-                                ) : null}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarFooter>
+                                    {isAdmin ? (
+                                        <DropdownMenuItem className="gap-2" asChild>
+                                            <Link href="/admin">
+                                                <ShieldCheck className="h-4 w-4" />
+                                                <span>Admin Portal</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    ) : null}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
+            </nav>
         </Sidebar>
     );
 }

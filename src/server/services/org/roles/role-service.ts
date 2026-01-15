@@ -23,11 +23,12 @@ import {
   type ListRolesInput,
 } from '@/server/use-cases/org/roles/list-roles';
 import { getRole as getRoleUseCase, type GetRoleInput } from '@/server/use-cases/org/roles/get-role';
-import type { NotificationComposerContract } from '@/server/services/platform/notifications/notification-composer.provider';
-import type { RoleQueueClient } from '@/server/workers/org/roles/role.queue';
+import type { NotificationComposerContract } from '@/server/repositories/contracts/notifications/notification-composer-contract';
+import type { RoleQueueContract } from '@/server/repositories/contracts/org/roles/role-queue-contract';
+import type { RoleActionType } from '@/server/types/role-updates';
 import { appLogger } from '@/server/logging/structured-logger';
 
-type RoleChangeKind = 'created' | 'updated' | 'deleted';
+type RoleChangeKind = RoleActionType;
 
 const ROLE_RESOURCE_TYPE = 'org.role';
 const ROLE_ADMIN_PERMISSIONS: Record<string, string[]> = { organization: ['update'] };
@@ -35,7 +36,7 @@ const ROLE_ADMIN_PERMISSIONS: Record<string, string[]> = { organization: ['updat
 export interface RoleServiceDependencies {
   roleRepository: IRoleRepository;
   notificationComposer?: NotificationComposerContract;
-  roleQueue?: RoleQueueClient;
+  roleQueue?: RoleQueueContract;
 }
 
 export class RoleService extends AbstractOrgService {

@@ -1,4 +1,4 @@
-import { TimeEntryStatus } from '@prisma/client';
+import { TimeEntryStatus } from '@/server/types/prisma';
 import { z } from 'zod';
 
 const TIME_ENTRY_STATUS_VALUES = Object.values(TimeEntryStatus) as [

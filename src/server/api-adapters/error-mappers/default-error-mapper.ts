@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
-import { RepositoryAuthorizationError } from '@/server/repositories/security';
+import { AuthorizationError } from '@/server/errors';
 
 export const DefaultErrorMapper = {
     mapErrorToResponse(error: unknown): NextResponse {
@@ -15,7 +15,7 @@ export const DefaultErrorMapper = {
             );
         }
 
-        if (error instanceof RepositoryAuthorizationError) {
+        if (error instanceof AuthorizationError) {
             return NextResponse.json(
                 {
                     success: false,

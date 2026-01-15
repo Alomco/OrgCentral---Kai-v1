@@ -13,7 +13,6 @@ import type {
     AbsenceAiValidationResult,
     AbsenceAiValidationServiceDeps,
 } from '@/server/use-cases/hr/absences/ai-validation.types';
-
 const toError = (
     error: Error | string | { message?: string } | null | undefined,
 ): Error => {
@@ -28,13 +27,11 @@ const toError = (
     }
     return new Error('Unknown error');
 };
-
 export class AbsenceAiValidationProcessor {
     private readonly deps: Required<Omit<AbsenceAiValidationServiceDeps, 'auditLogger' | 'now'>> & {
         auditLogger: Required<AbsenceAiValidationServiceDeps>['auditLogger'];
         now: Required<AbsenceAiValidationServiceDeps>['now'];
     };
-
     constructor(deps: AbsenceAiValidationServiceDeps) {
         this.deps = {
             ...deps,
@@ -42,15 +39,17 @@ export class AbsenceAiValidationProcessor {
             now: deps.now ?? (() => new Date()),
         };
     }
-
     process(
         parsed: AbsenceAiValidationJob,
         authorization: RepositoryAuthorizationContext,
     ): ResultAsync<AbsenceAiValidationResult, Error> {
+        if (parsed.orgId && parsed.orgId !== authorization.orgId) {
+            return errAsync(new ValidationError('AI validation job organization does not match authorization context.'));
+        }
         return this.loadAbsence(parsed, authorization)
             .andThen((absence) => this.verifyAttachment(absence, parsed))
             .andThen(({ absence, attachment }) =>
-                this.loadType(absence, parsed).map((absenceType) => ({ absence, attachment, absenceType })),
+                this.loadType(absence, parsed, authorization).map((absenceType) => ({ absence, attachment, absenceType })),
             )
             .andThen(({ absence, attachment, absenceType }) =>
                 this.fetchAttachment(attachment, authorization).map((document) => ({
@@ -88,7 +87,7 @@ export class AbsenceAiValidationProcessor {
         authorization: RepositoryAuthorizationContext,
     ): ResultAsync<UnplannedAbsence, Error> {
         return ResultAsync.fromPromise<UnplannedAbsence | null, Error>(
-            this.deps.absenceRepository.getAbsence(authorization.orgId, parsed.absenceId),
+            this.deps.absenceRepository.getAbsence(authorization, parsed.absenceId),
             (error) => toError(error as Error | string | { message?: string } | null | undefined),
         ).andThen((absence) => {
             if (!absence) {
@@ -126,9 +125,13 @@ export class AbsenceAiValidationProcessor {
         }
     }
 
-    private loadType(absence: UnplannedAbsence, parsed: AbsenceAiValidationJob) {
+    private loadType(
+        absence: UnplannedAbsence,
+        _parsed: AbsenceAiValidationJob,
+        authorization: RepositoryAuthorizationContext,
+    ) {
         return ResultAsync.fromPromise<AbsenceTypeConfig | null, Error>(
-            this.deps.typeConfigRepository.getConfig(parsed.orgId, absence.typeId),
+            this.deps.typeConfigRepository.getConfig(authorization, absence.typeId),
             (error) => toError(error as Error | string | { message?: string } | null | undefined),
         ).andThen((type) => {
             if (!type) {
@@ -207,7 +210,7 @@ export class AbsenceAiValidationProcessor {
         });
 
         return ResultAsync.fromPromise<UnplannedAbsence, Error>(
-            this.deps.absenceRepository.updateAbsence(authorization.orgId, absence.id, {
+            this.deps.absenceRepository.updateAbsence(authorization, absence.id, {
                 metadata: updatedMetadata,
             }),
             (error) => toError(error as Error | string | { message?: string } | null | undefined),

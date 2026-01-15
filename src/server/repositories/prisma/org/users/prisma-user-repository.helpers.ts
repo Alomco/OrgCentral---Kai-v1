@@ -1,6 +1,6 @@
-import type { Prisma } from '@prisma/client';
 import { getModelDelegate, type PrismaClientBase } from '@/server/repositories/prisma/helpers/prisma-utils';
 import type { UserListFilters, UserSortInput } from '@/server/repositories/contracts/org/users/user-repository-contract';
+import type { Prisma } from '@/server/types/prisma';
 
 export async function resolvePrimaryRoleId(
     prisma: PrismaClientBase,

@@ -1,5 +1,5 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import type { HrNotificationServiceContract } from '@/server/services/hr/notifications/hr-notification-service.provider';
+import type { HrNotificationServiceContract } from '@/server/repositories/contracts/notifications';
 import { emitHrNotification } from '@/server/use-cases/hr/notifications/notification-emitter';
 import type { LeaveDecisionContext } from '@/server/use-cases/hr/leave/shared/leave-request-helpers';
 import type { LeaveRequest } from '@/server/types/leave-types';

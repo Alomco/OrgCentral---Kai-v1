@@ -1,7 +1,7 @@
 import type { PerformanceGoal } from '@/server/domain/hr/performance/types';
-import type { Prisma } from '@prisma/client';
+import type { PerformanceGoal as PrismaPerformanceGoal } from '@prisma/client';
 
-type PrismaPerformanceGoalRecord = Prisma.PerformanceGoalGetPayload<Record<string, never>>;
+type PrismaPerformanceGoalRecord = PrismaPerformanceGoal;
 
 export function mapPrismaPerformanceGoalToDomain(record: PrismaPerformanceGoalRecord): PerformanceGoal {
     return {

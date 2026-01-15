@@ -1,10 +1,7 @@
 import { z } from 'zod';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getNotificationComposerService } from '@/server/services/platform/notifications/notification-composer.provider';
-import {
-  notificationCreateSchema,
-  type NotificationCreateInput,
-} from '@/server/repositories/notifications/notification-schemas';
+import { notificationCreateSchema, type NotificationCreateInput } from '@/server/services/platform/notifications/notification-schema';
 import type { NotificationInboxResult } from '@/server/services/platform/notifications/notification-types';
 
 const composer = getNotificationComposerService();

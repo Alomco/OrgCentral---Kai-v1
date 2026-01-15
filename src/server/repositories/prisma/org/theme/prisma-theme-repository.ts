@@ -1,10 +1,10 @@
-import type { Prisma, PrismaClient } from '@prisma/client';
 import type { IThemeRepository } from '@/server/repositories/contracts/org/theme/theme-repository-contract';
 import { BasePrismaRepository } from '@/server/repositories/prisma/base-prisma-repository';
 import type { OrgThemeSettings } from '@/server/types/theme-types';
 import { getModelDelegate } from '@/server/repositories/prisma/helpers/prisma-utils';
+import type { PrismaClientInstance, PrismaInputJsonValue } from '@/server/types/prisma';
 
-type OrganizationDelegate = PrismaClient['organization'];
+type OrganizationDelegate = PrismaClientInstance['organization'];
 type OrganizationUpdateData = Parameters<OrganizationDelegate['update']>[0]['data'];
 
 function normalizeSettings(value: unknown): Record<string, unknown> {
@@ -80,7 +80,7 @@ export class PrismaThemeRepository extends BasePrismaRepository implements IThem
             settings: {
                 ...currentSettings,
                 theme: themeToJson(nextTheme),
-            } as unknown as Prisma.InputJsonValue,
+            } as unknown as PrismaInputJsonValue,
         };
 
         const record = await this.delegate().update({
@@ -109,7 +109,7 @@ export class PrismaThemeRepository extends BasePrismaRepository implements IThem
         void _removed;
 
         const data: OrganizationUpdateData = {
-            settings: rest as Prisma.InputJsonValue,
+            settings: rest as PrismaInputJsonValue,
         };
 
         await this.delegate().update({

@@ -1,7 +1,5 @@
-import { PrismaEnterpriseSettingsRepository } from '@/server/repositories/prisma/platform/settings/prisma-enterprise-settings-repository';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import { getEnterpriseSettings } from '@/server/use-cases/platform/settings/get-enterprise-settings';
-import { updateEnterpriseSettings } from '@/server/use-cases/platform/settings/update-enterprise-settings';
+import { fetchEnterpriseSettings, saveEnterpriseSettings } from '@/server/services/platform/settings/enterprise-settings-service';
 import type { EnterpriseSettings } from '@/server/types/platform-types';
 
 interface GetEnterpriseSettingsResult {
@@ -13,8 +11,6 @@ interface UpdateEnterpriseSettingsResult {
     success: true;
     data: { settings: EnterpriseSettings };
 }
-
-const enterpriseSettingsRepository = new PrismaEnterpriseSettingsRepository();
 
 async function authorizeRequest(
     request: Request,
@@ -43,10 +39,7 @@ async function readJson<T = unknown>(request: Request, fallback: T): Promise<T> 
 export async function getEnterpriseSettingsController(request: Request): Promise<GetEnterpriseSettingsResult> {
     const authorization = await authorizeRequest(request, 'api:platform:settings:get', 'read');
 
-    const result = await getEnterpriseSettings(
-        { enterpriseSettingsRepository },
-        { authorization },
-    );
+    const result = await fetchEnterpriseSettings(authorization);
 
     return { success: true, data: { settings: result.settings } };
 }
@@ -55,10 +48,7 @@ export async function updateEnterpriseSettingsController(request: Request): Prom
     const authorization = await authorizeRequest(request, 'api:platform:settings:update', 'update');
     const raw = await readJson(request, {});
 
-    const result = await updateEnterpriseSettings(
-        { enterpriseSettingsRepository },
-        { authorization, updates: raw },
-    );
+    const result = await saveEnterpriseSettings(authorization, raw as Partial<EnterpriseSettings>);
 
     return { success: true, data: { settings: result.settings } };
 }

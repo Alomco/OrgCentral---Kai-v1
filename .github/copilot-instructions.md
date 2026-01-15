@@ -1,10 +1,11 @@
-# OrgCentral – Copilot Instructions (Short)
-
+# OrgCentral – Github Copilot Instructions chat(Short)
+Always use the mcp and tools optimisely and always keep your knowledge updated
 ## Default rules
-- Keep files 250 LOC; split into small modules.
+- Keep files >250 LOC; split into small modules.
 - No `console.log`; use structured logging.
 - No `any`/`unknown`; add domain types in `src/server/types/**`.
-
+- maintain strict eslint config.
+- align the project for iso27001, dspt, a11y, core web vitls and other best practices.
 ## Multi-tenancy + compliance
 - Every feature must preserve tenant metadata: `orgId`, `dataResidency`, `dataClassification`, and audit fields.
 - Always enforce access via guards (`assertOrgAccess` / `withOrgContext`) before data access.
@@ -27,4 +28,6 @@
 - Server actions belong in route-local `actions.ts` and must invalidate the specific cache scopes they mutate.
 
 ## Workflow
-- After changes: check errors, run `pnpm exec tsc -p tsconfig.json --noEmit`, then `pnpm lint` (scope to changed paths when practical).
+- After changes: check errors, run `npx tsc --noEmit`, then `pnpm lint` (scope to changed paths when practical).
+
+after every chat response, suggest next step or optimization.

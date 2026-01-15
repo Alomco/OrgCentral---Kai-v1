@@ -205,9 +205,67 @@ After implementing boundary changes:
 Based on the lint boundary migration notes, here's the current status:
 
 - ✅ **Absence service/provider and HR absences API adapter**: Moved to provider
-- ✅ **Membership service/provider**: Uses provider builder  
+- ✅ **Membership service/provider**: Uses provider builder
 - ✅ **Invitation flow use-case**: Uses provider builder
-- 🔄 **Remaining hotspots**: platform notifications providers, security/roles/permissions providers, HR leave/compliance/onboarding providers, seeder scripts
+- ✅ **Billing service**: Updated to use provider factory pattern
+- ✅ **Leave service**: Updated to use provider factory pattern
+- ✅ **People service**: Updated to use provider factory pattern
+- ✅ **Role service**: Updated to use provider factory pattern
+- ✅ **User service**: Updated to use provider factory pattern
+- ✅ **Department service**: Updated to use provider factory pattern
+- ✅ **Post-login use-case**: Updated to use services instead of direct Prisma access
+- 🔄 **Remaining hotspots**: platform notifications providers, security/roles/permissions providers, HR leave/compliance/onboarding providers, seeder scripts, cron utilities
+
+## Migration Progress
+
+### Completed Migrations
+
+The following services have been successfully migrated to use the provider factory pattern:
+
+1. **Billing Service** (`src/server/services/billing/billing-service.provider.ts`)
+   - Created `src/server/repositories/providers/billing/billing-service-dependencies.ts`
+   - Updated to use `buildBillingServiceDependencies` factory
+
+2. **Leave Service** (`src/server/services/hr/leave/leave-service.provider.ts`)
+   - Created `src/server/repositories/providers/hr/leave-service-dependencies.ts`
+   - Updated to use `buildLeaveServiceDependencies` factory
+
+3. **People Service** (`src/server/services/hr/people/people-service.provider.ts`)
+   - Created `src/server/repositories/providers/hr/people-service-dependencies.ts`
+   - Updated to use `buildPeopleServiceDependencies` factory
+
+4. **Role Service** (`src/server/services/org/roles/role-service.provider.ts`)
+   - Created `src/server/repositories/providers/org/role-service-dependencies.ts`
+   - Updated to use `buildRoleServiceDependencies` factory
+
+5. **User Service** (`src/server/services/org/users/user-service.provider.ts`)
+   - Created `src/server/repositories/providers/org/user-service-dependencies.ts`
+   - Updated to use `buildUserServiceDependencies` factory
+
+6. **Department Service** (`src/server/services/org/departments/department-service.provider.ts`)
+   - Created `src/server/repositories/providers/org/department-service-dependencies.ts`
+   - Updated to use `buildDepartmentServiceDependencies` factory
+
+7. **Post-login Use Case** (`src/server/use-cases/auth/post-login.ts`)
+   - Updated to use services instead of direct Prisma access
+
+### Open Gaps / Next Steps
+
+1. **Replace remaining `any` placeholders** in new dependency builders and cron service with domain types to satisfy strict typing/OrgCentral rules.
+
+2. **Add org guards/audit metadata** in new services where missing (cron, post-login bridge).
+
+3. **Continue migrating downstream consumers** to use the new providers and remove any residual Prisma imports in use-cases or actions.
+
+4. **Address cron utilities** that still directly import Prisma:
+   - `src/server/api-adapters/cron/cron-shared.ts` still directly imports Prisma
+   - Need to create appropriate services for cron operations
+
+5. **Complete remaining service migrations**:
+   - Platform notifications providers
+   - Security/roles/permissions providers
+   - HR leave/compliance/onboarding providers
+   - Seeder scripts
 
 ## Best Practices
 

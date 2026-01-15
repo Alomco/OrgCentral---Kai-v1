@@ -4,9 +4,9 @@ import { AbstractBaseService, type ServiceExecutionContext } from '@/server/serv
 import type { WorkerJobMetadata } from '@/server/workers/abstract-org-worker';
 import {
     NOTIFICATION_DISPATCH_JOB_NAME,
-    type NotificationDispatchPayload,
     type NotificationDispatchEnvelope,
 } from '@/server/workers/notifications/dispatch.types';
+import type { NotificationDispatchPayload } from '@/server/types/notification-dispatch';
 import {
     getNotificationDispatchQueueClient,
     type NotificationDispatchQueueClient,

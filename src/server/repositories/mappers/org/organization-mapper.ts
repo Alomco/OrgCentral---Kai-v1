@@ -1,6 +1,5 @@
-import type { Organization, Prisma } from '@prisma/client';
-
-import type { ContactInfo, OrganizationData } from '@/server/types/leave-types';
+import type { PrismaJsonValue } from '@/server/types/prisma';
+import type { ContactInfo, OrganizationData, OrganizationRecord } from '@/server/types/leave-types';
 import { normalizeLeaveYearStartDate, type LeaveYearStartDate } from '@/server/types/org/leave-year-start-date';
 
 interface OrganizationLegacyColumns {
@@ -13,17 +12,17 @@ interface OrganizationLegacyColumns {
     employeeCountRange: string | null;
     incorporationDate: Date | null;
     registeredOfficeAddress: string | null;
-    contactDetails: Prisma.JsonValue | null;
+    contactDetails: PrismaJsonValue | null;
 
     // Leave settings legacy columns
     primaryLeaveType: string | null;
     leaveYearStartDate: Date | null;
 
     // Admin + subscription legacy fields
-    availablePermissions: Prisma.JsonValue | null;
+    availablePermissions: PrismaJsonValue | null;
 }
 
-type OrganizationWithLegacyColumns = Organization & Partial<OrganizationLegacyColumns>;
+type OrganizationWithLegacyColumns = OrganizationRecord & Partial<OrganizationLegacyColumns>;
 
 function normalizeRecord(value: unknown): Record<string, unknown> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -103,6 +102,7 @@ export function mapOrganizationToData(organization: OrganizationWithLegacyColumn
     const leaveSettings = (settings.leave as Record<string, unknown> | undefined) ?? {};
 
     const entitlements = leaveSettings.entitlements as Record<string, number> | undefined;
+    const leaveEntitlements = entitlements ?? {};
 
     const primaryLeaveType =
         readString(organization.primaryLeaveType) ?? readString(leaveSettings.primaryLeaveType) ?? 'annual';
@@ -124,17 +124,30 @@ export function mapOrganizationToData(organization: OrganizationWithLegacyColumn
 
     const leaveTypes = readStringArray(leaveSettings.customTypes) ?? readStringArray(settings.leaveTypes);
 
-    const governance = (organization.governanceTags as Record<string, unknown> | null) ?? {};
-    const auditSettings = (governance.audit as Record<string, unknown> | undefined) ?? {};
+    const governance = normalizeRecord(organization.governanceTags);
+    const auditSettingsRaw = governance.audit;
+    const auditSettings =
+        auditSettingsRaw && typeof auditSettingsRaw === 'object' && !Array.isArray(auditSettingsRaw)
+            ? (auditSettingsRaw as Record<string, unknown>)
+            : {};
+    const auditSource = typeof auditSettings.source === 'string' ? auditSettings.source : undefined;
+    const auditBatchId = typeof auditSettings.batchId === 'string' ? auditSettings.batchId : undefined;
+
+    const dataResidency = typeof organization.dataResidency === 'string' ? organization.dataResidency : 'UK_ONLY';
+    const dataClassification =
+        typeof organization.dataClassification === 'string' ? organization.dataClassification : 'OFFICIAL';
+
+    const availablePermissions =
+        readStringArray(organization.availablePermissions) ?? readStringArray(settings.availablePermissions);
 
     return {
         id: organization.id,
         slug: organization.slug,
         regionCode: organization.regionCode,
-        dataResidency: organization.dataResidency,
-        dataClassification: organization.dataClassification,
-        auditSource: (auditSettings.source as string | undefined) ?? 'org-repository',
-        auditBatchId: auditSettings.batchId as string | undefined,
+        dataResidency,
+        dataClassification,
+        auditSource: auditSource ?? 'org-repository',
+        auditBatchId,
         name: organization.name,
         address: organization.address ?? readString(profile.address),
         phone: organization.phone ?? readString(profile.phone),
@@ -150,14 +163,11 @@ export function mapOrganizationToData(organization: OrganizationWithLegacyColumn
         primaryBusinessContact,
         accountsFinanceContact,
         leaveTypes,
-        leaveEntitlements: entitlements ?? {},
+        leaveEntitlements,
         primaryLeaveType,
         leaveYearStartDate,
         leaveRoundingRule,
-        availablePermissions:
-            readStringArray(organization.availablePermissions) ??
-            readStringArray(settings.availablePermissions) ??
-            undefined,
+        availablePermissions: availablePermissions ?? undefined,
         createdAt: organization.createdAt.toISOString(),
         updatedAt: organization.updatedAt.toISOString(),
     } satisfies OrganizationData;

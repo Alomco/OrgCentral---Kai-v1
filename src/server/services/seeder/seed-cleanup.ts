@@ -1,30 +1,12 @@
 // src/server/services/seeder/seed-cleanup.ts
-import { prisma } from '@/server/lib/prisma';
+import { buildSeederServiceDependencies } from '@/server/repositories/providers/seeder/seeder-service-dependencies';
 import { getDefaultOrg, SEEDED_METADATA_KEY, type SeedResult, UNKNOWN_ERROR_MESSAGE } from './utils';
 
 export async function clearSeededDataInternal(): Promise<SeedResult> {
     try {
         const org = await getDefaultOrg();
-
-        const whereSeeded = { metadata: { path: [SEEDED_METADATA_KEY], equals: true } };
-
-        // Delete in order to respect FKs (roughly)
-        await prisma.billingInvoice.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.organizationSubscription.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.paymentMethod.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.hRNotification.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.hRPolicy.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.complianceLogItem.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.checklistInstance.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.checklistTemplate.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-
-        await prisma.leaveRequest.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.unplannedAbsence.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.timeEntry.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.trainingRecord.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-        await prisma.performanceReview.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
-
-        await prisma.employeeProfile.deleteMany({ where: { orgId: org.id, ...whereSeeded } });
+        const { seederCleanupRepository } = buildSeederServiceDependencies();
+        await seederCleanupRepository.clearSeededData(org.id, SEEDED_METADATA_KEY);
 
         return { success: true, message: 'Cleared all seeded data.' };
     } catch (error_) {

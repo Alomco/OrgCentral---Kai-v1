@@ -1,7 +1,7 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ServiceExecutionContext } from '@/server/services/abstract-base-service';
 import { AbstractHrService } from '@/server/services/hr/abstract-hr-service';
-import type { HrNotificationServiceContract } from '@/server/services/hr/notifications/hr-notification-service.provider';
+import type { HrNotificationServiceContract } from '@/server/repositories/contracts/notifications';
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
 import { ensureEmployeeByEmployeeNumber } from './leave-service.helpers';
 import {

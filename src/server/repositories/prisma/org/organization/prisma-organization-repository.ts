@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
 import type {
     CreateOrganizationInput,
@@ -7,39 +6,17 @@ import type {
 import type { OrganizationData } from '@/server/types/leave-types';
 import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-scoped-prisma-repository';
 import { mapOrganizationToData } from '@/server/repositories/mappers/org/organization-mapper';
-import type { LeaveYearStartDate } from '@/server/types/org/organization-settings';
 import { normalizeLeaveYearStartDate } from '@/server/types/org/leave-year-start-date';
+import { PrismaTypes, type PrismaInputJsonObject, type PrismaInputJsonValue } from '@/server/types/prisma';
+import { organizationContactDetailsSchema } from '@/server/validators/org/organization-validators';
+import {
+    normalizeLeaveRoundingRule,
+    parseIncorporationDate,
+    parseMonthDayToAnchorDate,
+    toJsonNullInput,
+} from './organization-repository-helpers';
 
 const ORGANIZATION_NOT_FOUND_MESSAGE = 'Organization not found';
-
-import { organizationContactDetailsSchema } from '@/server/validators/org/organization-validators';
-import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
-
-function parseMonthDayToAnchorDate(value: LeaveYearStartDate): Date {
-    const match = /^\d{2}-\d{2}$/.exec(value);
-    if (!match) {
-        throw new Error('leaveYearStartDate must be MM-DD');
-    }
-
-    // Anchor year is arbitrary; we only care about month/day.
-    // Use UTC to avoid timezone drift.
-    return new Date(`2000-${value}T00:00:00.000Z`);
-}
-
-function normalizeLeaveRoundingRule(value: string): string {
-    if (value === 'nearest_half') {
-        return 'half_day';
-    }
-    if (value === 'round_up') {
-        return 'full_day';
-    }
-    return value;
-}
-
-function parseIncorporationDate(value: string): Date | null {
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
 
 export class PrismaOrganizationRepository
     extends OrgScopedPrismaRepository
@@ -124,13 +101,15 @@ export class PrismaOrganizationRepository
         }
 
         // Validate contact details if present
-        let contactDetailsJson: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined = undefined;
+        let contactDetailsJson: PrismaInputJsonValue | typeof PrismaTypes.JsonNull | undefined = undefined;
         if (updates.contactDetails !== undefined) {
             if (updates.contactDetails === null) {
-                contactDetailsJson = Prisma.JsonNull;
+                contactDetailsJson = PrismaTypes.JsonNull;
             } else {
                 const validatedContactDetails = organizationContactDetailsSchema.parse(updates.contactDetails);
-                contactDetailsJson = toPrismaInputJson(validatedContactDetails as unknown as Prisma.InputJsonValue);
+                contactDetailsJson = toJsonNullInput(
+                    validatedContactDetails as unknown as PrismaInputJsonValue,
+                );
             }
         }
 
@@ -229,6 +208,21 @@ export class PrismaOrganizationRepository
                     },
                 },
             },
+        });
+    }
+
+    async getOrganizationSettings(orgId: string): Promise<PrismaInputJsonObject | null> {
+        const organization = await this.prisma.organization.findUnique({
+            where: { id: orgId },
+            select: { settings: true },
+        });
+        return (organization?.settings as PrismaInputJsonObject | null | undefined) ?? null;
+    }
+
+    async updateOrganizationSettings(orgId: string, settings: PrismaInputJsonObject): Promise<void> {
+        await this.prisma.organization.update({
+            where: { id: orgId },
+            data: { settings },
         });
     }
 }

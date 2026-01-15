@@ -1,12 +1,21 @@
 // src/server/services/seeder/seed-time-entries.ts
 import { faker } from '@faker-js/faker';
-import { TimeEntryStatus, Prisma } from '@prisma/client';
-import { prisma } from '@/server/lib/prisma';
-import { getDefaultOrg, getActiveMembers, getSeededMetadata, type SeedResult, UNKNOWN_ERROR_MESSAGE } from './utils';
+import { TimeEntryStatus } from '@/server/types/prisma';
+import { buildTimeTrackingServiceDependencies } from '@/server/repositories/providers/hr/time-tracking-service-dependencies';
+import {
+    buildSeederAuthorization,
+    getDefaultOrg,
+    getActiveMembers,
+    getSeededMetadata,
+    type SeedResult,
+    UNKNOWN_ERROR_MESSAGE,
+} from './utils';
 
 export async function seedFakeTimeEntriesInternal(count = 20): Promise<SeedResult> {
     try {
         const org = await getDefaultOrg();
+        const authorization = buildSeederAuthorization(org);
+        const { timeEntryRepository } = buildTimeTrackingServiceDependencies();
         const members = await getActiveMembers(org.id);
         if (!members.length) { return { success: false, message: 'No members.' }; }
 
@@ -19,20 +28,20 @@ export async function seedFakeTimeEntriesInternal(count = 20): Promise<SeedResul
             const clockOut = new Date(date);
             clockOut.setHours(17, 0, 0, 0); // 5 PM
 
-            await prisma.timeEntry.create({
-                data: {
-                    orgId: org.id,
-                    userId: member.userId,
-                    date,
-                    clockIn,
-                    clockOut,
-                    totalHours: new Prisma.Decimal(8),
-                    breakDuration: new Prisma.Decimal(1), // 1 hour break
-                    status: TimeEntryStatus.COMPLETED,
-                    project: faker.commerce.productName(),
-                    tasks: { summary: faker.company.buzzPhrase() } as Prisma.InputJsonValue,
-                    metadata: getSeededMetadata(),
-                }
+            await timeEntryRepository.createTimeEntry(org.id, {
+                orgId: org.id,
+                userId: member.userId,
+                date,
+                clockIn,
+                clockOut,
+                totalHours: 8,
+                breakDuration: 1, // 1 hour break
+                status: TimeEntryStatus.COMPLETED,
+                project: faker.commerce.productName(),
+                tasks: { summary: faker.company.buzzPhrase() },
+                metadata: getSeededMetadata(),
+                dataClassification: authorization.dataClassification,
+                residencyTag: authorization.dataResidency,
             });
             created++;
         }

@@ -36,6 +36,24 @@ export interface OrganizationSubscriptionData extends TenantMetadata {
   updatedAt: TimestampString;
 }
 
+export interface OrganizationSubscriptionRecord {
+  id: string;
+  orgId: OrgId;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  stripeSubscriptionItemId?: string | null;
+  stripePriceId: string;
+  status: BillingSubscriptionStatus;
+  seatCount: number;
+  currentPeriodEnd: Date | null;
+  cancelAtPeriodEnd: boolean;
+  lastStripeEventAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  dataClassification: OrganizationSubscriptionData['dataClassification'];
+  residencyTag: OrganizationSubscriptionData['dataResidency'];
+}
+
 export interface PaymentMethodData extends TenantMetadata {
   id: string;
   orgId: OrgId;
@@ -49,6 +67,23 @@ export interface PaymentMethodData extends TenantMetadata {
   isDefault: boolean;
   createdAt: TimestampString;
   updatedAt: TimestampString;
+}
+
+export interface PaymentMethodRecord {
+  id: string;
+  orgId: OrgId;
+  stripePaymentMethodId: string;
+  type: PaymentMethodType;
+  last4: string;
+  brand?: string | null;
+  bankName?: string | null;
+  expiryMonth?: number | null;
+  expiryYear?: number | null;
+  isDefault: boolean;
+  dataClassification: PaymentMethodData['dataClassification'];
+  residencyTag: PaymentMethodData['dataResidency'];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface BillingInvoiceData extends TenantMetadata {
@@ -67,4 +102,24 @@ export interface BillingInvoiceData extends TenantMetadata {
   paidAt?: TimestampString | null;
   createdAt: TimestampString;
   updatedAt: TimestampString;
+}
+
+export interface BillingInvoiceRecord {
+  id: string;
+  orgId: OrgId;
+  stripeInvoiceId: string;
+  status: BillingInvoiceStatus;
+  amountDue: number;
+  amountPaid: number;
+  currency: string;
+  periodStart: Date;
+  periodEnd: Date;
+  userCount: number;
+  invoiceUrl?: string | null;
+  invoicePdf?: string | null;
+  paidAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  dataClassification: BillingInvoiceData['dataClassification'];
+  residencyTag: BillingInvoiceData['dataResidency'];
 }

@@ -5,8 +5,8 @@ import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/
 import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ONBOARDING_INVITATIONS } from '@/server/repositories/cache-scopes';
 import type { IOnboardingInvitationRepository, OnboardingInvitation, OnboardingInvitationStatus } from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
-import { PrismaOnboardingInvitationRepository } from '@/server/repositories/prisma/hr/onboarding';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { getOnboardingInvitationRepository } from '@/server/services/hr/onboarding/onboarding-controller-dependencies';
 
 import { listOnboardingInvitations } from './list-onboarding-invitations';
 
@@ -21,7 +21,7 @@ export interface GetOnboardingInvitationsForUiResult {
 }
 
 function resolveInvitationRepository(): IOnboardingInvitationRepository {
-    return new PrismaOnboardingInvitationRepository();
+    return getOnboardingInvitationRepository();
 }
 
 export async function getOnboardingInvitationsForUi(

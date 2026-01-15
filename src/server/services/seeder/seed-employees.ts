@@ -1,61 +1,85 @@
 // src/server/services/seeder/seed-employees.ts
 import { faker } from '@faker-js/faker';
-import { MembershipStatus, EmploymentStatus, EmploymentType, Prisma } from '@prisma/client';
-import { prisma } from '@/server/lib/prisma';
-import { getDefaultOrg, getSeededMetadata, type SeedResult, UNKNOWN_ERROR_MESSAGE } from './utils';
+import { EmploymentStatus, EmploymentType, MembershipStatus } from '@/server/types/prisma';
+import { buildDepartmentServiceDependencies } from '@/server/repositories/providers/org/department-service-dependencies';
+import { buildMembershipRepositoryDependencies } from '@/server/repositories/providers/org/membership-service-dependencies';
+import { buildUserServiceDependencies } from '@/server/repositories/providers/org/user-service-dependencies';
+import {
+    buildSeederAuthorization,
+    getDefaultOrg,
+    getSeededMetadata,
+    type SeedResult,
+    UNKNOWN_ERROR_MESSAGE,
+} from './utils';
+
+const DEFAULT_ROLE = 'employee';
 
 export async function seedFakeEmployeesInternal(count = 5): Promise<SeedResult> {
     try {
         const org = await getDefaultOrg();
-        const role = await prisma.role.findFirst({ where: { orgId: org.id, name: 'employee' } });
-        if (!role) { throw new Error('Employee role not found'); }
-
-        const depts = await prisma.department.findMany({ where: { orgId: org.id } });
+        const authorization = buildSeederAuthorization(org);
+        const { userRepository } = buildUserServiceDependencies();
+        const { membershipRepository, employeeProfileRepository } = buildMembershipRepositoryDependencies();
+        const { departmentRepository } = buildDepartmentServiceDependencies();
+        const departments = await departmentRepository.getDepartmentsByOrganization(authorization);
 
         let created = 0;
         for (let index = 0; index < count; index++) {
             const firstName = faker.person.firstName();
             const lastName = faker.person.lastName();
+            const displayName = `${firstName} ${lastName}`;
             const email = faker.internet.email({ firstName, lastName }).toLowerCase();
+            const employmentType = faker.helpers.arrayElement(Object.values(EmploymentType));
+            const jobTitle = faker.person.jobTitle();
+            const employeeNumber = `EMP-${faker.string.alphanumeric(6).toUpperCase()}`;
+            const startDate = faker.date.past({ years: 2 });
 
-            // User & Membership
-            const user = await prisma.user.create({
-                data: { email, displayName: `${firstName} ${lastName}`, status: MembershipStatus.ACTIVE },
+            const user = await userRepository.create({
+                email,
+                displayName,
             });
 
-            await prisma.membership.create({
-                data: {
+            await membershipRepository.createMembershipWithProfile(authorization, {
+                userId: user.id,
+                roles: [DEFAULT_ROLE],
+                profile: {
                     orgId: org.id,
                     userId: user.id,
-                    roleId: role.id,
-                    status: MembershipStatus.ACTIVE,
+                    employeeNumber,
+                    jobTitle,
+                    employmentType,
+                    startDate,
                     metadata: getSeededMetadata(),
-                    createdBy: user.id,
+                },
+                userUpdate: {
+                    email,
+                    status: MembershipStatus.ACTIVE,
+                    displayName,
                 },
             });
 
-            // Employee Profile
-            await prisma.employeeProfile.create({
-                data: {
-                    orgId: org.id,
-                    userId: user.id,
-                    employeeNumber: `EMP-${faker.string.alphanumeric(6).toUpperCase()}`,
+            const profile = await employeeProfileRepository.getEmployeeProfileByUser(org.id, user.id);
+            if (profile) {
+                await employeeProfileRepository.updateEmployeeProfile(org.id, profile.id, {
                     firstName,
                     lastName,
-                    displayName: `${firstName} ${lastName}`,
-                    email, // Use same email for simplicity
-                    jobTitle: faker.person.jobTitle(),
-                    departmentId: depts.length > 0 ? faker.helpers.arrayElement(depts).id : undefined,
+                    displayName,
+                    email,
+                    jobTitle,
+                    departmentId: departments.length
+                        ? faker.helpers.arrayElement(departments).id
+                        : undefined,
                     employmentStatus: EmploymentStatus.ACTIVE,
-                    employmentType: faker.helpers.arrayElement(Object.values(EmploymentType)),
-                    startDate: faker.date.past({ years: 2 }),
-                    metadata: getSeededMetadata(),
-                    // UK Compliance Fake Data
+                    employmentType,
+                    startDate,
                     niNumber: faker.string.alphanumeric(9).toUpperCase(),
-                    salaryAmount: new Prisma.Decimal(faker.number.float({ min: 25000, max: 120000, fractionDigits: 2 })),
+                    salaryAmount: faker.number.float({ min: 25500, max: 120000, fractionDigits: 2 }),
                     salaryCurrency: 'GBP',
-                },
-            });
+                    dataResidency: org.dataResidency,
+                    dataClassification: org.dataClassification,
+                    metadata: getSeededMetadata(),
+                });
+            }
             created++;
         }
 

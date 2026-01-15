@@ -1,7 +1,50 @@
-import type { PerformanceReview } from '@/server/types/hr-types';
-import { Prisma, type PerformanceReview as PrismaPerformanceReview } from '@prisma/client';
+import type { PerformanceReview } from '@/server/domain/hr/performance/types';
+import type { PrismaJsonValue } from '@/server/types/prisma';
 
-export function mapPrismaPerformanceReviewToDomain(record: PrismaPerformanceReview): PerformanceReview {
+interface PerformanceReviewRecord {
+  id: string;
+  orgId: string;
+  userId: string;
+  reviewerOrgId: string;
+  reviewerUserId: string;
+    periodStartDate: Date;
+    periodEndDate: Date;
+    scheduledDate: Date;
+    completedDate?: Date | null;
+    status: PerformanceReview['status'];
+    overallRating?: number | null;
+    strengths?: string | null;
+    areasForImprovement?: string | null;
+    developmentPlan?: PrismaJsonValue | null;
+    reviewerNotes?: string | null;
+    employeeResponse?: string | null;
+    metadata?: PrismaJsonValue | null;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+interface PerformanceReviewCreatePayload {
+  orgId: string;
+  userId: string;
+  reviewerOrgId: string;
+  reviewerUserId: string;
+    periodStartDate: Date;
+    periodEndDate: Date;
+    scheduledDate: Date;
+    completedDate?: Date | null;
+    status: PerformanceReview['status'];
+    overallRating?: number | null;
+    strengths?: string | null;
+    areasForImprovement?: string | null;
+    developmentPlan?: PrismaJsonValue | null;
+    reviewerNotes?: string | null;
+    employeeResponse?: string | null;
+    metadata?: PrismaJsonValue | null;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export function mapPrismaPerformanceReviewToDomain(record: PerformanceReviewRecord): PerformanceReview {
     return {
         id: record.id,
         orgId: record.orgId,
@@ -16,16 +59,16 @@ export function mapPrismaPerformanceReviewToDomain(record: PrismaPerformanceRevi
         overallRating: record.overallRating ?? null,
         strengths: record.strengths ?? null,
         areasForImprovement: record.areasForImprovement ?? null,
-        developmentPlan: record.developmentPlan as PerformanceReview['developmentPlan'],
+        developmentPlan: toDomainJsonValue(record.developmentPlan),
         reviewerNotes: record.reviewerNotes ?? null,
         employeeResponse: record.employeeResponse ?? null,
-        metadata: record.metadata as PerformanceReview['metadata'],
+        metadata: toDomainJsonValue(record.metadata),
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
     };
 }
 
-export function mapDomainPerformanceReviewToPrisma(input: PerformanceReview): Prisma.PerformanceReviewUncheckedCreateInput {
+export function mapDomainPerformanceReviewToPrisma(input: PerformanceReview): PerformanceReviewCreatePayload {
     return {
         orgId: input.orgId,
         userId: input.userId,
@@ -39,11 +82,20 @@ export function mapDomainPerformanceReviewToPrisma(input: PerformanceReview): Pr
         overallRating: input.overallRating ?? null,
         strengths: input.strengths ?? null,
         areasForImprovement: input.areasForImprovement ?? null,
-        developmentPlan: input.developmentPlan === null ? Prisma.JsonNull : (input.developmentPlan as Prisma.InputJsonValue | undefined),
+        developmentPlan: input.developmentPlan ?? null,
         reviewerNotes: input.reviewerNotes ?? null,
         employeeResponse: input.employeeResponse ?? null,
-        metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata as Prisma.InputJsonValue | undefined),
+        metadata: input.metadata ?? null,
         createdAt: input.createdAt,
         updatedAt: input.updatedAt,
-    };
+    } satisfies PerformanceReviewCreatePayload;
+}
+
+function toDomainJsonValue(
+    value: PrismaJsonValue | null | undefined,
+): PerformanceReview['developmentPlan'] | null | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    return value as PerformanceReview['developmentPlan'];
 }

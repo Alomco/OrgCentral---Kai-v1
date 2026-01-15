@@ -1,44 +1,22 @@
 import { PerformanceService, type PerformanceServiceDependencies } from './performance-service';
-import { PrismaPerformanceRepository } from '@/server/repositories/prisma/hr/performance';
-import type { BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
-import { invalidateOrgCache } from '@/server/lib/cache-tags';
+import { buildPerformanceServiceDependencies, type PerformanceServiceDependencyOptions } from '@/server/repositories/providers/hr/performance-service-dependencies';
 
 export interface PerformanceServiceProviderOptions {
     overrides?: Partial<PerformanceServiceDependencies>;
-    prismaOptions?: Pick<BasePrismaRepositoryOptions, 'prisma' | 'trace' | 'onAfterWrite'>;
+    prismaOptions?: PerformanceServiceDependencyOptions;
 }
 
 const sharedDefaultOptions: PerformanceServiceProviderOptions = {};
 
 export function getPerformanceService(options: PerformanceServiceProviderOptions = sharedDefaultOptions): PerformanceService {
-    const prismaOptions = options.prismaOptions;
-
-    const defaults: PerformanceServiceDependencies = {
-        repositoryFactory: (authorization) => {
-            const { orgId, dataClassification, dataResidency } = authorization;
-
-            return new PrismaPerformanceRepository(orgId, dataClassification, dataResidency, {
-                ...(prismaOptions ?? {}),
-                onAfterWrite: prismaOptions?.onAfterWrite ?? (async (tenantId: string, scopes?: string[]) => {
-                    if (!scopes?.length) {
-                        return;
-                    }
-                    await Promise.all(
-                        scopes.map((scope) =>
-                            invalidateOrgCache(tenantId, scope, dataClassification, dataResidency),
-                        ),
-                    );
-                }),
-            });
-        },
-    };
+    const dependencies = buildPerformanceServiceDependencies(options.prismaOptions);
 
     if (!options.overrides || Object.keys(options.overrides).length === 0) {
-        return new PerformanceService(defaults);
+        return new PerformanceService(dependencies);
     }
 
     return new PerformanceService({
-        ...defaults,
+        ...dependencies,
         ...options.overrides,
     });
 }

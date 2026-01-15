@@ -5,7 +5,7 @@ import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/
 import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_HR_POLICIES } from '@/server/repositories/cache-scopes';
 import type { IHRPolicyRepository } from '@/server/repositories/contracts/hr/policies/hr-policy-repository-contract';
-import { PrismaHRPolicyRepository } from '@/server/repositories/prisma/hr/policies/prisma-hr-policy-repository';
+import { buildHrPolicyServiceDependencies } from '@/server/repositories/providers/hr/hr-policy-service-dependencies';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { HRPolicy } from '@/server/types/hr-ops-types';
 
@@ -21,7 +21,7 @@ export interface ListHrPoliciesForUiResult {
 }
 
 function resolvePolicyRepository(): IHRPolicyRepository {
-    return new PrismaHRPolicyRepository();
+    return buildHrPolicyServiceDependencies().policyRepository;
 }
 
 export async function listHrPoliciesForUi(

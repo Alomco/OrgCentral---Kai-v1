@@ -1,38 +1,33 @@
-import { PrismaLeaveBalanceRepository, PrismaLeavePolicyRepository, PrismaLeaveRequestRepository, PrismaLeaveAttachmentRepository } from '@/server/repositories/prisma/hr/leave';
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
-import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
 import { LeaveService, type LeaveServiceDependencies } from './leave-service';
 import { getHrNotificationService } from '@/server/services/hr/notifications/hr-notification-service.provider';
 import { getNotificationService } from '@/server/services/notifications/notification-service.provider';
+import { buildLeaveServiceDependencies, type LeaveServiceDependencyOptions } from '@/server/repositories/providers/hr/leave-service-dependencies';
 
-const leaveRequestRepository = new PrismaLeaveRequestRepository();
-const leaveBalanceRepository = new PrismaLeaveBalanceRepository();
-const leavePolicyRepository = new PrismaLeavePolicyRepository();
-const leaveAttachmentRepository = new PrismaLeaveAttachmentRepository();
-const organizationRepository = new PrismaOrganizationRepository();
-const profileRepository = new PrismaEmployeeProfileRepository();
-const defaultLeaveServiceDependencies: LeaveServiceDependencies = {
-    leaveRequestRepository,
-    leaveBalanceRepository,
-    leavePolicyRepository,
-    leaveAttachmentRepository,
-    organizationRepository,
-    profileRepository,
-    hrNotificationService: getHrNotificationService(),
-    notificationDispatchService: getNotificationService(),
-};
-
-const sharedLeaveService = new LeaveService(defaultLeaveServiceDependencies);
-
-export function getLeaveService(overrides?: Partial<LeaveServiceDependencies>): LeaveService {
-    if (!overrides || Object.keys(overrides).length === 0) {
-        return sharedLeaveService;
+const sharedLeaveService = (() => {
+  const dependencies = buildLeaveServiceDependencies({
+    overrides: {
+      hrNotificationService: getHrNotificationService(),
+      notificationDispatchService: getNotificationService(),
     }
+  });
+  return new LeaveService(dependencies);
+})();
 
-    return new LeaveService({
-        ...defaultLeaveServiceDependencies,
-        ...overrides,
-    });
+export function getLeaveService(overrides?: Partial<LeaveServiceDependencies>, options?: LeaveServiceDependencyOptions): LeaveService {
+  if (!overrides || Object.keys(overrides).length === 0) {
+    return sharedLeaveService;
+  }
+
+  const dependencies = buildLeaveServiceDependencies({
+    prismaOptions: options?.prismaOptions,
+    overrides: {
+      hrNotificationService: getHrNotificationService(),
+      notificationDispatchService: getNotificationService(),
+      ...overrides,
+    }
+  });
+
+  return new LeaveService(dependencies);
 }
 
 export type LeaveServiceContract = Pick<

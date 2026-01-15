@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { AppHeader } from '@/components/layout/app-header';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { SidebarInset } from '@/components/ui/sidebar';
+import { SkipLink } from '@/components/ui/skip-link';
 import { TenantThemeRegistry } from '@/components/theme/tenant-theme-registry';
 import { DevelopmentThemeWidget } from '@/components/dev/DevelopmentThemeWidget';
 import { AppClientProviders } from '@/app/(app)/_components/app-client-providers';
@@ -58,6 +59,7 @@ export async function AppLayoutShell({ children }: { children: ReactNode }) {
                 residency: authorization.dataResidency,
             }}
         >
+            <SkipLink targetId="app-main-content" />
             <AppSidebar
                 session={session}
                 authorization={authorization}
@@ -80,7 +82,7 @@ export async function AppLayoutShell({ children }: { children: ReactNode }) {
                         notifications={notifications}
                         unreadCount={unreadCount}
                     />
-                    <main className="min-h-0 flex-1 overflow-y-auto">
+                    <main id="app-main-content" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto">
                         <AppClientProviders session={sessionSnapshot} branding={brandingSnapshot}>
                             {children}
                         </AppClientProviders>

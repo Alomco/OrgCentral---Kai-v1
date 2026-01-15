@@ -42,9 +42,9 @@ export interface PageContainerProps extends VariantProps<typeof pageContainerVar
 
 export function PageContainer({ children, padding, maxWidth, className }: PageContainerProps) {
     return (
-        <main className={cn(pageContainerVariants({ padding, maxWidth }), className)}>
+        <div className={cn(pageContainerVariants({ padding, maxWidth }), className)}>
             {children}
-        </main>
+        </div>
     );
 }
 

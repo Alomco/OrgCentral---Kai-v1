@@ -4,11 +4,15 @@ import type {
   ReturnToWorkRecordInput,
   UnplannedAbsence,
 } from '@/server/types/hr-ops-types';
+import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 
 export interface IUnplannedAbsenceRepository {
-  createAbsence(orgId: string, input: Omit<UnplannedAbsence, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { status?: UnplannedAbsence['status'] }): Promise<UnplannedAbsence>;
+  createAbsence(
+    contextOrOrgId: RepositoryAuthorizationContext | string,
+    input: Omit<UnplannedAbsence, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { status?: UnplannedAbsence['status'] },
+  ): Promise<UnplannedAbsence>;
   updateAbsence(
-    orgId: string,
+    contextOrOrgId: RepositoryAuthorizationContext | string,
     id: string,
     updates: Partial<
       Pick<
@@ -31,21 +35,24 @@ export interface IUnplannedAbsenceRepository {
     >
   ): Promise<UnplannedAbsence>;
   recordReturnToWork(
-    orgId: string,
+    contextOrOrgId: RepositoryAuthorizationContext | string,
     id: string,
     record: ReturnToWorkRecordInput,
   ): Promise<UnplannedAbsence>;
   addAttachments(
-    orgId: string,
+    contextOrOrgId: RepositoryAuthorizationContext | string,
     id: string,
     attachments: readonly AbsenceAttachmentInput[],
   ): Promise<UnplannedAbsence>;
-  removeAttachment(orgId: string, id: string, attachmentId: string): Promise<UnplannedAbsence>;
+  removeAttachment(context: RepositoryAuthorizationContext, id: string, attachmentId: string): Promise<UnplannedAbsence>;
   deleteAbsence(
-    orgId: string,
+    contextOrOrgId: RepositoryAuthorizationContext | string,
     id: string,
     audit: AbsenceDeletionAuditEntry,
   ): Promise<void>;
-  getAbsence(orgId: string, id: string): Promise<UnplannedAbsence | null>;
-  listAbsences(orgId: string, filters?: { userId?: string; status?: UnplannedAbsence['status']; includeClosed?: boolean; from?: Date; to?: Date }): Promise<UnplannedAbsence[]>;
+  getAbsence(contextOrOrgId: RepositoryAuthorizationContext | string, id: string): Promise<UnplannedAbsence | null>;
+  listAbsences(
+    contextOrOrgId: RepositoryAuthorizationContext | string,
+    filters?: { userId?: string; status?: UnplannedAbsence['status']; includeClosed?: boolean; from?: Date; to?: Date },
+  ): Promise<UnplannedAbsence[]>;
 }

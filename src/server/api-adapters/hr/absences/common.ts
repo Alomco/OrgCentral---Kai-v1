@@ -1,4 +1,4 @@
-import { AbsenceService } from '@/server/services/hr/absences/absence-service';
+import { type AbsenceService } from '@/server/services/hr/absences/absence-service';
 import { getAbsenceService } from '@/server/services/hr/absences/absence-service.provider';
 import type { GetSessionDependencies } from '@/server/use-cases/auth/sessions/get-session';
 

@@ -7,9 +7,7 @@ import { LEAVE_ROUNDING_RULES } from '@/server/types/leave-types';
 import type { LeaveYearStartDate } from '@/server/types/org/organization-settings';
 import { normalizeLeaveYearStartDate } from '@/server/types/org/leave-year-start-date';
 
-import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization/prisma-organization-repository';
-import { getLeaveSettings as getLeaveSettingsUseCase } from '@/server/use-cases/org/organization/get-leave-settings';
-import { updateLeaveSettings as updateLeaveSettingsUseCase } from '@/server/use-cases/org/organization/update-leave-settings';
+import { fetchLeaveSettings, saveLeaveSettings } from '@/server/services/org/organization/leave-settings-service';
 
 const AUDIT_SOURCE = {
     get: 'api:org:leave-settings:get',
@@ -74,14 +72,7 @@ export async function getLeaveSettingsController(request: Request, orgId: string
         },
     );
 
-    const repository = new PrismaOrganizationRepository();
-    return getLeaveSettingsUseCase(
-        { organizationRepository: repository },
-        {
-            authorization,
-            orgId: normalizedOrgId,
-        },
-    );
+    return fetchLeaveSettings(authorization, normalizedOrgId);
 }
 
 export async function updateLeaveSettingsController(request: Request, orgId: string) {
@@ -109,13 +100,5 @@ export async function updateLeaveSettingsController(request: Request, orgId: str
         },
     );
 
-    const repository = new PrismaOrganizationRepository();
-    return updateLeaveSettingsUseCase(
-        { organizationRepository: repository },
-        {
-            authorization,
-            orgId: normalizedOrgId,
-            updates,
-        },
-    );
+    return saveLeaveSettings(authorization, normalizedOrgId, updates);
 }

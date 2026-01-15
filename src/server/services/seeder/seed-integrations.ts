@@ -1,24 +1,26 @@
 // src/server/services/seeder/seed-integrations.ts
 import { faker } from '@faker-js/faker';
-import { prisma } from '@/server/lib/prisma';
-import { getDefaultOrg, type SeedResult, UNKNOWN_ERROR_MESSAGE } from './utils';
+import { buildIntegrationServiceDependencies } from '@/server/repositories/providers/org/integration-service-dependencies';
+import { buildSeederAuthorization, getDefaultOrg, type SeedResult, UNKNOWN_ERROR_MESSAGE } from './utils';
 
 export async function seedIntegrationsInternal(): Promise<SeedResult> {
     try {
         const org = await getDefaultOrg();
+        const authorization = buildSeederAuthorization(org);
+        const { integrationConfigRepository } = buildIntegrationServiceDependencies();
         const providers = ['slack', 'discord', 'google-workspace', 'zoom'];
 
         for (const provider of providers) {
-            await prisma.integrationConfig.upsert({
-                where: { orgId_provider: { orgId: org.id, provider } },
-                update: {},
-                create: {
-                    orgId: org.id,
-                    provider,
-                    credentials: { apiKey: faker.string.alphanumeric(32) },
-                    settings: { syncEnabled: true, webhookUrl: faker.internet.url() },
-                    active: faker.datatype.boolean(),
-                }
+            const existing = await integrationConfigRepository.getIntegrationConfigByProvider(authorization, provider);
+            if (existing) {
+                continue;
+            }
+            await integrationConfigRepository.createIntegrationConfig(authorization, {
+                orgId: org.id,
+                provider,
+                credentials: { apiKey: faker.string.alphanumeric(32) },
+                settings: { syncEnabled: true, webhookUrl: faker.internet.url() },
+                active: faker.datatype.boolean(),
             });
         }
         return { success: true, message: 'Seeded Integrations.' };

@@ -1,7 +1,25 @@
-import type { NotificationPreference } from '@/server/types/hr-types';
-import { Prisma, type NotificationPreference as PrismaNotificationPreference } from '@prisma/client';
+import type {
+    NotificationPreference,
+    NotificationPreferenceRecord,
+} from '@/server/types/hr-types';
+import { Prisma, type PrismaInputJsonValue, type PrismaNullableJsonNullValueInput } from '@/server/types/prisma';
+import type { Prisma as PrismaClient } from '@prisma/client';
 
-export function mapPrismaNotificationPreferenceToDomain(record: PrismaNotificationPreference): NotificationPreference {
+type NotificationPreferenceCreateInput = PrismaClient.NotificationPreferenceUncheckedCreateInput;
+
+const toJsonInput = (
+    value: PrismaInputJsonValue | null | undefined,
+): PrismaInputJsonValue | PrismaNullableJsonNullValueInput | undefined => {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return Prisma.JsonNull;
+    }
+    return value;
+};
+
+export function mapPrismaNotificationPreferenceToDomain(record: NotificationPreferenceRecord): NotificationPreference {
     return {
         id: record.id,
         orgId: record.orgId,
@@ -14,14 +32,14 @@ export function mapPrismaNotificationPreferenceToDomain(record: PrismaNotificati
     };
 }
 
-export function mapDomainNotificationPreferenceToPrisma(input: NotificationPreference): Prisma.NotificationPreferenceUncheckedCreateInput {
+export function mapDomainNotificationPreferenceToPrisma(input: NotificationPreference): NotificationPreferenceCreateInput {
     return {
         orgId: input.orgId,
         userId: input.userId,
         channel: input.channel,
         enabled: input.enabled,
-        quietHours: input.quietHours === null ? Prisma.JsonNull : (input.quietHours),
-        metadata: input.metadata === null ? Prisma.JsonNull : (input.metadata),
+        quietHours: toJsonInput(input.quietHours),
+        metadata: toJsonInput(input.metadata),
         updatedAt: input.updatedAt,
     };
 }

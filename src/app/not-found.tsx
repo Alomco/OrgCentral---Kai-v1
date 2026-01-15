@@ -6,6 +6,7 @@ import {
     ErrorActions,
     ErrorLinkButton,
 } from '@/components/error';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 export const metadata = {
     title: 'Page not found | OrgCentral',
@@ -25,6 +26,7 @@ export default function NotFound() {
                     Go home
                 </ErrorLinkButton>
                 <ErrorLinkButton href="/login">Login</ErrorLinkButton>
+                <LogoutButton label="Sign out" variant="outline" size="sm" />
             </ErrorActions>
         </ErrorPageLayout>
     );

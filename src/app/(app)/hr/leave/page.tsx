@@ -20,6 +20,7 @@ import { HrPageHeader } from '../_components/hr-page-header';
 import { buildInitialLeaveRequestFormState } from './form-state';
 import { LeaveRequestForm } from './_components/leave-request-form';
 import { LeaveRequestsPanel } from './_components/leave-requests-panel';
+import { LeaveSubnav } from './_components/leave-subnav';
 import { getLeaveService } from '@/server/services/hr/leave/leave-service.provider';
 import { getAbsences } from '@/server/use-cases/hr/absences/get-absences';
 import { PrismaUnplannedAbsenceRepository } from '@/server/repositories/prisma/hr/absences';
@@ -51,6 +52,7 @@ function LeaveRequestsSkeleton() {
 
 export default async function HrLeavePage() {
     const headerStore = await nextHeaders();
+    const correlationId = headerStore.get('x-correlation-id') ?? undefined;
     const { authorization } = await getSessionContextOrRedirect({}, {
         headers: headerStore,
         requiredAnyPermissions: [
@@ -59,8 +61,9 @@ export default async function HrLeavePage() {
         ],
         action: HR_ACTION.READ,
         resourceType: HR_RESOURCE.HR_LEAVE,
-        resourceAttributes: { scope: 'self' },
+        resourceAttributes: { scope: 'self', correlationId },
         auditSource: 'ui:hr:leave',
+        correlationId,
     });
 
     const peopleService = getPeopleService();
@@ -188,6 +191,8 @@ export default async function HrLeavePage() {
                     : 'Request leave, track submissions, and see who approves.'}
                 icon={<CalendarDays className="h-5 w-5" />}
             />
+
+            <LeaveSubnav />
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <LeaveRequestForm

@@ -16,6 +16,8 @@ const HR_LEAVE_REQUEST_RESOURCE = 'hr.leave.request';
 const MEMBER_READ_RESOURCES = [
     'employeeProfile',
     'employmentContract',
+    'hr.people.profile',
+    'hr.people.contract',
     HR_LEAVE_REQUEST_RESOURCE,
     'hr.leave.balance',
     'hr.absence',
@@ -42,6 +44,15 @@ export const MEMBER_POLICIES: AbacPolicy[] = [
         resources: MEMBER_READ_RESOURCES,
         condition: MEMBER_SUBJECT,
         priority: MEMBER_POLICY_PRIORITY,
+    },
+    {
+        id: 'default:abac:member:read-people-directory',
+        description: 'Members can read HR people directory resources.',
+        effect: 'allow',
+        actions: ['read', 'list'],
+        resources: ['hr.people.profile', 'hr.people.contract'],
+        condition: MEMBER_SUBJECT,
+        priority: MEMBER_POLICY_PRIORITY + 10,
     },
     {
         id: 'default:abac:member:create-own-leave',

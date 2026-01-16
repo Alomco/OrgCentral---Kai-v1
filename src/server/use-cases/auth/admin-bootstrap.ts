@@ -15,6 +15,7 @@ import { AuthorizationError, ValidationError } from '@/server/errors';
 import type { PlatformProvisioningConfig } from '@/server/repositories/contracts/platform';
 import type { JsonRecord } from '@/server/types/json';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
+import { appLogger } from '@/server/logging/structured-logger';
 import { extractIpAddress, extractUserAgent } from '@/server/use-cases/shared/request-metadata';
 import {
     BOOTSTRAP_SEED_SOURCE,
@@ -217,18 +218,24 @@ export async function runAdminBootstrap(
             setActiveHeaders,
         };
     } catch (error) {
-        await recordAuditEvent({
-            orgId: resolvePlatformConfig().platformTenantId,
-            eventType: 'SYSTEM',
-            action: 'admin.bootstrap.failed',
-            resource: 'platform.bootstrap',
-            auditSource: BOOTSTRAP_SEED_SOURCE,
-            payload: {
-                errorType: error instanceof Error ? error.name : 'UnknownError',
-                ipAddress,
-                userAgent,
-            },
-        });
+        try {
+            await recordAuditEvent({
+                orgId: resolvePlatformConfig().platformTenantId,
+                eventType: 'SYSTEM',
+                action: 'admin.bootstrap.failed',
+                resource: 'platform.bootstrap',
+                auditSource: BOOTSTRAP_SEED_SOURCE,
+                payload: {
+                    errorType: error instanceof Error ? error.name : 'UnknownError',
+                    ipAddress,
+                    userAgent,
+                },
+            });
+        } catch (auditError) {
+            appLogger.error('admin.bootstrap.audit.failed', {
+                error: auditError instanceof Error ? auditError.message : 'Unknown error',
+            });
+        }
         throw error;
     }
 }

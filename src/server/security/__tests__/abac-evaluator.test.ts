@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
 import {
-    evaluateAbac,
-    makeResource,
-    makeSubject,
-    AbacService,
+  evaluateAbac,
+  makeResource,
+  makeSubject,
+  AbacService,
 } from '@/server/security/abac';
 import type { AbacPolicy } from '@/server/security/abac-types';
 import { normalizeAbacPolicies } from '@/server/security/abac-policy-normalizer';
@@ -50,7 +50,7 @@ describe('evaluateCondition and selector logic', () => {
         priority: 10,
       },
     ]);
-    const service = new AbacService(repo);
+    const service = new AbacService(repo, { includeBootstrapPolicies: false });
     const policies = await service.getEvaluatedPoliciesForOrg('org-1');
     expect(policies.map((p) => p.id)).toEqual(['deny-updates-when-blocked', 'allow-all']);
 
@@ -87,7 +87,7 @@ describe('evaluateCondition and selector logic', () => {
         },
       },
     ]);
-    const service = new AbacService(repo);
+    const service = new AbacService(repo, { includeBootstrapPolicies: false });
 
     const canReadOwn = await service.evaluate(
       'org-1',
@@ -125,7 +125,7 @@ describe('evaluateCondition and selector logic', () => {
         priority: 1,
       },
     ]);
-    const service = new AbacService(repo);
+    const service = new AbacService(repo, { includeBootstrapPolicies: false });
 
     const allowed = await service.evaluate(
       'org-1',

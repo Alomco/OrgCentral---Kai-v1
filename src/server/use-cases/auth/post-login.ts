@@ -72,6 +72,9 @@ export async function handlePostLogin(
     desiredOrgId ??= currentActiveOrgId ?? null;
 
     if (desiredOrgId === null) {
+        if (isInvitationAcceptancePath(nextPath)) {
+            return { redirectUrl: new URL(nextPath, input.requestUrl.origin) };
+        }
         const memberships = await listActiveMembershipsForUser(session.user.id);
         desiredOrgId = selectLatestMembershipOrgId(memberships);
     }
@@ -111,6 +114,15 @@ export async function handlePostLogin(
         redirectUrl: new URL(redirectPath, input.requestUrl.origin),
         setActiveHeaders,
     };
+}
+
+function isInvitationAcceptancePath(nextPath: string): boolean {
+    try {
+        const pathname = new URL(nextPath, 'http://localhost').pathname;
+        return pathname === '/accept-invitation';
+    } catch {
+        return nextPath.startsWith('/accept-invitation');
+    }
 }
 
 function resolveSafeNextPath(requestUrl: URL): SafeNextPath {

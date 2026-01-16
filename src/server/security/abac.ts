@@ -5,11 +5,13 @@
 import type { IAbacPolicyRepository } from '@/server/repositories/contracts/org/abac/abac-policy-repository-contract';
 import { appLogger } from '@/server/logging/structured-logger';
 import type { AbacPolicy } from './abac-types';
+import { DEFAULT_BOOTSTRAP_POLICIES } from './abac-policies';
 import { normalizeAbacPolicies } from './abac-policy-normalizer';
 import { evaluateCondition, matchesPolicySelector, subjectHasRole } from './abac-rules';
 
 export interface AbacServiceOptions {
   logger?: (event: string, metadata?: Record<string, unknown>) => void;
+  includeBootstrapPolicies?: boolean;
 }
 
 export class AbacService {
@@ -60,8 +62,15 @@ export class AbacService {
   async getPolicies(orgId: string): Promise<AbacPolicy[]> {
     const repository = await this.getRepository();
     const raw = await repository.getPoliciesForOrg(orgId);
+    const includeDefaults = this.options.includeBootstrapPolicies !== false;
     if (!raw.length) {
-      return [];
+      if (this.options.logger && includeDefaults) {
+        this.options.logger('abac.policy.fallback.default', { orgId });
+      }
+      if (!includeDefaults) {
+        return [];
+      }
+      return DEFAULT_BOOTSTRAP_POLICIES.slice().sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
     }
 
     const normalized = normalizeAbacPolicies(raw);
@@ -73,7 +82,16 @@ export class AbacService {
       if (rescued.length && this.options.logger) {
         this.options.logger('abac.policy.rescued', { orgId, rescuedCount: rescued.length });
       }
+
       const merged = [...normalized, ...rescued];
+      if (includeDefaults) {
+        const mergedIds = new Set(merged.map((p) => p.id));
+        for (const policy of DEFAULT_BOOTSTRAP_POLICIES) {
+          if (!mergedIds.has(policy.id)) {
+            merged.push(policy);
+          }
+        }
+      }
       return merged.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
     }
 

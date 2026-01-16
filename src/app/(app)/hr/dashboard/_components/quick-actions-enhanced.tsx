@@ -36,7 +36,7 @@ export function QuickActions({ authorization }: QuickActionsProps) {
             title: "Report Absence",
             description: "Log unplanned time off",
             icon: AlertCircle,
-            href: "/hr/absences",
+            href: "/hr/absence",
             color: "text-rose-500",
             bg: "bg-rose-500/10",
             hover: "hover:bg-rose-500/20"

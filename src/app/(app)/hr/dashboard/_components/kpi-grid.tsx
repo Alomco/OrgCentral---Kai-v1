@@ -73,7 +73,7 @@ export async function KpiGrid({ authorization, employeeId }: KpiGridProps) {
                 title="Leave Balance"
                 value={`${leaveBalance.toLocaleString()} days`}
                 icon={Briefcase}
-                href="/hr/leave"
+                href="/hr/leave/balances"
                 color="text-blue-500"
                 gradient="from-blue-500/10"
             />
@@ -81,7 +81,7 @@ export async function KpiGrid({ authorization, employeeId }: KpiGridProps) {
                 title="Pending Requests"
                 value={pendingRequests.toString()}
                 icon={Clock}
-                href="/hr/leave"
+                href="/hr/leave/requests"
                 color="text-amber-500"
                 gradient="from-amber-500/10"
             />
@@ -89,7 +89,7 @@ export async function KpiGrid({ authorization, employeeId }: KpiGridProps) {
                 title="Absent Today"
                 value={absentToday.toString()}
                 icon={Calendar}
-                href="/hr/absences"
+                href="/hr/absence"
                 color="text-rose-500"
                 gradient="from-rose-500/10"
             />

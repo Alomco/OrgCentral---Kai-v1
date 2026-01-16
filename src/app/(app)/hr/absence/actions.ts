@@ -1,17 +1,70 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 
+import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
+import { invalidateAbsenceScopeCache } from '@/server/use-cases/hr/absences/cache-helpers';
+import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { appLogger } from '@/server/logging/structured-logger';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getAbsenceService } from '@/server/services/hr/absences/absence-service.provider';
 
 import type { CancelAbsenceFormState, ReportAbsenceFormState } from './form-state';
 import { cancelAbsenceSchema, reportAbsenceSchema } from './schema';
 
+type AuthorizationAuditContext = Pick<
+    RepositoryAuthorizationContext,
+    'orgId' | 'dataResidency' | 'dataClassification'
+>;
+
 const ABSENCES_PATH = '/hr/absence';
 
 function formDataString(value: FormDataEntryValue | null): string {
     return typeof value === 'string' ? value : '';
+}
+
+export async function refreshAbsenceOverviewAction(): Promise<void> {
+    const headerStore = await headers();
+    const correlationId = headerStore.get('x-correlation-id') ?? undefined;
+    let auditContext: AuthorizationAuditContext | null = null;
+
+    try {
+        const { authorization } = await getSessionContext(
+            {},
+            {
+                headers: headerStore,
+                requiredAnyPermissions: [
+                    { [HR_RESOURCE.HR_ABSENCE]: ['read'] },
+                    { employeeProfile: ['read'] },
+                ],
+                auditSource: 'ui:hr:absence:refresh',
+                correlationId,
+                action: HR_ACTION.READ,
+                resourceType: HR_RESOURCE.HR_ABSENCE,
+                resourceAttributes: {
+                    scope: 'overview',
+                    correlationId,
+                },
+            },
+        );
+
+        auditContext = {
+            orgId: authorization.orgId,
+            dataResidency: authorization.dataResidency,
+            dataClassification: authorization.dataClassification,
+        };
+
+        await invalidateAbsenceScopeCache(authorization);
+    } catch (error) {
+        appLogger.error('hr.absence.refresh.failed', {
+            error: error instanceof Error ? error.message : String(error),
+            correlationId,
+            orgId: auditContext?.orgId,
+            dataResidency: auditContext?.dataResidency,
+            dataClassification: auditContext?.dataClassification,
+        });
+    }
 }
 
 export async function reportAbsenceAction(
@@ -86,7 +139,6 @@ export async function reportAbsenceAction(
     }
 }
 
-/** Cancel an absence with reason validation. */
 export async function cancelAbsenceAction(
     authorization: RepositoryAuthorizationContext,
     absenceId: string,
@@ -170,4 +222,3 @@ export async function rejectAbsenceAction(
 
     revalidatePath(ABSENCES_PATH);
 }
-

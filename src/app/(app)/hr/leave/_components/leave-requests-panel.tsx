@@ -3,6 +3,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { LeaveRequest } from '@/server/types/leave-types';
 import { getLeaveRequestsForUi } from '@/server/use-cases/hr/leave/get-leave-requests.cached';
 import { LeaveRequestAttachments } from './leave-request-attachments';
 import { appLogger } from '@/server/logging/structured-logger';
@@ -23,6 +24,7 @@ export interface LeaveRequestsPanelProps {
         slaDays?: number;
         notes?: string;
     };
+    requests?: LeaveRequest[];
 }
 
 function formatDate(value: string): string {
@@ -40,6 +42,7 @@ export async function LeaveRequestsPanel({
     title,
     description,
     approverChain,
+    requests: initialRequests,
 }: LeaveRequestsPanelProps) {
     const resolvedTitle = title ?? 'Requests';
     const resolvedDescription = description ?? 'Recent leave requests linked to your profile.';
@@ -56,19 +59,21 @@ export async function LeaveRequestsPanel({
         );
     }
 
-    let requests: Awaited<ReturnType<typeof getLeaveRequestsForUi>>['requests'] = [];
+    let requests: Awaited<ReturnType<typeof getLeaveRequestsForUi>>['requests'] = initialRequests ?? [];
     let loadError: string | null = null;
-    try {
-        const result = await getLeaveRequestsForUi({ authorization, employeeId });
-        requests = result.requests;
-    } catch (error) {
-        loadError = error instanceof Error ? error.message : 'Unable to load leave requests.';
-        appLogger.error('hr.leave.requests.load.failed', {
-            orgId: authorization.orgId,
-            employeeId,
-            error: loadError,
-        });
-        requests = [];
+    if (!initialRequests) {
+        try {
+            const result = await getLeaveRequestsForUi({ authorization, employeeId });
+            requests = result.requests;
+        } catch (error) {
+            loadError = error instanceof Error ? error.message : 'Unable to load leave requests.';
+            appLogger.error('hr.leave.requests.load.failed', {
+                orgId: authorization.orgId,
+                employeeId,
+                error: loadError,
+            });
+            requests = [];
+        }
     }
 
     const approver = canApproveLeave(authorization);

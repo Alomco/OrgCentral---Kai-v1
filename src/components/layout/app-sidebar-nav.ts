@@ -32,6 +32,7 @@ export const navItems: NavItem[] = [
             { href: "/hr/dashboard", label: "HR Dashboard", icon: LayoutDashboard },
             { href: "/hr/profile", label: "My Profile", icon: User },
             { href: "/hr/leave", label: "Leave Management", icon: CalendarDays },
+            { href: "/hr/absence", label: "Absence", icon: CalendarDays },
             { href: "/hr/employees", label: "Employees", icon: Users },
             { href: "/hr/policies", label: "Policies", icon: FileText },
             { href: "/hr/compliance", label: "Compliance", icon: Shield },

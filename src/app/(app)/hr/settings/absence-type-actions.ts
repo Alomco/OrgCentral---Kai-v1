@@ -114,7 +114,7 @@ export async function createAbsenceTypeAction(
         );
 
         revalidatePath('/hr/settings');
-        revalidatePath('/hr/absences');
+        revalidatePath('/hr/absence');
 
         return {
             status: 'success',
@@ -182,7 +182,7 @@ export async function updateAbsenceTypeAction(
         );
 
         revalidatePath('/hr/settings');
-        revalidatePath('/hr/absences');
+        revalidatePath('/hr/absence');
 
         return {
             status: 'success',

@@ -32,7 +32,20 @@ export async function runProfileAndContractPhase(params: {
 
   let contractCreated = false;
   await exec(async (scopedRepos: TransactionalCreateDependencies) => {
-    await scopedRepos.employeeProfileRepository.createEmployeeProfile(orgId, payload);
+    const existingProfile = await scopedRepos.employeeProfileRepository.getEmployeeProfileByUser(
+      orgId,
+      payload.userId,
+    );
+
+    if (existingProfile) {
+      const { orgId: _orgId, userId: _userId, employeeNumber: _employeeNumber, ...updates } = payload;
+      void _orgId;
+      void _userId;
+      void _employeeNumber;
+      await scopedRepos.employeeProfileRepository.updateEmployeeProfile(orgId, existingProfile.id, updates);
+    } else {
+      await scopedRepos.employeeProfileRepository.createEmployeeProfile(orgId, payload);
+    }
 
     if (!contractPayload) {
       return;

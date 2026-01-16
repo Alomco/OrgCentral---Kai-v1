@@ -11,7 +11,7 @@ const HR_NAVIGATION_ITEMS = [
     { href: '/hr/dashboard', label: 'Dashboard', audience: 'member' },
     { href: '/hr/profile', label: 'My Profile', audience: 'member' },
     { href: '/hr/leave', label: 'Leave', audience: 'member' },
-    { href: '/hr/absences', label: 'Absences', audience: 'member' },
+    { href: '/hr/absence', label: 'Absence', audience: 'member' },
     { href: '/hr/time-tracking', label: 'Time', audience: 'member' },
     { href: '/hr/training', label: 'Training', audience: 'member' },
     { href: '/hr/performance', label: 'Performance', audience: 'member' },

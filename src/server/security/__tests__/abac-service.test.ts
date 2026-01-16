@@ -31,7 +31,7 @@ describe('AbacService', () => {
 
   beforeEach(() => {
     repository = new FakeAbacPolicyRepository();
-    service = new AbacService(repository);
+    service = new AbacService(repository, { includeBootstrapPolicies: false });
   });
 
   it('normalizes policies by dropping invalid entries, deduping IDs, and sorting by priority', async () => {

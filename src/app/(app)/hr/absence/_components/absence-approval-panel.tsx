@@ -127,7 +127,7 @@ export function AbsenceApprovalPanel({
                         ))}
                         {pendingRequests.length > 5 ? (
                             <Button variant="ghost" size="sm" className="w-full" asChild>
-                                <Link href="/hr/absences?status=pending">
+                                <Link href="/hr/absence/requests">
                                     View all {pendingRequests.length} requests
                                     <ArrowRight className="h-3 w-3 ml-1" />
                                 </Link>

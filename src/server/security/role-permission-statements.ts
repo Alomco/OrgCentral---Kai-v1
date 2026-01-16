@@ -5,6 +5,7 @@ export const ROLE_PERMISSION_STATEMENTS: Record<string, readonly string[]> = {
     cache: ['tag', 'invalidate'],
     invitation: ['create', 'cancel'],
     member: ['read', 'invite', 'update', 'remove'],
+    platformSettings: ['read', 'update'],
     'org.settings': ['create', 'read', 'update', 'delete', 'governance'],
     residency: ['enforce'],
     'hr.absence': ['read', 'list', 'create', 'update', 'delete', 'acknowledge', 'cancel'],

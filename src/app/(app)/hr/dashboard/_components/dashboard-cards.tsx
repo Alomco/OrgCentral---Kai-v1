@@ -32,7 +32,7 @@ export const EMPLOYEE_ACTIONS: DashboardAction[] = [
     { href: '/hr/leave', label: 'Request Leave', icon: Calendar, description: 'Submit a leave request' },
     { href: '/hr/profile', label: 'My Profile', icon: User, description: 'View and update your details' },
     { href: '/hr/policies', label: 'View Policies', icon: FileText, description: 'Read company policies' },
-    { href: '/hr/absences', label: 'Report Absence', icon: AlertCircle, description: 'Log unplanned absence' },
+    { href: '/hr/absence', label: 'Report Absence', icon: AlertCircle, description: 'Log unplanned absence' },
 ];
 
 // Admin-only actions

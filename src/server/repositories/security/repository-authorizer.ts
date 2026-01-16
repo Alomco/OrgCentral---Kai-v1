@@ -1,9 +1,5 @@
-import {
-    assertOrgAccessWithAbac,
-    type OrgAccessContext,
-    type OrgAccessInput,
-    toTenantScope,
-} from '@/server/security/guards';
+import type { OrgAccessContext, OrgAccessInput } from '@/server/security/guards';
+import type { TenantScope } from '@/server/types/tenant';
 import { authorizeOrgAccessRbacOnly } from '@/server/security/authorization/engine';
 import type {
     GuardEvaluator,
@@ -22,7 +18,7 @@ export class RepositoryAuthorizer {
     private readonly defaults: RepositoryAuthorizationDefaults;
 
     constructor(options?: RepositoryAuthorizerOptions) {
-        this.guard = options?.guard ?? assertOrgAccessWithAbac;
+        this.guard = options?.guard ?? defaultGuard;
         this.defaults = options?.defaults ?? {};
     }
 
@@ -82,6 +78,21 @@ export class RepositoryAuthorizer {
             throw toRepositoryAuthorizationError(error);
         }
     }
+}
+
+const defaultGuard: GuardEvaluator = async (input) => {
+    const { assertOrgAccessWithAbac } = await import('@/server/security/guards');
+    return assertOrgAccessWithAbac(input);
+};
+
+function toTenantScope(context: OrgAccessContext): TenantScope {
+    return {
+        orgId: context.orgId,
+        dataResidency: context.dataResidency,
+        dataClassification: context.dataClassification,
+        auditSource: context.auditSource,
+        auditBatchId: context.auditBatchId,
+    };
 }
 
 let sharedAuthorizer: RepositoryAuthorizer | null = null;

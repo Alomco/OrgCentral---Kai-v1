@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import type { OrganizationData } from '@/server/types/leave-types';
 import type { DataClassificationLevel, DataResidencyZone, TenantScope } from '@/server/types/tenant';
-import { isOrgRoleKey, type OrgPermissionMap, type OrgRoleKey } from '@/server/security/access-control';
+import { BUILTIN_ROLE_KEYS, isOrgRoleKey, type OrgPermissionMap, type OrgRoleKey } from '@/server/security/access-control';
 import type { RoleScope } from '@/server/types/prisma';
 import {
     authorizeOrgAccessAbacOnly,
@@ -114,11 +114,59 @@ export async function withOrgContext<T>(
     return handler(context);
 }
 
+const ROLE_KEY_LOOKUP: Record<string, OrgRoleKey | undefined> = BUILTIN_ROLE_KEYS.reduce<Record<string, OrgRoleKey | undefined>>(
+    (accumulator, key) => {
+        accumulator[normalizeRoleKey(key)] = key;
+        return accumulator;
+    },
+    {},
+);
+
+function normalizeRoleKey(value: string): string {
+    return value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+}
+
+function inferRoleKeyFromName(normalized: string): OrgRoleKey | null {
+    if (!normalized) {
+        return null;
+    }
+    if (normalized.includes('globaladmin')) {
+        return 'globalAdmin';
+    }
+    if (normalized.includes('orgadmin') || normalized.includes('organizationadmin')) {
+        return 'orgAdmin';
+    }
+    if (normalized.includes('hr') && normalized.includes('admin')) {
+        return 'hrAdmin';
+    }
+    if (normalized.includes('owner')) {
+        return 'owner';
+    }
+    if (normalized.includes('manager')) {
+        return 'manager';
+    }
+    if (normalized.includes('compliance')) {
+        return 'compliance';
+    }
+    if (normalized.includes('member') || normalized.includes('employee') || normalized.includes('staff')) {
+        return 'member';
+    }
+    return null;
+}
+
 function resolveRoleKey(roleName?: string | null): OrgRoleKey | 'custom' {
     if (!roleName) {
         return 'custom';
     }
-    return isOrgRoleKey(roleName) ? roleName : 'custom';
+    if (isOrgRoleKey(roleName)) {
+        return roleName;
+    }
+    const normalized = normalizeRoleKey(roleName);
+    const direct = ROLE_KEY_LOOKUP[normalized];
+    if (direct) {
+        return direct;
+    }
+    return inferRoleKeyFromName(normalized) ?? 'custom';
 }
 
 function extractAuditBatchId(metadata: unknown): string | undefined {

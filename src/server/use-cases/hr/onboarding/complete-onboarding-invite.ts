@@ -15,6 +15,7 @@ import type { IMembershipRepository } from '@/server/repositories/contracts/org/
 import type { BillingServiceContract } from '@/server/services/billing/billing-service.provider';
 import { normalizeToken } from '@/server/use-cases/shared';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
+import { syncBetterAuthUserToPrisma } from '@/server/lib/auth-sync';
 import {
     createEmployeeProfile,
     type CreateEmployeeProfileTransactionRunner,
@@ -92,6 +93,14 @@ export async function completeOnboardingInvite(
     const payload = extractOnboardingPayload(invitation);
     const employeeNumber = resolveEmployeeNumber(payload);
 
+    await syncBetterAuthUserToPrisma({
+        id: input.userId,
+        email: payload.email ?? invitation.targetEmail,
+        name: payload.displayName ?? null,
+        status: 'active',
+        lastSignInAt: new Date().toISOString(),
+    });
+
     const profileData = buildProfileData({
         payload,
         userId: input.userId,
@@ -123,6 +132,33 @@ export async function completeOnboardingInvite(
         })
         : null;
 
+    const membershipResult = linkedProfile
+        ? await ensureMembership({
+            authorization,
+            membershipRepository: deps.membershipRepository,
+            billingService: deps.billingService,
+            invitation,
+            payload,
+            profile: linkedProfile,
+            userId: input.userId,
+            employeeNumber,
+        })
+        : await ensureMembership({
+            authorization,
+            membershipRepository: deps.membershipRepository,
+            billingService: deps.billingService,
+            invitation,
+            payload,
+            profile: {
+                jobTitle: profileData.jobTitle ?? null,
+                employmentType: profileData.employmentType ?? 'FULL_TIME',
+                startDate: profileData.startDate ?? null,
+                metadata: profileData.metadata ?? null,
+            },
+            userId: input.userId,
+            employeeNumber,
+        });
+
     const creationResult = linkedProfile
         ? await handleExistingProfile({
             deps,
@@ -147,17 +183,6 @@ export async function completeOnboardingInvite(
     if (!profile) {
         throw new EntityNotFoundError('Employee profile', { employeeNumber, orgId: organization.id });
     }
-
-    const membershipResult = await ensureMembership({
-        authorization,
-        membershipRepository: deps.membershipRepository,
-        billingService: deps.billingService,
-        invitation,
-        payload,
-        profile,
-        userId: input.userId,
-        employeeNumber,
-    });
 
     await deps.onboardingInvitationRepository.markAccepted(organization.id, invitation.token, input.userId);
 

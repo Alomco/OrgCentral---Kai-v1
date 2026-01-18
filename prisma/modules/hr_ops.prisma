@@ -43,6 +43,13 @@ enum ChecklistInstanceStatus {
   @@schema("hr")
 }
 
+enum OffboardingStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  @@schema("hr")
+}
+
 enum ComplianceItemStatus {
   PENDING
   COMPLETE
@@ -296,6 +303,7 @@ model ChecklistInstance {
   orgId        String                   @db.Uuid
   employeeId   String                   @db.Uuid
   templateId   String                   @db.Uuid
+  offboardingId String?                 @db.Uuid
   templateName String?
   status       ChecklistInstanceStatus  @default(IN_PROGRESS)
   items        Json                     @db.JsonB
@@ -305,13 +313,46 @@ model ChecklistInstance {
   createdAt    DateTime                 @default(now())
   updatedAt    DateTime                 @updatedAt
 
-  org      Organization       @relation("OrgChecklistInstances", fields: [orgId], references: [id], onDelete: Cascade)
-  template ChecklistTemplate  @relation("ChecklistTemplateInstances", fields: [templateId], references: [id], onDelete: Cascade)
-  employee EmployeeProfile    @relation("EmployeeChecklistInstances", fields: [employeeId], references: [id], onDelete: Cascade)
+  org        Organization       @relation("OrgChecklistInstances", fields: [orgId], references: [id], onDelete: Cascade)
+  template   ChecklistTemplate  @relation("ChecklistTemplateInstances", fields: [templateId], references: [id], onDelete: Cascade)
+  employee   EmployeeProfile    @relation("EmployeeChecklistInstances", fields: [employeeId], references: [id], onDelete: Cascade)
+  offboarding Offboarding?      @relation("OffboardingChecklistInstance", fields: [offboardingId], references: [id], onDelete: SetNull)
 
   @@index([orgId, employeeId])
   @@index([templateId])
+  @@index([offboardingId])
   @@map("checklist_instances")
+  @@schema("hr")
+}
+
+model Offboarding {
+  id             String             @id @default(uuid()) @db.Uuid
+  orgId          String             @db.Uuid
+  employeeId     String             @db.Uuid
+  initiatedByUserId String          @db.Uuid
+  checklistInstanceId String?       @db.Uuid
+  reason         String
+  status         OffboardingStatus  @default(IN_PROGRESS)
+  startedAt      DateTime           @default(now())
+  completedAt    DateTime?
+  canceledAt     DateTime?
+  metadata       Json?              @db.JsonB
+  dataClassification DataClassificationLevel @default(OFFICIAL)
+  residencyTag       DataResidencyZone       @default(UK_ONLY)
+  auditSource     String?
+  correlationId   String?
+  createdBy       String?           @db.Uuid
+  updatedBy       String?           @db.Uuid
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  org       Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  employee  EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  checklistInstance ChecklistInstance? @relation("OffboardingChecklistInstance", fields: [checklistInstanceId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, employeeId])
+  @@index([orgId, status])
+  @@map("offboarding_records")
   @@schema("hr")
 }
 

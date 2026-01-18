@@ -63,6 +63,14 @@ export const HR_ANY_PERMISSION_PROFILE = {
     ] as readonly OrgPermissionMap[],
 
     /**
+     * Can manage offboarding: HR admin or org admin.
+     */
+    OFFBOARDING_MANAGEMENT: [
+        HR_PERMISSION_PROFILE.OFFBOARDING_MANAGE,
+        { organization: ['update'] },
+    ] as readonly OrgPermissionMap[],
+
+    /**
      * Can manage performance reviews: HR admin, org admin, or managers.
      */
     PERFORMANCE_MANAGEMENT: [

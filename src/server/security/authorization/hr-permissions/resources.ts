@@ -37,6 +37,9 @@ export const HR_RESOURCE_TYPE = {
     ONBOARDING_TASK: 'hr.onboarding.task',
     CHECKLIST_TEMPLATE: 'hr.checklist.template',
 
+    // Offboarding
+    OFFBOARDING: 'hr.offboarding',
+
     // People
     EMPLOYEE_PROFILE: 'hr.people.profile',
     EMPLOYMENT_CONTRACT: 'hr.people.contract',

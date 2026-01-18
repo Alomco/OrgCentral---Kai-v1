@@ -119,6 +119,7 @@ const eslintConfig = defineConfig([
           replacements: { props: false, params: false },
           allowList: {
             args: true,
+            dev: true,
             env: true,
             props: true,
             params: true,

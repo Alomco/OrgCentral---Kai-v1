@@ -34,7 +34,7 @@ export function ModernAdminDashboardControlCenter({ authorization }: ModernAdmin
                     <AdminQuickActionsGrid />
                 </div>
 
-                <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.15em] text-muted-foreground bg-secondary/30 px-4 py-3 rounded-xl inline-flex">
+                <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.15em] text-muted-foreground bg-secondary/30 px-4 py-3 rounded-xl">
                     <ShieldCheck className="h-5 w-5" />
                     Governance & security
                 </div>

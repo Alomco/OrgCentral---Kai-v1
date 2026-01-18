@@ -6,7 +6,7 @@ Always use the mcp and tools optimisely and always keep your knowledge updated
 - No `any`/`unknown`; add domain types in `src/server/types/**`.
 - maintain strict eslint config.
 - align the project for iso27001, dspt, a11y, core web vitls and other best practices.
-- optimise states, mutations with react query
+- alwayse find unimplementation and try best usage to optimise states, mutations with react query/tanstack query
 ## Multi-tenancy + compliance
 - Every feature must preserve tenant metadata: `orgId`, `dataResidency`, `dataClassification`, and audit fields.
 - Always enforce access via guards (`assertOrgAccess` / `withOrgContext`) before data access.

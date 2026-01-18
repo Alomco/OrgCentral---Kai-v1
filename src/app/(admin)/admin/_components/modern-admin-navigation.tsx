@@ -27,7 +27,7 @@ export function ModernAdminNavigation(props: AdminNavigationProps) {
 
     return (
         <header
-            className="sticky top-0 z-[var(--z-sticky)] h-16 border-b border-border/40 bg-background/80 backdrop-blur-md shadow-sm"
+            className="sticky top-0 z-(--z-sticky) h-16 border-b border-border/40 bg-background/80 backdrop-blur-md shadow-sm"
             role="banner"
         >
             <div className="flex h-full items-center justify-between px-4 sm:px-6">
@@ -55,10 +55,10 @@ export function ModernAdminNavigation(props: AdminNavigationProps) {
                         )}
                         aria-label="Global Admin Dashboard"
                     >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-md shadow-primary/20">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-accent text-white shadow-md shadow-primary/20">
                             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
                         </div>
-                        <span className="hidden sm:block bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent font-bold">
+                        <span className="hidden sm:block bg-linear-to-r from-foreground via-primary to-accent bg-clip-text text-transparent font-bold">
                             Global Admin
                         </span>
                     </Link>
@@ -148,7 +148,7 @@ export function ModernAdminNavigation(props: AdminNavigationProps) {
                         {/* User Profile */}
                         <div className="flex items-center gap-1 sm:gap-2">
                             <div className="hidden md:flex items-center gap-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/20 text-xs font-medium text-primary">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-accent/20 text-xs font-medium text-primary">
                                     {initial}
                                 </div>
                                 <span className="text-sm text-muted-foreground max-w-[120px] truncate" title={props.userEmail ?? ''}>
@@ -157,7 +157,7 @@ export function ModernAdminNavigation(props: AdminNavigationProps) {
                             </div>
 
                             {/* User Avatar for Mobile */}
-                            <div className="md:hidden flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/20 text-xs font-medium text-primary">
+                            <div className="md:hidden flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-accent/20 text-xs font-medium text-primary">
                                 {initial}
                             </div>
                         </div>

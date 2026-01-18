@@ -3,10 +3,12 @@ import { buildOnboardingServiceDependencies } from '@/server/repositories/provid
 import { buildPeopleServiceDependencies } from '@/server/repositories/providers/hr/people-service-dependencies';
 import { buildMembershipRepositoryDependencies } from '@/server/repositories/providers/org/membership-service-dependencies';
 import { buildOrganizationServiceDependencies } from '@/server/repositories/providers/org/organization-service-dependencies';
+import { buildUserServiceDependencies } from '@/server/repositories/providers/org/user-service-dependencies';
 import type { GetSessionDependencies } from '@/server/use-cases/auth/sessions/get-session';
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
 import type { IOnboardingInvitationRepository } from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
+import type { IUserRepository } from '@/server/repositories/contracts/org/users/user-repository-contract';
 import type { CompleteOnboardingInviteDependencies } from '@/server/use-cases/hr/onboarding/complete-onboarding-invite';
 
 const { profileRepo: profileRepository, contractRepo: employmentContractRepository } = buildPeopleServiceDependencies();
@@ -16,6 +18,7 @@ const {
     onboardingInvitationRepository: invitationRepository,
 } = buildOnboardingServiceDependencies();
 const { organizationRepository } = buildOrganizationServiceDependencies();
+const { userRepository } = buildUserServiceDependencies();
 const { membershipRepository } = buildMembershipRepositoryDependencies();
 const billingService = resolveBillingService() ?? undefined;
 
@@ -24,6 +27,7 @@ export interface ResolvedOnboardingControllerDependencies {
     profileRepository: IEmployeeProfileRepository;
     invitationRepository: IOnboardingInvitationRepository;
     organizationRepository: IOrganizationRepository;
+    userRepository: IUserRepository;
 }
 
 export type OnboardingControllerDependencies = Partial<ResolvedOnboardingControllerDependencies>;
@@ -33,6 +37,7 @@ export const defaultOnboardingControllerDependencies: ResolvedOnboardingControll
     profileRepository,
     invitationRepository,
     organizationRepository,
+    userRepository,
 };
 
 export function resolveOnboardingControllerDependencies(
@@ -47,6 +52,7 @@ export function resolveOnboardingControllerDependencies(
         profileRepository: overrides.profileRepository ?? defaultOnboardingControllerDependencies.profileRepository,
         invitationRepository: overrides.invitationRepository ?? defaultOnboardingControllerDependencies.invitationRepository,
         organizationRepository: overrides.organizationRepository ?? defaultOnboardingControllerDependencies.organizationRepository,
+        userRepository: overrides.userRepository ?? defaultOnboardingControllerDependencies.userRepository,
     };
 }
 

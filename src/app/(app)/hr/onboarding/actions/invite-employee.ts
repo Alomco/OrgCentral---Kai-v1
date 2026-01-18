@@ -8,6 +8,7 @@ import { CACHE_SCOPE_ONBOARDING_INVITATIONS } from '@/server/repositories/cache-
 import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
 import { PrismaOnboardingInvitationRepository } from '@/server/repositories/prisma/hr/onboarding';
 import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
+import { PrismaUserRepository } from '@/server/repositories/prisma/org/users';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { sendOnboardingInvite } from '@/server/use-cases/hr/onboarding/send-onboarding-invite';
 import { buildInvitationRequestSecurityContext } from '@/server/use-cases/shared/request-metadata';
@@ -25,6 +26,7 @@ import {
 const profileRepository = new PrismaEmployeeProfileRepository();
 const invitationRepository = new PrismaOnboardingInvitationRepository();
 const organizationRepository = new PrismaOrganizationRepository({});
+const userRepository = new PrismaUserRepository();
 
 const RESOURCE_TYPE = 'hr.onboarding';
 
@@ -89,6 +91,7 @@ export async function inviteEmployeeAction(
                 profileRepository,
                 invitationRepository,
                 organizationRepository,
+                userRepository,
             },
             {
                 authorization: session.authorization,

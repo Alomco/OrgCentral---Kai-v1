@@ -10,7 +10,7 @@ export interface InviteEmployeePanelProps {
 }
 
 export async function InviteEmployeePanel({ authorization }: InviteEmployeePanelProps) {
-    const templatesResult = await getChecklistTemplatesForUi({ authorization });
+    const templatesResult = await getChecklistTemplatesForUi({ authorization, type: 'onboarding' });
 
     const templates: ChecklistTemplate[] = templatesResult.templates;
 

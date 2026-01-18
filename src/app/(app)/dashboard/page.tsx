@@ -30,7 +30,7 @@ function resolveUserEmail(value: unknown): string | null {
     return typeof value === 'string' && value.trim().length > 0 ? value : null;
 }
 
-function isDevAdminEmail(value: string | null): boolean {
+function isDevelopmentAdminEmail(value: string | null): boolean {
     if (!DEV_ADMIN_BYPASS_ENABLED || !value) {
         return false;
     }
@@ -68,7 +68,7 @@ async function DashboardPageContent() {
         auditSource: 'ui:dashboard',
     });
 
-    if (authorization.roleScope === RoleScope.GLOBAL && !isDevAdminEmail(session.user.email ?? null)) {
+    if (authorization.roleScope === RoleScope.GLOBAL && !isDevelopmentAdminEmail(session.user.email)) {
         redirect('/admin/dashboard');
     }
 

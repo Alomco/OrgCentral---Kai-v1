@@ -6,12 +6,14 @@ import { OnboardingWizard, type OnboardingWizardValues } from '../wizard';
 import type { ChecklistTemplate } from '@/server/types/onboarding-types';
 import type { Department } from '../wizard/job-step';
 import type { ManagerOption } from '../wizard/wizard.types';
+import type { LeaveType } from '../wizard/assignments-step';
 import { submitOnboardingWizardAction, checkEmailExistsAction } from '../actions';
 
 export interface OnboardingWizardPanelProps {
     departments?: Department[];
     checklistTemplates?: ChecklistTemplate[];
     managers?: ManagerOption[];
+    leaveTypes?: LeaveType[];
     canManageTemplates?: boolean;
 }
 
@@ -19,6 +21,7 @@ export function OnboardingWizardPanel({
     departments = [],
     checklistTemplates = [],
     managers = [],
+    leaveTypes = [],
     canManageTemplates = false,
 }: OnboardingWizardPanelProps) {
     const router = useRouter();
@@ -40,6 +43,7 @@ export function OnboardingWizardPanel({
             departments={departments}
             checklistTemplates={checklistTemplates}
             managers={managers}
+            leaveTypes={leaveTypes}
             canManageTemplates={canManageTemplates}
             onEmailCheck={handleEmailCheck}
             onSubmit={handleSubmit}

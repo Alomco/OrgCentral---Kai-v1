@@ -10,22 +10,9 @@ import { FieldError } from '../../_components/field-error';
 import type { OnboardingWizardValues } from './wizard.schema';
 import type { FieldErrors } from '../../_components/form-errors';
 import type { ChecklistTemplate } from '@/server/types/onboarding-types';
+import type { LeaveTypeOption } from '@/server/types/hr/leave-type-options';
 
-export interface LeaveType {
-    code: string;
-    name: string;
-    description?: string;
-}
-
-// Default UK leave types that are commonly used
-const DEFAULT_LEAVE_TYPES: LeaveType[] = [
-    { code: 'ANNUAL', name: 'Annual Leave', description: 'Statutory paid annual leave' },
-    { code: 'SICK', name: 'Sick Leave', description: 'Paid sick leave' },
-    { code: 'MATERNITY', name: 'Maternity Leave', description: 'Statutory maternity leave' },
-    { code: 'PATERNITY', name: 'Paternity Leave', description: 'Statutory paternity leave' },
-    { code: 'UNPAID', name: 'Unpaid Leave', description: 'Unpaid time off' },
-    { code: 'EMERGENCY', name: 'Emergency Leave', description: 'Emergency time off for urgent matters' },
-];
+export type LeaveType = LeaveTypeOption;
 
 export interface AssignmentsStepProps {
     values: OnboardingWizardValues;
@@ -41,7 +28,7 @@ export function AssignmentsStep({
     values,
     fieldErrors,
     onValuesChange,
-    leaveTypes = DEFAULT_LEAVE_TYPES,
+    leaveTypes = [],
     checklistTemplates = [],
     canManageTemplates = false,
     disabled = false,
@@ -67,7 +54,7 @@ export function AssignmentsStep({
     };
 
     const selectedLeaveTypes = values.eligibleLeaveTypes ?? [];
-    const allSelected = selectedLeaveTypes.length === leaveTypes.length;
+    const allSelected = leaveTypes.length > 0 && selectedLeaveTypes.length === leaveTypes.length;
 
     return (
         <div className="space-y-6">
@@ -92,7 +79,7 @@ export function AssignmentsStep({
                             <button
                                 type="button"
                                 onClick={handleSelectAllLeaveTypes}
-                                disabled={disabled || allSelected}
+                                disabled={disabled || allSelected || leaveTypes.length === 0}
                                 className="text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline"
                             >
                                 Select all
@@ -110,39 +97,45 @@ export function AssignmentsStep({
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        {leaveTypes.map((leaveType) => {
-                            const isChecked = selectedLeaveTypes.includes(leaveType.code);
-                            return (
-                                <div
-                                    key={leaveType.code}
-                                    className="flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                                >
-                                    <Checkbox
-                                        id={`leave-${leaveType.code}`}
-                                        checked={isChecked}
-                                        onCheckedChange={(checked) =>
-                                            handleLeaveTypeToggle(leaveType.code, checked === true)
-                                        }
-                                        disabled={disabled}
-                                    />
-                                    <div className="grid gap-0.5">
-                                        <Label
-                                            htmlFor={`leave-${leaveType.code}`}
-                                            className="cursor-pointer font-medium"
-                                        >
-                                            {leaveType.name}
-                                        </Label>
-                                        {leaveType.description ? (
-                                            <p className="text-xs text-muted-foreground">
-                                                {leaveType.description}
-                                            </p>
-                                        ) : null}
+                    {leaveTypes.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            No leave types are configured for this organization yet.
+                        </p>
+                    ) : (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            {leaveTypes.map((leaveType) => {
+                                const isChecked = selectedLeaveTypes.includes(leaveType.code);
+                                return (
+                                    <div
+                                        key={leaveType.code}
+                                        className="flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                                    >
+                                        <Checkbox
+                                            id={`leave-${leaveType.code}`}
+                                            checked={isChecked}
+                                            onCheckedChange={(checked) =>
+                                                handleLeaveTypeToggle(leaveType.code, checked === true)
+                                            }
+                                            disabled={disabled}
+                                        />
+                                        <div className="grid gap-0.5">
+                                            <Label
+                                                htmlFor={`leave-${leaveType.code}`}
+                                                className="cursor-pointer font-medium"
+                                            >
+                                                {leaveType.name}
+                                            </Label>
+                                            {leaveType.description ? (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {leaveType.description}
+                                                </p>
+                                            ) : null}
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                     <FieldError id="wizard-leaveTypes-error" message={leaveTypesError} />
                     {selectedLeaveTypes.length > 0 && (
                         <p className="mt-3 text-xs text-muted-foreground">

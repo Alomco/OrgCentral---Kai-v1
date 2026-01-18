@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +16,7 @@ export interface IdentityStepProps {
     values: OnboardingWizardValues;
     fieldErrors?: FieldErrors<OnboardingWizardValues>;
     onValuesChange: (updates: Partial<OnboardingWizardValues>) => void;
-    onEmailCheck?: (email: string) => Promise<{ exists: boolean; reason?: string }>;
+    onEmailCheck?: (email: string) => Promise<{ exists: boolean; reason?: string; actionUrl?: string; actionLabel?: string }>;
     disabled?: boolean;
 }
 
@@ -30,10 +31,13 @@ export function IdentityStep({
 }: IdentityStepProps) {
     const [emailCheckStatus, setEmailCheckStatus] = useState<EmailCheckStatus>('idle');
     const [emailCheckMessage, setEmailCheckMessage] = useState<string | null>(null);
+    const [emailCheckAction, setEmailCheckAction] = useState<{ url: string; label: string } | null>(null);
     const previousEmailReference = useRef<string | undefined>(undefined);
 
     const emailError = fieldErrors?.email;
     const displayNameError = fieldErrors?.displayName;
+    const firstNameError = fieldErrors?.firstName;
+    const lastNameError = fieldErrors?.lastName;
     const employeeNumberError = fieldErrors?.employeeNumber;
 
     // Debounced email check using timeout in effect
@@ -50,6 +54,7 @@ export function IdentityStep({
                     previousEmailReference.current = values.email;
                     setEmailCheckStatus('idle');
                     setEmailCheckMessage(null);
+                    setEmailCheckAction(null);
                 }
                 return;
             }
@@ -60,6 +65,7 @@ export function IdentityStep({
                 previousEmailReference.current = values.email;
                 setEmailCheckStatus('idle');
                 setEmailCheckMessage(null);
+                setEmailCheckAction(null);
                 return;
             }
 
@@ -72,15 +78,22 @@ export function IdentityStep({
                     if (result.exists) {
                         setEmailCheckStatus('invalid');
                         setEmailCheckMessage(result.reason ?? 'This email is already in use.');
+                        if (result.actionUrl && result.actionLabel) {
+                            setEmailCheckAction({ url: result.actionUrl, label: result.actionLabel });
+                        } else {
+                            setEmailCheckAction(null);
+                        }
                     } else {
                         setEmailCheckStatus('valid');
                         setEmailCheckMessage(null);
+                        setEmailCheckAction(null);
                     }
                 })
                 .catch(() => {
                     if (abortController.signal.aborted) {return;}
                     setEmailCheckStatus('idle');
                     setEmailCheckMessage(null);
+                    setEmailCheckAction(null);
                 });
         }, 100); // Small delay ensures all state updates happen asynchronously
 
@@ -129,9 +142,53 @@ export function IdentityStep({
                     <FieldError id="wizard-email-error" message={emailError} />
                     {emailCheckStatus === 'invalid' && emailCheckMessage ? (
                         <Alert variant="destructive" className="py-2">
-                            <AlertDescription className="text-sm">{emailCheckMessage}</AlertDescription>
+                            <AlertDescription className="text-sm">
+                                {emailCheckMessage}
+                                {emailCheckAction ? (
+                                    <span className="mt-2 block">
+                                        <Link
+                                            href={emailCheckAction.url}
+                                            className="text-sm font-medium text-white underline underline-offset-4"
+                                        >
+                                            {emailCheckAction.label}
+                                        </Link>
+                                    </span>
+                                ) : null}
+                            </AlertDescription>
                         </Alert>
                     ) : null}
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="wizard-firstName">First name *</Label>
+                    <Input
+                        id="wizard-firstName"
+                        type="text"
+                        autoComplete="given-name"
+                        value={values.firstName}
+                        onChange={(event) => onValuesChange({ firstName: event.target.value })}
+                        aria-invalid={Boolean(firstNameError)}
+                        aria-describedby={firstNameError ? 'wizard-firstName-error' : undefined}
+                        disabled={disabled}
+                        placeholder="John"
+                    />
+                    <FieldError id="wizard-firstName-error" message={firstNameError} />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="wizard-lastName">Last name *</Label>
+                    <Input
+                        id="wizard-lastName"
+                        type="text"
+                        autoComplete="family-name"
+                        value={values.lastName}
+                        onChange={(event) => onValuesChange({ lastName: event.target.value })}
+                        aria-invalid={Boolean(lastNameError)}
+                        aria-describedby={lastNameError ? 'wizard-lastName-error' : undefined}
+                        disabled={disabled}
+                        placeholder="Smith"
+                    />
+                    <FieldError id="wizard-lastName-error" message={lastNameError} />
                 </div>
 
                 <div className="space-y-2">

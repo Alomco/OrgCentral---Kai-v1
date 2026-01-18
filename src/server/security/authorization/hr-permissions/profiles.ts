@@ -73,6 +73,14 @@ export const HR_PERMISSION_PROFILE = {
     CHECKLIST_TEMPLATE_READ: { [r.CHECKLIST_TEMPLATE]: [a.READ] } satisfies OrgPermissionMap,
     CHECKLIST_TEMPLATE_MANAGE: { [r.CHECKLIST_TEMPLATE]: [a.READ, a.LIST, a.CREATE, a.UPDATE, a.DELETE] } satisfies OrgPermissionMap,
 
+    // Offboarding permissions
+    OFFBOARDING_READ: { [r.OFFBOARDING]: [a.READ] } satisfies OrgPermissionMap,
+    OFFBOARDING_LIST: { [r.OFFBOARDING]: [a.LIST] } satisfies OrgPermissionMap,
+    OFFBOARDING_START: { [r.OFFBOARDING]: [a.CREATE] } satisfies OrgPermissionMap,
+    OFFBOARDING_COMPLETE: { [r.OFFBOARDING]: [a.COMPLETE] } satisfies OrgPermissionMap,
+    OFFBOARDING_CANCEL: { [r.OFFBOARDING]: [a.CANCEL] } satisfies OrgPermissionMap,
+    OFFBOARDING_MANAGE: { [r.OFFBOARDING]: [a.READ, a.LIST, a.CREATE, a.UPDATE, a.COMPLETE, a.CANCEL] } satisfies OrgPermissionMap,
+
     // People permissions
     PROFILE_READ: { [r.EMPLOYEE_PROFILE]: [a.READ] } satisfies OrgPermissionMap,
     PROFILE_LIST: { [r.EMPLOYEE_PROFILE]: [a.LIST] } satisfies OrgPermissionMap,

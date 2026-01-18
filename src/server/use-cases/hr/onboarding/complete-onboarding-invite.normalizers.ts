@@ -1,5 +1,5 @@
-import type { ContractTypeCode, EmploymentTypeCode, JsonValue, ProfileMutationPayload } from '@/server/types/hr/people';
-import { CONTRACT_TYPE_VALUES, EMPLOYMENT_TYPE_VALUES } from '@/server/types/hr/people';
+import type { ContractTypeCode, EmploymentTypeCode, JsonValue, ProfileMutationPayload, SalaryBasisCode } from '@/server/types/hr/people';
+import { CONTRACT_TYPE_VALUES, EMPLOYMENT_TYPE_VALUES, SALARY_BASIS_VALUES } from '@/server/types/hr/people';
 
 export function resolveEmploymentType(value?: string): EmploymentTypeCode {
     if (!value) {
@@ -52,6 +52,16 @@ export function normalizePaySchedule(
         return 'BI_WEEKLY';
     }
     return undefined;
+}
+
+export function normalizeSalaryBasis(value?: string): SalaryBasisCode | undefined {
+    if (!value) {
+        return undefined;
+    }
+    const normalized = value.replace(/[-\s]/g, '_').toUpperCase();
+    return SALARY_BASIS_VALUES.includes(normalized as SalaryBasisCode)
+        ? (normalized as SalaryBasisCode)
+        : undefined;
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

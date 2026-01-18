@@ -8,10 +8,13 @@ import { CACHE_SCOPE_ONBOARDING_INVITATIONS } from '@/server/repositories/cache-
 import { PrismaEmployeeProfileRepository } from '@/server/repositories/prisma/hr/people';
 import { PrismaOnboardingInvitationRepository } from '@/server/repositories/prisma/hr/onboarding';
 import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
+import { PrismaUserRepository } from '@/server/repositories/prisma/org/users';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { sendOnboardingInvite } from '@/server/use-cases/hr/onboarding/send-onboarding-invite';
 import { checkExistingOnboardingTarget } from '@/server/use-cases/hr/onboarding/check-existing-onboarding-target';
 import { buildInvitationRequestSecurityContext } from '@/server/use-cases/shared/request-metadata';
+import { getHrSettingsForUi } from '@/server/use-cases/hr/settings/get-hr-settings.cached';
+import { buildLeaveTypeCodeSet, normalizeLeaveTypeOptions } from '@/server/lib/hr/leave-type-options';
 
 import { onboardingWizardSchema, type OnboardingWizardValues } from './wizard.schema';
 import type { EmailCheckResult, WizardSubmitResult } from './wizard.types';
@@ -20,6 +23,7 @@ import { attemptInvitationEmail, resendPendingInvitation } from './wizard.email'
 const profileRepository = new PrismaEmployeeProfileRepository();
 const invitationRepository = new PrismaOnboardingInvitationRepository();
 const organizationRepository = new PrismaOrganizationRepository({});
+const userRepository = new PrismaUserRepository();
 
 const RESOURCE_TYPE = 'hr.onboarding';
 
@@ -67,6 +71,32 @@ export async function submitOnboardingWizardAction(
         };
     }
 
+    if (parsed.data.eligibleLeaveTypes && parsed.data.eligibleLeaveTypes.length > 0) {
+        try {
+            const hrSettingsResult = await getHrSettingsForUi({
+                authorization: session.authorization,
+                orgId: session.authorization.orgId,
+            });
+            const leaveTypeOptions = normalizeLeaveTypeOptions(hrSettingsResult.settings.leaveTypes ?? undefined);
+            const allowedCodes = buildLeaveTypeCodeSet(leaveTypeOptions);
+            const invalidSelections = parsed.data.eligibleLeaveTypes
+                .map((code) => code.trim())
+                .filter((code) => code.length > 0 && !allowedCodes.has(code));
+
+            if (invalidSelections.length > 0) {
+                return {
+                    success: false,
+                    error: 'Selected leave types are no longer available. Please update your selections.',
+                };
+            }
+        } catch {
+            return {
+                success: false,
+                error: 'Unable to validate leave type selections. Please try again.',
+            };
+        }
+    }
+
     try {
         const onboardingTemplateId = parsed.data.includeTemplate
             ? (parsed.data.onboardingTemplateId ?? null)
@@ -84,11 +114,14 @@ export async function submitOnboardingWizardAction(
                 profileRepository,
                 invitationRepository,
                 organizationRepository,
+                userRepository,
             },
             {
                 authorization: session.authorization,
                 email: parsed.data.email,
                 displayName: parsed.data.displayName,
+                firstName: parsed.data.firstName,
+                lastName: parsed.data.lastName,
                 employeeNumber: parsed.data.employeeNumber,
                 jobTitle: parsed.data.jobTitle,
                 departmentId: parsed.data.departmentId,
@@ -96,7 +129,9 @@ export async function submitOnboardingWizardAction(
                 startDate: parsed.data.startDate,
                 managerEmployeeNumber: parsed.data.managerEmployeeNumber,
                 annualSalary: parsed.data.annualSalary,
+                hourlyRate: parsed.data.hourlyRate,
                 salaryCurrency: parsed.data.currency,
+                salaryBasis: parsed.data.salaryBasis,
                 paySchedule: parsed.data.paySchedule,
                 eligibleLeaveTypes: parsed.data.eligibleLeaveTypes ?? [],
                 onboardingTemplateId,
@@ -166,6 +201,7 @@ export async function checkEmailExistsAction(email: string): Promise<EmailCheckR
             {
                 profileRepository,
                 invitationRepository,
+                userRepository,
             },
             {
                 authorization: session.authorization,
@@ -173,14 +209,31 @@ export async function checkEmailExistsAction(email: string): Promise<EmailCheckR
             },
         );
 
-        if (result.exists) {
-            const reason = result.kind === 'profile'
-                ? 'An employee profile with this email already exists. Update the existing profile instead of inviting again.'
-                : 'A pending invitation has already been sent to this email. You can resend it from the invitations list.';
-            return { exists: true, reason };
+        if (!result.exists) {
+            return { exists: false };
         }
 
-        return { exists: false };
+        switch (result.kind) {
+            case 'profile':
+                return {
+                    exists: true,
+                    reason: 'An employee profile with this email already exists. Update the existing profile instead of inviting again.',
+                };
+            case 'pending_invitation':
+                return {
+                    exists: true,
+                    reason: 'A pending invitation has already been sent to this email. You can resend it from the invitations list.',
+                };
+            case 'auth_user':
+                return {
+                    exists: true,
+                    reason: 'This email already belongs to an OrgCentral user. Invite them to this organization from user management.',
+                    actionUrl: '/org/members',
+                    actionLabel: 'Go to user management',
+                };
+            default:
+                return { exists: false };
+        }
     } catch {
         return { exists: false };
     }

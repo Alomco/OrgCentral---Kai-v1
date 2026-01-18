@@ -15,6 +15,7 @@ import {
     extractStringArray,
     isJsonValue,
     isRecord,
+    normalizeSalaryBasis,
     normalizePaySchedule,
     resolveContractType,
     resolveEmploymentType,
@@ -23,6 +24,8 @@ import {
 export interface OnboardingPayload {
     email?: string;
     displayName?: string;
+    firstName?: string;
+    lastName?: string;
     employeeId?: string;
     employeeNumber?: string;
     employmentType?: string;
@@ -31,7 +34,9 @@ export interface OnboardingPayload {
     startDate?: string;
     managerEmployeeNumber?: string;
     annualSalary?: number;
+    hourlyRate?: number;
     salaryCurrency?: string;
+    salaryBasis?: string;
     paySchedule?: string;
     eligibleLeaveTypes?: string[];
     onboardingTemplateId?: string;
@@ -50,6 +55,8 @@ export function extractOnboardingPayload(invitation: OnboardingInvitation): Onbo
     return {
         email: coerceString(data.email),
         displayName: coerceString(data.displayName),
+        firstName: coerceString(data.firstName),
+        lastName: coerceString(data.lastName),
         employeeId: coerceString(data.employeeId),
         employeeNumber: coerceString(data.employeeNumber),
         employmentType: coerceString(data.employmentType),
@@ -58,7 +65,9 @@ export function extractOnboardingPayload(invitation: OnboardingInvitation): Onbo
         startDate: coerceString(data.startDate),
         managerEmployeeNumber: coerceString(data.managerEmployeeNumber),
         annualSalary: coerceNumber(data.annualSalary ?? data.salary),
+        hourlyRate: coerceNumber(data.hourlyRate),
         salaryCurrency: coerceString(data.salaryCurrency ?? data.currency),
+        salaryBasis: coerceString(data.salaryBasis),
         paySchedule: coerceString(data.paySchedule),
         eligibleLeaveTypes: extractStringArray(data.eligibleLeaveTypes),
         onboardingTemplateId: coerceString(data.onboardingTemplateId),
@@ -101,10 +110,14 @@ export function buildProfileData(params: {
         departmentId: params.payload.departmentId,
         startDate: params.payload.startDate,
         annualSalary: params.payload.annualSalary,
+        hourlyRate: params.payload.hourlyRate,
         salaryCurrency: params.payload.salaryCurrency,
+        salaryBasis: normalizeSalaryBasis(params.payload.salaryBasis),
         paySchedule: normalizePaySchedule(params.payload.paySchedule),
         email: params.payload.email ?? params.invitation.targetEmail,
         displayName: params.payload.displayName,
+        firstName: params.payload.firstName,
+        lastName: params.payload.lastName,
         eligibleLeaveTypes: params.payload.eligibleLeaveTypes ?? [],
         metadata,
     } satisfies ProfileMutationPayload['changes'] & { userId: string; employeeNumber: string };

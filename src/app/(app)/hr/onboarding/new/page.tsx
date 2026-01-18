@@ -18,10 +18,15 @@ import { hasPermission } from '@/lib/security/permission-check';
 import { getChecklistTemplatesForUi } from '@/server/use-cases/hr/onboarding/templates/get-checklist-templates.cached';
 import { listEmployeeDirectoryForUi } from '@/server/use-cases/hr/people/list-employee-directory.cached';
 import type { EmployeeProfile } from '@/server/types/hr-types';
+import { getDepartmentService } from '@/server/services/org/departments/department-service.provider';
+import { getHrSettingsForUi } from '@/server/use-cases/hr/settings/get-hr-settings.cached';
+import { normalizeLeaveTypeOptions } from '@/server/lib/hr/leave-type-options';
 
 import { HrPageHeader } from '../../_components/hr-page-header';
 import { OnboardingWizardPanel } from '../_components/onboarding-wizard-panel';
 import type { ManagerOption } from '../wizard/wizard.types';
+import type { LeaveType } from '../wizard/assignments-step';
+import type { Department } from '../wizard/job-step';
 
 function WizardSkeleton() {
     return (
@@ -82,7 +87,7 @@ export default async function OnboardingWizardPage() {
         redirect('/access-denied');
     }
 
-    const templatesResult = await getChecklistTemplatesForUi({ authorization });
+    const templatesResult = await getChecklistTemplatesForUi({ authorization, type: 'onboarding' });
     let managers: ManagerOption[] = [];
     try {
         const managerResult = await listEmployeeDirectoryForUi({
@@ -94,6 +99,25 @@ export default async function OnboardingWizardPage() {
         managers = buildManagerOptions(managerResult.profiles);
     } catch {
         managers = [];
+    }
+
+    let departments: Department[] = [];
+    try {
+        const departmentResult = await getDepartmentService().getDepartments({ authorization });
+        departments = departmentResult.departments.map((department) => ({
+            id: department.id,
+            name: department.name,
+        }));
+    } catch {
+        departments = [];
+    }
+
+    let leaveTypes: LeaveType[] = [];
+    try {
+        const hrSettingsResult = await getHrSettingsForUi({ authorization, orgId: authorization.orgId });
+        leaveTypes = normalizeLeaveTypeOptions(hrSettingsResult.settings.leaveTypes ?? undefined);
+    } catch {
+        leaveTypes = [];
     }
 
     return (
@@ -128,7 +152,9 @@ export default async function OnboardingWizardPage() {
                 <Suspense fallback={<WizardSkeleton />}>
                     <OnboardingWizardPanel
                         checklistTemplates={templatesResult.templates}
+                        departments={departments}
                         managers={managers}
+                        leaveTypes={leaveTypes}
                         canManageTemplates={templatesResult.canManageTemplates}
                     />
                 </Suspense>

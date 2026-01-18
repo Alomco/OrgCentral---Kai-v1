@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  ShieldCheck,
-  ArrowLeft,
-  LayoutDashboard,
-  Users,
-  Settings,
-  Menu,
-  X
+    ShieldCheck,
+    ArrowLeft,
+    LayoutDashboard,
+    Users,
+    Settings,
+    Menu,
+    X
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -72,7 +72,7 @@ export function ModernAdminSidebar({ organizationLabel, roleKey, permissions }: 
             {/* Sidebar */}
             <aside
                 className={cn(
-                    'fixed left-0 top-14 z-[var(--z-sticky)] h-[calc(100vh-3.5rem)] w-64 border-r border-border/30 bg-background/70 backdrop-blur-sm',
+                    'fixed left-0 top-14 z-(--z-sticky) h-[calc(100vh-3.5rem)] w-64 border-r border-border/30 bg-background/70 backdrop-blur-sm',
                     'transform transition-all duration-300 ease-in-out',
                     sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full md:translate-x-0 md:opacity-100',
                     'shadow-lg'
@@ -93,7 +93,7 @@ export function ModernAdminSidebar({ organizationLabel, roleKey, permissions }: 
                             aria-label="Global Admin Dashboard"
                         >
                             <span
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-md shadow-primary/25"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-accent text-white shadow-md shadow-primary/25"
                                 aria-hidden="true"
                             >
                                 <ShieldCheck className="h-5 w-5" />
@@ -115,7 +115,7 @@ export function ModernAdminSidebar({ organizationLabel, roleKey, permissions }: 
                     </div>
 
                     {/* Organization Info Card */}
-                    <div className="mt-4 rounded-xl border border-border/40 bg-gradient-to-br from-primary/5 to-accent/5 px-4 py-3 shadow-sm">
+                    <div className="mt-4 rounded-xl border border-border/40 bg-linear-to-br from-primary/5 to-accent/5 px-4 py-3 shadow-sm">
                         <div className="flex items-center justify-between">
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                                 Organization

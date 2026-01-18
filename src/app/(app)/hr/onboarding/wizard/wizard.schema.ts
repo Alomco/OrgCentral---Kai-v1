@@ -26,6 +26,8 @@ function booleanFromFormValue(value: unknown): boolean | undefined {
 export const onboardingIdentityStepSchema = z.object({
     email: z.email({ message: 'Enter a valid email address' }).min(3, 'Email is required'),
     displayName: z.string().trim().min(1, 'Display name is required').max(120, 'Display name is too long'),
+    firstName: z.string().trim().min(1, 'First name is required').max(120, 'First name is too long'),
+    lastName: z.string().trim().min(1, 'Last name is required').max(120, 'Last name is too long'),
     employeeNumber: z.string().trim().min(1, 'Employee number is required').max(64, 'Employee number is too long'),
 });
 
@@ -50,7 +52,9 @@ export const onboardingJobStepSchema = z.object({
             { message: 'Enter a valid date' },
         ),
     annualSalary: z.coerce.number().min(0, 'Salary must be positive').optional(),
+    hourlyRate: z.coerce.number().min(0, 'Hourly rate must be positive').optional(),
     currency: z.string().length(3, 'Currency must be a 3-letter code').optional(),
+    salaryBasis: z.enum(['ANNUAL', 'HOURLY']).optional(),
     paySchedule: z.enum(['MONTHLY', 'BI_WEEKLY']).optional(),
     managerEmployeeNumber: z.string().trim().max(64).optional(),
 });
@@ -83,6 +87,8 @@ export const onboardingWizardSchema = z.object({
     // Step 1: Identity
     email: onboardingIdentityStepSchema.shape.email,
     displayName: onboardingIdentityStepSchema.shape.displayName,
+    firstName: onboardingIdentityStepSchema.shape.firstName,
+    lastName: onboardingIdentityStepSchema.shape.lastName,
     employeeNumber: onboardingIdentityStepSchema.shape.employeeNumber,
     // Step 2: Job & Compensation
     jobTitle: onboardingJobStepSchema.shape.jobTitle,
@@ -90,7 +96,9 @@ export const onboardingWizardSchema = z.object({
     employmentType: onboardingJobStepSchema.shape.employmentType,
     startDate: onboardingJobStepSchema.shape.startDate,
     annualSalary: onboardingJobStepSchema.shape.annualSalary,
+    hourlyRate: onboardingJobStepSchema.shape.hourlyRate,
     currency: onboardingJobStepSchema.shape.currency,
+    salaryBasis: onboardingJobStepSchema.shape.salaryBasis,
     paySchedule: onboardingJobStepSchema.shape.paySchedule,
     managerEmployeeNumber: onboardingJobStepSchema.shape.managerEmployeeNumber,
     // Step 3: Assignments
@@ -137,13 +145,17 @@ export function validateWizardStep(
 export const defaultOnboardingWizardValues: OnboardingWizardValues = {
     email: '',
     displayName: '',
+    firstName: '',
+    lastName: '',
     employeeNumber: '',
     jobTitle: undefined,
     departmentId: undefined,
     employmentType: undefined,
     startDate: undefined,
     annualSalary: undefined,
+    hourlyRate: undefined,
     currency: 'GBP',
+    salaryBasis: 'ANNUAL',
     paySchedule: 'MONTHLY',
     managerEmployeeNumber: undefined,
     eligibleLeaveTypes: [],

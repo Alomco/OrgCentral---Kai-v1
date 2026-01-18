@@ -1,17 +1,15 @@
 'use client';
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 import { X } from 'lucide-react';
 import type { ZodError } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardHeader } from '@/components/ui/card';
 import { Stepper, useStepper } from '@/components/ui/stepper';
 import type { ChecklistTemplate } from '@/server/types/onboarding-types';
 import { toFieldErrors } from '../../_components/form-errors';
-import { IdentityStep } from './identity-step';
-import { JobStep, type Department } from './job-step';
-import { AssignmentsStep, type LeaveType } from './assignments-step';
-import { ReviewStep } from './review-step';
+import { type Department } from './job-step';
+import { type LeaveType } from './assignments-step';
+import { OnboardingWizardContent } from './onboarding-wizard-content';
 import { OnboardingWizardFooter } from './onboarding-wizard-footer';
 import { OnboardingWizardSuccess } from './onboarding-wizard-success';
 import { WIZARD_STEPS } from './onboarding-wizard-steps';
@@ -32,7 +30,7 @@ export interface OnboardingWizardProps {
     /** Whether the user can manage templates */
     canManageTemplates?: boolean;
     /** Email existence check function */
-    onEmailCheck?: (email: string) => Promise<{ exists: boolean; reason?: string }>;
+    onEmailCheck?: (email: string) => Promise<{ exists: boolean; reason?: string; actionUrl?: string; actionLabel?: string }>;
     /** Submit handler */
     onSubmit: (values: OnboardingWizardValues) => Promise<WizardSubmitResult>;
     /** Cancel handler */
@@ -54,6 +52,14 @@ export function OnboardingWizard({
         buildInitialWizardState(initialValues),
     );
     const [isPending, startTransition] = useTransition();
+
+    const leaveTypeCodeSet = useMemo(() => {
+        return new Set(
+            (leaveTypes ?? [])
+                .map((leaveType) => leaveType.code.trim())
+                .filter((code) => code.length > 0),
+        );
+    }, [leaveTypes]);
 
     const stepper = useStepper({ totalSteps: WIZARD_STEPS.length });
 
@@ -77,6 +83,26 @@ export function OnboardingWizard({
             }));
             return false;
         }
+
+        if (stepper.currentStep >= 2) {
+            const selectedLeaveTypes = state.values.eligibleLeaveTypes ?? [];
+            const invalidSelections = selectedLeaveTypes
+                .map((code) => code.trim())
+                .filter((code) => code.length > 0 && !leaveTypeCodeSet.has(code));
+
+            if (invalidSelections.length > 0) {
+                setState((previous) => ({
+                    ...previous,
+                    status: 'error',
+                    fieldErrors: {
+                        ...previous.fieldErrors,
+                        eligibleLeaveTypes: 'Selected leave types are no longer available. Please update your selections.',
+                    },
+                    message: 'Please update the leave type selections.',
+                }));
+                return false;
+            }
+        }
         setState((previous) => ({
             ...previous,
             status: 'idle',
@@ -84,7 +110,7 @@ export function OnboardingWizard({
             message: undefined,
         }));
         return true;
-    }, [stepper.currentStep, state.values]);
+    }, [leaveTypeCodeSet, stepper.currentStep, state.values]);
 
     const handleNext = useCallback(() => {
         if (handleStepValidation()) {
@@ -188,54 +214,19 @@ export function OnboardingWizard({
                 />
             </CardHeader>
 
-            <CardContent className="min-h-[400px]">
-                {state.status === 'error' && state.message && (
-                    <Alert variant="destructive" className="mb-4">
-                        <AlertDescription>{state.message}</AlertDescription>
-                    </Alert>
-                )}
-
-                {stepper.currentStep === 0 && (
-                    <IdentityStep
-                        values={state.values}
-                        fieldErrors={state.fieldErrors}
-                        onValuesChange={handleValuesChange}
-                        onEmailCheck={onEmailCheck}
-                        disabled={isSubmitting}
-                    />
-                )}
-
-                {stepper.currentStep === 1 && (
-                    <JobStep
-                        values={state.values}
-                        fieldErrors={state.fieldErrors}
-                        onValuesChange={handleValuesChange}
-                        departments={departments}
-                        managers={managers}
-                        disabled={isSubmitting}
-                    />
-                )}
-
-                {stepper.currentStep === 2 && (
-                    <AssignmentsStep
-                        values={state.values}
-                        fieldErrors={state.fieldErrors}
-                        onValuesChange={handleValuesChange}
-                        leaveTypes={leaveTypes}
-                        checklistTemplates={checklistTemplates}
-                        canManageTemplates={canManageTemplates}
-                        disabled={isSubmitting}
-                    />
-                )}
-
-                {stepper.currentStep === 3 && (
-                    <ReviewStep
-                        values={state.values}
-                        checklistTemplates={checklistTemplates}
-                        onEditStep={handleGoToStep}
-                    />
-                )}
-            </CardContent>
+            <OnboardingWizardContent
+                currentStep={stepper.currentStep}
+                state={state}
+                departments={departments}
+                managers={managers}
+                leaveTypes={leaveTypes}
+                checklistTemplates={checklistTemplates}
+                canManageTemplates={canManageTemplates}
+                onValuesChange={handleValuesChange}
+                onEmailCheck={onEmailCheck}
+                onEditStep={handleGoToStep}
+                isSubmitting={isSubmitting}
+            />
 
             <OnboardingWizardFooter
                 isSubmitting={isSubmitting}

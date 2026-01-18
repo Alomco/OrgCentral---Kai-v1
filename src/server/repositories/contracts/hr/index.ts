@@ -16,3 +16,4 @@ export * from './notifications/hr-notification-repository-contract';
 export * from './settings/hr-settings-repository-contract';
 export * from './onboarding/invitation-repository-contract';
 export * from './compliance/compliance-status-repository-contract';
+export * from './offboarding';

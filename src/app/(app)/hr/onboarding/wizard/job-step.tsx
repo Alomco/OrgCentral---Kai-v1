@@ -10,7 +10,8 @@ import type { FieldErrors } from '../../_components/form-errors';
 import type { ManagerOption } from './wizard.types';
 import { ManagerSelect } from './manager-select';
 
-import { CURRENCIES, EMPLOYMENT_TYPES, PAY_SCHEDULES } from './job-step-options';
+import { EMPLOYMENT_TYPES } from './job-step-options';
+import { JobCompensationSection } from './job-compensation-section';
 
 export interface Department {
     id: string;
@@ -38,9 +39,6 @@ export function JobStep({
     const departmentError = fieldErrors?.departmentId;
     const employmentTypeError = fieldErrors?.employmentType;
     const startDateError = fieldErrors?.startDate;
-    const salaryError = fieldErrors?.annualSalary;
-    const currencyError = fieldErrors?.currency;
-    const payScheduleError = fieldErrors?.paySchedule;
     const managerError = fieldErrors?.managerEmployeeNumber;
 
     return (
@@ -149,78 +147,12 @@ export function JobStep({
                 </div>
             </div>
 
-            {/* Compensation Details */}
-            <div className="space-y-4">
-                <h4 className="text-sm font-medium text-muted-foreground">Compensation</h4>
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="space-y-2">
-                        <Label htmlFor="wizard-annualSalary">Annual salary</Label>
-                        <Input
-                            id="wizard-annualSalary"
-                            type="number"
-                            min={0}
-                            step={1000}
-                            value={values.annualSalary ?? ''}
-                            onChange={(event) => onValuesChange({ annualSalary: event.target.value ? Number(event.target.value) : undefined })}
-                            aria-invalid={Boolean(salaryError)}
-                            aria-describedby={salaryError ? 'wizard-annualSalary-error' : undefined}
-                            disabled={disabled}
-                            placeholder="45000"
-                        />
-                        <FieldError id="wizard-annualSalary-error" message={salaryError} />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="wizard-currency">Currency</Label>
-                        <Select
-                            value={values.currency ?? 'GBP'}
-                            onValueChange={(value) => onValuesChange({ currency: value })}
-                            disabled={disabled}
-                        >
-                            <SelectTrigger
-                                id="wizard-currency"
-                                aria-invalid={Boolean(currencyError)}
-                                aria-describedby={currencyError ? 'wizard-currency-error' : undefined}
-                            >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {CURRENCIES.map((currency) => (
-                                    <SelectItem key={currency.value} value={currency.value}>
-                                        {currency.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FieldError id="wizard-currency-error" message={currencyError} />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="wizard-paySchedule">Pay schedule</Label>
-                        <Select
-                            value={values.paySchedule ?? 'MONTHLY'}
-                            onValueChange={(value) => onValuesChange({ paySchedule: value as OnboardingWizardValues['paySchedule'] })}
-                            disabled={disabled}
-                        >
-                            <SelectTrigger
-                                id="wizard-paySchedule"
-                                aria-invalid={Boolean(payScheduleError)}
-                                aria-describedby={payScheduleError ? 'wizard-paySchedule-error' : undefined}
-                            >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {PAY_SCHEDULES.map((schedule) => (
-                                    <SelectItem key={schedule.value} value={schedule.value}>
-                                        {schedule.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FieldError id="wizard-paySchedule-error" message={payScheduleError} />
-                    </div>
-                </div>
-            </div>
+            <JobCompensationSection
+                values={values}
+                fieldErrors={fieldErrors}
+                onValuesChange={onValuesChange}
+                disabled={disabled}
+            />
         </div>
     );
 }

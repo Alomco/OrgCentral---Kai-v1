@@ -10,6 +10,8 @@ export interface WizardSubmitResult {
 export interface EmailCheckResult {
     exists: boolean;
     reason?: string;
+    actionUrl?: string;
+    actionLabel?: string;
 }
 
 export interface ManagerOption {

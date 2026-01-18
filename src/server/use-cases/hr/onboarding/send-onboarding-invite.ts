@@ -3,6 +3,7 @@ import { canManageOnboarding } from '@/server/security/authorization/hr-guards/o
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
 import type { IOnboardingInvitationRepository } from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
+import type { IUserRepository } from '@/server/repositories/contracts/org/users/user-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { assertNonEmpty } from '@/server/use-cases/shared/validators';
 import { normalizeRoles } from '@/server/use-cases/shared';
@@ -14,6 +15,8 @@ export interface SendOnboardingInviteInput {
     authorization: RepositoryAuthorizationContext;
     email: string;
     displayName: string;
+    firstName?: string;
+    lastName?: string;
     employeeNumber: string;
     jobTitle?: string;
     departmentId?: string;
@@ -21,7 +24,9 @@ export interface SendOnboardingInviteInput {
     startDate?: string;
     managerEmployeeNumber?: string;
     annualSalary?: number;
+    hourlyRate?: number;
     salaryCurrency?: string;
+    salaryBasis?: string;
     paySchedule?: string;
     eligibleLeaveTypes?: string[];
     onboardingTemplateId?: string | null;
@@ -37,6 +42,7 @@ export interface SendOnboardingInviteDependencies {
     profileRepository: IEmployeeProfileRepository;
     invitationRepository: IOnboardingInvitationRepository;
     organizationRepository?: IOrganizationRepository;
+    userRepository?: IUserRepository;
 }
 
 export interface SendOnboardingInviteResult {
@@ -62,6 +68,7 @@ export async function sendOnboardingInvite(
         {
             profileRepository: deps.profileRepository,
             invitationRepository: deps.invitationRepository,
+            userRepository: deps.userRepository,
         },
         {
             authorization: input.authorization,
@@ -100,6 +107,8 @@ export async function sendOnboardingInvite(
         onboardingData: {
             email: normalizedEmail,
             displayName: input.displayName,
+            firstName: input.firstName ?? null,
+            lastName: input.lastName ?? null,
             employeeId: normalizedEmployeeNumber,
             employmentType: input.employmentType ?? null,
             jobTitle: input.jobTitle ?? null,
@@ -107,7 +116,9 @@ export async function sendOnboardingInvite(
             startDate: input.startDate ?? null,
             managerEmployeeNumber: input.managerEmployeeNumber ?? null,
             annualSalary: input.annualSalary ?? null,
+            hourlyRate: input.hourlyRate ?? null,
             salaryCurrency: input.salaryCurrency ?? null,
+            salaryBasis: input.salaryBasis ?? null,
             paySchedule: input.paySchedule ?? null,
             eligibleLeaveTypes: input.eligibleLeaveTypes ?? [],
             onboardingTemplateId: input.onboardingTemplateId ?? null,

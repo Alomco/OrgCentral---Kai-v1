@@ -3,6 +3,7 @@ export * from './hr-ops-types';
 export * from './hr-types';
 export * from './hr/people';
 export * from './hr/notifications';
+export * from './hr/offboarding-types';
 export * from './leave-types';
 export * from './membership';
 export * from './tenant';

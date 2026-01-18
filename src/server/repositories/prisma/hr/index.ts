@@ -9,3 +9,4 @@ export * from './notifications';
 export * from './settings';
 export * from './onboarding';
 export * from './compliance';
+export * from './offboarding';

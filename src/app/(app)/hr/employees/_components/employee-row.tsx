@@ -114,6 +114,14 @@ export function EmployeeRow({ employee }: EmployeeRowProps) {
                                 View Profile
                             </Link>
                         </DropdownMenuItem>
+                        {employee.employmentStatus !== 'OFFBOARDING' && employee.employmentStatus !== 'ARCHIVED' ? (
+                            <DropdownMenuItem asChild>
+                                <Link href={`/hr/employees/${employee.id}?tab=lifecycle`}>
+                                    <User className="h-4 w-4 mr-2" />
+                                    Start Offboarding
+                                </Link>
+                            </DropdownMenuItem>
+                        ) : null}
                         <DropdownMenuItem asChild>
                             <a href={`mailto:${employee.email}`}>
                                 <Mail className="h-4 w-4 mr-2" />

@@ -5,8 +5,10 @@ import type { IChecklistInstanceRepository } from '@/server/repositories/contrac
 import type { IOffboardingRepository } from '@/server/repositories/contracts/hr/offboarding';
 import type { IUserSessionRepository } from '@/server/repositories/contracts/auth/sessions/user-session-repository-contract';
 import type { OffboardingRecord } from '@/server/types/hr/offboarding-types';
+import type { MembershipServiceContract } from '@/server/services/org/membership/membership-service.provider';
 import { assertOffboardingCompleter } from '@/server/security/authorization/hr-guards/offboarding';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
+import { revokeOffboardingAccess } from './offboarding-access';
 
 export interface CompleteOffboardingInput {
     authorization: RepositoryAuthorizationContext;
@@ -18,11 +20,13 @@ export interface CompleteOffboardingDependencies {
     employeeProfileRepository: IEmployeeProfileRepository;
     checklistInstanceRepository?: IChecklistInstanceRepository;
     userSessionRepository: IUserSessionRepository;
+    membershipService?: MembershipServiceContract;
 }
 
 export interface CompleteOffboardingResult {
     offboarding: OffboardingRecord;
     revokedSessions: boolean;
+    membershipSuspended: boolean;
 }
 
 export async function completeOffboarding(
@@ -46,7 +50,7 @@ export async function completeOffboarding(
     }
 
     if (offboarding.status === 'COMPLETED') {
-        return { offboarding, revokedSessions: false };
+        return { offboarding, revokedSessions: false, membershipSuspended: false };
     }
 
     if (offboarding.checklistInstanceId) {
@@ -57,7 +61,7 @@ export async function completeOffboarding(
             input.authorization.orgId,
             offboarding.checklistInstanceId,
         );
-        if (!instance || instance.status !== 'COMPLETED') {
+        if (instance?.status !== 'COMPLETED') {
             throw new Error('Offboarding checklist must be completed before closing offboarding.');
         }
     }
@@ -89,16 +93,17 @@ export async function completeOffboarding(
         },
     );
 
-    const revokedSessions = await revokeSessionsWithRetry(
-        deps.userSessionRepository,
-        input.authorization.orgId,
-        profile.userId,
-    );
+    const accessResult = await revokeOffboardingAccess({
+        authorization: input.authorization,
+        userId: profile.userId,
+        userSessionRepository: deps.userSessionRepository,
+        membershipService: deps.membershipService,
+    });
 
     await recordAuditEvent({
         orgId: input.authorization.orgId,
         userId: input.authorization.userId,
-        eventType: 'HR',
+        eventType: 'DATA_CHANGE',
         action: 'hr.offboarding.completed',
         resource: 'hr.offboarding',
         resourceId: completed.id,
@@ -108,30 +113,14 @@ export async function completeOffboarding(
         payload: {
             profileId: profile.id,
             checklistInstanceId: completed.checklistInstanceId ?? null,
-            revokedSessions,
+            revokedSessions: accessResult.revokedSessions,
+            membershipSuspended: accessResult.membershipSuspended,
         },
     });
 
-    return { offboarding: completed, revokedSessions };
-}
-
-async function revokeSessionsWithRetry(
-    repository: IUserSessionRepository,
-    orgId: string,
-    userId: string,
-): Promise<boolean> {
-    const maxAttempts = 3;
-    let attempt = 0;
-    while (attempt < maxAttempts) {
-        try {
-            attempt += 1;
-            await repository.invalidateUserSessionsByUser(orgId, userId);
-            return true;
-        } catch (error) {
-            if (attempt >= maxAttempts) {
-                throw error;
-            }
-        }
-    }
-    return false;
+    return {
+        offboarding: completed,
+        revokedSessions: accessResult.revokedSessions,
+        membershipSuspended: accessResult.membershipSuspended,
+    };
 }

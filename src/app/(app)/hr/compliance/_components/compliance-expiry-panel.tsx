@@ -96,7 +96,7 @@ export function ComplianceExpiryPanel({ expiringItems }: ComplianceExpiryPanelPr
                             return (
                                 <Link
                                     key={item.id}
-                                    href={`/hr/compliance/${item.id}`}
+                                    href={`/hr/compliance/${item.id}?userId=${encodeURIComponent(item.employeeId)}`}
                                     className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted"
                                 >
                                     <div className="flex items-center gap-3 min-w-0 flex-1">

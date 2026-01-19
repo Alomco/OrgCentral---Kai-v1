@@ -18,24 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-interface Employee {
-    id: string;
-    name: string;
-    department: string;
-}
-
-interface Template {
-    id: string;
-    name: string;
-    category: string;
-}
-
-interface BulkAssignDialogProps {
-    templates: Template[];
-    employees: Employee[];
-    onAssign?: (templateId: string, employeeIds: string[]) => Promise<void>;
-}
+import type { BulkAssignDialogProps } from './bulk-assign-dialog.types';
 
 export function BulkAssignDialog({
     templates,
@@ -47,6 +30,7 @@ export function BulkAssignDialog({
     const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
     const [search, setSearch] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const filteredEmployees = employees.filter(
         (emp) =>
@@ -75,14 +59,45 @@ export function BulkAssignDialog({
     };
 
     const handleSubmit = async () => {
-        if (!selectedTemplate || selectedEmployees.size === 0 || !onAssign) { return; }
+        if (!selectedTemplate || selectedEmployees.size === 0) {
+            return;
+        }
+
+        const template = templates.find((entry) => entry.id === selectedTemplate);
+        if (!template) {
+            return;
+        }
+
+        const templateItemIds = template.items.map((item) => item.id).filter((id) => id.length > 0);
+        if (templateItemIds.length === 0) {
+            return;
+        }
 
         setIsSubmitting(true);
+        setErrorMessage('');
         try {
-            await onAssign(selectedTemplate, Array.from(selectedEmployees));
+            if (onAssign) {
+                await onAssign(selectedTemplate, templateItemIds, Array.from(selectedEmployees));
+            } else {
+                const response = await fetch('/api/hr/compliance/assign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        templateId: selectedTemplate,
+                        templateItemIds,
+                        userIds: Array.from(selectedEmployees),
+                    }),
+                });
+                if (!response.ok) {
+                    const payload = (await response.json()) as { error?: string } | null;
+                    throw new Error(payload?.error ?? 'Unable to assign compliance items.');
+                }
+            }
             setOpen(false);
             setSelectedTemplate('');
             setSelectedEmployees(new Set());
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : 'Unable to assign compliance items.');
         } finally {
             setIsSubmitting(false);
         }
@@ -110,6 +125,11 @@ export function BulkAssignDialog({
                 </DialogHeader>
 
                 <div className="space-y-4">
+                    {errorMessage ? (
+                        <p className="text-sm text-destructive" role="alert">
+                            {errorMessage}
+                        </p>
+                    ) : null}
                     {/* Template Selection */}
                     <div className="space-y-2">
                         <Label htmlFor="bulk-template-select">Template</Label>
@@ -191,6 +211,7 @@ export function BulkAssignDialog({
                                 <Badge variant="secondary">
                                     {selectedEmployees.size} employee(s)
                                 </Badge>
+                                {' '}• {selectedTemplateObject.items.length} item(s)
                             </p>
                         </div>
                     ) : null}

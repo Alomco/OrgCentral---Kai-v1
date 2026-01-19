@@ -20,6 +20,7 @@ const HR_NAVIGATION_ITEMS = [
     { href: '/hr/compliance', label: 'Compliance', audience: 'compliance' },
     { href: '/hr/employees', label: 'Employees', audience: 'admin' },
     { href: '/hr/onboarding', label: 'Onboarding', audience: 'onboarding' },
+    { href: '/hr/offboarding', label: 'Offboarding', audience: 'admin' },
     { href: '/hr/settings', label: 'Settings', audience: 'admin' },
 ] as const;
 

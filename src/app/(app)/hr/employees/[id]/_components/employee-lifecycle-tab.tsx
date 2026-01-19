@@ -10,6 +10,7 @@ import { listEmploymentContractsByEmployee } from '@/server/use-cases/hr/people/
 import { EmployeeLifecycleEligibilityCard } from './employee-lifecycle-eligibility-card';
 import { EmployeeLifecycleTerminationCard } from './employee-lifecycle-termination-card';
 import { EmployeeLifecycleComplianceCard } from './employee-lifecycle-compliance-card';
+import { EmployeeOffboardingPanel } from './employee-offboarding-panel';
 
 export interface EmployeeLifecycleTabProps {
     authorization: RepositoryAuthorizationContext;
@@ -52,6 +53,7 @@ export async function EmployeeLifecycleTab({ authorization, profile }: EmployeeL
                     contracts={contractResult.contracts}
                 />
             </div>
+            <EmployeeOffboardingPanel authorization={authorization} profile={profile} />
             <EmployeeLifecycleComplianceCard
                 profileId={profile.id}
                 userId={profile.userId}

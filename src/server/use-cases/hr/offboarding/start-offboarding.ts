@@ -4,10 +4,14 @@ import type { IEmployeeProfileRepository } from '@/server/repositories/contracts
 import type { IChecklistTemplateRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-template-repository-contract';
 import type { IChecklistInstanceRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-instance-repository-contract';
 import type { IOffboardingRepository } from '@/server/repositories/contracts/hr/offboarding';
+import type { IUserSessionRepository } from '@/server/repositories/contracts/auth/sessions/user-session-repository-contract';
 import type { ChecklistTemplateItem, ChecklistItemProgress } from '@/server/types/onboarding-types';
 import type { OffboardingRecord } from '@/server/types/hr/offboarding-types';
+import type { MembershipServiceContract } from '@/server/services/org/membership/membership-service.provider';
+import type { JsonRecord } from '@/server/types/json';
 import { assertOffboardingStarter } from '@/server/security/authorization/hr-guards/offboarding';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
+import { revokeOffboardingAccess } from './offboarding-access';
 
 export type OffboardingMode = 'DIRECT' | 'CHECKLIST';
 
@@ -17,7 +21,7 @@ export interface StartOffboardingInput {
     mode: OffboardingMode;
     templateId?: string;
     reason: string;
-    metadata?: Record<string, unknown> | null;
+    metadata?: JsonRecord | null;
 }
 
 export interface StartOffboardingDependencies {
@@ -25,6 +29,8 @@ export interface StartOffboardingDependencies {
     employeeProfileRepository: IEmployeeProfileRepository;
     checklistTemplateRepository?: IChecklistTemplateRepository;
     checklistInstanceRepository?: IChecklistInstanceRepository;
+    userSessionRepository?: IUserSessionRepository;
+    membershipService?: MembershipServiceContract;
 }
 
 export interface StartOffboardingResult {
@@ -56,7 +62,7 @@ export async function startOffboarding(
         input.authorization.orgId,
         input.profileId,
     );
-    if (existing && existing.status === 'IN_PROGRESS') {
+    if (existing?.status === 'IN_PROGRESS') {
         throw new Error('Offboarding already in progress for this employee.');
     }
 
@@ -88,7 +94,7 @@ export async function startOffboarding(
             input.authorization.orgId,
             input.templateId,
         );
-        if (!template || template.type !== 'offboarding') {
+        if (template?.type !== 'offboarding') {
             throw new Error('Offboarding checklist template not found.');
         }
 
@@ -118,6 +124,9 @@ export async function startOffboarding(
     }
 
     if (input.mode === 'DIRECT') {
+        if (!deps.userSessionRepository) {
+            throw new Error('User session repository is required to complete direct offboarding.');
+        }
         await deps.employeeProfileRepository.updateEmployeeProfile(
             input.authorization.orgId,
             profile.id,
@@ -137,10 +146,17 @@ export async function startOffboarding(
             },
         );
 
+        const accessResult = await revokeOffboardingAccess({
+            authorization: input.authorization,
+            userId: profile.userId,
+            userSessionRepository: deps.userSessionRepository,
+            membershipService: deps.membershipService,
+        });
+
         await recordAuditEvent({
             orgId: input.authorization.orgId,
             userId: input.authorization.userId,
-            eventType: 'HR',
+            eventType: 'DATA_CHANGE',
             action: 'hr.offboarding.completed',
             resource: 'hr.offboarding',
             resourceId: completed.id,
@@ -151,6 +167,8 @@ export async function startOffboarding(
                 profileId: profile.id,
                 mode: input.mode,
                 reason: input.reason,
+                revokedSessions: accessResult.revokedSessions,
+                membershipSuspended: accessResult.membershipSuspended,
             },
         });
 
@@ -171,7 +189,7 @@ export async function startOffboarding(
     await recordAuditEvent({
         orgId: input.authorization.orgId,
         userId: input.authorization.userId,
-        eventType: 'HR',
+        eventType: 'DATA_CHANGE',
         action: 'hr.offboarding.started',
         resource: 'hr.offboarding',
         resourceId: offboarding.id,

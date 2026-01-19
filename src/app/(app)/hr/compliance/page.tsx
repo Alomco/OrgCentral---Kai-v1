@@ -15,12 +15,17 @@ import {
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getComplianceStatusService } from '@/server/services/hr/compliance/compliance-status.service.provider';
+import { PrismaComplianceTemplateRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-template-repository';
+import { listComplianceTemplates } from '@/server/use-cases/hr/compliance/list-compliance-templates';
+import { listEmployeeProfilesForUi } from '@/server/use-cases/hr/people/list-employee-profiles.cached';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { ComplianceItemsPanel } from './_components/compliance-items-panel';
 import { ComplianceReviewQueuePanel } from './_components/compliance-review-queue-panel';
 import { ComplianceTemplatesPanel } from './_components/compliance-templates-panel';
 import { BulkAssignDialog } from './_components/bulk-assign-dialog';
+import { ComplianceExpiryPanelLoader } from './_components/compliance-expiry-panel-loader';
+import { ComplianceCategoryManager } from './_components/compliance-category-manager';
 
 export const metadata: Metadata = {
     title: 'Compliance',
@@ -62,6 +67,19 @@ export default async function HrCompliancePage() {
         .then((result) => result.authorization)
         .catch(() => null);
 
+    const adminData = adminAuthorization
+        ? await Promise.all([
+            listComplianceTemplates(
+                { complianceTemplateRepository: new PrismaComplianceTemplateRepository() },
+                { authorization: adminAuthorization },
+            ),
+            listEmployeeProfilesForUi({ authorization: adminAuthorization }),
+        ])
+        : null;
+
+    const templates = adminData?.[0] ?? [];
+    const employees = adminData?.[1]?.profiles ?? [];
+
     return (
         <div className="space-y-6">
             <Breadcrumb>
@@ -95,8 +113,27 @@ export default async function HrCompliancePage() {
                 <div className="space-y-6">
                     {/* Bulk Assign Action */}
                     <div className="flex justify-end">
-                        <BulkAssignDialog templates={[]} employees={[]} />
+                        <BulkAssignDialog
+                            templates={templates.map((template) => ({
+                                id: template.id,
+                                name: template.name,
+                                category: template.categoryKey ?? 'General',
+                                items: template.items.map((item) => ({ id: item.id, name: item.name })),
+                            }))}
+                            employees={employees.map((profile) => ({
+                                id: profile.userId,
+                                name: profile.displayName
+                                    ?? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim()
+                                    ?? profile.email
+                                    ?? profile.userId,
+                                department: profile.jobTitle ?? profile.departmentId ?? 'General',
+                            }))}
+                        />
                     </div>
+                    <Suspense fallback={<div className="text-sm text-muted-foreground">Loading expiry data…</div>}>
+                        <ComplianceExpiryPanelLoader authorization={adminAuthorization} />
+                    </Suspense>
+                    <ComplianceCategoryManager initialCategories={[]} />
                     <Suspense fallback={<div className="text-sm text-muted-foreground">Loading templates…</div>}>
                         <ComplianceTemplatesPanel authorization={adminAuthorization} />
                     </Suspense>

@@ -200,13 +200,24 @@
 - Offboarding queue shows accurate counts and filters.
 - All actions are tenant-scoped and audited.
 
-## TODOs
-- [ ] Analyze and design an offboarding initiation flow (direct archive vs checklist-based) with permission guards.
-- [ ] Analyze and implement offboarding checklist instantiation from templates for existing employees.
-- [ ] Analyze and add OFFBOARDING status transitions and related audit events.
-- [ ] Analyze and implement completion actions that archive/remove access when offboarding checklists finish.
-- [ ] Analyze and design an offboarding queue view with counts and statuses.
-- [ ] Add data model updates for offboarding records and status enum.
-- [ ] Add service contracts and use-cases with tenant guards.
-- [ ] Add access revocation pipeline and retries.
-- [ ] Add security/a11y verification checklist.
+## Implementation status (server/data)
+- Use-cases: start/complete/cancel/list/get implemented with tenant guards.
+- Data model: `Offboarding` record + `OffboardingStatus` enum added; missing owner/due-date fields and `offboardingId` link on checklist instances.
+- Audit events: `hr.offboarding.started`, `hr.offboarding.completed`, `hr.offboarding.canceled` implemented; checklist-created and item-completed events missing.
+- Access lifecycle: `employmentStatus` transitions + session invalidation + membership suspension implemented; downstream deprovision tasks not wired.
+
+## Remaining TODOs
+- [ ] Add checklist instance link back to `offboardingId` and snapshot metadata.
+- [ ] Capture owner + due date for offboarding and expose queue filters.
+- [ ] Emit audit events for checklist creation and item completion.
+- [ ] Auto-complete offboarding on checklist completion (or document manual requirement).
+- [ ] Add downstream deprovision tasks (directory, payroll, equipment).
+- [ ] Scrub or avoid free-text reasons in audit payloads to prevent PII leakage.
+
+## Security & A11y verification checklist
+- [x] Guarded by `assertOffboarding*` permissions on all use-cases.
+- [x] Tenant-scoped access enforced via `orgId` in every repository call.       
+- [x] Session invalidation + membership suspension executed with retries.       
+- [ ] No PII in structured logs or error payloads (free-text reasons are logged today).
+- [x] Queue UI uses accessible labels, keyboard-friendly controls, and status badges.
+- [x] Progress indicators use semantic UI (`Progress`) and textual equivalents.

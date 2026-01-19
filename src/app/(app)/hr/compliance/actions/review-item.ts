@@ -14,7 +14,33 @@ const reviewComplianceItemFormSchema = z.object({
     itemId: z.uuid(),
     decision: z.enum(['approve', 'reject']),
     notes: z.string().max(2000).optional(),
+    attachments: z.string().optional(),
+    completedAt: z.string().optional(),
 });
+
+function parseAttachments(value: string | undefined): string[] | undefined {
+    if (!value) {
+        return undefined;
+    }
+    try {
+        const parsed = JSON.parse(value) as string[] | null;
+        if (!Array.isArray(parsed)) {
+            return undefined;
+        }
+        const cleaned = parsed.filter((item) => typeof item === 'string' && item.trim().length > 0);
+        return cleaned.length > 0 ? cleaned : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+function parseCompletedAt(value: string | undefined): Date | undefined {
+    if (!value) {
+        return undefined;
+    }
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
 
 export async function reviewComplianceItemAction(formData: FormData): Promise<void> {
     const notesRaw = formData.get('notes');
@@ -25,6 +51,8 @@ export async function reviewComplianceItemAction(formData: FormData): Promise<vo
         itemId: formData.get('itemId'),
         decision: formData.get('decision'),
         notes: notesValue,
+        attachments: formData.get('attachments'),
+        completedAt: formData.get('completedAt'),
     });
 
     if (!parsed.success) {
@@ -51,6 +79,9 @@ export async function reviewComplianceItemAction(formData: FormData): Promise<vo
 
     const normalizedNotes = normalizeString(parsed.data.notes);
 
+    const attachments = parseAttachments(parsed.data.attachments);
+    const completedAt = parseCompletedAt(parsed.data.completedAt) ?? new Date();
+
     await updateComplianceItem(
         { complianceItemRepository: new PrismaComplianceItemRepository() },
         {
@@ -61,6 +92,8 @@ export async function reviewComplianceItemAction(formData: FormData): Promise<vo
                 parsed.data.decision === 'approve'
                     ? {
                         status: 'COMPLETE',
+                        attachments,
+                        completedAt,
                         reviewedBy: authorization.userId,
                         reviewedAt: new Date(),
                     }

@@ -1,7 +1,8 @@
 import type { PrismaJsonValue } from '@/server/types/prisma';
+import type { JsonRecord } from '@/server/types/json';
 import type { OffboardingCreateInput, OffboardingUpdateInput, OffboardingRecord } from '@/server/types/hr/offboarding-types';
 
-export interface OffboardingRecordDb {
+export interface OffboardingRecordDatabase {
     id: string;
     orgId: string;
     employeeId: string;
@@ -23,7 +24,7 @@ export interface OffboardingRecordDb {
     updatedAt: Date | string;
 }
 
-export function mapOffboardingRecordToDomain(record: OffboardingRecordDb): OffboardingRecord {
+export function mapOffboardingRecordToDomain(record: OffboardingRecordDatabase): OffboardingRecord {
     return {
         id: record.id,
         orgId: record.orgId,
@@ -35,7 +36,7 @@ export function mapOffboardingRecordToDomain(record: OffboardingRecordDb): Offbo
         startedAt: record.startedAt,
         completedAt: record.completedAt ?? null,
         canceledAt: record.canceledAt ?? null,
-        metadata: record.metadata as Record<string, unknown> | null | undefined,
+        metadata: normalizeMetadata(record.metadata),
         dataClassification: record.dataClassification,
         dataResidency: record.residencyTag,
         auditSource: record.auditSource ?? null,
@@ -47,7 +48,16 @@ export function mapOffboardingRecordToDomain(record: OffboardingRecordDb): Offbo
     };
 }
 
-export function mapOffboardingCreateToDb(input: OffboardingCreateInput): Partial<OffboardingRecordDb> {
+function normalizeMetadata(metadata?: PrismaJsonValue | null): JsonRecord | null {
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+        return null;
+    }
+    return metadata as JsonRecord;
+}
+
+export function mapOffboardingCreateToDatabase(
+    input: OffboardingCreateInput,
+): Partial<OffboardingRecordDatabase> {
     return {
         orgId: input.orgId,
         employeeId: input.employeeId,
@@ -63,7 +73,9 @@ export function mapOffboardingCreateToDb(input: OffboardingCreateInput): Partial
     };
 }
 
-export function mapOffboardingUpdateToDb(updates: OffboardingUpdateInput): Partial<OffboardingRecordDb> {
+export function mapOffboardingUpdateToDatabase(
+    updates: OffboardingUpdateInput,
+): Partial<OffboardingRecordDatabase> {
     return {
         status: updates.status,
         completedAt: updates.completedAt ?? null,

@@ -1,3 +1,4 @@
+import type { JsonRecord } from '../json';
 import type { DataClassificationLevel, DataResidencyZone } from '../tenant';
 
 export const OFFBOARDING_STATUS_VALUES = ['IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const;
@@ -14,7 +15,7 @@ export interface OffboardingRecord {
     startedAt: Date | string;
     completedAt?: Date | string | null;
     canceledAt?: Date | string | null;
-    metadata?: Record<string, unknown> | null;
+    metadata?: JsonRecord | null;
     dataResidency?: DataResidencyZone;
     dataClassification?: DataClassificationLevel;
     auditSource?: string | null;
@@ -31,7 +32,7 @@ export interface OffboardingCreateInput {
     initiatedByUserId: string;
     checklistInstanceId?: string | null;
     reason: string;
-    metadata?: Record<string, unknown> | null;
+    metadata?: JsonRecord | null;
     dataResidency: DataResidencyZone;
     dataClassification: DataClassificationLevel;
     auditSource?: string | null;
@@ -44,6 +45,6 @@ export interface OffboardingUpdateInput {
     completedAt?: Date | null;
     canceledAt?: Date | null;
     checklistInstanceId?: string | null;
-    metadata?: Record<string, unknown> | null;
+    metadata?: JsonRecord | null;
     updatedBy?: string | null;
 }

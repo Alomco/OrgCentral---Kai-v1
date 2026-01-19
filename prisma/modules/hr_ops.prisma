@@ -303,7 +303,6 @@ model ChecklistInstance {
   orgId        String                   @db.Uuid
   employeeId   String                   @db.Uuid
   templateId   String                   @db.Uuid
-  offboardingId String?                 @db.Uuid
   templateName String?
   status       ChecklistInstanceStatus  @default(IN_PROGRESS)
   items        Json                     @db.JsonB
@@ -316,11 +315,10 @@ model ChecklistInstance {
   org        Organization       @relation("OrgChecklistInstances", fields: [orgId], references: [id], onDelete: Cascade)
   template   ChecklistTemplate  @relation("ChecklistTemplateInstances", fields: [templateId], references: [id], onDelete: Cascade)
   employee   EmployeeProfile    @relation("EmployeeChecklistInstances", fields: [employeeId], references: [id], onDelete: Cascade)
-  offboarding Offboarding?      @relation("OffboardingChecklistInstance", fields: [offboardingId], references: [id], onDelete: SetNull)
+  offboarding Offboarding?      @relation("OffboardingChecklistInstance")
 
   @@index([orgId, employeeId])
   @@index([templateId])
-  @@index([offboardingId])
   @@map("checklist_instances")
   @@schema("hr")
 }
@@ -330,7 +328,7 @@ model Offboarding {
   orgId          String             @db.Uuid
   employeeId     String             @db.Uuid
   initiatedByUserId String          @db.Uuid
-  checklistInstanceId String?       @db.Uuid
+  checklistInstanceId String?       @unique @db.Uuid
   reason         String
   status         OffboardingStatus  @default(IN_PROGRESS)
   startedAt      DateTime           @default(now())

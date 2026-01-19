@@ -111,6 +111,7 @@ model Organization {
   hrSettings             HRSettings?
   checklistTemplates     ChecklistTemplate[] @relation("OrgChecklistTemplates")
   checklistInstances     ChecklistInstance[] @relation("OrgChecklistInstances")
+  offboardingRecords     Offboarding[]
   complianceTemplates    ComplianceTemplate[] @relation("OrgComplianceTemplates")
   complianceCategories   ComplianceCategory[] @relation("OrgComplianceCategories")
   complianceLogItems     ComplianceLogItem[] @relation("OrgComplianceLogItems")

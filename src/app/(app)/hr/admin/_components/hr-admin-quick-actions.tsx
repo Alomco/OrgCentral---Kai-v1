@@ -34,6 +34,12 @@ const ADMIN_QUICK_ACTIONS: QuickAction[] = [
         description: 'Manage new hire workflows',
     },
     {
+        href: '/hr/offboarding',
+        label: 'Offboarding',
+        icon: ClipboardList,
+        description: 'Track offboarding progress',
+    },
+    {
         href: '/hr/leave',
         label: 'Leave Management',
         icon: Calendar,

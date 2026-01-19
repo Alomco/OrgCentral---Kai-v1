@@ -70,7 +70,7 @@ export async function cancelOffboarding(
     await recordAuditEvent({
         orgId: input.authorization.orgId,
         userId: input.authorization.userId,
-        eventType: 'HR',
+        eventType: 'DATA_CHANGE',
         action: 'hr.offboarding.canceled',
         resource: 'hr.offboarding',
         resourceId: updated.id,

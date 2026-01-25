@@ -44,7 +44,11 @@ export async function getSessionContextOrRedirect(
         }
 
         if (decision === 'unauthenticated') {
-            redirect(withNext(loginPath, nextPath));
+            const reason = resolveSessionExpiryReason(error);
+            const target = reason
+                ? withNextAndReason(loginPath, nextPath, reason)
+                : withNext(loginPath, nextPath);
+            redirect(target);
         }
 
         redirect(accessDeniedPath);
@@ -82,18 +86,42 @@ function isUnauthenticatedError(error: unknown): boolean {
         return false;
     }
 
+    if (error instanceof AuthorizationError && error.details?.reason === 'session_expired') {
+        return true;
+    }
+
     const message = error instanceof Error ? error.message.toLowerCase() : '';
     return (
         message.includes('unauthenticated') ||
         message.includes('session not found') ||
+        message.includes('session expired') ||
         message.includes('authenticated session is required')
     );
+}
+
+function resolveSessionExpiryReason(error: unknown): string | null {
+    if (error instanceof AuthorizationError && error.details?.reason === 'session_expired') {
+        return 'session_expired';
+    }
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    return message.includes('session expired') ? 'session_expired' : null;
 }
 
 function withNext(path: string, nextPath: string): string {
     const url = new URL(path, 'http://localhost');
     if (!url.searchParams.has('next')) {
         url.searchParams.set('next', nextPath);
+    }
+    return `${url.pathname}${url.search}`;
+}
+
+function withNextAndReason(path: string, nextPath: string, reason: string): string {
+    const url = new URL(path, 'http://localhost');
+    if (!url.searchParams.has('next')) {
+        url.searchParams.set('next', nextPath);
+    }
+    if (!url.searchParams.has('reason')) {
+        url.searchParams.set('reason', reason);
     }
     return `${url.pathname}${url.search}`;
 }

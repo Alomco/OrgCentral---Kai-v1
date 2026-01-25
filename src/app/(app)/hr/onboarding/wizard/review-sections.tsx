@@ -8,40 +8,19 @@ import { User, Briefcase, ListChecks, PlaneTakeoff } from 'lucide-react';
 import type { OnboardingWizardValues } from './wizard.schema';
 import type { ChecklistTemplate } from '@/server/types/onboarding-types';
 import type { LeaveType } from './assignments-step';
-
-const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
-    FULL_TIME: 'Full-time',
-    PART_TIME: 'Part-time',
-    CONTRACT: 'Contract',
-    TEMPORARY: 'Temporary',
-    INTERN: 'Intern',
-};
-
-const PAY_SCHEDULE_LABELS: Record<string, string> = {
-    MONTHLY: 'Monthly',
-    BI_WEEKLY: 'Bi-weekly',
-};
-
-const SALARY_BASIS_LABELS: Record<string, string> = {
-    ANNUAL: 'Annual',
-    HOURLY: 'Hourly',
-};
-
-const LEAVE_TYPE_LABELS: Partial<Record<string, string>> = {
-    ANNUAL: 'Annual Leave',
-    SICK: 'Sick Leave',
-    MATERNITY: 'Maternity Leave',
-    PATERNITY: 'Paternity Leave',
-    ADOPTION: 'Adoption Leave',
-    UNPAID: 'Unpaid Leave',
-    SPECIAL: 'Special Leave',
-    EMERGENCY: 'Emergency Leave',
-};
+import {
+    EMPLOYMENT_TYPE_LABELS,
+    LEAVE_TYPE_LABELS,
+    PAY_SCHEDULE_LABELS,
+    SALARY_BASIS_LABELS,
+    formatCurrency,
+    formatDate,
+} from './review-utils';
 
 interface ReviewSectionProps {
     title: string;
     icon: React.ReactNode;
-    stepIndex: number;
+    stepIndex?: number;
     onEdit?: (stepIndex: number) => void;
     children: React.ReactNode;
 }
@@ -55,7 +34,7 @@ function ReviewSection({ title, icon, stepIndex, onEdit, children }: ReviewSecti
                         {icon}
                         <CardTitle className="text-base">{title}</CardTitle>
                     </div>
-                    {onEdit && (
+                    {onEdit && stepIndex !== undefined && (
                         <button
                             type="button"
                             onClick={() => onEdit(stepIndex)}
@@ -80,51 +59,42 @@ function ReviewField({ label, value }: { label: string; value: React.ReactNode }
     );
 }
 
-function formatCurrency(amount: number, currency = 'GBP'): string {
-    return new Intl.NumberFormat('en-GB', {
-        style: 'currency',
-        currency,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(amount);
-}
-
-function formatDate(dateString: string | undefined): string {
-    if (!dateString) { return 'N/A'; }
-    try {
-        return new Date(dateString).toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-        });
-    } catch {
-        return dateString;
-    }
-}
-
 export interface ReviewIdentitySectionProps {
     values: OnboardingWizardValues;
     onEditStep?: (stepIndex: number) => void;
+    stepIndex?: number;
+    showEmployeeFields?: boolean;
 }
 
-export function ReviewIdentitySection({ values, onEditStep }: ReviewIdentitySectionProps) {
+export function ReviewIdentitySection({
+    values,
+    onEditStep,
+    stepIndex,
+    showEmployeeFields = false,
+}: ReviewIdentitySectionProps) {
     return (
         <ReviewSection
-            title="Employee Identity"
+            title="Access & Identity"
             icon={<User className="h-4 w-4 text-muted-foreground" />}
-            stepIndex={0}
+            stepIndex={stepIndex}
             onEdit={onEditStep}
         >
             <div className="space-y-0.5">
+                <ReviewField label="Role" value={values.role} />
+                <Separator />
                 <ReviewField label="Email" value={values.email} />
                 <Separator />
                 <ReviewField label="Display name" value={values.displayName} />
-                <Separator />
-                <ReviewField label="First name" value={values.firstName} />
-                <Separator />
-                <ReviewField label="Last name" value={values.lastName} />
-                <Separator />
-                <ReviewField label="Employee number" value={values.employeeNumber} />
+                {showEmployeeFields ? (
+                    <>
+                        <Separator />
+                        <ReviewField label="First name" value={values.firstName} />
+                        <Separator />
+                        <ReviewField label="Last name" value={values.lastName} />
+                        <Separator />
+                        <ReviewField label="Employee number" value={values.employeeNumber} />
+                    </>
+                ) : null}
             </div>
         </ReviewSection>
     );
@@ -133,14 +103,15 @@ export function ReviewIdentitySection({ values, onEditStep }: ReviewIdentitySect
 export interface ReviewJobSectionProps {
     values: OnboardingWizardValues;
     onEditStep?: (stepIndex: number) => void;
+    stepIndex?: number;
 }
 
-export function ReviewJobSection({ values, onEditStep }: ReviewJobSectionProps) {
+export function ReviewJobSection({ values, onEditStep, stepIndex }: ReviewJobSectionProps) {
     return (
         <ReviewSection
             title="Job & Compensation"
             icon={<Briefcase className="h-4 w-4 text-muted-foreground" />}
-            stepIndex={1}
+            stepIndex={stepIndex}
             onEdit={onEditStep}
         >
             <div className="space-y-0.5">
@@ -185,6 +156,7 @@ export interface ReviewAssignmentsSectionProps {
     selectedLeaveTypes: string[];
     selectedTemplate?: ChecklistTemplate;
     onEditStep?: (stepIndex: number) => void;
+    stepIndex?: number;
 }
 
 export function ReviewAssignmentsSection({
@@ -193,6 +165,7 @@ export function ReviewAssignmentsSection({
     selectedLeaveTypes,
     selectedTemplate,
     onEditStep,
+    stepIndex,
 }: ReviewAssignmentsSectionProps) {
     const leaveTypeLabelMap = new Map(leaveTypes.map((leaveType) => [leaveType.code, leaveType.name]));
 
@@ -200,7 +173,7 @@ export function ReviewAssignmentsSection({
         <ReviewSection
             title="Assignments"
             icon={<ListChecks className="h-4 w-4 text-muted-foreground" />}
-            stepIndex={2}
+            stepIndex={stepIndex}
             onEdit={onEditStep}
         >
             <div className="space-y-4">

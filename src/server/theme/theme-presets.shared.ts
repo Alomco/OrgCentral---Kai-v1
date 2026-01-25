@@ -1,4 +1,4 @@
-import type { HslValue, ThemeTokenMap } from './tokens';
+import type { ColorTokenValue, ThemeTokenMap } from './tokens';
 import { defaultDarkThemeTokens, defaultThemeTokens } from './tokens';
 
 export interface ThemePreset {
@@ -11,43 +11,43 @@ export interface ThemePreset {
 }
 
 export type SurfaceTokens = readonly [
-    background: HslValue,
-    foreground: HslValue,
-    surface: HslValue,
-    muted: HslValue,
-    mutedForeground: HslValue,
-    border: HslValue,
-    sidebar: HslValue,
-    sidebarForeground: HslValue,
+    background: ColorTokenValue,
+    foreground: ColorTokenValue,
+    surface: ColorTokenValue,
+    muted: ColorTokenValue,
+    mutedForeground: ColorTokenValue,
+    border: ColorTokenValue,
+    sidebar: ColorTokenValue,
+    sidebarForeground: ColorTokenValue,
 ];
 
 export type AccentTokens = readonly [
-    primary: HslValue,
-    primaryForeground: HslValue,
-    accent: HslValue,
-    accentForeground: HslValue,
-    ring: HslValue,
-    chart1: HslValue,
-    chart2: HslValue,
-    chart3: HslValue,
-    chart4: HslValue,
-    chart5: HslValue,
-    sidebarPrimary: HslValue,
-    sidebarPrimaryForeground: HslValue,
-    sidebarAccent: HslValue,
-    sidebarAccentForeground: HslValue,
-    sidebarRing: HslValue,
+    primary: ColorTokenValue,
+    primaryForeground: ColorTokenValue,
+    accent: ColorTokenValue,
+    accentForeground: ColorTokenValue,
+    ring: ColorTokenValue,
+    chart1: ColorTokenValue,
+    chart2: ColorTokenValue,
+    chart3: ColorTokenValue,
+    chart4: ColorTokenValue,
+    chart5: ColorTokenValue,
+    sidebarPrimary: ColorTokenValue,
+    sidebarPrimaryForeground: ColorTokenValue,
+    sidebarAccent: ColorTokenValue,
+    sidebarAccentForeground: ColorTokenValue,
+    sidebarRing: ColorTokenValue,
 ];
 
-export const WHITE = '0 0% 100%' as HslValue;
-export const HSL_CHART_CYAN = '200 98% 39%' as HslValue;
-export const HSL_CHART_YELLOW = '48 96% 53%' as HslValue;
-export const HSL_CHART_ORANGE = '31 87% 51%' as HslValue;
+export const WHITE = '0 0% 100%' as ColorTokenValue;
+export const HSL_CHART_CYAN = '200 98% 39%' as ColorTokenValue;
+export const HSL_CHART_YELLOW = '48 96% 53%' as ColorTokenValue;
+export const HSL_CHART_ORANGE = '31 87% 51%' as ColorTokenValue;
 
-export const NEON_FOREGROUND = '240 84% 5%' as HslValue;
-export const ROYAL_FOREGROUND = '270 84% 5%' as HslValue;
-export const GALAXY_FOREGROUND = '230 84% 5%' as HslValue;
-export const TANGERINE_FOREGROUND = '35 84% 5%' as HslValue;
+export const NEON_FOREGROUND = '240 84% 5%' as ColorTokenValue;
+export const ROYAL_FOREGROUND = '270 84% 5%' as ColorTokenValue;
+export const GALAXY_FOREGROUND = '230 84% 5%' as ColorTokenValue;
+export const TANGERINE_FOREGROUND = '35 84% 5%' as ColorTokenValue;
 
 export function surface(...values: SurfaceTokens): SurfaceTokens {
     return values;

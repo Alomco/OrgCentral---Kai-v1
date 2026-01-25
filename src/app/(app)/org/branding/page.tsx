@@ -28,9 +28,9 @@ export default async function OrgBrandingPage() {
     return (
         <div className="space-y-6 p-6">
             <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">Branding</p>
-                <h1 className="text-2xl font-semibold text-[hsl(var(--foreground))]">Organization branding</h1>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">Set your organization name, colors, and assets.</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-[oklch(var(--muted-foreground))]">Branding</p>
+                <h1 className="text-2xl font-semibold text-[oklch(var(--foreground))]">Organization branding</h1>
+                <p className="text-sm text-[oklch(var(--muted-foreground))]">Set your organization name, colors, and assets.</p>
             </div>
 
             <OrgBrandingForm branding={branding} />

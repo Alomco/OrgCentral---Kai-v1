@@ -39,11 +39,11 @@ export function PolicyCard({
     onRemoveCondition,
 }: PolicyCardProps) {
     return (
-        <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.35)] p-4">
+        <div className="rounded-xl border border-[oklch(var(--border))] bg-[oklch(var(--muted)/0.35)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <p className="text-sm font-semibold text-[hsl(var(--foreground))]">Policy {index + 1}</p>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    <p className="text-sm font-semibold text-[oklch(var(--foreground))]">Policy {index + 1}</p>
+                    <p className="text-xs text-[oklch(var(--muted-foreground))]">
                         {draft.id ? draft.id : 'New policy'}
                     </p>
                 </div>
@@ -54,7 +54,7 @@ export function PolicyCard({
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <label className="grid gap-1">
-                    <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Policy ID</span>
+                    <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Policy ID</span>
                     <Input
                         value={draft.id}
                         onChange={(event) => onUpdate({ id: event.target.value })}
@@ -62,18 +62,18 @@ export function PolicyCard({
                     />
                 </label>
                 <label className="grid gap-1">
-                    <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Effect</span>
+                    <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Effect</span>
                     <select
                         value={draft.effect}
                         onChange={(event) => onUpdate({ effect: event.target.value as AbacEffect })}
-                        className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                        className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                     >
                         <option value="allow">Allow</option>
                         <option value="deny">Deny</option>
                     </select>
                 </label>
                 <label className="grid gap-1 md:col-span-2">
-                    <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Description</span>
+                    <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Description</span>
                     <Input
                         value={draft.description}
                         onChange={(event) => onUpdate({ description: event.target.value })}
@@ -81,7 +81,7 @@ export function PolicyCard({
                     />
                 </label>
                 <label className="grid gap-1">
-                    <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Priority</span>
+                    <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Priority</span>
                     <Input
                         type="number"
                         value={draft.priority}

@@ -137,7 +137,7 @@ export function ModernAdminSidebar({ organizationLabel, roleKey, permissions }: 
                         <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                             Navigation
                         </p>
-                        <div className="rounded-xl border border-border/30 bg-background/60 p-2 shadow-[inset_0_1px_0_hsl(var(--border)/0.35)]">
+                        <div className="rounded-xl border border-border/30 bg-background/60 p-2 shadow-[inset_0_1px_0_oklch(var(--border)/0.35)]">
                             {items.map((item) => (
                                 <AdminSidebarNavLink
                                     key={item.href}

@@ -7,16 +7,16 @@ import { cva, type VariantProps } from 'class-variance-authority';
 export const errorCardVariants = cva(
     [
         'relative overflow-hidden rounded-3xl',
-        'bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--card))] to-[hsl(var(--muted))]',
-        'p-8 shadow-[0_25px_80px_-30px_hsl(var(--primary)/0.4)]',
+        'bg-gradient-to-br from-[oklch(var(--background))] via-[oklch(var(--card))] to-[oklch(var(--muted))]',
+        'p-8 shadow-[0_25px_80px_-30px_oklch(var(--primary)/0.4)]',
         'motion-reduce:transition-none',
     ],
     {
         variants: {
             intent: {
-                danger: 'shadow-[0_25px_80px_-30px_hsl(var(--destructive)/0.35)]',
-                warning: 'shadow-[0_25px_80px_-30px_hsl(48,96%,53%,0.35)]',
-                info: 'shadow-[0_25px_80px_-30px_hsl(var(--primary)/0.4)]',
+                danger: 'shadow-[0_25px_80px_-30px_oklch(var(--destructive)/0.35)]',
+                warning: 'shadow-[0_25px_80px_-30px_oklch(var(--chart-4)/0.35)]',
+                info: 'shadow-[0_25px_80px_-30px_oklch(var(--primary)/0.4)]',
             },
         },
         defaultVariants: {
@@ -29,14 +29,14 @@ export const errorTitleVariants = cva(
     [
         'bg-clip-text text-transparent',
         'text-3xl font-semibold tracking-tight',
-        'text-shadow-[0_12px_40px_hsl(var(--primary)/0.2)]',
+        'text-shadow-[0_12px_40px_oklch(var(--primary)/0.2)]',
     ],
     {
         variants: {
             intent: {
-                danger: 'bg-gradient-to-r from-[hsl(var(--destructive))] via-[hsl(var(--accent))] to-[hsl(var(--primary))]',
-                warning: 'bg-gradient-to-r from-[hsl(48,96%,45%)] via-[hsl(31,87%,51%)] to-[hsl(var(--accent))]',
-                info: 'bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(var(--chart-3))]',
+                danger: 'bg-gradient-to-r from-[oklch(var(--destructive))] via-[oklch(var(--accent))] to-[oklch(var(--primary))]',
+                warning: 'bg-gradient-to-r from-[oklch(var(--chart-4))] via-[oklch(var(--chart-5))] to-[oklch(var(--accent))]',
+                info: 'bg-gradient-to-r from-[oklch(var(--primary))] via-[oklch(var(--accent))] to-[oklch(var(--chart-3))]',
             },
         },
         defaultVariants: {

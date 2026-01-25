@@ -34,11 +34,22 @@ export function enforceOrgSessionSecurity(
     const envelope = session as SessionEnvelope;
     const sessionInfo = envelope.session;
 
+    const expiresAt = resolveDate(sessionInfo?.expiresAt);
+    if (expiresAt && Date.now() >= expiresAt.getTime()) {
+        throw new AuthorizationError('Session expired for this organization.', {
+            reason: 'session_expired',
+            policy: 'token',
+        });
+    }
+
     const lastActive = resolveDate(sessionInfo?.updatedAt) ?? resolveDate(sessionInfo?.createdAt);
     if (lastActive) {
         const maxAgeMs = settings.security.sessionTimeoutMinutes * 60 * 1000;
         if (Date.now() - lastActive.getTime() > maxAgeMs) {
-            throw new AuthorizationError('Session expired for this organization.');
+            throw new AuthorizationError('Session expired for this organization.', {
+                reason: 'session_expired',
+                policy: 'idle_timeout',
+            });
         }
     }
 

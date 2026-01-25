@@ -29,8 +29,8 @@ export function HrGradientHeader({
                 {icon ? (
                     <div className={cn(
                         'flex items-center justify-center rounded-xl p-2.5',
-                        'bg-linear-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))]',
-                        'text-white shadow-lg shadow-[hsl(var(--primary)/0.3)]',
+                        'bg-linear-to-br from-[oklch(var(--primary))] to-[oklch(var(--accent))]',
+                        'text-white shadow-lg shadow-[oklch(var(--primary)/0.3)]',
                     )}>
                         {icon}
                     </div>
@@ -39,7 +39,7 @@ export function HrGradientHeader({
                     <h1 className={cn(
                         sizeStyles[size],
                         'font-bold tracking-tight',
-                        'bg-linear-to-r from-[hsl(var(--foreground))] via-[hsl(var(--primary))] to-[hsl(var(--accent))]',
+                        'bg-linear-to-r from-[oklch(var(--foreground))] via-[oklch(var(--primary))] to-[oklch(var(--accent))]',
                         'bg-clip-text text-transparent',
                         'bg-size-[200%_auto] animate-[gradient-shift_3s_ease_infinite]',
                     )}>

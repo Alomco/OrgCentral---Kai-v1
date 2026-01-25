@@ -20,15 +20,15 @@ export function ConditionGroup({
     onRemove,
 }: ConditionGroupProps) {
     return (
-        <div className="space-y-3 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-3">
+        <div className="space-y-3 rounded-lg border border-[oklch(var(--border))] bg-[oklch(var(--background))] p-3">
             <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-[hsl(var(--muted-foreground))]">{title}</p>
+                <p className="text-xs font-medium text-[oklch(var(--muted-foreground))]">{title}</p>
                 <Button type="button" variant="secondary" size="sm" onClick={onAdd}>
                     Add condition
                 </Button>
             </div>
             {conditions.length === 0 ? (
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">No conditions added.</p>
+                <p className="text-xs text-[oklch(var(--muted-foreground))]">No conditions added.</p>
             ) : (
                 <div className="grid gap-2">
                     {conditions.map((condition) => (
@@ -44,7 +44,7 @@ export function ConditionGroup({
                                     onUpdate(condition.id, { operator: event.target.value as AbacOperator })
                                 }
                                 aria-label="Operator"
-                                className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                                className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                             >
                                 <option value="eq">eq</option>
                                 <option value="in">in</option>

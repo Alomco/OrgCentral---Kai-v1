@@ -7,6 +7,7 @@ import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/
 import { CACHE_SCOPE_TENANT_THEME } from '@/server/repositories/cache-scopes';
 import { PrismaThemeRepository } from '@/server/repositories/prisma/org/theme/prisma-theme-repository';
 import { getThemePreset, defaultPresetId } from './theme-presets';
+import { defaultUiStyle, isUiStyleKey } from './ui-style-presets';
 import type { TenantTheme, ThemeTokenMap } from './tokens';
 import type { OrgThemeSettings } from '@/server/types/theme-types';
 
@@ -43,12 +44,15 @@ function resolveThemeFromSettings(
 
     // Apply any custom overrides on top of preset
     const customOverrides = orgSettings?.customOverrides ?? {};
+    const uiStyleCandidate = orgSettings?.uiStyleId ?? null;
+    const uiStyleId = isUiStyleKey(uiStyleCandidate) ? uiStyleCandidate : defaultUiStyle;
 
     return {
         orgId,
         presetId,
         tokens: { ...preset.tokens, ...customOverrides } as ThemeTokenMap,
         darkTokens: { ...preset.darkTokens, ...customOverrides } as ThemeTokenMap,
+        uiStyleId,
         updatedAt: orgSettings?.updatedAt ?? new Date(),
     };
 }

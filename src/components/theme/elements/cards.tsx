@@ -21,9 +21,9 @@ const featureCardVariants = cva(
         variants: {
             variant: {
                 default: '',
-                glass: '[--ui-surface-fill:hsl(var(--card)/0.72)] [--ui-surface-blur:16px]',
+                glass: '[--ui-surface-fill:oklch(var(--card)/0.72)] [--ui-surface-blur:16px]',
                 gradient: 'bg-gradient-to-br from-card/90 via-card/80 to-primary/8',
-                outline: '[--ui-surface-fill:transparent] [--ui-surface-shadow:var(--ui-surface-outline-weak)] hover:[--ui-surface-fill:hsl(var(--card)/0.88)] hover:[--ui-surface-shadow:var(--ui-surface-item-shadow)]',
+                outline: '[--ui-surface-fill:transparent] [--ui-surface-shadow:var(--ui-surface-outline-weak)] hover:[--ui-surface-fill:oklch(var(--card)/0.88)] hover:[--ui-surface-shadow:var(--ui-surface-item-shadow)]',
             },
             interactive: {
                 true: '',
@@ -95,9 +95,9 @@ export interface InfoCardProps {
 export function InfoCard({ label, value, icon, variant = 'default', className }: InfoCardProps) {
     const variantStyles = {
         default: '',
-        success: 'text-emerald-600 dark:text-emerald-400 [--ui-surface-fill:hsl(142_76%_35%_/_0.12)] dark:[--ui-surface-fill:hsl(142_76%_30%_/_0.2)]',
-        warning: 'text-amber-600 dark:text-amber-400 [--ui-surface-fill:hsl(45_93%_47%_/_0.12)] dark:[--ui-surface-fill:hsl(45_93%_40%_/_0.2)]',
-        error: 'text-destructive [--ui-surface-fill:hsl(var(--destructive)/0.12)] dark:[--ui-surface-fill:hsl(var(--destructive)/0.18)]',
+        success: 'text-emerald-600 dark:text-emerald-400 [--ui-surface-fill:oklch(0.64_0.21_142_/_0.12)] dark:[--ui-surface-fill:oklch(0.56_0.2_142_/_0.2)]',
+        warning: 'text-amber-600 dark:text-amber-400 [--ui-surface-fill:oklch(0.74_0.19_85_/_0.12)] dark:[--ui-surface-fill:oklch(0.67_0.18_85_/_0.2)]',
+        error: 'text-destructive [--ui-surface-fill:oklch(var(--destructive)/0.12)] dark:[--ui-surface-fill:oklch(var(--destructive)/0.18)]',
     };
 
     return (

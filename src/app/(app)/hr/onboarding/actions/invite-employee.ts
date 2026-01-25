@@ -12,6 +12,7 @@ import { PrismaUserRepository } from '@/server/repositories/prisma/org/users';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { sendOnboardingInvite } from '@/server/use-cases/hr/onboarding/send-onboarding-invite';
 import { buildInvitationRequestSecurityContext } from '@/server/use-cases/shared/request-metadata';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions';
 
 import type { OnboardingInviteFormState } from '../form-state';
 import { onboardingInviteFormSchema } from '../schema';
@@ -28,12 +29,19 @@ const invitationRepository = new PrismaOnboardingInvitationRepository();
 const organizationRepository = new PrismaOrganizationRepository({});
 const userRepository = new PrismaUserRepository();
 
-const RESOURCE_TYPE = 'hr.onboarding';
-
 export async function inviteEmployeeAction(
     previous: OnboardingInviteFormState,
     formData: FormData,
 ): Promise<OnboardingInviteFormState> {
+    const candidate = {
+        email: readFormString(formData, 'email'),
+        displayName: readFormString(formData, 'displayName'),
+        employeeNumber: readFormString(formData, 'employeeNumber'),
+        jobTitle: readFormString(formData, 'jobTitle') || undefined,
+        onboardingTemplateId: readFormString(formData, 'onboardingTemplateId') || undefined,
+        includeTemplate: formData.get('includeTemplate'),
+    };
+
     let session: Awaited<ReturnType<typeof getSessionContext>>;
     let headerStore: Headers;
     try {
@@ -42,9 +50,11 @@ export async function inviteEmployeeAction(
             {},
             {
                 headers: headerStore,
-                requiredPermissions: { member: ['invite'] },
+                requiredPermissions: HR_PERMISSION_PROFILE.ONBOARDING_SEND,
                 auditSource: 'ui:hr:onboarding:invite',
-                resourceType: RESOURCE_TYPE,
+                action: HR_ACTION.SEND,
+                resourceType: HR_RESOURCE_TYPE.ONBOARDING_INVITE,
+                resourceAttributes: { email: candidate.email },
             },
         );
     } catch {
@@ -54,15 +64,6 @@ export async function inviteEmployeeAction(
             values: previous.values,
         };
     }
-
-    const candidate = {
-        email: readFormString(formData, 'email'),
-        displayName: readFormString(formData, 'displayName'),
-        employeeNumber: readFormString(formData, 'employeeNumber'),
-        jobTitle: readFormString(formData, 'jobTitle') || undefined,
-        onboardingTemplateId: readFormString(formData, 'onboardingTemplateId') || undefined,
-        includeTemplate: formData.get('includeTemplate'),
-    };
 
     const parsed = onboardingInviteFormSchema.safeParse(candidate);
     if (!parsed.success) {

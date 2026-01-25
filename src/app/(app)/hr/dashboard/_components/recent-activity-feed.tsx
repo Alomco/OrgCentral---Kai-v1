@@ -23,7 +23,7 @@ export async function RecentActivityFeed({ authorization }: RecentActivityFeedPr
     const recentNotifications = notifications.slice(0, 10); // Take top 10
 
     return (
-        <Card className="h-full border-border/50 bg-background/50 backdrop-blur-sm">
+        <Card className="h-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Bell className="h-5 w-5 text-primary" />

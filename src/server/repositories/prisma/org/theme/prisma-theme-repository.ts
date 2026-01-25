@@ -24,10 +24,11 @@ function normalizeTheme(value: unknown): OrgThemeSettings {
 /**
  * Convert theme settings to JSON-safe format for Prisma
  */
-function themeToJson(theme: OrgThemeSettings): Record<string, unknown> {
+function themeToJson(theme: OrgThemeSettings): Record<string, unknown> {        
     return {
         presetId: theme.presetId,
         customOverrides: theme.customOverrides,
+        uiStyleId: theme.uiStyleId,
         updatedAt: theme.updatedAt?.toISOString(),
     };
 }

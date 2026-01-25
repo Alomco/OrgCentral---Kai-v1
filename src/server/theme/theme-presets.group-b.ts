@@ -1,4 +1,4 @@
-import type { HslValue } from './tokens';
+import type { ColorTokenValue } from './tokens';
 import {
     accents,
     GALAXY_FOREGROUND,
@@ -9,12 +9,14 @@ import {
 } from './theme-presets.shared';
 import type { ThemePreset } from './theme-presets.shared';
 
-const infernoPrimary: HslValue = '355 85% 55%';
-const cherryPrimary: HslValue = '340 75% 60%';
-const galaxyPrimary: HslValue = '230 80% 50%';
-const tangerinePrimary: HslValue = '35 95% 58%';
-const tangerineAccent: HslValue = '25 92% 55%';
-const rubyPrimary: HslValue = '350 80% 50%';
+const infernoPrimary: ColorTokenValue = '355 85% 55%';
+const cherryPrimary: ColorTokenValue = '340 75% 60%';
+const galaxyPrimary: ColorTokenValue = '230 80% 50%';
+const tangerinePrimary: ColorTokenValue = '35 95% 58%';
+const tangerineAccent: ColorTokenValue = '25 92% 55%';
+const rubyPrimary: ColorTokenValue = '350 80% 50%';
+const corporatePrimary: ColorTokenValue = '220 80% 45%';
+const corporateAccent: ColorTokenValue = '200 75% 40%';
 
 export const themePresetsGroupB = {
     'inferno-red': makePreset({
@@ -61,5 +63,48 @@ export const themePresetsGroupB = {
         accents: accents(rubyPrimary, WHITE, '5 75% 52%', WHITE, rubyPrimary, rubyPrimary, '5 75% 52%', '340 75% 55%', '10 78% 50%', '330 72% 52%', '350 80% 55%', WHITE, '5 75% 57%', WHITE, rubyPrimary),
         light: surface('350 70% 97%', '350 40% 12%', '350 60% 99%', '350 35% 92%', '350 20% 45%', '350 30% 86%', '350 40% 96%', '350 30% 20%'),
         dark: surface('350 40% 8%', '350 20% 94%', '350 35% 12%', '350 30% 16%', '350 18% 65%', '350 25% 22%', '350 40% 10%', '350 20% 90%'),
+    }),
+    'corporate-slate': makePreset({
+        id: 'corporate-slate',
+        name: 'Corporate Slate',
+        description: 'Crisp neutrals with a confident blue accent',
+        emoji: '??',
+        accents: accents(
+            corporatePrimary,
+            WHITE,
+            corporateAccent,
+            WHITE,
+            corporatePrimary,
+            '205 78% 45%',
+            '160 60% 38%',
+            '35 85% 50%',
+            '280 60% 55%',
+            '10 75% 50%',
+            corporatePrimary,
+            WHITE,
+            '210 35% 94%',
+            '215 25% 16%',
+            corporatePrimary,
+        ),
+        light: surface(
+            '210 40% 98%',
+            '215 25% 12%',
+            '210 40% 99%',
+            '210 25% 94%',
+            '215 15% 45%',
+            '210 18% 85%',
+            '210 35% 97%',
+            '215 25% 16%',
+        ),
+        dark: surface(
+            '215 30% 8%',
+            '210 20% 96%',
+            '215 26% 12%',
+            '215 20% 16%',
+            '215 15% 65%',
+            '215 20% 22%',
+            '215 26% 10%',
+            '210 20% 90%',
+        ),
     }),
 } as const satisfies Record<string, ThemePreset>;

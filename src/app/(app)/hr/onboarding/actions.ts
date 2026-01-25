@@ -22,8 +22,10 @@ import {
 } from './actions/checklist-instance';
 import {
     submitOnboardingWizardAction as submitOnboardingWizardActionImpl,
-    checkEmailExistsAction as checkEmailExistsActionImpl,
 } from './wizard/wizard.actions';
+import {
+    checkEmailExistsAction as checkEmailExistsActionImpl,
+} from './wizard/wizard.email.actions';
 
 export async function inviteEmployeeAction(
     ...args: Parameters<typeof inviteEmployeeActionImpl>

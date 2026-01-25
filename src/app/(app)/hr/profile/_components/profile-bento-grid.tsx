@@ -182,7 +182,7 @@ export function ProfileBentoGrid({ profile, className }: ProfileBentoGridProps) 
 
             {/* 5. Tenure / Status (Wide - Row 2) */}
             <motion.div variants={item} className="md:col-span-2 lg:col-span-2">
-                <Card className={cn(liftCardBase, 'h-full flex items-center justify-between bg-linear-to-r from-[hsl(var(--card))] to-[hsl(var(--muted)/0.3)]')} data-ui-surface="container">
+                <Card className={cn(liftCardBase, 'h-full flex items-center justify-between bg-linear-to-r from-[oklch(var(--card))] to-[oklch(var(--muted)/0.3)]')} data-ui-surface="container">
                     <div>
                         <h3 className="mb-1 text-sm font-semibold text-muted-foreground uppercase tracking-widest">
                             Current Status

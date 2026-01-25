@@ -9,16 +9,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { getPresetOptions } from '@/server/theme/theme-presets';
+import type { UiStyleKey } from '@/server/theme/ui-style-presets';
 
 import { resetOrgThemeAction, updateOrgThemeAction, updateOrgThemeColorsAction } from '../actions';
 import { initialThemeState } from '../actions.state';
+import { OrgUiStyleCard } from './org-ui-style-card';
 
 interface OrgThemeManagerProps {
     orgId: string;
     currentPresetId?: string;
+    currentUiStyleId?: UiStyleKey;
 }
 
-export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps) {
+export function OrgThemeManager({ orgId, currentPresetId, currentUiStyleId }: OrgThemeManagerProps) {
     const presets = getPresetOptions();
 
     const boundPresetAction = updateOrgThemeAction.bind(null, orgId);
@@ -33,9 +36,9 @@ export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps
         <div className="space-y-6">
             {/* 🎨 Theme Preset Selector */}
             <Card className="overflow-hidden border-0 bg-background/80 shadow-xl backdrop-blur-xl">
-                <CardHeader className="border-b border-[hsl(var(--primary)/0.1)] bg-linear-to-r from-[hsl(var(--primary)/0.05)] to-transparent">
+                <CardHeader className="border-b border-[oklch(var(--primary)/0.1)] bg-linear-to-r from-[oklch(var(--primary)/0.05)] to-transparent">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white shadow-lg">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-[oklch(var(--primary))] to-[oklch(var(--accent))] text-white shadow-lg">
                             <Palette className="h-5 w-5" />
                         </div>
                         <div>
@@ -52,10 +55,10 @@ export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps
                                     key={preset.id}
                                     className={cn(
                                         'group relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-200',
-                                        'hover:border-[hsl(var(--primary)/0.5)] hover:shadow-lg hover:shadow-[hsl(var(--primary)/0.1)]',
+                                        'hover:border-[oklch(var(--primary)/0.5)] hover:shadow-lg hover:shadow-[oklch(var(--primary)/0.1)]',
                                         currentPresetId === preset.id
-                                            ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary)/0.05)] shadow-md'
-                                            : 'border-[hsl(var(--border))] bg-card/50',
+                                            ? 'border-[oklch(var(--primary))] bg-[oklch(var(--primary)/0.05)] shadow-md'
+                                            : 'border-[oklch(var(--border))] bg-card/50',
                                     )}
                                 >
                                     <input
@@ -72,7 +75,7 @@ export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps
                                             <p className="text-xs text-muted-foreground">{preset.description}</p>
                                         </div>
                                         {currentPresetId === preset.id && (
-                                            <Check className="h-5 w-5 text-[hsl(var(--primary))]" />
+                                            <Check className="h-5 w-5 text-[oklch(var(--primary))]" />
                                         )}
                                     </div>
                                 </label>
@@ -83,7 +86,7 @@ export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps
                             <Button
                                 type="submit"
                                 disabled={isPresetPending}
-                                className="bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white shadow-lg hover:shadow-xl"
+                                className="bg-linear-to-r from-[oklch(var(--primary))] to-[oklch(var(--accent))] text-white shadow-lg hover:shadow-xl"
                             >
                                 <Sparkles className="mr-2 h-4 w-4" />
                                 Apply Theme
@@ -99,30 +102,32 @@ export function OrgThemeManager({ orgId, currentPresetId }: OrgThemeManagerProps
                 </CardContent>
             </Card>
 
+            <OrgUiStyleCard orgId={orgId} currentUiStyleId={currentUiStyleId} />
+
             {/* 🎯 Custom Color Overrides */}
             <Card className="overflow-hidden border-0 bg-background/80 shadow-xl backdrop-blur-xl">
-                <CardHeader className="border-b border-[hsl(var(--accent)/0.1)] bg-linear-to-r from-[hsl(var(--accent)/0.05)] to-transparent">
+                <CardHeader className="border-b border-[oklch(var(--accent)/0.1)] bg-linear-to-r from-[oklch(var(--accent)/0.05)] to-transparent">
                     <CardTitle className="text-lg">Custom Colors</CardTitle>
-                    <CardDescription>Fine-tune individual colors (HSL format: &quot;262 83% 58%&quot;)</CardDescription>
+                    <CardDescription>Fine-tune individual colors (OKLCH format: &quot;0.58 0.23 286&quot;)</CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                     <form action={colorsAction} className="space-y-4">
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="primaryColor">Primary Color (HSL)</Label>
+                                <Label htmlFor="primaryColor">Primary Color (OKLCH)</Label>
                                 <Input
                                     id="primaryColor"
                                     name="primaryColor"
-                                    placeholder="262 83% 58%"
+                                    placeholder="0.58 0.23 286"
                                     className="font-mono"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="accentColor">Accent Color (HSL)</Label>
+                                <Label htmlFor="accentColor">Accent Color (OKLCH)</Label>
                                 <Input
                                     id="accentColor"
                                     name="accentColor"
-                                    placeholder="330 81% 60%"
+                                    placeholder="0.62 0.24 330"
                                     className="font-mono"
                                 />
                             </div>

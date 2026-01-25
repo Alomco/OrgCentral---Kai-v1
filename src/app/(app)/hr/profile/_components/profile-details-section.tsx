@@ -103,7 +103,7 @@ export function ProfileDetailsSection({ profile, className }: ProfileDetailsSect
                     </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-[hsl(var(--border)/var(--ui-border-opacity))]">
+                <div className="mt-8 pt-6 border-t border-[oklch(var(--border)/var(--ui-border-opacity))]">
                     <h4 className="mb-4 text-xs font-semibold text-primary/70 uppercase">Home Address</h4>
                     <div className="flex items-start gap-3 text-sm">
                         <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
@@ -131,7 +131,7 @@ function DetailItem({ icon, label, value, onCopy }: { icon: ReactNode, label: st
     if (!value || value === 'Not set') { return null; }
 
     return (
-        <div className="group flex items-center justify-between gap-2 rounded-md p-2 hover:bg-[hsl(var(--muted)/0.5)] transition-colors">
+        <div className="group flex items-center justify-between gap-2 rounded-md p-2 hover:bg-[oklch(var(--muted)/0.5)] transition-colors">
             <div className="flex items-center gap-3 overflow-hidden">
                 <div className="text-muted-foreground">{icon}</div>
                 <div className="min-w-0">

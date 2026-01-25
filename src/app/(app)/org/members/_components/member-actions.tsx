@@ -52,24 +52,24 @@ export function MemberActions(props: {
 
     return (
         <div className="mt-2 grid gap-2">
-            <div className="text-[11px] text-[hsl(var(--muted-foreground))]">Status: {props.status}</div>
+            <div className="text-[11px] text-[oklch(var(--muted-foreground))]">Status: {props.status}</div>
 
             <form action={rolesAction} className="flex flex-col gap-2">
                 <input type="hidden" name="targetUserId" value={props.userId} />
                 <label className="grid gap-1">
-                    <span className="text-[11px] font-medium text-[hsl(var(--muted-foreground))]">Role</span>
+                    <span className="text-[11px] font-medium text-[oklch(var(--muted-foreground))]">Role</span>
                     <input
                         name="roles"
                         defaultValue={props.initialRoles}
-                        className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                        className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                     />
                 </label>
-                <span className="text-[11px] text-[hsl(var(--muted-foreground))]">Only one role is currently supported.</span>
-                {message ? <p className="text-xs text-[hsl(var(--muted-foreground))]">{message.message}</p> : null}
+                <span className="text-[11px] text-[oklch(var(--muted-foreground))]">Only one role is currently supported.</span>
+                {message ? <p className="text-xs text-[oklch(var(--muted-foreground))]">{message.message}</p> : null}
                 <button
                     type="submit"
                     disabled={rolesPending}
-                    className="h-9 w-fit rounded-md bg-[hsl(var(--primary))] px-3 text-sm font-medium text-[hsl(var(--primary-foreground))] disabled:opacity-70"
+                    className="h-9 w-fit rounded-md bg-[oklch(var(--primary))] px-3 text-sm font-medium text-[oklch(var(--primary-foreground))] disabled:opacity-70"
                 >
                     Update roles
                 </button>
@@ -81,7 +81,7 @@ export function MemberActions(props: {
                     <button
                         type="submit"
                         disabled={!canSuspend || suspendPending}
-                        className="h-9 w-fit rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm font-medium text-[hsl(var(--foreground))] disabled:opacity-70"
+                        className="h-9 w-fit rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm font-medium text-[oklch(var(--foreground))] disabled:opacity-70"
                     >
                         Suspend
                     </button>
@@ -91,7 +91,7 @@ export function MemberActions(props: {
                     <button
                         type="submit"
                         disabled={!canResume || resumePending}
-                        className="h-9 w-fit rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm font-medium text-[hsl(var(--foreground))] disabled:opacity-70"
+                        className="h-9 w-fit rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm font-medium text-[oklch(var(--foreground))] disabled:opacity-70"
                     >
                         Resume
                     </button>

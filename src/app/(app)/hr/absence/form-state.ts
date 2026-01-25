@@ -17,8 +17,11 @@ export function buildInitialReportAbsenceFormState(
         fieldErrors: undefined,
         values: {
             typeId: values?.typeId ?? '',
+            durationType: values?.durationType ?? 'DAYS',
             startDate: values?.startDate ?? new Date().toISOString().slice(0, 10),
             endDate: values?.endDate ?? '',
+            startTime: values?.startTime ?? '',
+            endTime: values?.endTime ?? '',
             hours: values?.hours ?? 8,
             reason: values?.reason ?? '',
         },

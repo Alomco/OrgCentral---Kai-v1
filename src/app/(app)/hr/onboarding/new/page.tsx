@@ -21,6 +21,7 @@ import type { EmployeeProfile } from '@/server/types/hr-types';
 import { getDepartmentService } from '@/server/services/org/departments/department-service.provider';
 import { getHrSettingsForUi } from '@/server/use-cases/hr/settings/get-hr-settings.cached';
 import { normalizeLeaveTypeOptions } from '@/server/lib/hr/leave-type-options';
+import { assertOnboardingInviteSender } from '@/server/security/authorization/hr-guards/onboarding';
 
 import { HrPageHeader } from '../../_components/hr-page-header';
 import { OnboardingWizardPanel } from '../_components/onboarding-wizard-panel';
@@ -82,6 +83,13 @@ export default async function OnboardingWizardPage() {
     const canInviteMembers =
         hasPermission(authorization.permissions, 'member', 'invite') ||
         hasPermission(authorization.permissions, 'organization', 'update');
+    let canManageOnboarding = false;
+    try {
+        await assertOnboardingInviteSender({ authorization });
+        canManageOnboarding = true;
+    } catch {
+        canManageOnboarding = false;
+    }
 
     if (!canInviteMembers) {
         redirect('/access-denied');
@@ -151,11 +159,16 @@ export default async function OnboardingWizardPage() {
             <div className="mx-auto max-w-2xl">
                 <Suspense fallback={<WizardSkeleton />}>
                     <OnboardingWizardPanel
+                        roleOptions={[{ name: 'member', description: 'Standard employee access.' }]}
+                        defaultRole="member"
                         checklistTemplates={templatesResult.templates}
                         departments={departments}
                         managers={managers}
                         leaveTypes={leaveTypes}
                         canManageTemplates={templatesResult.canManageTemplates}
+                        canManageOnboarding={canManageOnboarding}
+                        enableEmailCheck={canManageOnboarding}
+                        cancelPath="/hr/onboarding"
                     />
                 </Suspense>
             </div>

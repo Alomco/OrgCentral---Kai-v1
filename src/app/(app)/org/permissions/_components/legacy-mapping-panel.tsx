@@ -37,11 +37,11 @@ export function LegacyMappingPanel() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <ul className="space-y-3 text-sm text-[hsl(var(--foreground))]">
+                <ul className="space-y-3 text-sm text-[oklch(var(--foreground))]">
                     {legacyChecks.map((check) => (
                         <li key={check.title} className="rounded-lg border border-dashed p-3">
                             <div className="font-medium">{check.title}</div>
-                            <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                            <p className="text-xs text-[oklch(var(--muted-foreground))]">
                                 {check.description}
                             </p>
                         </li>

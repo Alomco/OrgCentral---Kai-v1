@@ -36,10 +36,10 @@ const premiumButtonVariants = cva(
                 // 🌟 GLOW - Primary color with strong glow
                 glow: [
                     'bg-primary text-primary-foreground',
-                    'shadow-[0_0_20px_hsl(var(--primary)/0.5),0_0_40px_hsl(var(--primary)/0.25)]',
-                    'hover:shadow-[0_0_30px_hsl(var(--primary)/0.7),0_0_60px_hsl(var(--primary)/0.35)]',
+                    'shadow-[0_0_20px_oklch(var(--primary)/0.5),0_0_40px_oklch(var(--primary)/0.25)]',
+                    'hover:shadow-[0_0_30px_oklch(var(--primary)/0.7),0_0_60px_oklch(var(--primary)/0.35)]',
                     hoverLift,
-                    `${activeReset} active:shadow-[0_0_15px_hsl(var(--primary)/0.4)]`,
+                    `${activeReset} active:shadow-[0_0_15px_oklch(var(--primary)/0.4)]`,
                 ].join(' '),
 
                 // 🌈 GRADIENT - Primary to accent gradient
@@ -69,7 +69,7 @@ const premiumButtonVariants = cva(
                     'bg-transparent text-primary',
                     'border-2 border-primary/50',
                     'hover:bg-primary/10 hover:border-primary',
-                    'hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)]',
+                    'hover:shadow-[0_0_20px_oklch(var(--primary)/0.3)]',
                     hoverLift,
                     `${activeReset} active:bg-primary/15`,
                 ].join(' '),

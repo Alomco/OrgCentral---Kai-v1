@@ -84,7 +84,7 @@ export function QuickActions({ authorization }: QuickActionsProps) {
     );
 
     return (
-        <Card className="border-border/50 bg-background/50 backdrop-blur-sm">
+        <Card>
             <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
                 <CardDescription>Select a task to get started</CardDescription>
@@ -95,10 +95,12 @@ export function QuickActions({ authorization }: QuickActionsProps) {
                         <Link
                             key={action.title}
                             href={action.href}
-                            className="group relative flex flex-col gap-3 rounded-xl border border-border/50 bg-muted/30 p-4 transition-all duration-300 hover:bg-muted/50 hover:shadow-sm"
+                            data-ui-surface="interactive"
+                            data-ui-interactive="true"
+                            className="group relative flex flex-col gap-3 rounded-xl p-4 transition-all duration-300"
                         >
                             <div className="flex items-center justify-between">
-                                <div className="rounded-lg bg-background/60 p-2 text-foreground">
+                                <div className="rounded-lg bg-primary/10 p-2 text-primary transition-colors group-hover:bg-primary/15">
                                     <action.icon className="h-5 w-5" />
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />

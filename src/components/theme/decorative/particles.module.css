@@ -43,15 +43,15 @@
 }
 
 .particlePrimary {
-    background: hsl(var(--primary) / 0.6);
+    background: oklch(var(--primary) / 0.6);
 }
 
 .particleAccent {
-    background: hsl(var(--accent) / 0.6);
+    background: oklch(var(--accent) / 0.6);
 }
 
 .particleSecondary {
-    background: hsl(var(--secondary) / 0.8);
+    background: oklch(var(--secondary) / 0.8);
 }
 
 .particleSm {

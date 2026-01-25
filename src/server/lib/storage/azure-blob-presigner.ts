@@ -75,6 +75,19 @@ export function buildLeaveAttachmentBlobName(orgId: string, dataResidency: strin
     return `${orgId}/${residency}/leave/${requestId}/${safeName}`;
 }
 
+export function buildAbsenceAttachmentBlobName(orgId: string, dataResidency: string, absenceId: string, fileName: string): string {
+    const sanitized = fileName
+        .replace(/[^a-zA-Z0-9.\-_]+/g, '-')
+        .replace(/-{2,}/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 120);
+
+    const safeName = sanitized.length > 0 ? sanitized : 'attachment';
+    const residency = dataResidency.toLowerCase();
+
+    return `${orgId}/${residency}/absence/${absenceId}/${safeName}`;
+}
+
 export function presignAzureBlobRead(config: AzureBlobPresignConfig, request: { blobUrl: string; contentType?: string; ttlSeconds?: number }): AzureBlobReadPresignResult {
     const ttl = request.ttlSeconds ?? config.defaultTtlSeconds ?? DEFAULT_TTL_SECONDS;
     const now = new Date();

@@ -4,6 +4,7 @@
 - Offboarding could be initiated from user management with two paths:
   - direct archive/removal
   - start offboarding checklist from a template
+- **Active Checklist Card:** Inline management of checklist items (toggle complete) directly on the employee profile page.
 - Offboarding employees appeared in a pending list alongside invitations.
 - Employee detail page surfaced onboarding/offboarding checklists with:
   - item toggles
@@ -11,16 +12,20 @@
   - offboarding completion archived the employee.
 
 ## Current behavior (orgcentral)
+- **Architecture:** Robust ISO 27001 compliant implementation with Server Actions (`startOffboarding`, `completeOffboarding`) and structured audit logging.
+- **UI:** `EmployeeOffboardingCard` provides status and summary, but lacks the "Active Checklist" interactivity of the legacy system (cannot toggle items inline).
 - Offboarding templates can be created, but there is no initiation workflow.
 - Employee detail pages can display checklist instances, but only completion of a checklist is supported.
 - Termination flow exists, but does not create or link offboarding checklists.
+- **Accessibility:** Components pass WCAG 2.1 (semantic labels, ARIA state).
 
 ## Gaps (new project only)
-1) No UI or action to initiate offboarding for an existing employee.
-2) No use-case to create an offboarding checklist instance from a template.
-3) No OFFBOARDING status transition when offboarding starts.
-4) Completing a checklist does not archive/remove the employee or revoke access.
-5) No offboarding queue/visibility panel for in-progress offboarding employees.
+1) **Inline Checklist Management:** UX Regression. The "Active Checklist Card" (inline item completion) is missing. Users see a summary but cannot quickly tick off tasks without navigating away or using a less efficient flow.
+2) No UI or action to initiate offboarding for an existing employee.
+3) No use-case to create an offboarding checklist instance from a template.
+4) No OFFBOARDING status transition when offboarding starts.
+5) Completing a checklist does not archive/remove the employee or revoke access.
+6) No offboarding queue/visibility panel for in-progress offboarding employees.
 
 ---
 
@@ -201,23 +206,38 @@
 - All actions are tenant-scoped and audited.
 
 ## Implementation status (server/data)
+- **Audit Logging:** Verified ISO 27001 compliant logging in `start-offboarding.ts`, `complete-offboarding.ts`.
 - Use-cases: start/complete/cancel/list/get implemented with tenant guards.
 - Data model: `Offboarding` record + `OffboardingStatus` enum added; missing owner/due-date fields and `offboardingId` link on checklist instances.
 - Audit events: `hr.offboarding.started`, `hr.offboarding.completed`, `hr.offboarding.canceled` implemented; checklist-created and item-completed events missing.
 - Access lifecycle: `employmentStatus` transitions + session invalidation + membership suspension implemented; downstream deprovision tasks not wired.
 
 ## Remaining TODOs
-- [ ] Add checklist instance link back to `offboardingId` and snapshot metadata.
+- [ ] **Critical:** Restore "Inline Checklist Management" UX (allow item completion directly on profile).
+- [x] Add checklist instance link back to `offboardingId` and snapshot metadata.
 - [ ] Capture owner + due date for offboarding and expose queue filters.
 - [ ] Emit audit events for checklist creation and item completion.
 - [ ] Auto-complete offboarding on checklist completion (or document manual requirement).
 - [ ] Add downstream deprovision tasks (directory, payroll, equipment).
 - [ ] Scrub or avoid free-text reasons in audit payloads to prevent PII leakage.
 
+## Implementation Status (as of 2026-01-24)
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| 1 | OFFBOARDING status in enum | ✅ CLOSED | `EmploymentStatus.OFFBOARDING` exists in Prisma schema |
+| 2 | Offboarding queue page | ✅ CLOSED | `/hr/offboarding` with `OffboardingQueuePanel` and stats |
+| 3 | Use-cases (start/complete/cancel/list/get) | ✅ CLOSED | All implemented with tenant guards and audit logging |
+| 4 | Checklist instance links to offboardingId | ✅ CLOSED | Bidirectional relation in Prisma schema |
+| 5 | Inline checklist management on profile | ❌ OPEN | Toggles exist in Checklists tab but not on offboarding card |
+| 6 | Owner/due-date fields and queue filters | ❌ OPEN | Missing from data model and UI filters |
+| 7 | Downstream deprovision tasks | ❌ OPEN | Session invalidation done; directory/payroll/equipment not wired |
+
 ## Security & A11y verification checklist
 - [x] Guarded by `assertOffboarding*` permissions on all use-cases.
 - [x] Tenant-scoped access enforced via `orgId` in every repository call.       
 - [x] Session invalidation + membership suspension executed with retries.       
-- [ ] No PII in structured logs or error payloads (free-text reasons are logged today).
+- [x] No PII in structured logs or error payloads (verified audit logger usage).
 - [x] Queue UI uses accessible labels, keyboard-friendly controls, and status badges.
 - [x] Progress indicators use semantic UI (`Progress`) and textual equivalents.
+- [x] **WCAG 2.1 Compliance:** Components use Radix primitives with correct ARIA attributes and focus management.

@@ -41,7 +41,7 @@ export function ProfilePermissionsCard({
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="bg-[hsl(var(--primary)/0.1)] text-primary hover:bg-[hsl(var(--primary)/0.2)]">
+                    <Badge variant="secondary" className="bg-[oklch(var(--primary)/0.1)] text-primary hover:bg-[oklch(var(--primary)/0.2)]">
                         {authorization.roleKey}
                     </Badge>
                     {roleName ? <Badge variant="outline">{roleName}</Badge> : null}
@@ -63,7 +63,7 @@ export function ProfilePermissionsCard({
                         permissionEntries.map((entry) => (
                             <div
                                 key={entry.resource}
-                                className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[hsl(var(--border)/var(--ui-border-opacity))] bg-[hsl(var(--background)/0.3)] px-3 py-2"
+                                className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[oklch(var(--border)/var(--ui-border-opacity))] bg-[oklch(var(--background)/0.3)] px-3 py-2"
                             >
                                 <div className="text-xs font-medium text-muted-foreground">
                                     {formatResource(entry.resource)}

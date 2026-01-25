@@ -20,21 +20,21 @@ const premiumInputVariants = cva(
             vibe: {
                 glow: [
                     'bg-card/80 border border-primary/30',
-                    'shadow-[0_0_10px_hsl(var(--primary)/0.15)]',
-                    'focus:border-primary focus:shadow-[0_0_25px_hsl(var(--primary)/0.4)]',
+                    'shadow-[0_0_10px_oklch(var(--primary)/0.15)]',
+                    'focus:border-primary focus:shadow-[0_0_25px_oklch(var(--primary)/0.4)]',
                 ].join(' '),
                 gradient: [
                     'bg-card/80',
                     'border-2 border-transparent',
                     'bg-clip-padding',
-                    '[background:linear-gradient(hsl(var(--card)),hsl(var(--card)))_padding-box,linear-gradient(135deg,hsl(var(--primary)/0.5),hsl(var(--accent)/0.5))_border-box]',
-                    'focus:[background:linear-gradient(hsl(var(--card)),hsl(var(--card)))_padding-box,linear-gradient(135deg,hsl(var(--primary)),hsl(var(--accent)))_border-box]',
+                    '[background:linear-gradient(oklch(var(--card)),oklch(var(--card)))_padding-box,linear-gradient(135deg,oklch(var(--primary)/0.5),oklch(var(--accent)/0.5))_border-box]',
+                    'focus:[background:linear-gradient(oklch(var(--card)),oklch(var(--card)))_padding-box,linear-gradient(135deg,oklch(var(--primary)),oklch(var(--accent)))_border-box]',
                 ].join(' '),
                 glass: [
                     'bg-card/40 backdrop-blur-xl',
                     'border border-border/40',
                     'shadow-lg shadow-primary/5',
-                    'focus:bg-card/60 focus:border-primary/40 focus:shadow-[0_0_20px_hsl(var(--primary)/0.2)]',
+                    'focus:bg-card/60 focus:border-primary/40 focus:shadow-[0_0_20px_oklch(var(--primary)/0.2)]',
                 ].join(' '),
                 outline: [
                     'bg-transparent',

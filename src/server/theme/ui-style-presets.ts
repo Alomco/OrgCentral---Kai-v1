@@ -63,20 +63,20 @@ export const uiStylePresets: Record<string, UiStylePreset> = {
         emoji: '🔮',
         description: 'Glassmorphism with neon glows. Modern tech aesthetic.',
         tokens: {
-            backdropBlur: '12px',
+            backdropBlur: '16px',
             cardShadow: 'glow',
             borderRadius: 'lg',
             glowIntensity: '0.35',
             transitionDuration: '200ms',
             transitionEasing: 'ease-out',
-            borderOpacity: '0',
-            cardOpacity: '1',
+            borderOpacity: '0.2',
+            cardOpacity: '0.95',
             hoverScale: '1.02',
             hoverLift: '-2px',
             activeScale: '0.98',
             focusRingWidth: '3px',
             focusRingOffset: '2px',
-            borderWidth: '0px',
+            borderWidth: '2px',
             animationIntensity: 'expressive',
         },
     },
@@ -88,18 +88,18 @@ export const uiStylePresets: Record<string, UiStylePreset> = {
         tokens: {
             backdropBlur: '0',
             cardShadow: 'sm',
-            borderRadius: 'md',
+            borderRadius: 'sm',
             glowIntensity: '0',
             transitionDuration: '150ms',
             transitionEasing: 'ease-out',
-            borderOpacity: '0',
+            borderOpacity: '0.3',
             cardOpacity: '1',
             hoverScale: '1',
             hoverLift: '0px',
             activeScale: '0.99',
             focusRingWidth: '2px',
             focusRingOffset: '1px',
-            borderWidth: '0px',
+            borderWidth: '1px',
             animationIntensity: 'subtle',
         },
     },
@@ -111,11 +111,11 @@ export const uiStylePresets: Record<string, UiStylePreset> = {
         tokens: {
             backdropBlur: '8px',
             cardShadow: 'md',
-            borderRadius: 'xl',
+            borderRadius: '2xl',
             glowIntensity: '0.15',
             transitionDuration: '250ms',
             transitionEasing: 'ease-in-out',
-            borderOpacity: '0',
+            borderOpacity: '0.1',
             cardOpacity: '1',
             hoverScale: '1.01',
             hoverLift: '-1px',
@@ -133,19 +133,19 @@ export const uiStylePresets: Record<string, UiStylePreset> = {
         description: 'High contrast with vibrant accents. Dark mode optimized.',
         tokens: {
             backdropBlur: '0',
-            cardShadow: 'lg',
+            cardShadow: 'xl',
             borderRadius: 'md',
             glowIntensity: '0.5',
             transitionDuration: '150ms',
             transitionEasing: 'ease-out',
-            borderOpacity: '0',
+            borderOpacity: '0.5',
             cardOpacity: '1',
             hoverScale: '1.03',
             hoverLift: '-4px',
             activeScale: '0.97',
             focusRingWidth: '4px',
             focusRingOffset: '2px',
-            borderWidth: '0px',
+            borderWidth: '2px',
             animationIntensity: 'expressive',
         },
     },
@@ -156,19 +156,19 @@ export const uiStylePresets: Record<string, UiStylePreset> = {
         description: 'Elevation-based shadows with expressive motion.',
         tokens: {
             backdropBlur: '4px',
-            cardShadow: 'md',
-            borderRadius: 'lg',
+            cardShadow: 'lg',
+            borderRadius: 'xl',
             glowIntensity: '0',
             transitionDuration: '300ms',
             transitionEasing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            borderOpacity: '0',
+            borderOpacity: '0.2',
             cardOpacity: '1',
             hoverScale: '1.01',
             hoverLift: '-2px',
             activeScale: '0.98',
             focusRingWidth: '2px',
             focusRingOffset: '2px',
-            borderWidth: '0px',
+            borderWidth: '1px',
             animationIntensity: 'expressive',
         },
     },
@@ -177,7 +177,7 @@ export const uiStylePresets: Record<string, UiStylePreset> = {
 export type UiStyleKey = keyof typeof uiStylePresets;
 export const uiStyleKeys = Object.keys(uiStylePresets);
 
-export const defaultUiStyle: UiStyleKey = 'glass-neon';
+export const defaultUiStyle: UiStyleKey = 'clean-corporate';
 
 /**
  * Get CSS custom properties for a UI style preset.
@@ -204,5 +204,9 @@ export function getUiStyleCssVariables(styleKey: UiStyleKey): Record<string, str
         '--ui-border-width': tokens.borderWidth,
         '--ui-animation-intensity': tokens.animationIntensity,
     };
+}
+
+export function isUiStyleKey(value: string | null): value is UiStyleKey {
+    return Boolean(value && Object.prototype.hasOwnProperty.call(uiStylePresets, value));
 }
 

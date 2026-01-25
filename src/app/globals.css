@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "../styles/ui-styles.css";
+@import "../../styles/ui/cleanCorporateUi/ui-styles.css";
 
 @property --border-angle-1 {
   syntax: "<angle>";
@@ -169,64 +169,62 @@
   --radius-2xl: calc(var(--radius) + 8px);
   /* WCAG 2.2 AA Compliant Color System - Enhanced Contrast */
   --background: 1 0 0;
-  --foreground: 0.18 0.03 262;
+  --foreground: 0.2 0.02 255;
 
   /* Cards with subtle gradient capability */
   --card: 1 0 0;
-  --card-foreground: 0.18 0.03 262;
+  --card-foreground: 0.2 0.02 255;
 
   --popover: 1 0 0;
-  --popover-foreground: 0.18 0.03 262;
+  --popover-foreground: 0.2 0.02 255;
 
-  /* Primary: WCAG 2.2 AA Compliant Purple-Blue - Enhanced contrast ratio */
-  --primary: 0.55 0.22 289;
-  /* Enhanced contrast purple */
+  /* Primary: WCAG 2.2 AA Compliant Corporate Blue - Enhanced contrast ratio */
+  --primary: 0.55 0.17 250;
   --primary-foreground: 0.98 0 0;
 
-  /* Secondary: WCAG 2.2 AA Compliant lavender - Better contrast */
-  --secondary: 0.92 0.05 290;
-  --secondary-foreground: 0.26 0.08 285;
+  /* Secondary: WCAG 2.2 AA Compliant neutral - Better contrast */
+  --secondary: 0.95 0.01 250;
+  --secondary-foreground: 0.28 0.02 250;
 
-  /* Muted: WCAG 2.2 AA Compliant purple-gray - Better contrast */
-  --muted: 0.92 0.03 285;
-  --muted-foreground: 0.45 0.06 285;
+  /* Muted: WCAG 2.2 AA Compliant slate-gray - Better contrast */
+  --muted: 0.96 0.01 255;
+  --muted-foreground: 0.5 0.02 255;
 
-  /* Accent: WCAG 2.2 AA Compliant Pink - Enhanced contrast ratio */
-  --accent: 0.58 0.23 330;
-  /* Enhanced contrast pink */
+  /* Accent: WCAG 2.2 AA Compliant Blue-Teal - Enhanced contrast ratio */
+  --accent: 0.54 0.14 200;
   --accent-foreground: 0.98 0 0;
 
   /* Destructive: WCAG 2.2 AA Compliant Red - Enhanced contrast */
-  --destructive: 0.52 0.23 25;
+  --destructive: 0.55 0.2 30;
   --destructive-foreground: 0.98 0 0;
 
   /* Border: WCAG 2.2 AA Compliant - Better contrast */
-  --border: 0.7 0.03 285;
-  --input: 0.7 0.03 285;
-  --ring: 0.55 0.22 289;
+  --border: 0.86 0.01 255;
+  --input: 0.86 0.01 255;
+  --ring: 0.55 0.17 250;
 
   /* Charts: WCAG 2.2 AA Compliant Palette - Enhanced contrast ratios */
-  --chart-1: 0.58 0.23 330;
-  /* Pink - Enhanced contrast */
-  --chart-2: 0.55 0.22 289;
-  /* Purple - Enhanced contrast */
-  --chart-3: 0.6 0.2 210;
-  /* Cyan - Enhanced contrast */
-  --chart-4: 0.72 0.19 95;
+  --chart-1: 0.55 0.17 250;
+  /* Blue - Enhanced contrast */
+  --chart-2: 0.58 0.14 200;
+  /* Teal - Enhanced contrast */
+  --chart-3: 0.58 0.12 150;
+  /* Green - Enhanced contrast */
+  --chart-4: 0.75 0.14 90;
   /* Yellow - Enhanced contrast */
-  --chart-5: 0.65 0.2 55;
+  --chart-5: 0.68 0.16 40;
   /* Orange - Enhanced contrast */
 
   /* Sidebar: WCAG 2.2 AA Compliant - Better contrast ratios */
-  --sidebar: 0.95 0.02 285;
+  --sidebar: 0.97 0.01 255;
   --sidebar-background: var(--sidebar);
-  --sidebar-foreground: 0.26 0.08 285;
-  --sidebar-primary: 0.55 0.22 289;
+  --sidebar-foreground: 0.28 0.02 255;
+  --sidebar-primary: 0.55 0.17 250;
   --sidebar-primary-foreground: 0.98 0 0;
-  --sidebar-accent: 0.92 0.05 330;
-  --sidebar-accent-foreground: 0.26 0.08 285;
-  --sidebar-border: 0.87 0.04 285;
-  --sidebar-ring: 0.55 0.22 289;
+  --sidebar-accent: 0.94 0.01 250;
+  --sidebar-accent-foreground: 0.28 0.02 255;
+  --sidebar-border: 0.88 0.01 255;
+  --sidebar-ring: 0.55 0.17 250;
 
   --app-background-gradient: linear-gradient(135deg,
     oklch(var(--background)) 0%,
@@ -251,69 +249,69 @@
 }
 
 .dark {
-  /* Dark Mode: WCAG 2.2 AA Compliant Deep purple-blue with enhanced contrast */
-  --background: 0.15 0.03 285;
-  /* Deep purple-black - Enhanced contrast */
-  --foreground: 0.97 0.02 285;
+  /* Dark Mode: WCAG 2.2 AA Compliant Slate-Blue with enhanced contrast */
+  --background: 0.14 0.01 255;
+  /* Deep slate - Enhanced contrast */
+  --foreground: 0.96 0.01 255;
   /* Enhanced contrast light text */
 
-  --card: 0.18 0.03 285;
-  --card-foreground: 0.97 0.02 285;
+  --card: 0.18 0.01 255;
+  --card-foreground: 0.96 0.01 255;
   /* Enhanced contrast card text */
 
-  --popover: 0.18 0.03 285;
-  --popover-foreground: 0.97 0.02 285;
+  --popover: 0.18 0.01 255;
+  --popover-foreground: 0.96 0.01 255;
   /* Enhanced contrast popover text */
 
-  /* Primary: WCAG 2.2 AA Compliant purple in dark mode - Enhanced contrast */
-  --primary: 0.75 0.16 290;
+  /* Primary: WCAG 2.2 AA Compliant blue in dark mode - Enhanced contrast */
+  --primary: 0.7 0.14 250;
   --primary-foreground: 0.98 0 0;
 
-  /* Secondary: WCAG 2.2 AA Compliant dark purple-gray - Enhanced contrast */
-  --secondary: 0.28 0.06 285;
-  --secondary-foreground: 0.97 0.02 285;
+  /* Secondary: WCAG 2.2 AA Compliant dark slate - Enhanced contrast */
+  --secondary: 0.24 0.02 255;
+  --secondary-foreground: 0.96 0.01 255;
   /* Enhanced contrast secondary text */
 
-  /* Muted: WCAG 2.2 AA Compliant darker purple-gray - Enhanced contrast */
-  --muted: 0.28 0.05 285;
-  --muted-foreground: 0.75 0.04 285;
+  /* Muted: WCAG 2.2 AA Compliant darker slate - Enhanced contrast */
+  --muted: 0.24 0.02 255;
+  --muted-foreground: 0.7 0.02 255;
   /* Enhanced contrast muted text */
-  /* Accent: WCAG 2.2 AA Compliant pink in dark mode - Enhanced contrast */
-  --accent: 0.74 0.18 330;
+  /* Accent: WCAG 2.2 AA Compliant teal in dark mode - Enhanced contrast */
+  --accent: 0.66 0.12 200;
   --accent-foreground: 0.98 0 0;
 
   /* Destructive: WCAG 2.2 AA Compliant red - Enhanced contrast */
-  --destructive: 0.7 0.2 25;
+  --destructive: 0.65 0.2 30;
   --destructive-foreground: 0.98 0 0;
 
-  /* Border: WCAG 2.2 AA Compliant subtle purple - Enhanced contrast */
-  --border: 0.32 0.05 285;
-  --input: 0.32 0.05 285;
-  --ring: 0.75 0.16 290;
+  /* Border: WCAG 2.2 AA Compliant subtle slate - Enhanced contrast */
+  --border: 0.3 0.02 255;
+  --input: 0.3 0.02 255;
+  --ring: 0.7 0.14 250;
 
   /* Charts: WCAG 2.2 AA Compliant dark mode palette - Enhanced contrast */
-  --chart-1: 0.74 0.18 330;
-  /* Pink - Enhanced contrast */
-  --chart-2: 0.75 0.16 290;
-  /* Purple - Enhanced contrast */
-  --chart-3: 0.7 0.2 210;
-  /* Cyan - Enhanced contrast */
-  --chart-4: 0.83 0.17 95;
+  --chart-1: 0.66 0.14 200;
+  /* Teal - Enhanced contrast */
+  --chart-2: 0.7 0.14 250;
+  /* Blue - Enhanced contrast */
+  --chart-3: 0.68 0.12 150;
+  /* Green - Enhanced contrast */
+  --chart-4: 0.8 0.14 90;
   /* Yellow - Enhanced contrast */
-  --chart-5: 0.74 0.18 55;
+  --chart-5: 0.72 0.16 40;
   /* Orange - Enhanced contrast */
 
-  /* Sidebar: WCAG 2.2 AA Compliant deep purple-black with enhanced contrast */
-  --sidebar: 0.18 0.03 285;
+  /* Sidebar: WCAG 2.2 AA Compliant deep slate with enhanced contrast */
+  --sidebar: 0.18 0.01 255;
   --sidebar-background: var(--sidebar);
-  --sidebar-foreground: 0.97 0.02 285;
+  --sidebar-foreground: 0.96 0.01 255;
   /* Enhanced contrast sidebar text */
-  --sidebar-primary: 0.75 0.16 290;
+  --sidebar-primary: 0.7 0.14 250;
   --sidebar-primary-foreground: 0.98 0 0;
-  --sidebar-accent: 0.28 0.06 285;
-  --sidebar-accent-foreground: 0.97 0.02 285;
-  --sidebar-border: 0.32 0.05 285;
-  --sidebar-ring: 0.75 0.16 290;
+  --sidebar-accent: 0.24 0.02 255;
+  --sidebar-accent-foreground: 0.96 0.01 255;
+  --sidebar-border: 0.3 0.02 255;
+  --sidebar-ring: 0.7 0.14 250;
 
   --app-background-gradient: linear-gradient(135deg,
     oklch(var(--background)) 0%,
@@ -342,9 +340,9 @@
     background-color: oklch(var(--background));
     /* Subtle gradient overlay using primary color for theme tinting */
     background-image:
-      radial-gradient(ellipse at 0% 0%, oklch(var(--primary) / 0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 0%, oklch(var(--accent) / 0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, oklch(var(--primary) / 0.02) 0%, transparent 50%);
+      radial-gradient(ellipse at 0% 0%, oklch(var(--primary) / 0.08) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 0%, oklch(var(--accent) / 0.06) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 100%, oklch(var(--primary) / 0.05) 0%, transparent 55%);
     background-attachment: fixed;
     min-height: 100vh;
     /* WCAG 2.2 AA compliance: Adequate line height and letter spacing */
@@ -358,9 +356,9 @@
     /* Dark mode uses the same theme-reactive approach */
     background-color: oklch(var(--background));
     background-image:
-      radial-gradient(ellipse at 0% 0%, oklch(var(--primary) / 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 0%, oklch(var(--accent) / 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, oklch(var(--primary) / 0.04) 0%, transparent 50%);
+      radial-gradient(ellipse at 0% 0%, oklch(var(--primary) / 0.12) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 0%, oklch(var(--accent) / 0.1) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 100%, oklch(var(--primary) / 0.08) 0%, transparent 55%);
     background-attachment: fixed;
   }
 
@@ -901,6 +899,74 @@
       radial-gradient(at 97% 96%, oklch(var(--accent) / 0.22) 0px, transparent 50%),
       radial-gradient(at 33% 50%, oklch(var(--muted) / 0.3) 0px, transparent 50%),
       radial-gradient(at 79% 53%, oklch(var(--accent) / 0.22) 0px, transparent 50%);
+  }
+
+  .page-mesh {
+    background:
+      linear-gradient(135deg in oklab,
+        oklch(var(--background)) 0%,
+        oklch(var(--muted) / 0.52) 45%,
+        oklch(var(--background)) 100%),
+      radial-gradient(120% 120% at 15% 0% in oklab,
+        oklch(var(--primary) / 0.18) 0%,
+        transparent 60%),
+      radial-gradient(90% 90% at 85% 12% in oklab,
+        oklch(var(--accent) / 0.16) 0%,
+        transparent 58%),
+      radial-gradient(120% 120% at 50% 100% in oklab,
+        oklch(var(--secondary) / 0.14) 0%,
+        transparent 68%);
+    filter: saturate(1.12);
+    opacity: 0.95;
+  }
+
+  .dark .page-mesh {
+    background:
+      linear-gradient(135deg in oklab,
+        oklch(var(--background)) 0%,
+        oklch(var(--muted) / 0.22) 45%,
+        oklch(var(--background)) 100%),
+      radial-gradient(120% 120% at 15% 0% in oklab,
+        oklch(var(--primary) / 0.26) 0%,
+        transparent 60%),
+      radial-gradient(90% 90% at 85% 12% in oklab,
+        oklch(var(--accent) / 0.24) 0%,
+        transparent 58%),
+      radial-gradient(120% 120% at 50% 100% in oklab,
+        oklch(var(--secondary) / 0.18) 0%,
+        transparent 68%);
+    filter: saturate(1.1);
+    opacity: 0.78;
+  }
+
+  .hr-page-shell {
+    background:
+      radial-gradient(120% 120% at 12% 0% in oklab,
+        oklch(var(--primary) / 0.22) 0%,
+        transparent 58%),
+      radial-gradient(120% 120% at 88% 8% in oklab,
+        oklch(var(--accent) / 0.18) 0%,
+        transparent 60%),
+      oklch(var(--background));
+  }
+
+  .dark .hr-page-shell {
+    background:
+      radial-gradient(120% 120% at 12% 0% in oklab,
+        oklch(var(--primary) / 0.28) 0%,
+        transparent 58%),
+      radial-gradient(120% 120% at 88% 8% in oklab,
+        oklch(var(--accent) / 0.24) 0%,
+        transparent 60%),
+      oklch(var(--background));
+  }
+
+  .hr-dashboard-surface {
+    --ui-border-opacity: 0.18;
+  }
+
+  .dark .hr-dashboard-surface {
+    --ui-border-opacity: 0.26;
   }
 
   /* Glass Morphism */

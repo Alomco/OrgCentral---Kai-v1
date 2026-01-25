@@ -30,12 +30,12 @@ const avatarVariants = cva(
             },
             ring: {
                 none: '',
-                default: 'shadow-[0_0_0_2px_hsl(var(--background))]',
-                primary: 'shadow-[0_0_0_2px_hsl(var(--primary))]',
-                gradient: 'shadow-[0_0_0_2px_hsl(var(--background)),0_0_0_4px_hsl(var(--primary)/0.4)]',
+                default: 'shadow-[0_0_0_2px_oklch(var(--background))]',
+                primary: 'shadow-[0_0_0_2px_oklch(var(--primary))]',
+                gradient: 'shadow-[0_0_0_2px_oklch(var(--background)),0_0_0_4px_oklch(var(--primary)/0.4)]',
             },
             interactive: {
-                true: 'cursor-pointer hover:scale-105 hover:shadow-[0_0_0_2px_hsl(var(--primary)/0.5)] active:scale-95',
+                true: 'cursor-pointer hover:scale-105 hover:shadow-[0_0_0_2px_oklch(var(--primary)/0.5)] active:scale-95',
                 false: '',
             },
         },
@@ -92,7 +92,7 @@ export function PremiumAvatar({
             {status && (
                 <span
                     className={cn(
-                        'absolute bottom-0 right-0 block rounded-full shadow-[0_0_0_2px_hsl(var(--background))]',
+                        'absolute bottom-0 right-0 block rounded-full shadow-[0_0_0_2px_oklch(var(--background))]',
                         size === 'xs' || size === 'sm' ? 'h-2 w-2' : 'h-3 w-3',
                         status === 'online' && 'bg-green-500',
                         status === 'away' && 'bg-yellow-500',
@@ -142,7 +142,7 @@ export function AvatarGroup({ children, max = 4, total, className }: AvatarGroup
             ))}
             {overflow > 0 && (
                 <div
-                    className="relative z-0 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground shadow-[0_0_0_2px_hsl(var(--background))]"
+                    className="relative z-0 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground shadow-[0_0_0_2px_oklch(var(--background))]"
                 >
                     +{overflow}
                 </div>

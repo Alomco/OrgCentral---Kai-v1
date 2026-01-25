@@ -114,20 +114,25 @@ export default async function HrCompliancePage() {
                     {/* Bulk Assign Action */}
                     <div className="flex justify-end">
                         <BulkAssignDialog
-                            templates={templates.map((template) => ({
-                                id: template.id,
-                                name: template.name,
-                                category: template.categoryKey ?? 'General',
-                                items: template.items.map((item) => ({ id: item.id, name: item.name })),
-                            }))}
-                            employees={employees.map((profile) => ({
-                                id: profile.userId,
-                                name: profile.displayName
-                                    ?? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim()
-                                    ?? profile.email
-                                    ?? profile.userId,
-                                department: profile.jobTitle ?? profile.departmentId ?? 'General',
-                            }))}
+                            templates={templates.map((template) => {
+                                const categoryKey = template.categoryKey?.trim();
+                                return {
+                                    id: template.id,
+                                    name: template.name,
+                                    category: (categoryKey && categoryKey.length > 0 ? categoryKey : undefined) ?? 'General',
+                                    items: template.items.map((item) => ({ id: item.id, name: item.name })),
+                                };
+                            })}
+                            employees={employees.map((profile) => {
+                                const displayName = profile.displayName?.trim();
+                                const fallbackName = `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim();
+                                const safeFallbackName = fallbackName.length > 0 ? fallbackName : undefined;
+                                return {
+                                    id: profile.userId,
+                                    name: displayName ?? safeFallbackName ?? profile.email ?? profile.userId,
+                                    department: profile.jobTitle ?? profile.departmentId ?? 'General',
+                                };
+                            })}
                         />
                     </div>
                     <Suspense fallback={<div className="text-sm text-muted-foreground">Loading expiry data…</div>}>

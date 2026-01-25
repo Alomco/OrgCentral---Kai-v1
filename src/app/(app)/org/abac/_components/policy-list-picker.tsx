@@ -35,21 +35,21 @@ export function ListPicker({
     }
 
     return (
-        <div className="space-y-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-3">
-            <p className="text-xs font-medium text-[hsl(var(--muted-foreground))]">{label}</p>
+        <div className="space-y-2 rounded-lg border border-[oklch(var(--border))] bg-[oklch(var(--background))] p-3">
+            <p className="text-xs font-medium text-[oklch(var(--muted-foreground))]">{label}</p>
             <div className="flex flex-wrap gap-2">
                 {items.length === 0 ? (
-                    <span className="text-xs text-[hsl(var(--muted-foreground))]">None</span>
+                    <span className="text-xs text-[oklch(var(--muted-foreground))]">None</span>
                 ) : (
                     items.map((item) => (
                         <span
                             key={item}
-                            className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-xs text-[hsl(var(--foreground))]"
+                            className="inline-flex items-center gap-2 rounded-full bg-[oklch(var(--muted))] px-3 py-1 text-xs text-[oklch(var(--foreground))]"
                         >
                             {item}
                             <button
                                 type="button"
-                                className="text-[10px] uppercase text-[hsl(var(--muted-foreground))]"
+                                className="text-[10px] uppercase text-[oklch(var(--muted-foreground))]"
                                 onClick={() => onRemove(item)}
                             >
                                 Remove

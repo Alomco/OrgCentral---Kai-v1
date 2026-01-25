@@ -11,7 +11,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
-import { uiStylePresets, uiStyleKeys, defaultUiStyle, getUiStyleCssVariables, type UiStyleKey } from '@/server/theme/ui-style-presets';
+import { uiStylePresets, uiStyleKeys, defaultUiStyle, getUiStyleCssVariables, isUiStyleKey, type UiStyleKey } from '@/server/theme/ui-style-presets';
+import { ORG_SCOPE_CHANGE_EVENT, readOrgScope } from './org-scope';
 
 // ============================================================================
 // Types
@@ -39,19 +40,32 @@ interface UiStyleContextValue {
 
 const UiStyleContext = createContext<UiStyleContextValue | undefined>(undefined);
 
-const UI_STYLE_STORAGE_KEY = 'orgcentral-ui-style';
+const UI_STYLE_STORAGE_KEY_PREFIX = 'orgcentral-ui-style:';
 const UI_STYLE_CHANGE_EVENT = 'orgcentral-ui-style-change';
 
 // ============================================================================
 // Storage & Events
 // ============================================================================
 
-function readStoredStyle(): UiStyleKey {
+function getUiStyleStorageKey(): string {
+    return `${UI_STYLE_STORAGE_KEY_PREFIX}${readOrgScope()}`;
+}
+
+function readServerStyle(): UiStyleKey {
     try {
-        const value = localStorage.getItem(UI_STYLE_STORAGE_KEY);
-        return value && uiStyleKeys.includes(value) ? (value) : defaultUiStyle;
+        const value = document.documentElement.dataset.uiStyle ?? null;
+        return isUiStyleKey(value) ? value : defaultUiStyle;
     } catch {
         return defaultUiStyle;
+    }
+}
+
+function readStoredStyle(): UiStyleKey {
+    try {
+        const value = localStorage.getItem(getUiStyleStorageKey());
+        return isUiStyleKey(value) ? value : readServerStyle();
+    } catch {
+        return readServerStyle();
     }
 }
 
@@ -59,9 +73,11 @@ function subscribeToStyleChanges(onStoreChange: () => void) {
     const handler = () => onStoreChange();
     window.addEventListener('storage', handler);
     window.addEventListener(UI_STYLE_CHANGE_EVENT, handler);
+    window.addEventListener(ORG_SCOPE_CHANGE_EVENT, handler);
     return () => {
         window.removeEventListener('storage', handler);
         window.removeEventListener(UI_STYLE_CHANGE_EVENT, handler);
+        window.removeEventListener(ORG_SCOPE_CHANGE_EVENT, handler);
     };
 }
 
@@ -91,18 +107,28 @@ function generateBlockingScript(): string {
     // Self-executing function that runs immediately on page load
     return `(function(){
 try {
-    var STORAGE_KEY = '${UI_STYLE_STORAGE_KEY}';
+    var STORAGE_KEY_PREFIX = '${UI_STYLE_STORAGE_KEY_PREFIX}';
     var DEFAULT_STYLE = '${defaultUiStyle}';
     var PRESETS = ${JSON.stringify(presetsMap)};
     var VALID_KEYS = ${JSON.stringify(uiStyleKeys)};
-    
+
+    var root = document.documentElement;
+    var orgId = root.dataset.orgId || 'default';
+    var storageKey = STORAGE_KEY_PREFIX + orgId;
+
     // Read from localStorage
     var stored = null;
-    try { stored = localStorage.getItem(STORAGE_KEY); } catch(e) {}
-    var styleKey = (stored && VALID_KEYS.indexOf(stored) !== -1) ? stored : DEFAULT_STYLE;
-    
+    try { stored = localStorage.getItem(storageKey); } catch(e) {}
+    var styleKey = (stored && VALID_KEYS.indexOf(stored) !== -1) ? stored : null;
+    var serverStyle = root.dataset.uiStyle;
+    if (!styleKey && serverStyle && VALID_KEYS.indexOf(serverStyle) !== -1) {
+        styleKey = serverStyle;
+    }
+    if (!styleKey) {
+        styleKey = DEFAULT_STYLE;
+    }
+
     // Apply CSS variables to root
-    var root = document.documentElement;
     var vars = PRESETS[styleKey];
     if (vars) {
         for (var key in vars) {
@@ -111,9 +137,12 @@ try {
             }
         }
     }
-    
+
     // Set data attribute for CSS selectors
     root.dataset.uiStyle = styleKey;
+    if (document.body) {
+        document.body.dataset.uiStyle = styleKey;
+    }
 } catch(e) {}
 })();`;
 }
@@ -152,14 +181,14 @@ export function UiStyleProvider({ children }: { children: ReactNode }) {
     }, [storedStyle]);
 
     const setStyle = (styleKey: UiStyleKey) => {
-        localStorage.setItem(UI_STYLE_STORAGE_KEY, styleKey);
+        localStorage.setItem(getUiStyleStorageKey(), styleKey);
         applyStyleToDOM(styleKey);
         window.dispatchEvent(new Event(UI_STYLE_CHANGE_EVENT));
     };
 
     const clearStyle = () => {
-        localStorage.removeItem(UI_STYLE_STORAGE_KEY);
-        applyStyleToDOM(defaultUiStyle);
+        localStorage.removeItem(getUiStyleStorageKey());
+        applyStyleToDOM(readServerStyle());
         window.dispatchEvent(new Event(UI_STYLE_CHANGE_EVENT));
     };
 

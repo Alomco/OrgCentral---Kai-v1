@@ -1,4 +1,5 @@
 import type { ThemeTokenMap } from '@/server/theme/tokens';
+import type { UiStyleKey } from '@/server/theme/ui-style-presets';
 
 /**
  * Organization theme settings stored in settings.theme JSON field
@@ -6,8 +7,10 @@ import type { ThemeTokenMap } from '@/server/theme/tokens';
 export interface OrgThemeSettings {
     /** Selected theme preset ID */
     presetId?: string;
-    /** Custom color overrides (HSL format) */
+    /** Custom color overrides (OKLCH or HSL format) */
     customOverrides?: Partial<ThemeTokenMap>;
+    /** Default UI style preset */
+    uiStyleId?: UiStyleKey;
     /** Last updated timestamp */
     updatedAt?: Date;
 }

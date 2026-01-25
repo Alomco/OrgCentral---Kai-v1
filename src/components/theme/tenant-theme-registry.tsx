@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { getTenantTheme, type TenantThemeCacheContext } from '@/server/theme/get-tenant-theme';
+import { defaultUiStyle } from '@/server/theme/ui-style-presets';
 import { themeTokenKeys, type ThemeTokenKey, type ThemeTokenMap } from '@/server/theme/tokens';
 
 export type TenantThemeRegistryProps =
@@ -46,6 +47,7 @@ export async function TenantThemeRegistry({
 
     const cssVariables = buildCssVariables(theme.tokens, tenantOverrideKeys);
     const darkCssVariables = buildCssVariables(theme.darkTokens, tenantOverrideKeys);
+    const uiStyleId = theme.uiStyleId ?? defaultUiStyle;
 
     return (
         <>
@@ -61,7 +63,9 @@ export async function TenantThemeRegistry({
                 dangerouslySetInnerHTML={{
                     __html: `(() => { try { const root = document.documentElement; const nextOrgId = ${JSON.stringify(
                         resolvedOrgId,
-                    )}; if (root.dataset.orgId !== nextOrgId) { root.dataset.orgId = nextOrgId; window.dispatchEvent(new Event('orgcentral-org-scope-change')); } } catch {} })();`,
+                    )}; const nextUiStyleId = ${JSON.stringify(
+                        uiStyleId,
+                    )}; if (root.dataset.orgId !== nextOrgId) { root.dataset.orgId = nextOrgId; window.dispatchEvent(new Event('orgcentral-org-scope-change')); } if (root.dataset.uiStyle !== nextUiStyleId) { root.dataset.uiStyle = nextUiStyleId; window.dispatchEvent(new Event('orgcentral-ui-style-change')); } if (document.body) { document.body.dataset.uiStyle = nextUiStyleId; } } catch {} })();`,
                 }}
             />
             {children}

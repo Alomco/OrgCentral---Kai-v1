@@ -10,7 +10,7 @@ import { AssignmentsStep, type LeaveType } from './assignments-step';
 import { ReviewStep } from './review-step';
 import type { OnboardingWizardState } from './wizard.state';
 import type { OnboardingWizardValues } from './wizard.schema';
-import type { ManagerOption } from './wizard.types';
+import type { EmailCheckResult, InviteRoleOption, ManagerOption } from './wizard.types';
 
 export interface OnboardingWizardBodyProps {
     state: OnboardingWizardState;
@@ -20,9 +20,10 @@ export interface OnboardingWizardBodyProps {
     leaveTypes: LeaveType[] | undefined;
     checklistTemplates: ChecklistTemplate[];
     canManageTemplates: boolean;
+    roleOptions: InviteRoleOption[];
     isSubmitting: boolean;
     onValuesChange: (updates: Partial<OnboardingWizardValues>) => void;
-    onEmailCheck?: (email: string) => Promise<{ exists: boolean; reason?: string; actionUrl?: string; actionLabel?: string }>;
+    onEmailCheck?: (email: string) => Promise<EmailCheckResult>;
     onEditStep: (stepIndex: number) => void;
 }
 
@@ -34,6 +35,7 @@ export function OnboardingWizardBody({
     leaveTypes,
     checklistTemplates,
     canManageTemplates,
+    roleOptions,
     isSubmitting,
     onValuesChange,
     onEmailCheck,
@@ -54,10 +56,11 @@ export function OnboardingWizardBody({
                     onValuesChange={onValuesChange}
                     onEmailCheck={onEmailCheck}
                     disabled={isSubmitting}
+                    roleOptions={roleOptions}
                 />
             )}
 
-            {currentStep === 1 && (
+            {currentStep === 1 && state.values.useOnboarding && (
                 <JobStep
                     values={state.values}
                     fieldErrors={state.fieldErrors}
@@ -68,7 +71,7 @@ export function OnboardingWizardBody({
                 />
             )}
 
-            {currentStep === 2 && (
+            {currentStep === 2 && state.values.useOnboarding && (
                 <AssignmentsStep
                     values={state.values}
                     fieldErrors={state.fieldErrors}
@@ -86,6 +89,12 @@ export function OnboardingWizardBody({
                     checklistTemplates={checklistTemplates}
                     leaveTypes={leaveTypes}
                     onEditStep={onEditStep}
+                    stepIndexById={new Map([
+                        ['identity', 0],
+                        ['job', 1],
+                        ['assignments', 2],
+                        ['review', 3],
+                    ])}
                 />
             )}
         </CardContent>

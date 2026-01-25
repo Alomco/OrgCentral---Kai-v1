@@ -18,7 +18,7 @@ interface GlobalErrorProps {
 
 export default function GlobalError({ reset }: GlobalErrorProps) {
     return (
-        <div className="min-h-screen bg-[hsl(var(--background))]">
+        <div className="min-h-screen bg-[oklch(var(--background))]">
             <ErrorPageLayout intent="danger" fullScreen>
                 <ErrorIllustration src={serverErrorImage} alt="Something went wrong" />
                 <ErrorContent

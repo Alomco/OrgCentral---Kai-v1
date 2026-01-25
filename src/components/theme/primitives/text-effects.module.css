@@ -29,9 +29,9 @@
 .gradientPrimary {
     background-image: linear-gradient(
         135deg,
-        hsl(var(--primary)) 0%,
-        hsl(var(--accent)) 50%,
-        hsl(var(--primary)) 100%
+        oklch(var(--primary)) 0%,
+        oklch(var(--accent)) 50%,
+        oklch(var(--primary)) 100%
     );
     background-size: 200% 100%;
 }
@@ -39,10 +39,10 @@
 .gradientVibrant {
     background-image: linear-gradient(
         135deg,
-        hsl(var(--primary)) 0%,
-        hsl(var(--accent)) 33%,
-        hsl(var(--secondary)) 66%,
-        hsl(var(--primary)) 100%
+        oklch(var(--primary)) 0%,
+        oklch(var(--accent)) 33%,
+        oklch(var(--secondary)) 66%,
+        oklch(var(--primary)) 100%
     );
     background-size: 300% 100%;
 }
@@ -50,11 +50,11 @@
 .gradientRainbow {
     background-image: linear-gradient(
         135deg,
-        hsl(0 80% 60%) 0%,
-        hsl(60 80% 55%) 25%,
-        hsl(120 70% 50%) 50%,
-        hsl(200 80% 55%) 75%,
-        hsl(280 75% 60%) 100%
+        oklch(0.72 0.23 30) 0%,
+        oklch(0.85 0.2 90) 25%,
+        oklch(0.74 0.18 145) 50%,
+        oklch(0.7 0.18 230) 75%,
+        oklch(0.72 0.2 320) 100%
     );
     background-size: 300% 100%;
 }

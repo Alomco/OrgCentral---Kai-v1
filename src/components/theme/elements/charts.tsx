@@ -54,7 +54,7 @@ export function SimpleBarChart({
                                     className="h-full rounded-full transition-all duration-500"
                                     style={{
                                         width: `${percentage.toFixed(2)}%`,
-                                        background: item.color ?? 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)))',
+                                        background: item.color ?? 'linear-gradient(90deg, oklch(var(--primary)), oklch(var(--accent)))',
                                     }}
                                 />
                             </div>
@@ -76,7 +76,7 @@ export function SimpleBarChart({
                                 className="w-full rounded-t transition-all duration-500"
                                 style={{
                                     height: `${percentage.toFixed(2)}%`,
-                                    background: item.color ?? 'linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)))',
+                                    background: item.color ?? 'linear-gradient(180deg, oklch(var(--primary)), oklch(var(--accent)))',
                                 }}
                             />
                         </div>
@@ -126,7 +126,7 @@ export function SimpleDonutChart({
                     cx={size / 2}
                     cy={size / 2}
                     r={radius}
-                    stroke="hsl(var(--muted))"
+                    stroke="oklch(var(--muted))"
                     strokeWidth={thickness}
                     fill="none"
                 />
@@ -145,8 +145,8 @@ export function SimpleDonutChart({
                 />
                 <defs>
                     <linearGradient id="donutGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" />
-                        <stop offset="100%" stopColor="hsl(var(--accent))" />
+                        <stop offset="0%" stopColor="oklch(var(--primary))" />
+                        <stop offset="100%" stopColor="oklch(var(--accent))" />
                     </linearGradient>
                 </defs>
             </svg>
@@ -194,8 +194,8 @@ export function Sparkline({ data, width = 100, height = 32, className }: Sparkli
             />
             <defs>
                 <linearGradient id="sparklineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" />
-                    <stop offset="100%" stopColor="hsl(var(--accent))" />
+                    <stop offset="0%" stopColor="oklch(var(--primary))" />
+                    <stop offset="100%" stopColor="oklch(var(--accent))" />
                 </linearGradient>
             </defs>
         </svg>

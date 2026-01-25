@@ -1,0 +1,7 @@
+/* Status color tokens for badges/notifications (oklch only). */
+:root {
+    --status-success: var(--chart-3);
+    --status-warning: var(--chart-4);
+    --status-info: var(--chart-1);
+    --status-danger: var(--destructive);
+}

@@ -42,7 +42,7 @@ export function PermissionResourceRow(props: { resource: PermissionResource }) {
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold font-mono text-[hsl(var(--foreground))]">
+                        <p className="text-sm font-semibold font-mono text-[oklch(var(--foreground))]">
                             {props.resource.resource}
                         </p>
                         {legacyKeys.length > 0 ? (
@@ -51,7 +51,7 @@ export function PermissionResourceRow(props: { resource: PermissionResource }) {
                             </Badge>
                         ) : null}
                     </div>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    <p className="text-xs text-[oklch(var(--muted-foreground))]">
                         {props.resource.description ?? 'No description'}
                     </p>
                     {legacyKeys.length > 0 ? (

@@ -119,7 +119,7 @@ export function ProgressRing({
                     cx={size / 2}
                     cy={size / 2}
                     r={radius}
-                    stroke="hsl(var(--muted))"
+                    stroke="oklch(var(--muted))"
                     strokeWidth={strokeWidth}
                     fill="none"
                 />
@@ -138,8 +138,8 @@ export function ProgressRing({
                 />
                 <defs>
                     <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" />
-                        <stop offset="100%" stopColor="hsl(var(--accent))" />
+                        <stop offset="0%" stopColor="oklch(var(--primary))" />
+                        <stop offset="100%" stopColor="oklch(var(--accent))" />
                     </linearGradient>
                 </defs>
             </svg>

@@ -5,7 +5,7 @@ export { themePresets, type ThemePreset };
 
 export type ThemePresetId = keyof typeof themePresets;
 
-export const defaultPresetId: ThemePresetId = 'cyberpunk-purple';
+export const defaultPresetId: ThemePresetId = 'corporate-slate';
 
 export function isThemePresetId(value: string): value is ThemePresetId {
     return Object.prototype.hasOwnProperty.call(themePresets, value);

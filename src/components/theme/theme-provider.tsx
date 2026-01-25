@@ -3,6 +3,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import { useTheme as useNextTheme } from 'next-themes';
+import { converter, parse } from 'culori';
+import { ORG_SCOPE_CHANGE_EVENT, readOrgScope } from './org-scope';
 
 import { getThemePreset, themePresets, type ThemePresetId } from '@/server/theme/theme-presets';
 import { themeTokenKeys } from '@/server/theme/tokens';
@@ -25,28 +27,48 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const THEME_STORAGE_KEY_PREFIX = 'orgcentral-theme:';
 const THEME_CHANGE_EVENT = 'orgcentral-theme-change';
-const ORG_SCOPE_CHANGE_EVENT = 'orgcentral-org-scope-change';
 
-function readOrgScope(): string {
-    try {
-        return document.documentElement.dataset.orgId ?? 'default';
-    } catch {
-        return 'default';
-    }
+interface OklchColor {
+    l?: number;
+    c?: number;
+    h?: number;
 }
+
+const toOklch = converter('oklch');
 
 function getThemeStorageKey(): string {
     return `${THEME_STORAGE_KEY_PREFIX}${readOrgScope()}`;
 }
 
-function toCssHsl(hsl: string): string {
-    return `hsl(${hsl})`;
+function formatOklchToken(color: OklchColor): string | null {
+    if (typeof color.l !== 'number' || typeof color.c !== 'number') {
+        return null;
+    }
+
+    const l = color.l.toFixed(4);
+    const c = color.c.toFixed(4);
+    const h = Number.isFinite(color.h) ? Number(color.h).toFixed(2) : '0';
+
+    return `${l} ${c} ${h}`;
+}
+
+function toOklchToken(value: string): string {
+    const parsedOklch = parse(`oklch(${value})`);
+    const oklchFromOklch = parsedOklch ? toOklch(parsedOklch) : null;
+    const oklchToken = oklchFromOklch ?? toOklch(`hsl(${value})`);
+
+    const formatted = oklchToken ? formatOklchToken(oklchToken) : null;
+    return formatted ?? value;
+}
+
+function toCssOklch(value: string): string {
+    return `oklch(${toOklchToken(value)})`;
 }
 
 export const THEME_PRESETS = Object.values(themePresets).map((preset) => ({
     id: preset.id as ThemeId,
     name: preset.name,
-    color: toCssHsl(preset.tokens.primary),
+    color: toCssOklch(preset.tokens.primary),
 })) as readonly { id: ThemeId; name: string; color: string }[];
 
 function isThemeId(value: string | null): value is ThemeId {
@@ -112,7 +134,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
         Object.entries(tokens).forEach(([key, value]) => {
             if (typeof value === 'string' && value.length > 0) {
-                root.style.setProperty(`--${key}`, value);
+                root.style.setProperty(`--${key}`, toOklchToken(value));
             }
         });
 

@@ -1,4 +1,4 @@
-import type { HslValue } from './tokens';
+import type { ColorTokenValue } from './tokens';
 import {
     accents,
     HSL_CHART_CYAN,
@@ -12,14 +12,14 @@ import {
 } from './theme-presets.shared';
 import type { ThemePreset } from './theme-presets.shared';
 
-const cyberpunkPrimary: HslValue = '262 83% 58%';
-const sunsetPrimary: HslValue = '25 95% 53%';
-const sunsetAccent: HslValue = '350 80% 55%';
-const forestPrimary: HslValue = '160 84% 39%';
-const neonPrimary: HslValue = '280 100% 60%';
-const neonAccent: HslValue = '180 100% 50%';
-const royalPrimary: HslValue = '270 70% 45%';
-const royalAccent: HslValue = '45 90% 50%';
+const cyberpunkPrimary: ColorTokenValue = '262 83% 58%';
+const sunsetPrimary: ColorTokenValue = '25 95% 53%';
+const sunsetAccent: ColorTokenValue = '350 80% 55%';
+const forestPrimary: ColorTokenValue = '160 84% 39%';
+const neonPrimary: ColorTokenValue = '280 100% 60%';
+const neonAccent: ColorTokenValue = '180 100% 50%';
+const royalPrimary: ColorTokenValue = '270 70% 45%';
+const royalAccent: ColorTokenValue = '45 90% 50%';
 
 export const themePresetsGroupA = {
     'cyberpunk-purple': makePreset({

@@ -10,11 +10,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-lg shadow-[hsl(var(--primary)/0.25)] hover:bg-primary/90 hover:shadow-xl hover:shadow-[hsl(var(--primary)/0.35)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-md",
+          "bg-primary text-primary-foreground shadow-lg shadow-[oklch(var(--primary)/0.25)] hover:bg-primary/90 hover:shadow-xl hover:shadow-[oklch(var(--primary)/0.35)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-md",
         destructive:
           "bg-destructive text-white shadow-lg shadow-destructive/25 hover:bg-destructive/90 hover:shadow-xl hover:shadow-destructive/35 dark:bg-destructive/60",
         outline:
-          "bg-background shadow-[0_0_0_1px_hsl(var(--primary)/0.2)] hover:bg-accent hover:text-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.4)] hover:-translate-y-0.5 active:translate-y-0 dark:bg-input/30 dark:shadow-[0_0_0_1px_hsl(var(--input))] dark:hover:bg-input/50",
+          "bg-background shadow-[0_0_0_1px_oklch(var(--primary)/0.2)] hover:bg-accent hover:text-accent-foreground hover:shadow-[0_0_0_1px_oklch(var(--primary)/0.4)] hover:-translate-y-0.5 active:translate-y-0 dark:bg-input/30 dark:shadow-[0_0_0_1px_oklch(var(--input))] dark:hover:bg-input/50",
         secondary:
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
         ghost:

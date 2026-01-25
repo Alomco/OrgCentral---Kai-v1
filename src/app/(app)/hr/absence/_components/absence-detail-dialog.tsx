@@ -1,6 +1,7 @@
 'use client';
 
-import { Calendar, Clock, FileText, Info } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Calendar, CheckCircle2, Clock, FileText, Info } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,13 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import type { AbsenceMetadata } from '@/server/domain/absences/metadata';
+import { coerceAbsenceMetadata } from '@/server/domain/absences/metadata';
+import type { AbsenceAttachment, ReturnToWorkRecord, UnplannedAbsence } from '@/server/types/hr-ops-types';
 import { formatHumanDate } from '../../_components/format-date';
+import { AbsenceAttachmentsPanel } from './absence-attachments-panel';
+import { AbsenceAiValidationPanel } from './absence-ai-validation-panel';
+import type { AbsenceTypeLabelMap } from './absence-row';
 
 export interface AbsenceDetailData {
     id: string;
@@ -22,22 +29,20 @@ export interface AbsenceDetailData {
     endDate: Date;
     hours: number;
     reason: string | null;
-    status: string;
+    status: UnplannedAbsence['status'];
     createdAt: Date;
+    attachments: AbsenceAttachment[];
+    returnToWork: ReturnToWorkRecord | null;
+    metadata: AbsenceMetadata;
 }
 
 export interface AbsenceDetailDialogProps {
     absence: AbsenceDetailData | null;
+    typeLabels: AbsenceTypeLabelMap;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onAbsenceUpdated?: (absence: AbsenceDetailData) => void;
 }
-
-const TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
-    SICK_LEAVE: { label: 'Sick Leave', emoji: '🤒' },
-    EMERGENCY: { label: 'Emergency', emoji: '🚨' },
-    PERSONAL: { label: 'Personal', emoji: '👤' },
-    OTHER: { label: 'Other', emoji: '📋' },
-};
 
 const STATUS_STYLES: Record<string, string> = {
     REPORTED: 'bg-secondary/70 text-secondary-foreground',
@@ -73,23 +78,50 @@ function DetailRow({
 
 export function AbsenceDetailDialog({
     absence,
+    typeLabels,
     open,
     onOpenChange,
+    onAbsenceUpdated,
 }: AbsenceDetailDialogProps) {
-    if (!absence) { return null; }
+    const [localAbsence, setLocalAbsence] = useState(absence);
 
-    const typeInfo = TYPE_LABELS[absence.typeId] ?? {
-        label: absence.typeId,
+    useEffect(() => {
+        setLocalAbsence(absence);
+    }, [absence]);
+
+    if (!localAbsence) { return null; }
+
+    const typeInfo = typeLabels[localAbsence.typeId] ?? {
+        label: localAbsence.typeId,
         emoji: '📋',
     };
-    const statusStyle = STATUS_STYLES[absence.status] ?? STATUS_STYLES.REPORTED;
+    const typeEmoji = typeInfo.emoji ?? '📋';
+    const statusStyle = STATUS_STYLES[localAbsence.status] ?? STATUS_STYLES.REPORTED;
+
+    const handleAbsenceUpdated = (updated: UnplannedAbsence) => {
+        const mapped: AbsenceDetailData = {
+            id: updated.id,
+            typeId: updated.typeId,
+            startDate: updated.startDate,
+            endDate: updated.endDate,
+            hours: Number(updated.hours),
+            reason: updated.reason ?? null,
+            status: updated.status,
+            createdAt: updated.createdAt,
+            attachments: updated.attachments ?? [],
+            returnToWork: updated.returnToWork ?? null,
+            metadata: coerceAbsenceMetadata(updated.metadata),
+        };
+        setLocalAbsence(mapped);
+        onAbsenceUpdated?.(mapped);
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <span className="text-lg">{typeInfo.emoji}</span>
+                        <span className="text-lg">{typeEmoji}</span>
                         {typeInfo.label}
                     </DialogTitle>
                     <DialogDescription>
@@ -100,10 +132,10 @@ export function AbsenceDetailDialog({
                 <div className="space-y-4 pt-2">
                     <div className="flex items-center justify-between">
                         <Badge className={cn('font-medium', statusStyle)}>
-                            {absence.status.replace(/_/g, ' ')}
+                            {localAbsence.status.replace(/_/g, ' ')}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                            Reported {formatDate(absence.createdAt)}
+                            Reported {formatDate(localAbsence.createdAt)}
                         </span>
                     </div>
 
@@ -111,25 +143,55 @@ export function AbsenceDetailDialog({
 
                     <div className="grid gap-4">
                         <DetailRow icon={Calendar} label="Period">
-                            {formatDate(absence.startDate)} — {formatDate(absence.endDate)}
+                            {formatDate(localAbsence.startDate)} — {formatDate(localAbsence.endDate)}
                         </DetailRow>
 
                         <DetailRow icon={Clock} label="Duration">
-                            {absence.hours.toFixed(1)} hours
+                            {localAbsence.hours.toFixed(1)} hours
                         </DetailRow>
 
-                        {absence.reason ? (
+                        {localAbsence.reason ? (
                             <DetailRow icon={FileText} label="Reason">
-                                {absence.reason}
+                                {localAbsence.reason}
+                            </DetailRow>
+                        ) : null}
+
+                        {localAbsence.returnToWork ? (
+                            <DetailRow icon={CheckCircle2} label="Return to work">
+                                <div className="space-y-1">
+                                    <div>{formatDate(localAbsence.returnToWork.returnDate)}</div>
+                                    {localAbsence.returnToWork.comments ? (
+                                        <div className="text-xs text-muted-foreground">
+                                            {localAbsence.returnToWork.comments}
+                                        </div>
+                                    ) : null}
+                                </div>
                             </DetailRow>
                         ) : null}
 
                         <DetailRow icon={Info} label="Reference ID">
                             <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-                                {absence.id.slice(0, 8)}
+                                {localAbsence.id.slice(0, 8)}
                             </code>
                         </DetailRow>
                     </div>
+
+                    <Separator />
+
+                    <AbsenceAttachmentsPanel
+                        absenceId={localAbsence.id}
+                        attachments={localAbsence.attachments}
+                        onAbsenceUpdated={handleAbsenceUpdated}
+                    />
+
+                    <Separator />
+
+                    <AbsenceAiValidationPanel
+                        absenceId={localAbsence.id}
+                        metadata={localAbsence.metadata}
+                        attachments={localAbsence.attachments}
+                        onAbsenceUpdated={handleAbsenceUpdated}
+                    />
                 </div>
 
                 <div className="flex justify-end pt-4">

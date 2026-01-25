@@ -48,7 +48,7 @@ export function MeshGradientPattern({ className }: { className?: string }) {
             <motion.div
                 className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] opacity-40 blur-3xl"
                 style={{
-                    background: 'radial-gradient(circle at 50% 50%, hsl(var(--primary)) 0%, transparent 50%)',
+                    background: 'radial-gradient(circle at 50% 50%, oklch(var(--primary)) 0%, transparent 50%)',
                 }}
                 animate={{
                     transform: [
@@ -63,7 +63,7 @@ export function MeshGradientPattern({ className }: { className?: string }) {
             <motion.div
                 className="absolute top-0 right-0 w-[150%] h-[150%] opacity-30 blur-3xl"
                 style={{
-                    background: 'radial-gradient(circle at 50% 50%, hsl(var(--accent)) 0%, transparent 60%)',
+                    background: 'radial-gradient(circle at 50% 50%, oklch(var(--accent)) 0%, transparent 60%)',
                 }}
                 animate={{
                     transform: [

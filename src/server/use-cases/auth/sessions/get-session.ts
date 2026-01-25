@@ -8,6 +8,7 @@ import { auth, type AuthSession } from '@/server/lib/auth';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import { normalizeHeaders, buildMetadata as buildJsonMetadata } from '@/server/use-cases/shared';
 import { loadOrgSettings } from '@/server/services/org/settings/org-settings-store';
+import { getSecurityEventService } from '@/server/services/auth/security-event-service';
 import { enforceOrgSessionSecurity } from './session-security';
 
 export type SessionRepositoryContract = Pick<
@@ -52,7 +53,20 @@ export async function getSessionContext(
 
     const authorization = await requireSessionAuthorization(session, extractAccessRequest(input));
     const orgSettings = await loadOrgSettings(authorization.orgId);
-    enforceOrgSessionSecurity(session, orgSettings, input.ipAddress);
+    try {
+        enforceOrgSessionSecurity(session, orgSettings, input.ipAddress);
+    } catch (error) {
+        await revokeExpiredSession(
+            deps.userSessionRepository,
+            authorization.orgId,
+            session,
+            headers,
+            error,
+            input.ipAddress,
+            input.userAgent,
+        );
+        throw error;
+    }
     await syncUserSessionRecord(deps.userSessionRepository, authorization.orgId, session, {
         ipAddress: input.ipAddress,
         userAgent: input.userAgent,
@@ -156,4 +170,62 @@ function coalesceUpdateValue<TValue extends string | null | undefined>(
 ): string | undefined {
     const candidate = preferred ?? fallback;
     return typeof candidate === 'string' ? candidate : undefined;
+}
+
+async function revokeExpiredSession(
+    repository: SessionRepositoryContract | undefined,
+    orgId: string,
+    session: NonNullable<AuthSession>,
+    headers: Headers,
+    error: unknown,
+    ipAddress?: string,
+    userAgent?: string,
+): Promise<void> {
+    if (!(error instanceof AuthorizationError) || error.details?.reason !== 'session_expired') {
+        return;
+    }
+
+    const token = session.session.token;
+    if (!token) {
+        return;
+    }
+
+    const details = error.details ?? {};
+    const policy = typeof details.policy === 'string' ? details.policy : 'unknown';
+    await logSessionExpiryEvent(orgId, session.session.userId, policy, ipAddress, userAgent);
+
+    try {
+        await auth.api.revokeSession({
+            headers,
+            body: { token },
+        });
+        await repository?.invalidateUserSession(orgId, token);
+    } catch {
+        // Best-effort cleanup; authorization error will still be thrown.
+    }
+}
+
+async function logSessionExpiryEvent(
+    orgId: string,
+    userId: string,
+    policy: string,
+    ipAddress?: string,
+    userAgent?: string,
+): Promise<void> {
+    try {
+        await getSecurityEventService().logEvent({
+            orgId,
+            userId,
+            eventType: 'auth.session.expired',
+            severity: 'low',
+            description: policy === 'idle_timeout'
+                ? 'Session expired due to inactivity.'
+                : 'Session expired.',
+            ipAddress: ipAddress ?? null,
+            userAgent: userAgent ?? null,
+            metadata: { policy },
+        });
+    } catch {
+        // Best-effort logging only.
+    }
 }

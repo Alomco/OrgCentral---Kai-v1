@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { registerCacheTag } from "@/server/lib/cache-tags";
 import { auth } from '@/server/lib/auth';
 import { sanitizeNextPath } from '@/server/ui/auth/role-redirect';
@@ -37,9 +38,10 @@ function getLoginPageCopy(): Promise<LoginPageCopy> {
 
 interface LoginPageContentProps {
     initialOrgSlug?: string;
+    reason?: "session_expired";
 }
 
-async function LoginPageContent({ initialOrgSlug }: LoginPageContentProps) {
+async function LoginPageContent({ initialOrgSlug, reason }: LoginPageContentProps) {
     "use cache";
     cacheLife("seconds");
     registerCacheTag({
@@ -57,7 +59,17 @@ async function LoginPageContent({ initialOrgSlug }: LoginPageContentProps) {
             subtitle={copy.subtitle}
             footer={<AuthFooter />}
         >
-            <LoginForm initialOrgSlug={initialOrgSlug} />
+            <div className="space-y-4">
+                {reason === "session_expired" ? (
+                    <Alert>
+                        <AlertTitle>Session expired</AlertTitle>
+                        <AlertDescription>
+                            Your session expired due to inactivity. Please sign in again to continue.
+                        </AlertDescription>
+                    </Alert>
+                ) : null}
+                <LoginForm initialOrgSlug={initialOrgSlug} />
+            </div>
         </AuthLayout>
     );
 }
@@ -79,12 +91,13 @@ async function LoginGate({ searchParams }: LoginPageProps) {
     });
 
     const initialOrgSlug = extractOrgSlug(resolvedSearchParams);
+    const reason = extractReason(resolvedSearchParams);
 
     if (session?.session) {
         redirect(buildPostLoginRedirect(resolvedSearchParams, initialOrgSlug));
     }
 
-    return <LoginPageContent initialOrgSlug={initialOrgSlug} />;
+    return <LoginPageContent initialOrgSlug={initialOrgSlug} reason={reason} />;
 }
 
 function buildPostLoginRedirect(
@@ -122,6 +135,12 @@ function extractOrgSlug(searchParams: LoginSearchParams): string | undefined {
 
     const trimmed = orgSlug.trim();
     return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function extractReason(searchParams: LoginSearchParams): "session_expired" | undefined {
+    const value = searchParams.reason;
+    const reason = Array.isArray(value) ? value[0] : value;
+    return reason === "session_expired" ? "session_expired" : undefined;
 }
 
 function AuthFooter() {

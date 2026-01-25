@@ -36,24 +36,24 @@ export function OrgMembersFilters({
     return (
         <form
             method="get"
-            className="flex flex-col gap-3 border-b border-[hsl(var(--border)/0.6)] pb-4 md:flex-row md:items-end md:flex-wrap"
+            className="flex flex-col gap-3 border-b border-[oklch(var(--border)/0.6)] pb-4 md:flex-row md:items-end md:flex-wrap"
         >
-            <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+            <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-[oklch(var(--muted-foreground))]">
                 Search
                 <input
                     type="search"
                     name="q"
                     defaultValue={query.search}
                     placeholder="Search by name or email"
-                    className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                    className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                 />
             </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+            <label className="flex flex-col gap-1 text-xs font-medium text-[oklch(var(--muted-foreground))]">
                 Status
                 <select
                     name="status"
                     defaultValue={query.status ?? ''}
-                    className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                    className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                 >
                     <option value="">All statuses</option>
                     {ORG_MEMBER_STATUS_VALUES.map((status) => (
@@ -63,12 +63,12 @@ export function OrgMembersFilters({
                     ))}
                 </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+            <label className="flex flex-col gap-1 text-xs font-medium text-[oklch(var(--muted-foreground))]">
                 Role
                 <select
                     name="role"
                     defaultValue={query.role ?? ''}
-                    className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                    className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                 >
                     <option value="">All roles</option>
                     {roleNames.map((role) => (
@@ -78,12 +78,12 @@ export function OrgMembersFilters({
                     ))}
                 </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+            <label className="flex flex-col gap-1 text-xs font-medium text-[oklch(var(--muted-foreground))]">
                 Sort by
                 <select
                     name="sort"
                     defaultValue={query.sort}
-                    className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                    className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                 >
                     {ORG_MEMBER_SORT_KEYS.map((key) => (
                         <option key={key} value={key}>
@@ -92,12 +92,12 @@ export function OrgMembersFilters({
                     ))}
                 </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+            <label className="flex flex-col gap-1 text-xs font-medium text-[oklch(var(--muted-foreground))]">
                 Direction
                 <select
                     name="dir"
                     defaultValue={query.direction}
-                    className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                    className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                 >
                     {ORG_MEMBER_SORT_DIRECTIONS.map((direction) => (
                         <option key={direction} value={direction}>
@@ -106,12 +106,12 @@ export function OrgMembersFilters({
                     ))}
                 </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+            <label className="flex flex-col gap-1 text-xs font-medium text-[oklch(var(--muted-foreground))]">
                 Page size
                 <select
                     name="pageSize"
                     defaultValue={String(query.pageSize)}
-                    className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                    className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                 >
                     {ORG_MEMBERS_PAGE_SIZE_OPTIONS.map((size) => (
                         <option key={size} value={size}>
@@ -123,7 +123,7 @@ export function OrgMembersFilters({
             <input type="hidden" name="page" value="1" />
             <button
                 type="submit"
-                className="h-9 w-fit rounded-md bg-[hsl(var(--primary))] px-4 text-sm font-medium text-[hsl(var(--primary-foreground))]"
+                className="h-9 w-fit rounded-md bg-[oklch(var(--primary))] px-4 text-sm font-medium text-[oklch(var(--primary-foreground))]"
             >
                 Apply
             </button>

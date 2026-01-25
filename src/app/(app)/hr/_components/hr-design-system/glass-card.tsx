@@ -25,7 +25,7 @@ export function HrGlassCard({
     const glowStyles = glow
         ? cn(
             'after:absolute after:inset-2 after:-z-10',
-            'after:bg-gradient-to-r after:from-[hsl(var(--primary)/0.18)] after:to-[hsl(var(--accent)/0.18)]',
+            'after:bg-gradient-to-r after:from-[oklch(var(--primary)/0.18)] after:to-[oklch(var(--accent)/0.18)]',
             'after:blur-lg after:opacity-0 hover:after:opacity-100',
             'after:transition-opacity after:duration-500',
         )

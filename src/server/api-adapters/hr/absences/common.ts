@@ -16,6 +16,8 @@ type AbsenceServiceContract = Pick<
     | 'cancelAbsence'
     | 'updateSettings'
     | 'analyzeAttachment'
+    | 'presignAbsenceAttachment'
+    | 'presignAbsenceAttachmentDownload'
 >;
 
 export interface ResolvedAbsenceControllerDependencies {

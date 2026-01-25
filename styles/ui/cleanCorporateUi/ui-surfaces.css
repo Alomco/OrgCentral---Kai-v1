@@ -1,5 +1,4 @@
 /* Surface hierarchy tokens shared by DOM-level UI styles. */
-
 :root {
     --ui-surface-container-opacity: clamp(0.82, calc(var(--ui-card-opacity) - 0.08), 0.96);
     --ui-surface-item-opacity: clamp(0.88, calc(var(--ui-card-opacity) - 0.02), 0.98);
@@ -68,13 +67,13 @@
 [data-ui-surface="interactive"]:hover,
 [data-ui-surface][data-ui-interactive="true"]:hover {
     box-shadow: var(--ui-surface-interactive-shadow-hover);
-    transform: translateY(-2px);
+    transform: translateY(var(--ui-hover-lift));
 }
 
 [data-ui-surface="interactive"]:active,
 [data-ui-surface][data-ui-interactive="true"]:active {
     box-shadow: var(--ui-surface-interactive-shadow);
-    transform: translateY(0);
+    transform: translateY(0px);
 }
 
 @media (prefers-reduced-motion: reduce) {

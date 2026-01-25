@@ -38,11 +38,11 @@ export default async function OrgPermissionsPage() {
     return (
         <div className="space-y-6 p-6">
             <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">Access</p>
-                <h1 className="text-2xl font-semibold text-[hsl(var(--foreground))]">
+                <p className="text-xs uppercase tracking-[0.18em] text-[oklch(var(--muted-foreground))]">Access</p>
+                <h1 className="text-2xl font-semibold text-[oklch(var(--foreground))]">
                     Permissions registry
                 </h1>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                <p className="text-sm text-[oklch(var(--muted-foreground))]">
                     Govern access by defining resources, actions, and ABAC policies for this organization.
                 </p>
             </div>
@@ -161,7 +161,7 @@ async function AbacSummaryPanel({ policiesPromise }: { policiesPromise: Promise<
                                     >
                                         {policy.effect.toUpperCase()}
                                     </span>
-                                    <span className="text-xs font-semibold text-[hsl(var(--foreground))] break-all">
+                                    <span className="text-xs font-semibold text-[oklch(var(--foreground))] break-all">
                                         {policy.id}
                                     </span>
                                 </div>
@@ -181,5 +181,5 @@ async function AbacSummaryPanel({ policiesPromise }: { policiesPromise: Promise<
 }
 
 function PanelSkeleton() {
-    return <div className="h-44 w-full animate-pulse rounded-2xl bg-[hsl(var(--muted))]" />;
+    return <div className="h-44 w-full animate-pulse rounded-2xl bg-[oklch(var(--muted))]" />;
 }

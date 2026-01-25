@@ -1,0 +1,150 @@
+/* UI style presets for theme switching. */
+[data-ui-style="glass-neon"] {
+    --ui-backdrop-blur: 16px;
+    --ui-card-shadow: var(--shadow-glow);
+    --ui-border-radius: var(--radius-lg);
+    --ui-glow-intensity: 0.35;
+    --ui-transition-duration: 200ms;
+    --ui-transition-easing: ease-out;
+    --ui-border-opacity: 0.2;
+    --ui-card-opacity: 0.95;
+    --ui-hover-scale: 1.02;
+    --ui-hover-lift: -2px;
+    --ui-active-scale: 0.98;
+    --ui-focus-ring-width: 3px;
+    --ui-focus-ring-offset: 2px;
+    --ui-border-width: 2px;
+    --ui-surface-tint: var(--primary);
+    --ui-surface-fill: oklch(var(--card) / 0.6);
+    --ui-surface-container-bg: linear-gradient(135deg in oklab,
+        oklch(var(--card) / 0.52),
+        oklch(var(--primary) / 0.22) 55%,
+        oklch(var(--accent) / 0.16));
+    --ui-surface-depth-color: var(--primary);
+    --ui-surface-depth-md: 0 16px 32px -22px oklch(var(--primary) / 0.32);
+    --ui-surface-depth-lg: 0 20px 42px -28px oklch(var(--primary) / 0.4);
+    --ui-input-shadow: inset 0 0 0 1px oklch(var(--primary) / 0.25), 0 10px 20px -14px oklch(var(--primary) / 0.35);
+    --ui-control-shadow: 0 0 0 1px oklch(var(--primary) / 0.35);
+    --ui-focus-shadow: 0 0 0 1px oklch(var(--primary) / 0.55), 0 0 0 8px oklch(var(--primary) / 0.25);
+    --ui-border-glow-opacity: 0.18;
+    --ui-border-glow-opacity-hover: 0.35;
+    --ui-border-glow-blur: 4px;
+    --ui-border-gradient: linear-gradient(135deg in oklab,
+        oklch(var(--primary) / 0.6),
+        oklch(var(--accent) / 0.5) 55%,
+        oklch(var(--primary) / 0.55));
+    --ui-border-animation: none;
+}
+
+[data-ui-style="clean-corporate"] {
+    --ui-backdrop-blur: 0px;
+    --ui-card-shadow: var(--shadow-sm);
+    --ui-border-radius: var(--radius-sm);
+    --ui-glow-intensity: 0;
+    --ui-transition-duration: 150ms;
+    --ui-transition-easing: ease-out;
+    --ui-border-opacity: 0.3;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1;
+    --ui-hover-lift: 0px;
+    --ui-active-scale: 0.99;
+    --ui-focus-ring-width: 2px;
+    --ui-focus-ring-offset: 1px;
+    --ui-border-width: 1px;
+    --ui-surface-tint: var(--border);
+    --ui-surface-fill: oklch(var(--card));
+    --ui-surface-depth-color: var(--foreground);
+    --ui-surface-outline-weak: inset 0 0 0 1px oklch(var(--border) / 0.3), inset 0 1px 0 oklch(var(--background) / 0.5);
+    --ui-surface-outline: inset 0 0 0 1px oklch(var(--border) / 0.4), inset 0 1px 0 oklch(var(--background) / 0.6);
+    --ui-input-shadow: inset 0 0 0 1px oklch(var(--border) / 0.5);
+    --ui-control-shadow: inset 0 0 0 1px oklch(var(--border) / 0.5);
+    --ui-focus-shadow: 0 0 0 1px oklch(var(--primary) / 0.45), 0 0 0 4px oklch(var(--primary) / 0.15);
+    --ui-border-gradient: none;
+    --ui-border-glow-opacity-hover: 0;
+}
+
+[data-ui-style="soft-neutral"] {
+    --ui-backdrop-blur: 8px;
+    --ui-card-shadow: var(--shadow-md);
+    --ui-border-radius: var(--radius-2xl);
+    --ui-glow-intensity: 0.15;
+    --ui-transition-duration: 250ms;
+    --ui-transition-easing: ease-in-out;
+    --ui-border-opacity: 0.1;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1.01;
+    --ui-hover-lift: -1px;
+    --ui-active-scale: 0.99;
+    --ui-focus-ring-width: 3px;
+    --ui-focus-ring-offset: 2px;
+    --ui-border-width: 0px;
+    --ui-surface-tint: var(--border);
+    --ui-surface-fill: oklch(var(--card) / 0.85);
+    --ui-surface-depth-color: var(--foreground);
+    --ui-input-shadow: inset 0 0 0 1px oklch(var(--border) / 0.25), 0 10px 18px -16px oklch(var(--foreground) / 0.2);
+    --ui-control-shadow: 0 0 0 1px oklch(var(--border) / 0.22);
+    --ui-focus-shadow: 0 0 0 1px oklch(var(--primary) / 0.4), 0 0 0 7px oklch(var(--accent) / 0.18);
+    --ui-border-gradient: none;
+    --ui-border-glow-opacity-hover: 0.08;
+}
+
+[data-ui-style="bold-amoled"] {
+    --ui-backdrop-blur: 0px;
+    --ui-card-shadow: var(--shadow-xl);
+    --ui-border-radius: var(--radius-md);
+    --ui-glow-intensity: 0.5;
+    --ui-transition-duration: 150ms;
+    --ui-transition-easing: ease-out;
+    --ui-border-opacity: 0.5;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1.03;
+    --ui-hover-lift: -4px;
+    --ui-active-scale: 0.97;
+    --ui-focus-ring-width: 4px;
+    --ui-focus-ring-offset: 2px;
+    --ui-border-width: 2px;
+    --ui-surface-tint: var(--primary);
+    --ui-surface-fill: oklch(var(--card) / 0.6);
+    --ui-surface-container-bg: radial-gradient(140% 120% at 20% 0% in oklab,
+        oklch(var(--card) / 0.7),
+        oklch(var(--background) / 0.95) 70%);
+    --ui-surface-depth-color: var(--background);
+    --ui-input-shadow: inset 0 0 0 1px oklch(var(--primary) / 0.35), 0 12px 22px -16px oklch(var(--primary) / 0.4);
+    --ui-control-shadow: 0 0 0 1px oklch(var(--primary) / 0.45);
+    --ui-focus-shadow: 0 0 0 1px oklch(var(--primary) / 0.65), 0 0 0 9px oklch(var(--primary) / 0.3);
+    --ui-border-glow-opacity: 0.28;
+    --ui-border-glow-opacity-hover: 0.5;
+    --ui-border-glow-blur: 3px;
+    --ui-border-gradient: none;
+}
+
+[data-ui-style="material-motion"] {
+    --ui-backdrop-blur: 4px;
+    --ui-card-shadow: var(--shadow-lg);
+    --ui-border-radius: var(--radius-xl);
+    --ui-glow-intensity: 0;
+    --ui-transition-duration: 300ms;
+    --ui-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+    --ui-border-opacity: 0.2;
+    --ui-card-opacity: 1;
+    --ui-hover-scale: 1.01;
+    --ui-hover-lift: -2px;
+    --ui-active-scale: 0.98;
+    --ui-focus-ring-width: 2px;
+    --ui-focus-ring-offset: 2px;
+    --ui-border-width: 1px;
+    --ui-surface-tint: var(--border);
+    --ui-surface-fill: oklch(var(--card));
+    --ui-surface-depth-color: var(--foreground);
+    --ui-surface-outline-weak: inset 0 0 0 1px oklch(var(--border) / 0.14);
+    --ui-surface-outline: inset 0 0 0 1px oklch(var(--border) / 0.2);
+    --ui-input-shadow: inset 0 0 0 1px oklch(var(--border) / 0.25), 0 8px 16px -14px oklch(var(--foreground) / 0.2);
+    --ui-control-shadow: inset 0 0 0 1px oklch(var(--border) / 0.2);
+    --ui-focus-shadow: 0 0 0 1px oklch(var(--primary) / 0.4), 0 0 0 6px oklch(var(--primary) / 0.2);
+    --ui-border-gradient: none;
+    --ui-border-glow-opacity-hover: 0;
+}
+
+[data-ui-style] {
+    --ui-transition: var(--ui-transition-duration) var(--ui-transition-easing);
+}

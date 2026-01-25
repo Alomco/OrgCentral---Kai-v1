@@ -8,6 +8,9 @@ export { AbsenceRow, type AbsenceRowData, type AbsenceRowProps } from './absence
 export { AbsenceRows, type AbsenceRowsProps } from './absence-rows';
 export { CancelAbsenceDialog, type CancelAbsenceDialogProps } from './cancel-absence-dialog';
 export { ReportAbsenceForm, type ReportAbsenceFormProps } from './report-absence-form';
+export { AbsenceAttachmentsPanel, type AbsenceAttachmentsPanelProps } from './absence-attachments-panel';
+export { AbsenceAiValidationPanel, type AbsenceAiValidationPanelProps } from './absence-ai-validation-panel';
+export { ReturnToWorkDialog, type ReturnToWorkDialogProps } from './return-to-work-dialog';
 
 // New calendar and manager components
 export { AbsenceCalendar } from './absence-calendar';

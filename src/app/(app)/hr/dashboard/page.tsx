@@ -59,7 +59,7 @@ async function DashboardContent() {
     const employeeId = profile?.id ?? null;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 hr-dashboard-surface">
             <h1 className="sr-only">HR Dashboard</h1>
             <Breadcrumb>
                 <BreadcrumbList>

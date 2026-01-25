@@ -46,35 +46,37 @@ export function enforceInviteRolePolicy(
     roles: string[],
 ): void {
     const primaryRole = roles[0] ?? 'member';
-    const roleKey = authorization.roleKey;
+    const allowedRoles = resolveAllowedInviteRoles(authorization, [primaryRole]);
+    if (!allowedRoles.includes(primaryRole)) {
+        throw new AuthorizationError('You are not permitted to invite users with this role.');
+    }
+}
 
+export function resolveAllowedInviteRoles(
+    authorization: RepositoryAuthorizationContext,
+    roleNames: string[],
+): string[] {
+    const uniqueRoles = new Set(roleNames.map((role) => role.trim()).filter((role) => role.length > 0));
+    uniqueRoles.add('member');
+
+    const roleKey = authorization.roleKey;
     if (roleKey === 'globalAdmin') {
-        if (!['globalAdmin', 'orgAdmin'].includes(primaryRole)) {
-            throw new AuthorizationError('Global admins may only invite global admins or organization admins.');
-        }
-        return;
+        return Array.from(uniqueRoles);
     }
 
     if (roleKey === 'owner') {
-        if (primaryRole !== 'orgAdmin') {
-            throw new AuthorizationError('Organization owners may only invite organization admins.');
-        }
-        return;
+        return Array.from(uniqueRoles).filter((role) => role !== 'globalAdmin');
     }
 
     if (roleKey === 'orgAdmin') {
-        if (primaryRole !== 'hrAdmin') {
-            throw new AuthorizationError('Organization admins may only invite HR admins.');
-        }
-        return;
+        return Array.from(uniqueRoles).filter(
+            (role) => role !== 'globalAdmin' && role !== 'owner',
+        );
     }
 
     if (roleKey === 'hrAdmin') {
-        if (primaryRole !== 'member') {
-            throw new AuthorizationError('HR admins may only invite members.');
-        }
-        return;
+        return Array.from(uniqueRoles).filter((role) => role === 'member');
     }
 
-    throw new AuthorizationError('You are not permitted to invite users with this role.');
+    return ['member'];
 }

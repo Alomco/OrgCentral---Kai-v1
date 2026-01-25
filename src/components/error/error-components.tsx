@@ -27,8 +27,8 @@ export function ErrorPageLayout({ children, intent = 'danger', className, fullSc
         >
             <div className={cn(errorCardVariants({ intent }), 'max-w-md', className)}>
                 {/* Background orbs */}
-                <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-[hsl(var(--primary)/0.2)] blur-3xl motion-safe:animate-pulse motion-reduce:animate-none" />
-                <div className="pointer-events-none absolute -right-12 -bottom-12 h-40 w-40 rounded-full bg-[hsl(var(--accent)/0.2)] blur-3xl motion-safe:animate-pulse motion-reduce:animate-none" />
+                <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-[oklch(var(--primary)/0.2)] blur-3xl motion-safe:animate-pulse motion-reduce:animate-none" />
+                <div className="pointer-events-none absolute -right-12 -bottom-12 h-40 w-40 rounded-full bg-[oklch(var(--accent)/0.2)] blur-3xl motion-safe:animate-pulse motion-reduce:animate-none" />
                 {children}
             </div>
         </main>
@@ -47,7 +47,7 @@ interface ErrorIllustrationProps {
 export function ErrorIllustration({ src, alt }: ErrorIllustrationProps) {
     return (
         <div className="relative mb-4 flex justify-center">
-            <div className="absolute inset-0 rounded-full bg-[hsl(var(--primary)/0.15)] blur-2xl motion-reduce:blur-xl" />
+            <div className="absolute inset-0 rounded-full bg-[oklch(var(--primary)/0.15)] blur-2xl motion-reduce:blur-xl" />
             <Image
                 src={src}
                 alt={alt}
@@ -73,7 +73,7 @@ export function ErrorContent({ title, description, intent = 'danger' }: ErrorCon
     return (
         <div className="relative space-y-2">
             <h1 className={errorTitleVariants({ intent })}>{title}</h1>
-            <p className="text-[hsl(var(--muted-foreground))]">{description}</p>
+            <p className="text-[oklch(var(--muted-foreground))]">{description}</p>
         </div>
     );
 }
@@ -109,8 +109,8 @@ export function ErrorLinkButton({ href, variant = 'secondary', children }: Error
             className={cn(
                 'px-6',
                 isPrimary &&
-                'shadow-[0_15px_45px_-22px_hsl(var(--primary)/0.85)] hover:shadow-[0_18px_55px_-20px_hsl(var(--primary)/0.95)]',
-                !isPrimary && 'bg-[hsl(var(--card)/0.7)] hover:bg-[hsl(var(--card)/0.9)]',
+                'shadow-[0_15px_45px_-22px_oklch(var(--primary)/0.85)] hover:shadow-[0_18px_55px_-20px_oklch(var(--primary)/0.95)]',
+                !isPrimary && 'bg-[oklch(var(--card)/0.7)] hover:bg-[oklch(var(--card)/0.9)]',
                 'motion-safe:translate-y-0 motion-safe:hover:-translate-y-px',
             )}
         >

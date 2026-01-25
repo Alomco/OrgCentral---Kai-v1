@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Eye, X, MoreHorizontal } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Eye, X, MoreHorizontal, RotateCcw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -11,12 +11,16 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { TableCell, TableRow } from '@/components/ui/table';
+import type { AbsenceMetadata } from '@/server/domain/absences/metadata';
+import { coerceAbsenceMetadata } from '@/server/domain/absences/metadata';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import type { AbsenceAttachment, ReturnToWorkRecord, UnplannedAbsence } from '@/server/types/hr-ops-types';
 
 import { HrStatusBadge } from '../../_components/hr-status-badge';
 import { formatHumanDate } from '../../_components/format-date';
 import { AbsenceDetailDialog, type AbsenceDetailData } from './absence-detail-dialog';
 import { CancelAbsenceDialog } from './cancel-absence-dialog';
+import { ReturnToWorkDialog } from './return-to-work-dialog';
 
 export interface AbsenceRowData {
     id: string;
@@ -25,21 +29,20 @@ export interface AbsenceRowData {
     endDate: Date;
     hours: number;
     reason: string | null;
-    status: string;
+    status: UnplannedAbsence['status'];
     createdAt: Date;
+    attachments: AbsenceAttachment[];
+    returnToWork: ReturnToWorkRecord | null;
+    metadata: AbsenceMetadata;
 }
 
 export interface AbsenceRowProps {
     absence: AbsenceRowData;
     authorization: RepositoryAuthorizationContext;
+    typeLabels: AbsenceTypeLabelMap;
 }
 
-const TYPE_INFO: Record<string, { label: string; emoji: string }> = {
-    SICK_LEAVE: { label: 'Sick Leave', emoji: '🤒' },
-    EMERGENCY: { label: 'Emergency', emoji: '🚨' },
-    PERSONAL: { label: 'Personal', emoji: '👤' },
-    OTHER: { label: 'Other', emoji: '📋' },
-};
+export type AbsenceTypeLabelMap = Record<string, { label: string; emoji?: string }>;
 
 function formatDate(value: Date): string {
     if (Number.isNaN(value.getTime())) {
@@ -52,26 +55,53 @@ function formatHours(value: number): string {
     return value.toFixed(1);
 }
 
-export function AbsenceRow({ absence, authorization }: AbsenceRowProps) {
+export function AbsenceRow({ absence, authorization, typeLabels }: AbsenceRowProps) {
     const [detailOpen, setDetailOpen] = useState(false);
     const [cancelOpen, setCancelOpen] = useState(false);
+    const [returnOpen, setReturnOpen] = useState(false);
+    const [currentAbsence, setCurrentAbsence] = useState(absence);
 
-    const typeInfo = TYPE_INFO[absence.typeId] ?? { label: absence.typeId, emoji: '📋' };
-    const canCancel = absence.status === 'REPORTED' || absence.status === 'APPROVED';
+    useEffect(() => {
+        setCurrentAbsence(absence);
+    }, [absence]);
+
+    const typeInfo = (typeLabels[currentAbsence.typeId] ?? { label: currentAbsence.typeId, emoji: '📋' });
+    const typeEmoji = typeInfo.emoji ?? '📋';
+    const canCancel = currentAbsence.status === 'REPORTED' || currentAbsence.status === 'APPROVED';
+    const canReturnToWork = currentAbsence.status === 'REPORTED' || currentAbsence.status === 'APPROVED';
 
     const handleCancelSuccess = useCallback(() => {
         setCancelOpen(false);
     }, []);
 
+    const handleAbsenceUpdated = useCallback((updated: UnplannedAbsence) => {
+        setCurrentAbsence({
+            id: updated.id,
+            typeId: updated.typeId,
+            startDate: updated.startDate,
+            endDate: updated.endDate,
+            hours: Number(updated.hours),
+            reason: updated.reason ?? null,
+            status: updated.status,
+            createdAt: updated.createdAt,
+            attachments: updated.attachments ?? [],
+            returnToWork: updated.returnToWork ?? null,
+            metadata: coerceAbsenceMetadata(updated.metadata),
+        });
+    }, []);
+
     const detailData: AbsenceDetailData = {
-        id: absence.id,
-        typeId: absence.typeId,
-        startDate: absence.startDate,
-        endDate: absence.endDate,
-        hours: absence.hours,
-        reason: absence.reason,
-        status: absence.status,
-        createdAt: absence.createdAt,
+        id: currentAbsence.id,
+        typeId: currentAbsence.typeId,
+        startDate: currentAbsence.startDate,
+        endDate: currentAbsence.endDate,
+        hours: currentAbsence.hours,
+        reason: currentAbsence.reason,
+        status: currentAbsence.status,
+        createdAt: currentAbsence.createdAt,
+        attachments: currentAbsence.attachments,
+        returnToWork: currentAbsence.returnToWork,
+        metadata: currentAbsence.metadata,
     };
 
     return (
@@ -79,21 +109,21 @@ export function AbsenceRow({ absence, authorization }: AbsenceRowProps) {
             <TableRow className="group transition-colors hover:bg-muted/40 motion-reduce:transition-none">
                 <TableCell className="font-medium">
                     <span className="flex items-center gap-2">
-                        <span className="text-base">{typeInfo.emoji}</span>
+                        <span className="text-base">{typeEmoji}</span>
                         {typeInfo.label}
                     </span>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                    {formatDate(absence.startDate)} – {formatDate(absence.endDate)}
+                    {formatDate(currentAbsence.startDate)} – {formatDate(currentAbsence.endDate)}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                    {formatHours(absence.hours)}h
+                    {formatHours(currentAbsence.hours)}h
                 </TableCell>
                 <TableCell>
-                    <HrStatusBadge status={absence.status} />
+                    <HrStatusBadge status={currentAbsence.status} />
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                    {formatDate(absence.createdAt)}
+                    {formatDate(currentAbsence.createdAt)}
                 </TableCell>
                 <TableCell className="text-right">
                     <DropdownMenu>
@@ -112,6 +142,12 @@ export function AbsenceRow({ absence, authorization }: AbsenceRowProps) {
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                             </DropdownMenuItem>
+                            {canReturnToWork ? (
+                                <DropdownMenuItem onClick={() => setReturnOpen(true)}>
+                                    <RotateCcw className="mr-2 h-4 w-4" />
+                                    Record Return to Work
+                                </DropdownMenuItem>
+                            ) : null}
                             {canCancel ? (
                                 <DropdownMenuItem
                                     onClick={() => setCancelOpen(true)}
@@ -130,7 +166,19 @@ export function AbsenceRow({ absence, authorization }: AbsenceRowProps) {
                 absence={detailData}
                 open={detailOpen}
                 onOpenChange={setDetailOpen}
+                onAbsenceUpdated={(updated) => setCurrentAbsence(updated)}
+                typeLabels={typeLabels}
             />
+
+            {canReturnToWork ? (
+                <ReturnToWorkDialog
+                    absenceId={currentAbsence.id}
+                    startDate={currentAbsence.startDate}
+                    open={returnOpen}
+                    onOpenChange={setReturnOpen}
+                    onAbsenceUpdated={handleAbsenceUpdated}
+                />
+            ) : null}
 
             {canCancel ? (
                 <CancelAbsenceDialog

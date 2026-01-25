@@ -33,7 +33,7 @@ export function AdminSidebarNavLink({
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 'focus-visible:rounded-lg',
                 active &&
-                'bg-linear-to-r from-primary/10 to-accent/10 text-foreground shadow-[0_0_0_1px_hsl(var(--primary)/0.2)] before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-linear-to-b before:from-primary before:to-accent',
+                'bg-linear-to-r from-primary/10 to-accent/10 text-foreground shadow-[0_0_0_1px_oklch(var(--primary)/0.2)] before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-linear-to-b before:from-primary before:to-accent',
                 compact && 'py-1.5',
             )}
             prefetch={false}

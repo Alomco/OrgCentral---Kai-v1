@@ -9,6 +9,7 @@ import {
     Clock,
     BookOpen,
     ClipboardList,
+    BarChart3,
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,6 +45,12 @@ const ADMIN_QUICK_ACTIONS: QuickAction[] = [
         label: 'Leave Management',
         icon: Calendar,
         description: 'Review leave requests',
+    },
+    {
+        href: '/hr/reports',
+        label: 'Reports',
+        icon: BarChart3,
+        description: 'HR analytics & dashboards',
     },
     {
         href: '/hr/compliance',

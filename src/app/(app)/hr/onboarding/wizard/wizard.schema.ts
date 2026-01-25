@@ -20,15 +20,51 @@ function booleanFromFormValue(value: unknown): boolean | undefined {
     return undefined;
 }
 
+const MAX_ROLE = 60;
+
 /**
  * Step 1: Identity - Basic employee information
  */
 export const onboardingIdentityStepSchema = z.object({
+    role: z.string().trim().min(1, 'Select a role').max(MAX_ROLE, 'Role is too long'),
     email: z.email({ message: 'Enter a valid email address' }).min(3, 'Email is required'),
     displayName: z.string().trim().min(1, 'Display name is required').max(120, 'Display name is too long'),
-    firstName: z.string().trim().min(1, 'First name is required').max(120, 'First name is too long'),
-    lastName: z.string().trim().min(1, 'Last name is required').max(120, 'Last name is too long'),
-    employeeNumber: z.string().trim().min(1, 'Employee number is required').max(64, 'Employee number is too long'),
+    firstName: z.string().trim().max(120, 'First name is too long').optional(),
+    lastName: z.string().trim().max(120, 'Last name is too long').optional(),
+    employeeNumber: z.string().trim().max(64, 'Employee number is too long').optional(),
+    useOnboarding: z.boolean(),
+}).superRefine((values, context) => {
+    if (!values.useOnboarding) {
+        return;
+    }
+    if (!values.firstName || values.firstName.trim().length === 0) {
+        context.addIssue({
+            code: 'custom',
+            message: 'First name is required',
+            path: ['firstName'],
+        });
+    }
+    if (!values.lastName || values.lastName.trim().length === 0) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Last name is required',
+            path: ['lastName'],
+        });
+    }
+    if (!values.employeeNumber || values.employeeNumber.trim().length === 0) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Employee number is required',
+            path: ['employeeNumber'],
+        });
+    }
+    if (values.role !== 'member') {
+        context.addIssue({
+            code: 'custom',
+            message: 'Onboarding details can only be used for employee invites.',
+            path: ['role'],
+        });
+    }
 });
 
 export type OnboardingIdentityStepValues = z.infer<typeof onboardingIdentityStepSchema>;
@@ -84,12 +120,14 @@ export type OnboardingAssignmentsStepValues = z.infer<typeof onboardingAssignmen
  * Combined wizard schema for all steps
  */
 export const onboardingWizardSchema = z.object({
-    // Step 1: Identity
+    // Step 1: Access & Identity
+    role: onboardingIdentityStepSchema.shape.role,
     email: onboardingIdentityStepSchema.shape.email,
     displayName: onboardingIdentityStepSchema.shape.displayName,
     firstName: onboardingIdentityStepSchema.shape.firstName,
     lastName: onboardingIdentityStepSchema.shape.lastName,
     employeeNumber: onboardingIdentityStepSchema.shape.employeeNumber,
+    useOnboarding: onboardingIdentityStepSchema.shape.useOnboarding,
     // Step 2: Job & Compensation
     jobTitle: onboardingJobStepSchema.shape.jobTitle,
     departmentId: onboardingJobStepSchema.shape.departmentId,
@@ -106,11 +144,18 @@ export const onboardingWizardSchema = z.object({
     onboardingTemplateId: onboardingAssignmentsStepSchema.shape.onboardingTemplateId,
     includeTemplate: onboardingAssignmentsStepSchema.shape.includeTemplate,
 }).superRefine((values, context) => {
-    if (values.includeTemplate && !values.onboardingTemplateId) {
+    if (values.useOnboarding && values.includeTemplate && !values.onboardingTemplateId) {
         context.addIssue({
             code: 'custom',
             message: 'Select a checklist template or turn off the toggle.',
             path: ['onboardingTemplateId'],
+        });
+    }
+    if (!values.useOnboarding && values.includeTemplate) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Checklist templates are only available for employee onboarding.',
+            path: ['includeTemplate'],
         });
     }
 });
@@ -121,17 +166,17 @@ export type OnboardingWizardValues = z.infer<typeof onboardingWizardSchema>;
  * Validate a specific step of the wizard
  */
 export function validateWizardStep(
-    step: number,
+    stepId: 'identity' | 'job' | 'assignments' | 'review',
     values: Partial<OnboardingWizardValues>,
 ) {
-    switch (step) {
-        case 0:
+    switch (stepId) {
+        case 'identity':
             return onboardingIdentityStepSchema.safeParse(values);
-        case 1:
+        case 'job':
             return onboardingJobStepSchema.safeParse(values);
-        case 2:
+        case 'assignments':
             return onboardingAssignmentsStepSchema.safeParse(values);
-        case 3:
+        case 'review':
             // Review step validates the full form
             return onboardingWizardSchema.safeParse(values);
         default:
@@ -143,11 +188,13 @@ export function validateWizardStep(
  * Default values for a new onboarding wizard
  */
 export const defaultOnboardingWizardValues: OnboardingWizardValues = {
+    role: 'member',
     email: '',
     displayName: '',
     firstName: '',
     lastName: '',
     employeeNumber: '',
+    useOnboarding: false,
     jobTitle: undefined,
     departmentId: undefined,
     employmentType: undefined,

@@ -77,9 +77,9 @@ export function PremiumToaster({ position = 'bottom-right', ...props }: PremiumT
                 },
             }}
             style={{
-                '--normal-bg': 'hsl(var(--card) / 0.95)',
-                '--normal-text': 'hsl(var(--foreground))',
-                '--normal-border': 'hsl(var(--border))',
+                '--normal-bg': 'oklch(var(--card) / 0.95)',
+                '--normal-text': 'oklch(var(--foreground))',
+                '--normal-border': 'oklch(var(--border))',
                 '--border-radius': 'var(--radius)',
             } as React.CSSProperties}
             {...props}

@@ -7,7 +7,7 @@
  * @module components/theme/cards
  */
 
-import { type ReactNode, type ElementType } from 'react';
+import { type ReactNode, type ElementType, type CSSProperties } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
@@ -16,17 +16,17 @@ import { cn } from '@/lib/utils';
 // ============================================================================
 
 const cardVariants = cva(
-    'rounded-xl transition-all duration-300 ease-out',
+    'text-card-foreground',
     {
         variants: {
             variant: {
-                default: 'bg-card text-card-foreground border border-border shadow-sm',
-                elevated: 'bg-card text-card-foreground border border-border shadow-lg hover:shadow-xl',
-                glass: 'bg-card/50 backdrop-blur-md border border-border/30 shadow-md',
-                outline: 'bg-transparent border-2 border-border hover:border-primary/50',
-                gradient: 'bg-gradient-to-br from-card via-card/95 to-card/90 border border-border/50 shadow-lg',
-                glow: 'bg-card border border-primary/20 shadow-lg shadow-primary/10',
-                neon: 'bg-card/90 border-2 border-primary/30 shadow-xl shadow-primary/20',
+                default: '',
+                elevated: '',
+                glass: '',
+                outline: '',
+                gradient: '',
+                glow: '',
+                neon: '',
             },
             padding: {
                 none: '',
@@ -37,9 +37,9 @@ const cardVariants = cva(
             },
             hover: {
                 none: '',
-                lift: 'hover:-translate-y-1 hover:shadow-xl',
-                glow: 'hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30',
-                scale: 'hover:scale-[1.02]',
+                lift: '',
+                glow: '',
+                scale: '',
             },
         },
         defaultVariants: {
@@ -49,6 +49,33 @@ const cardVariants = cva(
         },
     }
 );
+
+type CardVariant = NonNullable<VariantProps<typeof cardVariants>['variant']>;
+type CardHover = NonNullable<VariantProps<typeof cardVariants>['hover']>;
+type CssVariableProperty = `--${string}`;
+type CssVariableStyles = Partial<Record<CssVariableProperty, string>>;
+type CardStyleOverrides = CSSProperties & CssVariableStyles;
+type CardSurface = 'container' | 'item' | 'interactive';
+
+const cardSurfaceByVariant: Record<CardVariant, CardSurface> = {
+    default: 'container',
+    elevated: 'interactive',
+    glass: 'item',
+    outline: 'container',
+    gradient: 'container',
+    glow: 'interactive',
+    neon: 'interactive',
+};
+
+const cardStyleOverrides: Partial<Record<CardVariant, CardStyleOverrides>> = {
+    outline: {
+        '--ui-surface-bg': 'transparent',
+        '--ui-surface-shadow': 'none',
+    },
+    gradient: {
+        '--ui-surface-bg': 'var(--app-gradient-primary)',
+    },
+};
 
 export interface ThemeCardProps extends VariantProps<typeof cardVariants> {
     children: ReactNode;
@@ -64,9 +91,20 @@ export function ThemeCard({
     hover,
     as: Component = 'div',
 }: ThemeCardProps) {
+    const resolvedVariant = (variant ?? 'default') as CardVariant;
+    const resolvedHover = (hover ?? 'none') as CardHover;
+    const isInteractive = resolvedHover !== 'none' || resolvedVariant === 'elevated' || resolvedVariant === 'glow' || resolvedVariant === 'neon';
+    const dataUiSurface = cardSurfaceByVariant[resolvedVariant];
+    const styleOverrides = cardStyleOverrides[resolvedVariant];
     const Comp = Component;
     return (
-        <Comp className={cn(cardVariants({ variant, padding, hover }), className)}>
+        <Comp
+            data-slot="card"
+            data-ui-surface={dataUiSurface}
+            data-ui-interactive={isInteractive ? 'true' : undefined}
+            className={cn(cardVariants({ variant, padding, hover }), className)}
+            style={styleOverrides}
+        >
             {children}
         </Comp>
     );

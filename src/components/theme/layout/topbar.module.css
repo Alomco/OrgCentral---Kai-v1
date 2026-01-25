@@ -22,15 +22,15 @@
     height: 4rem;
     
     /* Glassmorphism */
-    background: hsl(var(--background) / 0.8);
+    background: oklch(var(--background) / 0.8);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     
     /* Bottom border with gradient */
     border-bottom: 1px solid transparent;
     background-image: 
-        linear-gradient(hsl(var(--background) / 0.8), hsl(var(--background) / 0.8)),
-        linear-gradient(90deg, hsl(var(--border)), hsl(var(--primary) / 0.3), hsl(var(--border)));
+        linear-gradient(oklch(var(--background) / 0.8), oklch(var(--background) / 0.8)),
+        linear-gradient(90deg, oklch(var(--border)), oklch(var(--primary) / 0.3), oklch(var(--border)));
     background-origin: border-box;
     background-clip: padding-box, border-box;
 }
@@ -58,7 +58,7 @@
     gap: 0.75rem;
     font-weight: 700;
     font-size: 1.125rem;
-    color: hsl(var(--foreground));
+    color: oklch(var(--foreground));
     text-decoration: none;
     transition: opacity 0.2s;
 }
@@ -74,14 +74,14 @@
     width: 2rem;
     height: 2rem;
     border-radius: 0.5rem;
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    background: linear-gradient(135deg, oklch(var(--primary)), oklch(var(--accent)));
     color: white;
     font-weight: 800;
     font-size: 0.875rem;
 }
 
 .logoText {
-    background: linear-gradient(135deg, hsl(var(--foreground)), hsl(var(--muted-foreground)));
+    background: linear-gradient(135deg, oklch(var(--foreground)), oklch(var(--muted-foreground)));
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -97,9 +97,9 @@
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
-    background: hsl(var(--muted));
-    border: 1px solid hsl(var(--border));
-    color: hsl(var(--muted-foreground));
+    background: oklch(var(--muted));
+    border: 1px solid oklch(var(--border));
+    color: oklch(var(--muted-foreground));
     font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.2s;
@@ -107,21 +107,21 @@
 }
 
 .searchBox:hover {
-    background: hsl(var(--muted) / 0.8);
-    border-color: hsl(var(--primary) / 0.3);
+    background: oklch(var(--muted) / 0.8);
+    border-color: oklch(var(--primary) / 0.3);
 }
 
 .searchBox:focus-within {
-    border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+    border-color: oklch(var(--primary));
+    box-shadow: 0 0 0 3px oklch(var(--primary) / 0.2);
 }
 
 .searchKbd {
     display: none;
     padding: 0.125rem 0.375rem;
     border-radius: 0.25rem;
-    background: hsl(var(--background));
-    border: 1px solid hsl(var(--border));
+    background: oklch(var(--background));
+    border: 1px solid oklch(var(--border));
     font-size: 0.75rem;
     font-family: inherit;
 }
@@ -144,18 +144,18 @@
     height: 2.25rem;
     border-radius: 0.5rem;
     background: transparent;
-    color: hsl(var(--muted-foreground));
+    color: oklch(var(--muted-foreground));
     border: none;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .actionButton:hover {
-    background: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
+    background: oklch(var(--accent));
+    color: oklch(var(--accent-foreground));
 }
 
 .actionButton:focus-visible {
-    outline: 2px solid hsl(var(--ring));
+    outline: 2px solid oklch(var(--ring));
     outline-offset: 2px;
 }

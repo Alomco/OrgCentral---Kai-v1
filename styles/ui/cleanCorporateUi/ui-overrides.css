@@ -1,0 +1,71 @@
+/* Global overrides to bind Tailwind utilities to UI style tokens. */
+[data-ui-style] .border {
+    border-width: var(--ui-border-width) !important;
+}
+
+[data-ui-style] [data-slot="card"] {
+    border-width: var(--ui-border-width) !important;
+}
+
+[data-ui-style] [data-slot="button"] {
+    border-width: var(--ui-border-width) !important;
+    transition: all var(--ui-transition) !important;
+}
+
+[data-ui-style] .transition,
+[data-ui-style] .transition-all,
+[data-ui-style] .transition-colors,
+[data-ui-style] .transition-opacity,
+[data-ui-style] .transition-shadow,
+[data-ui-style] .transition-transform {
+    transition-duration: var(--ui-transition-duration) !important;
+    transition-timing-function: var(--ui-transition-easing) !important;
+}
+
+[data-ui-style] .duration-150,
+[data-ui-style] .duration-200,
+[data-ui-style] .duration-300 {
+    transition-duration: var(--ui-transition-duration) !important;
+}
+
+[data-ui-style] [data-slot="card"],
+[data-ui-style] [data-slot="popover-content"],
+[data-ui-style] [data-slot="dropdown-menu-content"],
+[data-ui-style] [data-slot="dialog-content"],
+[data-ui-style] [data-slot="sheet-content"],
+[data-ui-style] [data-slot="select-content"] {
+    border-radius: var(--ui-border-radius) !important;
+}
+
+[data-ui-style="bold-amoled"] [data-slot="card"],
+[data-ui-style="bold-amoled"] [data-slot="popover-content"],
+[data-ui-style="bold-amoled"] [data-slot="dropdown-menu-content"],
+[data-ui-style="bold-amoled"] [data-slot="dialog-content"] {
+    border: var(--ui-border-width) solid oklch(var(--primary) / 0.3) !important;
+    box-shadow: 0 0 20px -5px oklch(var(--primary) / 0.4) !important;
+}
+
+[data-ui-style="material-motion"] [data-slot="card"],
+[data-ui-style="material-motion"] [data-slot="button"],
+[data-ui-style="material-motion"] [data-slot="popover-content"] {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition-duration: 300ms !important;
+}
+
+[data-ui-style] [data-slot="card"]:hover,
+[data-ui-style] [data-slot="button"]:hover {
+    transform: scale(var(--ui-hover-scale)) translateY(var(--ui-hover-lift)) !important;
+}
+
+[data-ui-style] [data-slot="button"]:active {
+    transform: scale(var(--ui-active-scale)) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --ui-transition-duration: 1ms;
+        --ui-hover-scale: 1;
+        --ui-hover-lift: 0px;
+        --ui-active-scale: 1;
+    }
+}

@@ -3,6 +3,8 @@
 import { headers as nextHeaders } from 'next/headers';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
+import { listPendingReviewComplianceItemsForUi } from '@/server/use-cases/hr/compliance/list-pending-review-items.cached';
+import { getLeaveRequestsForUi } from '@/server/use-cases/hr/leave/get-leave-requests.cached';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
 import type { AdminDashboardStats, PendingApprovalItem } from './actions.types';
 
@@ -46,7 +48,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         stats.newHiresThisMonth = result.profiles.filter((p) => {
-            if (!p.startDate) {return false;}
+            if (!p.startDate) { return false; }
             const startDate = p.startDate instanceof Date ? p.startDate : new Date(p.startDate);
             return startDate >= startOfMonth;
         }).length;
@@ -54,8 +56,15 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
         // Gracefully handle permission errors
     }
 
-    // Note: Compliance and leave stats can be added when proper
-    // organization-level summary methods are available
+    const [leaveResult, complianceResult] = await Promise.all([
+        getLeaveRequestsForUi({ authorization }).catch(() => ({ requests: [] })),
+        listPendingReviewComplianceItemsForUi({ authorization, take: 500 }).catch(() => ({ items: [] })),
+    ]);
+
+    stats.pendingLeaveRequests = leaveResult.requests.filter((request) => request.status === 'submitted').length;
+    stats.complianceAlerts = complianceResult.items.length;
+
+    // Upcoming expirations can be added once org-level summary is available
 
     return stats;
 }

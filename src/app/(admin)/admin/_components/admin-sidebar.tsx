@@ -76,7 +76,7 @@ export function AdminSidebar({ organizationLabel, roleKey, permissions }: AdminS
                     <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                         Navigation
                     </p>
-                    <div className="rounded-xl border border-border/30 bg-background/60 p-2 shadow-[inset_0_1px_0_hsl(var(--border)/0.35)]">
+                    <div className="rounded-xl border border-border/30 bg-background/60 p-2 shadow-[inset_0_1px_0_oklch(var(--border)/0.35)]">
                         {items.map((item) => (
                             <NavLink
                                 key={item.href}
@@ -141,7 +141,7 @@ function NavLink({
                 'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200',
                 'text-muted-foreground hover:bg-primary/10 hover:text-foreground',
                 FOCUS_RING_CLASS,
-                active && 'bg-primary/10 text-foreground shadow-[0_0_0_1px_hsl(var(--primary)/0.2)] before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-primary/60',
+                active && 'bg-primary/10 text-foreground shadow-[0_0_0_1px_oklch(var(--primary)/0.2)] before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-primary/60',
                 compact && 'py-1.5'
             )}
         >

@@ -12,15 +12,15 @@ export interface TenantContext {
 export function NotInvitedFallback() {
     return (
         <AuthLayout title="Loading tenant styling" subtitle="Preparing your workspace...">
-            <div className="h-64 w-full animate-pulse rounded-3xl bg-[hsl(var(--muted))] opacity-70" />
+            <div className="h-64 w-full animate-pulse rounded-3xl bg-[oklch(var(--muted))] opacity-70" />
         </AuthLayout>
     );
 }
 
 export function IllustrationFallback() {
     return (
-        <div className="relative flex h-56 w-56 items-center justify-center rounded-2xl bg-[hsl(var(--card))] shadow-inner">
-            <div className="h-24 w-24 animate-pulse rounded-full bg-[hsl(var(--muted))]" />
+        <div className="relative flex h-56 w-56 items-center justify-center rounded-2xl bg-[oklch(var(--card))] shadow-inner">
+            <div className="h-24 w-24 animate-pulse rounded-full bg-[oklch(var(--muted))]" />
         </div>
     );
 }

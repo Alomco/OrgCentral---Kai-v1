@@ -32,10 +32,10 @@ export function HrGradientButton({
             onClick={onClick}
             className={cn(
                 'group relative overflow-hidden rounded-lg font-semibold text-white',
-                'bg-linear-to-r from-[hsl(var(--primary))] via-[hsl(var(--primary)/0.9)] to-[hsl(var(--accent))]',
-                'shadow-lg shadow-[hsl(var(--primary)/0.3)]',
+                'bg-linear-to-r from-[oklch(var(--primary))] via-[oklch(var(--primary)/0.9)] to-[oklch(var(--accent))]',
+                'shadow-lg shadow-[oklch(var(--primary)/0.3)]',
                 'transition-all duration-300 ease-out',
-                'hover:shadow-xl hover:shadow-[hsl(var(--primary)/0.4)]',
+                'hover:shadow-xl hover:shadow-[oklch(var(--primary)/0.4)]',
                 'hover:-translate-y-0.5',
                 'active:translate-y-0 active:shadow-md',
                 'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0',

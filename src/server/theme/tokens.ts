@@ -40,13 +40,19 @@ type HslNumber = `${number}`;
 type PercentToken = `${number}%`;
 export type HslValue = `${HslNumber} ${PercentToken} ${PercentToken}`;
 
-export type ThemeTokenMap = Record<ThemeTokenKey, HslValue>;
+export type OklchValue = `${number} ${number} ${number}`;
+export type ColorTokenValue = HslValue | OklchValue;
+
+export type ThemeTokenMap = Record<ThemeTokenKey, ColorTokenValue>;
+
+import type { UiStyleKey } from './ui-style-presets';
 
 export interface TenantTheme {
     orgId: string;
     presetId?: string;
     tokens: ThemeTokenMap;
     darkTokens: ThemeTokenMap;
+    uiStyleId?: UiStyleKey;
     updatedAt: Date;
 }
 
@@ -74,7 +80,7 @@ const palette = {
     primary: '221.2 83.2% 53.3%',
     sidebarBorder: '220 13% 91%',
     sidebarRing: '217.2 91.2% 59.8%',
-} as const satisfies Record<string, HslValue>;
+} as const satisfies Record<string, ColorTokenValue>;
 
 export const defaultThemeTokens = {
     background: palette.white,

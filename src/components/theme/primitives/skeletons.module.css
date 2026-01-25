@@ -27,11 +27,11 @@
 .skeleton {
     background: linear-gradient(
         90deg,
-        hsl(var(--muted)) 0%,
-        hsl(var(--muted-foreground) / 0.15) 25%,
-        hsl(var(--muted-foreground) / 0.25) 50%,
-        hsl(var(--muted-foreground) / 0.15) 75%,
-        hsl(var(--muted)) 100%
+        oklch(var(--muted)) 0%,
+        oklch(var(--muted-foreground) / 0.15) 25%,
+        oklch(var(--muted-foreground) / 0.25) 50%,
+        oklch(var(--muted-foreground) / 0.15) 75%,
+        oklch(var(--muted)) 100%
     );
     background-size: 200% 100%;
     animation: shimmerWave 1.8s ease-in-out infinite;
@@ -39,15 +39,15 @@
 }
 
 .skeletonGlow {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.08);
+    box-shadow: 0 0 20px oklch(var(--primary) / 0.08);
 }
 
 .skeletonSubtle {
     background: linear-gradient(
         90deg,
-        hsl(var(--muted)) 0%,
-        hsl(var(--muted-foreground) / 0.08) 50%,
-        hsl(var(--muted)) 100%
+        oklch(var(--muted)) 0%,
+        oklch(var(--muted-foreground) / 0.08) 50%,
+        oklch(var(--muted)) 100%
     );
     background-size: 200% 100%;
     animation: shimmerWave 2s ease-in-out infinite;
@@ -61,6 +61,6 @@
     .skeleton,
     .skeletonSubtle {
         animation: none;
-        background: hsl(var(--muted));
+        background: oklch(var(--muted));
     }
 }

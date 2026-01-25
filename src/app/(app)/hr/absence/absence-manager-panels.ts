@@ -10,6 +10,7 @@ export interface AbsenceManagerPanels {
         type: string;
         startDate: Date;
         endDate: Date;
+        hours: number;
         reason?: string;
         submittedAt: Date;
     }[];
@@ -72,6 +73,7 @@ export async function buildAbsenceManagerPanels(
                 type: absenceTypeById.get(absence.typeId) ?? absence.typeId,
                 startDate: absence.startDate,
                 endDate: absence.endDate,
+                hours: typeof absence.hours === 'number' ? absence.hours : Number(absence.hours),
                 reason: absence.reason ?? undefined,
                 submittedAt: absence.createdAt,
             };

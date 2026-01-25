@@ -1,9 +1,9 @@
 .mesh {
   position: absolute;
   inset: -25%;
-  background: radial-gradient(ellipse at 20% 20%, hsl(var(--primary) / 0.22), transparent 45%),
-    radial-gradient(ellipse at 80% 30%, hsl(var(--accent) / 0.18), transparent 45%),
-    radial-gradient(ellipse at 50% 80%, hsl(var(--chart-3) / 0.16), transparent 45%);
+  background: radial-gradient(ellipse at 20% 20%, oklch(var(--primary) / 0.22), transparent 45%),
+    radial-gradient(ellipse at 80% 30%, oklch(var(--accent) / 0.18), transparent 45%),
+    radial-gradient(ellipse at 50% 80%, oklch(var(--chart-3) / 0.16), transparent 45%);
   filter: blur(48px);
   opacity: 0.8;
   mix-blend-mode: screen;
@@ -12,8 +12,8 @@
 .grid {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(hsl(var(--foreground) / 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--foreground) / 0.12) 1px, transparent 1px);
+  background-image: linear-gradient(oklch(var(--foreground) / 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(var(--foreground) / 0.12) 1px, transparent 1px);
   background-size: 36px 36px;
   -webkit-mask-image: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.45), transparent 60%);
   mask-image: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.45), transparent 60%);
@@ -25,26 +25,26 @@
   position: absolute;
   inset: -12%;
   border-radius: 32px;
-  background: radial-gradient(ellipse at 30% 30%, hsl(var(--primary) / 0.16), transparent 55%),
-    radial-gradient(ellipse at 70% 20%, hsl(var(--accent) / 0.12), transparent 50%),
-    radial-gradient(ellipse at 50% 70%, hsl(var(--chart-3) / 0.16), transparent 55%);
+  background: radial-gradient(ellipse at 30% 30%, oklch(var(--primary) / 0.16), transparent 55%),
+    radial-gradient(ellipse at 70% 20%, oklch(var(--accent) / 0.12), transparent 50%),
+    radial-gradient(ellipse at 50% 70%, oklch(var(--chart-3) / 0.16), transparent 55%);
   filter: blur(38px);
   opacity: 0.8;
   mix-blend-mode: screen;
 }
 
 .headline {
-  background: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--chart-3)));
+  background: linear-gradient(120deg, oklch(var(--primary)), oklch(var(--accent)), oklch(var(--chart-3)));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 18px 60px hsl(var(--primary) / 0.25);
+  text-shadow: 0 18px 60px oklch(var(--primary) / 0.25);
 }
 
 .ctaGlow {
   box-shadow:
-    0 0 0 1px hsl(var(--primary) / 0.35),
-    0 18px 50px -18px hsl(var(--primary) / 0.65);
+    0 0 0 1px oklch(var(--primary) / 0.35),
+    0 18px 50px -18px oklch(var(--primary) / 0.65);
 }
 
 .meta {
@@ -60,12 +60,12 @@
   border-radius: 50%;
   background: conic-gradient(
     from 120deg,
-    hsl(var(--primary) / 0.32),
-    hsl(var(--chart-3) / 0.22),
-    hsl(var(--chart-5) / 0.28),
-    hsl(var(--accent) / 0.2),
-    hsl(var(--chart-2) / 0.34),
-    hsl(var(--primary) / 0.32)
+    oklch(var(--primary) / 0.32),
+    oklch(var(--chart-3) / 0.22),
+    oklch(var(--chart-5) / 0.28),
+    oklch(var(--accent) / 0.2),
+    oklch(var(--chart-2) / 0.34),
+    oklch(var(--primary) / 0.32)
   );
   filter: blur(24px);
   opacity: 0.6;
@@ -81,10 +81,10 @@
   height: 140%;
   background: linear-gradient(
     180deg,
-    hsl(var(--chart-3) / 0.0) 0%,
-    hsl(var(--chart-3) / 0.55) 40%,
-    hsl(var(--primary) / 0.55) 60%,
-    hsl(var(--primary) / 0.0) 100%
+    oklch(var(--chart-3) / 0.0) 0%,
+    oklch(var(--chart-3) / 0.55) 40%,
+    oklch(var(--primary) / 0.55) 60%,
+    oklch(var(--primary) / 0.0) 100%
   );
   filter: blur(6px);
   opacity: 0.45;

@@ -29,7 +29,7 @@ export function ProfileEditFormLayout({
     };
 
     const inputToneClass = '';
-    const sectionClass = 'space-y-4 rounded-xl border border-[hsl(var(--border)/0.12)] bg-[hsl(var(--background)/0.97)] px-5 py-5 shadow-none';
+    const sectionClass = 'space-y-4 rounded-xl border border-[oklch(var(--border)/0.12)] bg-[oklch(var(--background)/0.97)] px-5 py-5 shadow-none';
     const ids = buildProfileEditFormIds(resolvedFormId);
 
     return (

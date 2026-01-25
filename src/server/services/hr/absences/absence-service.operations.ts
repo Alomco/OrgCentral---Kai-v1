@@ -1,5 +1,10 @@
 export type { AbsenceServiceRuntime } from './absence-service.operations.types';
-export { handleAnalyzeAttachment, handleListAbsences } from './absence-service.operations.read';
+export {
+    handleAnalyzeAttachment,
+    handleListAbsences,
+    handlePresignAbsenceAttachment,
+    handlePresignAbsenceAttachmentDownload,
+} from './absence-service.operations.read';
 export {
     handleAcknowledgeAbsence,
     handleAddAttachments,

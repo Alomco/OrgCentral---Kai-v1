@@ -1,9 +1,11 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getAbsencesForUi } from '@/server/use-cases/hr/absences/get-absences.cached';
+import { listAbsenceTypeConfigsForUi } from '@/server/use-cases/hr/absences/list-absence-type-configs.cached';
+import { coerceAbsenceMetadata } from '@/server/domain/absences/metadata';
 
 import { HrDataTable, type HrDataTableColumn } from '../../_components/hr-data-table';
 import { AbsenceRows } from '../../absence/_components/absence-rows';
-import type { AbsenceRowData } from '../../absence/_components/absence-row';
+import type { AbsenceRowData, AbsenceTypeLabelMap } from '../../absence/_components/absence-row';
 
 export interface AbsencesPanelProps {
     authorization: RepositoryAuthorizationContext;
@@ -48,6 +50,20 @@ export async function AbsenceListPanel({
         includeClosed,
     });
 
+    const { types } = await listAbsenceTypeConfigsForUi({ authorization });
+    const typeLabels: AbsenceTypeLabelMap = Object.fromEntries(
+        types.map((type) => {
+            const emoji = (() => {
+                if (!type.metadata || typeof type.metadata !== 'object' || Array.isArray(type.metadata)) {
+                    return undefined;
+                }
+                const value = (type.metadata as Record<string, unknown>).emoji;
+                return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+            })();
+            return [type.id, { label: type.label, emoji }];
+        }),
+    );
+
     const absences: AbsenceRowData[] = result.absences.map((absence) => ({
         id: absence.id,
         typeId: absence.typeId,
@@ -57,6 +73,9 @@ export async function AbsenceListPanel({
         reason: absence.reason ?? null,
         status: absence.status,
         createdAt: absence.createdAt,
+        attachments: absence.attachments ?? [],
+        returnToWork: absence.returnToWork ?? null,
+        metadata: coerceAbsenceMetadata(absence.metadata),
     }));
 
     return (
@@ -70,6 +89,7 @@ export async function AbsenceListPanel({
             <AbsenceRows
                 absences={absences}
                 authorization={authorization}
+                typeLabels={typeLabels}
             />
         </HrDataTable>
     );

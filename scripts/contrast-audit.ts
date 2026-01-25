@@ -9,9 +9,7 @@ interface AuditPair {
     minRatio: number;
 }
 
-interface TokenMap {
-    [key: string]: string | undefined;
-}
+type TokenMap = Record<string, string | undefined>;
 
 const tokenPairs: AuditPair[] = [
     { name: 'foreground on background', text: 'foreground', background: 'background', minRatio: 4.5 },
@@ -38,13 +36,13 @@ function extractBlock(css: string, selector: string): string | null {
             return null;
         }
         let depth = 0;
-        for (let i = braceStart; i < css.length; i += 1) {
-            if (css[i] === '{') {
+        for (let index = braceStart; index < css.length; index += 1) {
+            if (css[index] === '{') {
                 depth += 1;
-            } else if (css[i] === '}') {
+            } else if (css[index] === '}') {
                 depth -= 1;
                 if (depth === 0) {
-                    return css.slice(braceStart + 1, i);
+                    return css.slice(braceStart + 1, index);
                 }
             }
         }
@@ -65,13 +63,13 @@ function extractBlockWithToken(css: string, selector: string, token: string): st
             return null;
         }
         let depth = 0;
-        for (let i = braceStart; i < css.length; i += 1) {
-            if (css[i] === '{') {
+        for (let index = braceStart; index < css.length; index += 1) {
+            if (css[index] === '{') {
                 depth += 1;
-            } else if (css[i] === '}') {
+            } else if (css[index] === '}') {
                 depth -= 1;
                 if (depth === 0) {
-                    const block = css.slice(braceStart + 1, i);
+                    const block = css.slice(braceStart + 1, index);
                     if (block.includes(`--${token}:`)) {
                         return block;
                     }
@@ -127,7 +125,7 @@ function auditBlock(label: string, tokens: TokenMap) {
         }
         const ratio = wcagContrast(text, background);
         const pass = ratio >= pair.minRatio ? 'PASS' : 'FAIL';
-        console.log(`- ${pair.name}: ${ratio.toFixed(2)} (${pass}, min ${pair.minRatio})`);
+        console.log(`- ${pair.name}: ${ratio.toFixed(2)} (${pass}, min ${pair.minRatio.toFixed(2)})`);
     }
 }
 

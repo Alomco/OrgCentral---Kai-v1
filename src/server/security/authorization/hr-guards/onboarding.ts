@@ -41,6 +41,15 @@ export function assertOnboardingCreator(request: HrGuardRequest): Promise<Reposi
     });
 }
 
+export function assertOnboardingInviteSender(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
+    return assertHrAccess(request.authorization, {
+        action: HR_ACTION.SEND,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_INVITE,
+        resourceAttributes: request.resourceAttributes,
+        requiredPermissions: HR_PERMISSION_PROFILE.ONBOARDING_SEND,
+    });
+}
+
 export function assertOnboardingUpdater(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
     return assertHrAccess(request.authorization, {
         action: HR_ACTION.UPDATE,

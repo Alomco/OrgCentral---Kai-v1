@@ -22,6 +22,7 @@ interface AbsenceRequest {
     type: string;
     startDate: Date;
     endDate: Date;
+    hours: number;
     reason?: string;
 }
 
@@ -45,12 +46,17 @@ function formatDateRange(start: Date, end: Date): string {
         day: 'numeric',
     });
     if (startString === endString) { return startString; }
-    return `${startString} - ${endString}`;
+    return startString + ' - ' + endString;
 }
 
 function getDayCount(start: Date, end: Date): number {
     const diff = end.getTime() - start.getTime();
     return Math.ceil(diff / 86400000) + 1;
+}
+
+function formatHours(hours: number): string {
+    const rounded = Math.round(hours * 100) / 100;
+    return String(rounded) + ' hour' + (rounded === 1 ? '' : 's');
 }
 
 export function AbsenceApprovalDialog({
@@ -120,7 +126,7 @@ export function AbsenceApprovalDialog({
                         <div className="text-sm text-muted-foreground">
                             <p>{formatDateRange(request.startDate, request.endDate)}</p>
                             <p className="text-xs">
-                                {dayCount} day{dayCount !== 1 ? 's' : ''}
+                                {dayCount} day{dayCount !== 1 ? 's' : ''} · {formatHours(request.hours)}
                             </p>
                         </div>
                         {request.reason ? (

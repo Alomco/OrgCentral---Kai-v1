@@ -1,4 +1,5 @@
 'use client';
+import { useMemo } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CardContent } from '@/components/ui/card';
@@ -10,35 +11,46 @@ import { AssignmentsStep, type LeaveType } from './assignments-step';
 import { ReviewStep } from './review-step';
 import type { OnboardingWizardState } from './wizard.state';
 import type { OnboardingWizardValues } from './wizard.schema';
-import type { ManagerOption } from './wizard.types';
+import type { EmailCheckResult, InviteRoleOption, ManagerOption } from './wizard.types';
+import type { StepperStep } from '@/components/ui/stepper';
+import type { WizardStepId } from './onboarding-wizard-steps';
 
 export interface OnboardingWizardContentProps {
-    currentStep: number;
+    currentStepId: WizardStepId;
+    steps: StepperStep[];
     state: OnboardingWizardState;
     departments: Department[];
     managers: ManagerOption[];
     leaveTypes?: LeaveType[];
     checklistTemplates: ChecklistTemplate[];
     canManageTemplates: boolean;
+    roleOptions: InviteRoleOption[];
     onValuesChange: (updates: Partial<OnboardingWizardValues>) => void;
-    onEmailCheck?: (email: string) => Promise<{ exists: boolean; reason?: string; actionUrl?: string; actionLabel?: string }>;
+    onEmailCheck?: (email: string) => Promise<EmailCheckResult>;
     onEditStep: (stepIndex: number) => void;
     isSubmitting: boolean;
 }
 
 export function OnboardingWizardContent({
-    currentStep,
+    currentStepId,
+    steps,
     state,
     departments,
     managers,
     leaveTypes,
     checklistTemplates,
     canManageTemplates,
+    roleOptions,
     onValuesChange,
     onEmailCheck,
     onEditStep,
     isSubmitting,
 }: OnboardingWizardContentProps) {
+    const stepIndexById = useMemo(
+        () => new Map(steps.map((step, index) => [step.id, index])),
+        [steps],
+    );
+
     return (
         <CardContent className="min-h-[400px]">
             {state.status === 'error' && state.message && (
@@ -47,17 +59,18 @@ export function OnboardingWizardContent({
                 </Alert>
             )}
 
-            {currentStep === 0 && (
+            {currentStepId === 'identity' && (
                 <IdentityStep
                     values={state.values}
                     fieldErrors={state.fieldErrors}
                     onValuesChange={onValuesChange}
                     onEmailCheck={onEmailCheck}
                     disabled={isSubmitting}
+                    roleOptions={roleOptions}
                 />
             )}
 
-            {currentStep === 1 && (
+            {currentStepId === 'job' && (
                 <JobStep
                     values={state.values}
                     fieldErrors={state.fieldErrors}
@@ -68,7 +81,7 @@ export function OnboardingWizardContent({
                 />
             )}
 
-            {currentStep === 2 && (
+            {currentStepId === 'assignments' && (
                 <AssignmentsStep
                     values={state.values}
                     fieldErrors={state.fieldErrors}
@@ -80,12 +93,13 @@ export function OnboardingWizardContent({
                 />
             )}
 
-            {currentStep === 3 && (
+            {currentStepId === 'review' && (
                 <ReviewStep
                     values={state.values}
                     checklistTemplates={checklistTemplates}
                     leaveTypes={leaveTypes}
                     onEditStep={onEditStep}
+                    stepIndexById={stepIndexById}
                 />
             )}
         </CardContent>

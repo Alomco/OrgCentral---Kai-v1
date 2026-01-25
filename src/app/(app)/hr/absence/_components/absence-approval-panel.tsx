@@ -18,6 +18,7 @@ interface PendingAbsence {
     type: string;
     startDate: Date;
     endDate: Date;
+    hours: number;
     reason?: string;
     submittedAt: Date;
 }
@@ -37,7 +38,12 @@ function formatDateRange(start: Date, end: Date): string {
         day: 'numeric',
     });
     if (startString === endString) { return startString; }
-    return `${startString} - ${endString}`;
+    return startString + ' - ' + endString;
+}
+
+function formatHours(hours: number): string {
+    const rounded = Math.round(hours * 100) / 100;
+    return String(rounded) + ' hour' + (rounded === 1 ? '' : 's');
 }
 
 function formatTimeAgo(date: Date): string {
@@ -46,8 +52,8 @@ function formatTimeAgo(date: Date): string {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(hours / 24);
 
-    if (days > 0) { return `${String(days)}d ago`; }
-    if (hours > 0) { return `${String(hours)}h ago`; }
+    if (days > 0) { return String(days) + 'd ago'; }
+    if (hours > 0) { return String(hours) + 'h ago'; }
     return 'Just now';
 }
 
@@ -103,7 +109,7 @@ export function AbsenceApprovalPanel({
                                         </Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        {formatDateRange(request.startDate, request.endDate)}
+                                        {formatDateRange(request.startDate, request.endDate)} · {formatHours(request.hours)}
                                     </p>
                                     {request.reason ? (
                                         <p className="text-xs text-muted-foreground mt-1 truncate">

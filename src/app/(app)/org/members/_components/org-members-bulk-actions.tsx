@@ -142,18 +142,18 @@ export function OrgMembersBulkActions({
             id="bulk-members-form"
             action={action}
             onSubmit={handleSubmit}
-            className="mt-4 flex flex-col gap-3 rounded-xl border border-[hsl(var(--border)/0.6)] bg-[hsl(var(--background)/0.4)] p-4"
+            className="mt-4 flex flex-col gap-3 rounded-xl border border-[oklch(var(--border)/0.6)] bg-[oklch(var(--background)/0.4)] p-4"
         >
-            <div className="text-xs font-medium uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
+            <div className="text-xs font-medium uppercase tracking-[0.18em] text-[oklch(var(--muted-foreground))]">
                 Bulk actions
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[hsl(var(--muted-foreground))]">
-                <label className="flex items-center gap-2 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[oklch(var(--muted-foreground))]">
+                <label className="flex items-center gap-2 text-xs font-medium text-[oklch(var(--muted-foreground))]">
                     <input
                         type="checkbox"
                         checked={allSelected}
                         onChange={handleToggleAll}
-                        className="h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))]"
+                        className="h-4 w-4 rounded border-[oklch(var(--border))] text-[oklch(var(--primary))]"
                     />
                     Select all on page
                 </label>
@@ -168,12 +168,12 @@ export function OrgMembersBulkActions({
                 </span>
             </div>
             <div className="flex flex-col gap-3 md:flex-row md:items-end md:flex-wrap">
-                <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+                <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-[oklch(var(--muted-foreground))]">
                     New role
                     <select
                         name="roles"
                         defaultValue=""
-                        className="h-9 w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))]"
+                        className="h-9 w-full rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm text-[oklch(var(--foreground))]"
                     >
                         <option value="">Select role</option>
                         {roleNames.map((role) => (
@@ -189,7 +189,7 @@ export function OrgMembersBulkActions({
                         name="intent"
                         value="update-roles"
                         disabled={pending}
-                        className="h-9 rounded-md bg-[hsl(var(--primary))] px-3 text-sm font-medium text-[hsl(var(--primary-foreground))] disabled:opacity-70"
+                        className="h-9 rounded-md bg-[oklch(var(--primary))] px-3 text-sm font-medium text-[oklch(var(--primary-foreground))] disabled:opacity-70"
                     >
                         Update roles
                     </button>
@@ -198,7 +198,7 @@ export function OrgMembersBulkActions({
                         name="intent"
                         value="suspend"
                         disabled={pending}
-                        className="h-9 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm font-medium text-[hsl(var(--foreground))] disabled:opacity-70"
+                        className="h-9 rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm font-medium text-[oklch(var(--foreground))] disabled:opacity-70"
                     >
                         Suspend
                     </button>
@@ -207,27 +207,26 @@ export function OrgMembersBulkActions({
                         name="intent"
                         value="resume"
                         disabled={pending}
-                        className="h-9 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm font-medium text-[hsl(var(--foreground))] disabled:opacity-70"
+                        className="h-9 rounded-md border border-[oklch(var(--border))] bg-[oklch(var(--background))] px-3 text-sm font-medium text-[oklch(var(--foreground))] disabled:opacity-70"
                     >
                         Resume
                     </button>
                 </div>
             </div>
-            <p className="text-xs text-[hsl(var(--muted-foreground))]">
+            <p className="text-xs text-[oklch(var(--muted-foreground))]">
                 Select members below to apply bulk updates.
             </p>
             {visibleClientMessage ? (
-                <p className="text-xs text-[hsl(var(--destructive))]" role="alert">
+                <p className="text-xs text-[oklch(var(--destructive))]" role="alert">
                     {visibleClientMessage}
                 </p>
             ) : null}
             {state.status !== 'idle' ? (
                 <p
-                    className={`text-xs ${
-                        state.status === 'success'
-                            ? 'text-[hsl(var(--primary))]'
-                            : 'text-[hsl(var(--destructive))]'
-                    }`}
+                    className={`text-xs ${state.status === 'success'
+                            ? 'text-[oklch(var(--primary))]'
+                            : 'text-[oklch(var(--destructive))]'
+                        }`}
                 >
                     {state.message}
                 </p>

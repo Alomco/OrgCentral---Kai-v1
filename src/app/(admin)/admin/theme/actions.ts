@@ -26,10 +26,16 @@ const hslValueSchema = z
     // Minimal format validation: "H S% L%".
     .regex(/^\d{1,3}\s+\d{1,3}%\s+\d{1,3}%$/, 'Invalid HSL format');
 
+const oklchValueSchema = z
+    .string()
+    .trim()
+    // Minimal format validation: "L C H" (oklch triplet).
+    .regex(/^\d*\.?\d+\s+\d*\.?\d+\s+\d*\.?\d+$/, 'Invalid OKLCH format');
+
 const colorsSchema = z
     .object({
-        primaryColor: z.union([hslValueSchema, z.literal('')]).optional(),
-        accentColor: z.union([hslValueSchema, z.literal('')]).optional(),
+        primaryColor: z.union([hslValueSchema, oklchValueSchema, z.literal('')]).optional(),
+        accentColor: z.union([hslValueSchema, oklchValueSchema, z.literal('')]).optional(),
     })
     .strict();
 

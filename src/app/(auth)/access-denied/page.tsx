@@ -18,7 +18,7 @@ export default function AccessDeniedPage() {
             title="Access denied"
             subtitle="Your account doesn’t have permission for this area. Try switching accounts or request access."
         >
-            <div className="w-full max-w-3xl rounded-3xl bg-[hsl(var(--card)/0.6)] p-8 text-center shadow-[0_20px_70px_-40px_hsl(var(--primary)/0.65)] backdrop-blur">
+            <div className="w-full max-w-3xl rounded-3xl bg-[oklch(var(--card)/0.6)] p-8 text-center shadow-[0_20px_70px_-40px_oklch(var(--primary)/0.65)] backdrop-blur">
                 <div className="flex flex-col items-center gap-6">
                     <Image
                         src={accessDeniedImage}
@@ -28,8 +28,11 @@ export default function AccessDeniedPage() {
                         className="h-48 w-48 drop-shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
                         priority
                     />
-                    <p className="text-base text-[hsl(var(--foreground))]">
+                    <p className="text-base text-[oklch(var(--foreground))]">
                         If you believe this is a mistake, contact your admin and include the workspace you’re trying to reach.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                        If your session expired due to inactivity, sign in again and retry.
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-3">
                         <Button asChild className="px-6 py-2 text-sm font-semibold">

@@ -26,11 +26,13 @@ export function buildInitialWizardState(
         status: 'idle',
         currentStep: 0,
         values: {
+            role: values?.role ?? 'member',
             email: values?.email ?? '',
             displayName: values?.displayName ?? '',
             firstName: values?.firstName ?? '',
             lastName: values?.lastName ?? '',
             employeeNumber: values?.employeeNumber ?? '',
+            useOnboarding: values?.useOnboarding ?? false,
             jobTitle: values?.jobTitle,
             departmentId: values?.departmentId,
             employmentType: values?.employmentType,

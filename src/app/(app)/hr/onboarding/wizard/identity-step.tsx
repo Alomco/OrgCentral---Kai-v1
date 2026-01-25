@@ -1,26 +1,29 @@
 'use client';
-
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { FieldError } from '../../_components/field-error';
 import type { OnboardingWizardValues } from './wizard.schema';
 import type { FieldErrors } from '../../_components/form-errors';
+import type { EmailCheckResult, InviteRoleOption } from './wizard.types';
+import { useEmailCheck } from './use-email-check';
+import { generateNextEmployeeId } from '../actions/generate-employee-id';
 
 export interface IdentityStepProps {
     values: OnboardingWizardValues;
     fieldErrors?: FieldErrors<OnboardingWizardValues>;
     onValuesChange: (updates: Partial<OnboardingWizardValues>) => void;
-    onEmailCheck?: (email: string) => Promise<{ exists: boolean; reason?: string; actionUrl?: string; actionLabel?: string }>;
+    onEmailCheck?: (email: string) => Promise<EmailCheckResult>;
     disabled?: boolean;
+    roleOptions: InviteRoleOption[];
 }
-
-type EmailCheckStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 
 export function IdentityStep({
     values,
@@ -28,91 +31,75 @@ export function IdentityStep({
     onValuesChange,
     onEmailCheck,
     disabled = false,
+    roleOptions,
 }: IdentityStepProps) {
-    const [emailCheckStatus, setEmailCheckStatus] = useState<EmailCheckStatus>('idle');
-    const [emailCheckMessage, setEmailCheckMessage] = useState<string | null>(null);
-    const [emailCheckAction, setEmailCheckAction] = useState<{ url: string; label: string } | null>(null);
-    const previousEmailReference = useRef<string | undefined>(undefined);
+    const { status: emailCheckStatus, message: emailCheckMessage, action: emailCheckAction } =
+        useEmailCheck(values.email, onEmailCheck);
+    const [isGenerating, startTransition] = useTransition();
+    const [generateError, setGenerateError] = useState<string | null>(null);
 
+    const roleError = fieldErrors?.role;
     const emailError = fieldErrors?.email;
     const displayNameError = fieldErrors?.displayName;
     const firstNameError = fieldErrors?.firstName;
     const lastNameError = fieldErrors?.lastName;
     const employeeNumberError = fieldErrors?.employeeNumber;
+    const selectedRole = roleOptions.find((option) => option.name === values.role);
 
-    // Debounced email check using timeout in effect
-    // All setState calls must be inside the setTimeout callback to avoid synchronous updates
-    useEffect(() => {
-        const abortController = new AbortController();
-
-        const timeoutId = setTimeout(() => {
-            if (abortController.signal.aborted) {return;}
-
-            // Skip if no check function or email too short
-            if (!onEmailCheck || !values.email || values.email.length < 3) {
-                if (previousEmailReference.current !== values.email) {
-                    previousEmailReference.current = values.email;
-                    setEmailCheckStatus('idle');
-                    setEmailCheckMessage(null);
-                    setEmailCheckAction(null);
-                }
-                return;
-            }
-
-            // Simple email validation before checking
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(values.email)) {
-                previousEmailReference.current = values.email;
-                setEmailCheckStatus('idle');
-                setEmailCheckMessage(null);
-                setEmailCheckAction(null);
-                return;
-            }
-
-            previousEmailReference.current = values.email;
-            setEmailCheckStatus('checking');
-
-            onEmailCheck(values.email)
+    const handleGenerateEmployeeId = useCallback(() => {
+        startTransition(() => {
+            setGenerateError(null);
+            void generateNextEmployeeId()
                 .then((result) => {
-                    if (abortController.signal.aborted) {return;}
-                    if (result.exists) {
-                        setEmailCheckStatus('invalid');
-                        setEmailCheckMessage(result.reason ?? 'This email is already in use.');
-                        if (result.actionUrl && result.actionLabel) {
-                            setEmailCheckAction({ url: result.actionUrl, label: result.actionLabel });
-                        } else {
-                            setEmailCheckAction(null);
-                        }
-                    } else {
-                        setEmailCheckStatus('valid');
-                        setEmailCheckMessage(null);
-                        setEmailCheckAction(null);
-                    }
+                    onValuesChange({ employeeNumber: result.employeeNumber });
                 })
-                .catch(() => {
-                    if (abortController.signal.aborted) {return;}
-                    setEmailCheckStatus('idle');
-                    setEmailCheckMessage(null);
-                    setEmailCheckAction(null);
+                .catch((error: unknown) => {
+                    const message = error instanceof Error
+                        ? error.message
+                        : 'Unable to generate an employee number.';
+                    setGenerateError(message);
                 });
-        }, 100); // Small delay ensures all state updates happen asynchronously
-
-        return () => {
-            clearTimeout(timeoutId);
-            abortController.abort();
-        };
-    }, [values.email, onEmailCheck]);
+        });
+    }, [onValuesChange, startTransition]);
 
     return (
         <div className="space-y-6">
             <div className="space-y-1">
-                <h3 className="text-lg font-semibold">Employee Identity</h3>
+                <h3 className="text-lg font-semibold">Invitee Details</h3>
                 <p className="text-sm text-muted-foreground">
-                    Enter the basic information for the new employee. An invitation will be sent to their email.
+                    Select the access level and share the invitee&apos;s contact details to send the invitation.
                 </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="wizard-role">Role *</Label>
+                    <Select
+                        value={values.role}
+                        onValueChange={(value) => onValuesChange({ role: value })}
+                        disabled={disabled || roleOptions.length <= 1}
+                    >
+                        <SelectTrigger
+                            id="wizard-role"
+                            aria-invalid={Boolean(roleError)}
+                            aria-describedby={roleError ? 'wizard-role-error' : undefined}
+                        >
+                            <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {roleOptions.map((role) => (
+                                <SelectItem key={role.name} value={role.name}>
+                                    {role.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <FieldError id="wizard-role-error" message={roleError} />
+                    {selectedRole?.description ? (
+                        <p className="text-xs text-muted-foreground">{selectedRole.description}</p>
+                    ) : null}
+                </div>
+
                 <div className="space-y-2">
                     <Label htmlFor="wizard-email">Email address *</Label>
                     <div className="relative">
@@ -160,38 +147,6 @@ export function IdentityStep({
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="wizard-firstName">First name *</Label>
-                    <Input
-                        id="wizard-firstName"
-                        type="text"
-                        autoComplete="given-name"
-                        value={values.firstName}
-                        onChange={(event) => onValuesChange({ firstName: event.target.value })}
-                        aria-invalid={Boolean(firstNameError)}
-                        aria-describedby={firstNameError ? 'wizard-firstName-error' : undefined}
-                        disabled={disabled}
-                        placeholder="John"
-                    />
-                    <FieldError id="wizard-firstName-error" message={firstNameError} />
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="wizard-lastName">Last name *</Label>
-                    <Input
-                        id="wizard-lastName"
-                        type="text"
-                        autoComplete="family-name"
-                        value={values.lastName}
-                        onChange={(event) => onValuesChange({ lastName: event.target.value })}
-                        aria-invalid={Boolean(lastNameError)}
-                        aria-describedby={lastNameError ? 'wizard-lastName-error' : undefined}
-                        disabled={disabled}
-                        placeholder="Smith"
-                    />
-                    <FieldError id="wizard-lastName-error" message={lastNameError} />
-                </div>
-
-                <div className="space-y-2">
                     <Label htmlFor="wizard-displayName">Display name *</Label>
                     <Input
                         id="wizard-displayName"
@@ -207,25 +162,78 @@ export function IdentityStep({
                     <FieldError id="wizard-displayName-error" message={displayNameError} />
                 </div>
 
-                <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="wizard-employeeNumber">Employee number *</Label>
-                    <Input
-                        id="wizard-employeeNumber"
-                        type="text"
-                        autoComplete="off"
-                        value={values.employeeNumber}
-                        onChange={(event) => onValuesChange({ employeeNumber: event.target.value })}
-                        aria-invalid={Boolean(employeeNumberError)}
-                        aria-describedby={employeeNumberError ? 'wizard-employeeNumber-error' : undefined}
-                        disabled={disabled}
-                        placeholder="EMP-001"
-                        className="sm:max-w-xs"
-                    />
-                    <FieldError id="wizard-employeeNumber-error" message={employeeNumberError} />
-                    <p className="text-xs text-muted-foreground">
-                        A unique identifier for this employee within your organization.
-                    </p>
-                </div>
+                {values.useOnboarding ? (
+                    <>
+                        <div className="space-y-2">
+                            <Label htmlFor="wizard-firstName">First name *</Label>
+                            <Input
+                                id="wizard-firstName"
+                                type="text"
+                                autoComplete="given-name"
+                                value={values.firstName}
+                                onChange={(event) => onValuesChange({ firstName: event.target.value })}
+                                aria-invalid={Boolean(firstNameError)}
+                                aria-describedby={firstNameError ? 'wizard-firstName-error' : undefined}
+                                disabled={disabled}
+                                placeholder="John"
+                            />
+                            <FieldError id="wizard-firstName-error" message={firstNameError} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="wizard-lastName">Last name *</Label>
+                            <Input
+                                id="wizard-lastName"
+                                type="text"
+                                autoComplete="family-name"
+                                value={values.lastName}
+                                onChange={(event) => onValuesChange({ lastName: event.target.value })}
+                                aria-invalid={Boolean(lastNameError)}
+                                aria-describedby={lastNameError ? 'wizard-lastName-error' : undefined}
+                                disabled={disabled}
+                                placeholder="Smith"
+                            />
+                            <FieldError id="wizard-lastName-error" message={lastNameError} />
+                        </div>
+
+                        <div className="space-y-2 sm:col-span-2">
+                            <Label htmlFor="wizard-employeeNumber">Employee number *</Label>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                                <Input
+                                    id="wizard-employeeNumber"
+                                    type="text"
+                                    autoComplete="off"
+                                    value={values.employeeNumber}
+                                    onChange={(event) => onValuesChange({ employeeNumber: event.target.value })}
+                                    aria-invalid={Boolean(employeeNumberError)}
+                                    aria-describedby={employeeNumberError ? 'wizard-employeeNumber-error' : undefined}
+                                    disabled={disabled}
+                                    placeholder="EMP-001"
+                                    className="sm:max-w-xs"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleGenerateEmployeeId}
+                                    disabled={disabled || isGenerating}
+                                    className="w-full sm:w-auto"
+                                >
+                                    {isGenerating ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : null}
+                                    Generate
+                                </Button>
+                            </div>
+                            <FieldError id="wizard-employeeNumber-error" message={employeeNumberError} />
+                            {generateError ? (
+                                <p className="text-xs text-destructive">{generateError}</p>
+                            ) : null}
+                            <p className="text-xs text-muted-foreground">
+                                A unique identifier for this employee within your organization.
+                            </p>
+                        </div>
+                    </>
+                ) : null}
             </div>
         </div>
     );

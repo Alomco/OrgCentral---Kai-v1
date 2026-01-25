@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 
 interface OnboardingWizardSuccessProps {
     email: string;
+    role: string;
     token?: string | null;
     invitationUrl?: string | null;
     emailDelivered?: boolean;
@@ -15,6 +16,7 @@ interface OnboardingWizardSuccessProps {
 
 export function OnboardingWizardSuccess({
     email,
+    role,
     token,
     invitationUrl,
     emailDelivered = true,
@@ -23,7 +25,7 @@ export function OnboardingWizardSuccess({
 }: OnboardingWizardSuccessProps) {
     const heading = emailDelivered ? 'Invitation Sent!' : 'Invitation Created';
     const detail = message ?? (emailDelivered
-        ? `The onboarding invitation has been sent to ${email}.`
+        ? `The invitation has been sent to ${email}.`
         : 'The invitation was created, but the email could not be delivered.');
 
     return (
@@ -41,7 +43,7 @@ export function OnboardingWizardSuccess({
                     <Alert variant="destructive">
                         <AlertTitle>Share the invite link</AlertTitle>
                         <AlertDescription>
-                            Copy the invitation URL below and send it to the employee manually.
+                            Copy the invitation URL below and send it to the invitee manually.
                         </AlertDescription>
                     </Alert>
                 )}
@@ -65,16 +67,18 @@ export function OnboardingWizardSuccess({
                     <AlertTitle>Next steps</AlertTitle>
                     <AlertDescription>
                         {emailDelivered
-                            ? 'The employee will receive an email with instructions to accept the invitation and complete their profile setup.'
-                            : 'Once the employee accepts the invitation, their profile setup will be completed.'}
+                            ? `The invitee will receive an email with instructions to accept the ${role} invitation.`
+                            : `Once the invitee accepts the ${role} invitation, their access will be activated.`}
                     </AlertDescription>
                 </Alert>
             </CardContent>
-            <CardFooter className="justify-center">
-                <Button onClick={onCancel} variant="outline">
-                    Close
-                </Button>
-            </CardFooter>
+            {onCancel ? (
+                <CardFooter className="justify-center">
+                    <Button onClick={onCancel} variant="outline">
+                        Close
+                    </Button>
+                </CardFooter>
+            ) : null}
         </Card>
     );
 }

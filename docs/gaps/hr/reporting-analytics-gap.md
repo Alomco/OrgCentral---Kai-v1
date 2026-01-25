@@ -38,3 +38,18 @@
 ## Related gaps
 - orgcentral/docs/gaps/documents/document-management-gap.md
 - orgcentral/docs/gaps/hr/compliance-gap.md
+
+## Implementation Status (as of 2026-01-24)
+
+| # | Gap | Status | Notes |
+|---|-----|--------|-------|
+| 1 | Document/Compliance KPIs in HR dashboard | ❌ OPEN | KPI grid shows leave/attendance only, no compliance tiles |
+| 2 | Document/Compliance metrics in HR reports | ❌ OPEN | `OrganizationPulseStats` lacks document/compliance fields |
+| 3 | HR Admin stats - real data | ⚠️ PARTIAL | Employee counts real; `pendingLeaveRequests`, `complianceAlerts`, `upcomingExpirations` hardcoded to 0 |
+| 4 | HR Admin pending approvals | ❌ OPEN | `getPendingApprovals` returns empty array placeholder |
+| 5 | HR Admin quick actions → Reports link | ❌ OPEN | No `/hr/reports` entry in quick actions |
+
+### Priority Recommendations
+1. **Low effort:** Add `/hr/reports` link to `hr-admin-quick-actions.tsx`
+2. **Medium effort:** Wire `pendingLeaveRequests` in admin stats (leave service exists)
+3. **High effort:** Create document-expiry use-case and add KPI tiles

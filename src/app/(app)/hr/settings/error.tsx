@@ -33,10 +33,10 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
                 </BreadcrumbList>
             </Breadcrumb>
 
-            <Card className="relative overflow-hidden shadow-[0_15px_50px_-20px_hsl(var(--destructive)/0.25)]">
-                <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[hsl(var(--destructive)/0.1)] blur-2xl" />
+            <Card className="relative overflow-hidden shadow-[0_15px_50px_-20px_oklch(var(--destructive)/0.25)]">
+                <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[oklch(var(--destructive)/0.1)] blur-2xl" />
                 <CardHeader>
-                    <CardTitle className="bg-linear-to-r from-[hsl(var(--destructive))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
+                    <CardTitle className="bg-linear-to-r from-[oklch(var(--destructive))] to-[oklch(var(--accent))] bg-clip-text text-transparent">
                         Unable to load HR settings
                     </CardTitle>
                     <CardDescription role="alert" aria-live="polite" aria-atomic="true">

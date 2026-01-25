@@ -58,15 +58,15 @@ export function AbacPolicyEditor({
     }, [router, state.status]);
 
     return (
-        <form action={formAction} className="space-y-6 rounded-2xl bg-[hsl(var(--card)/0.6)] p-6 backdrop-blur">
+        <form action={formAction} className="space-y-6 rounded-2xl bg-[oklch(var(--card)/0.6)] p-6 backdrop-blur">
             <input type="hidden" name="policiesText" value={serializedPolicies} />
 
             <div className="space-y-2">
-                <p className="text-sm font-semibold text-[hsl(var(--foreground))]">Policy builder</p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                <p className="text-sm font-semibold text-[oklch(var(--foreground))]">Policy builder</p>
+                <p className="text-xs text-[oklch(var(--muted-foreground))]">
                     Build ABAC policies with guided inputs. Changes apply immediately after saving.
                 </p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                <p className="text-xs text-[oklch(var(--muted-foreground))]">
                     Keep an allow policy for admins or you may lock out updates. Owners always bypass ABAC checks.
                 </p>
             </div>
@@ -105,7 +105,7 @@ export function AbacPolicyEditor({
                 >
                     Export template
                 </Button>
-                <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                <span className="text-xs text-[oklch(var(--muted-foreground))]">
                     {buildResult.policies.length} policies ({allowCount} allow, {denyCount} deny)
                 </span>
             </div>
@@ -130,7 +130,7 @@ export function AbacPolicyEditor({
                     className={
                         localMessage.status === 'error'
                             ? 'text-xs text-red-500'
-                            : 'text-xs text-[hsl(var(--muted-foreground))]'
+                            : 'text-xs text-[oklch(var(--muted-foreground))]'
                     }
                 >
                     {localMessage.message}
@@ -150,7 +150,7 @@ export function AbacPolicyEditor({
 
             <div className="space-y-5">
                 {drafts.length === 0 ? (
-                    <p className="text-sm text-[hsl(var(--muted-foreground))]">No policies defined yet.</p>
+                    <p className="text-sm text-[oklch(var(--muted-foreground))]">No policies defined yet.</p>
                 ) : (
                     drafts.map((draft, index) => (
                         <PolicyCard
@@ -175,9 +175,9 @@ export function AbacPolicyEditor({
                 )}
             </div>
 
-            <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.2)] p-4">
-                <p className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Value formatting tips</p>
-                <ul className="mt-2 space-y-1 text-[11px] text-[hsl(var(--muted-foreground))]">
+            <div className="rounded-xl border border-[oklch(var(--border))] bg-[oklch(var(--muted)/0.2)] p-4">
+                <p className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Value formatting tips</p>
+                <ul className="mt-2 space-y-1 text-[11px] text-[oklch(var(--muted-foreground))]">
                     <li>Use quotes for string values that look numeric: &quot;123&quot;.</li>
                     <li>Use JSON arrays for lists: [&quot;manager&quot;, &quot;hrAdmin&quot;].</li>
                     <li>Dynamic references are supported: $subject.departmentId, $resource.ownerId.</li>
@@ -191,7 +191,7 @@ export function AbacPolicyEditor({
             ) : null}
 
             {state.status === 'success' ? (
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">{state.message ?? 'Saved.'}</p>
+                <p className="text-xs text-[oklch(var(--muted-foreground))]">{state.message ?? 'Saved.'}</p>
             ) : null}
         </form>
     );

@@ -30,7 +30,7 @@ export async function PeopleStats({ authorization }: PeopleStatsProps) {
     const onLeaveFlexClass = `flex-[${Math.max(stats.onLeave, 0).toString()}]`;
 
     return (
-        <Card className="h-full border-border/50 bg-background/50 backdrop-blur-sm">
+        <Card className="h-full">
             <CardHeader>
                 <CardTitle>Workforce Overview</CardTitle>
                 <CardDescription>Current employee distribution</CardDescription>

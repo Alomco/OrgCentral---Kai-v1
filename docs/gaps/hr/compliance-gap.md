@@ -64,19 +64,33 @@ New Project: BulkAssignDialog is not wired (empty templates/employees) and there
 Gap: No operational visibility or bulk assignment workflow for compliance at organization scale.
 
 ## TODOs
-- [ ] Analyze and implement user submission UI that calls /api/hr/compliance/update with attachments, completion dates, acknowledgements, and notes.
-- [ ] Analyze and wire compliance item detail page to real data and align status labels with ComplianceItemStatus.
-- [ ] Analyze and join compliance items with template metadata to display item names, types, guidance, and internal-only visibility.
-- [ ] Analyze and wire bulk assignment to templates/employees with an onAssign action backed by assign-compliance-items.
-- [ ] Analyze and surface expiring items in the compliance page using dueDate/expiryDurationDays and the reminders pipeline.
-- [ ] Analyze and add a category manager (list/upsert categories) to avoid free-text category keys.
+- [x] Analyze and implement user submission UI that calls /api/hr/compliance/update with attachments, completion dates, acknowledgements, and notes.
+- [x] Analyze and wire compliance item detail page to real data and align status labels with ComplianceItemStatus.
+- [x] Analyze and join compliance items with template metadata to display item names, types, guidance, and internal-only visibility.
+- [x] Analyze and wire bulk assignment to templates/employees with an onAssign action backed by assign-compliance-items.
+- [x] Analyze and surface expiring items in the compliance page using dueDate/expiryDurationDays and the reminders pipeline.
+- [x] Analyze and add a category manager (list/upsert categories) to avoid free-text category keys.
 
 ## Actionable TODOs with targets
-- [ ] Build interactive item submission UI in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-items-panel.tsx` or a new client detail view, calling `orgcentral/src/app/api/hr/compliance/update/route.ts` with attachments, completedAt, and notes.
-- [ ] Replace mock compliance detail page with real data loading in `orgcentral/src/app/(app)/hr/compliance/[itemId]/page.tsx`, and update `orgcentral/src/app/(app)/hr/compliance/[itemId]/compliance-item-utils.ts` to map `ComplianceItemStatus`.
-- [ ] Add a server join of compliance items + template items (name/type/guidance/isInternalOnly) and use it to render in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-items-panel.tsx`.
-- [ ] Filter out internal-only items for employee views while keeping admin visibility (use template metadata, not just item status).
-- [ ] Wire `orgcentral/src/app/(app)/hr/compliance/_components/bulk-assign-dialog.tsx` with templates and employees and add an onAssign action that calls `orgcentral/src/app/api/hr/compliance/assign/route.ts`.
-- [ ] Surface expiry data in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-expiry-panel.tsx` and mount it on `orgcentral/src/app/(app)/hr/compliance/page.tsx` with a real expiring-items query.
+- [x] Build interactive item submission UI in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-items-panel.tsx` or a new client detail view, calling `orgcentral/src/app/api/hr/compliance/update/route.ts` with attachments, completedAt, and notes.
+- [x] Replace mock compliance detail page with real data loading in `orgcentral/src/app/(app)/hr/compliance/[itemId]/page.tsx`, and update `orgcentral/src/app/(app)/hr/compliance/[itemId]/compliance-item-utils.ts` to map `ComplianceItemStatus`.
+- [x] Add a server join of compliance items + template items (name/type/guidance/isInternalOnly) and use it to render in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-items-panel.tsx`.
+- [x] Filter out internal-only items for employee views while keeping admin visibility (use template metadata, not just item status).
+- [x] Wire `orgcentral/src/app/(app)/hr/compliance/_components/bulk-assign-dialog.tsx` with templates and employees and add an onAssign action that calls `orgcentral/src/app/api/hr/compliance/assign/route.ts`.
+- [x] Surface expiry data in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-expiry-panel.tsx` and mount it on `orgcentral/src/app/(app)/hr/compliance/page.tsx` with a real expiring-items query.
+- [x] Add category manager UI with list/upsert API in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-category-manager.tsx`.
+
+## Implementation Status (as of 2026-01-24)
+
+| # | Gap | Status | Implementation |
+|---|-----|--------|----------------|
+| 1 | User-facing submission UI | ✅ CLOSED | `compliance-item-submission-form.tsx` with all types (Document, Date, YesNo, Acknowledgement) |
+| 2 | Detail page mock data / status mapping | ✅ CLOSED | Real data via repositories; correct `ComplianceItemStatus` mapping |
+| 3 | Template metadata joined to items | ✅ CLOSED | `getComplianceItemsWithTemplates` joins name/type/guidance/isInternalOnly |
+| 4 | Bulk assign dialog wiring | ✅ CLOSED | Templates/employees passed from page; API route called |
+| 5 | Expiry panel not connected | ✅ CLOSED | `compliance-expiry-panel-loader.tsx` with real 30-day expiry query |
+| 6 | Category management UI | ✅ CLOSED | `compliance-category-manager.tsx` with list/upsert API |
+
+### All gaps from this document have been implemented. ✅
 - [ ] Add compliance category manager UI that calls `orgcentral/src/app/api/hr/compliance/categories/route.ts` for list/upsert.
 - [ ] Enhance review flow in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-review-queue-panel.tsx` to show evidence context and update completedAt/attachments in `orgcentral/src/app/(app)/hr/compliance/actions/review-item.ts`.

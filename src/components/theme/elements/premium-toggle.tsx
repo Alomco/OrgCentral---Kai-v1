@@ -48,7 +48,7 @@ export function PremiumToggle({
     };
 
     const vibeStyles: Record<ToggleVibe, string> = {
-        glow: state ? 'bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.5)]' : 'bg-muted',
+        glow: state ? 'bg-primary shadow-[0_0_20px_oklch(var(--primary)/0.5)]' : 'bg-muted',
         gradient: state ? 'bg-gradient-to-r from-primary to-accent' : 'bg-muted',
         glass: state
             ? 'bg-primary/60 backdrop-blur-sm border border-primary/40'

@@ -13,6 +13,8 @@ import type { DeleteUnplannedAbsenceDependencies, DeleteUnplannedAbsenceInput, D
 import type { GetAbsencesDependencies, GetAbsencesInput, GetAbsencesResult } from '@/server/use-cases/hr/absences/get-absences';
 import type { UpdateAbsenceSettingsDependencies, UpdateAbsenceSettingsInput, UpdateAbsenceSettingsResult } from '@/server/use-cases/hr/absences/update-absence-settings';
 import type { AnalyzeAbsenceAttachmentDependencies, AnalyzeAbsenceAttachmentInput } from '@/server/use-cases/hr/absences/analyze-absence-attachment';
+import type { PresignAbsenceAttachmentInput, PresignAbsenceAttachmentResult } from '@/server/use-cases/hr/absences/presign-absence-attachment';
+import type { PresignAbsenceAttachmentDownloadInput, PresignAbsenceAttachmentDownloadResult } from '@/server/use-cases/hr/absences/presign-absence-attachment-download';
 import {
     handleAcknowledgeAbsence,
     handleAddAttachments,
@@ -21,6 +23,8 @@ import {
     handleCancelAbsence,
     handleDeleteAbsence,
     handleListAbsences,
+    handlePresignAbsenceAttachment,
+    handlePresignAbsenceAttachmentDownload,
     handleRecordReturnToWork,
     handleRemoveAttachment,
     handleReportAbsence,
@@ -102,6 +106,16 @@ export class AbsenceService extends AbstractHrService {
 
     async analyzeAttachment(input: AnalyzeAbsenceAttachmentInput) {
         return handleAnalyzeAttachment(this.runtime, input);
+    }
+
+    presignAbsenceAttachment(input: PresignAbsenceAttachmentInput): Promise<PresignAbsenceAttachmentResult> {
+        return handlePresignAbsenceAttachment(this.runtime, input);
+    }
+
+    presignAbsenceAttachmentDownload(
+        input: PresignAbsenceAttachmentDownloadInput,
+    ): Promise<PresignAbsenceAttachmentDownloadResult> {
+        return handlePresignAbsenceAttachmentDownload(this.runtime, input);
     }
 
     private runOperation<TResult>(

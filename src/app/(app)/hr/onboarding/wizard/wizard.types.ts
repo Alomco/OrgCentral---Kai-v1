@@ -14,6 +14,11 @@ export interface EmailCheckResult {
     actionLabel?: string;
 }
 
+export interface InviteRoleOption {
+    name: string;
+    description?: string | null;
+}
+
 export interface ManagerOption {
     employeeNumber: string;
     displayName: string;

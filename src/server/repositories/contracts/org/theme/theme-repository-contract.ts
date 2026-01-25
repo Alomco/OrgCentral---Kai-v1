@@ -30,6 +30,7 @@ export function mapThemeRecordToDomain(record: OrgThemeRecord | null): OrgThemeS
     return {
         presetId: record.theme.presetId,
         customOverrides: record.theme.customOverrides,
+        uiStyleId: record.theme.uiStyleId,
         updatedAt: record.updatedAt,
     };
 }

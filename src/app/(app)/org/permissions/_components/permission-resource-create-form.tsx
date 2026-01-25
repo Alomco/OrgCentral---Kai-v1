@@ -49,11 +49,11 @@ export function PermissionResourceCreateForm() {
         <form
             ref={formReference}
             action={action}
-            className="space-y-4 rounded-xl border bg-[hsl(var(--muted)/0.2)] p-4"
+            className="space-y-4 rounded-xl border bg-[oklch(var(--muted)/0.2)] p-4"
         >
             <div>
-                <p className="text-sm font-semibold text-[hsl(var(--foreground))]">Add resource</p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                <p className="text-sm font-semibold text-[oklch(var(--foreground))]">Add resource</p>
+                <p className="text-xs text-[oklch(var(--muted-foreground))]">
                     Use dot-notation keys that align with your ABAC policies.
                 </p>
             </div>

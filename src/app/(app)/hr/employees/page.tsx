@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { headers as nextHeaders } from 'next/headers';
 import Link from 'next/link';
@@ -18,7 +19,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 
 import { HrPageHeader } from '../_components/hr-page-header';
-import { EmployeeDirectoryClient, EmployeeInvitationPanel } from './_components';
+import { EmployeeDirectoryClient } from './_components/employee-directory-client';
+
+const EmployeeInvitationPanel = dynamic(
+    () => import('./_components/employee-invitation-panel').then((module) => module.EmployeeInvitationPanel),
+    { loading: () => <Skeleton className="h-40 w-full rounded-2xl" /> },
+);
 import { getEmployeeList, getEmployeeFilterOptions, getEmployeeStats } from './actions';
 
 export const metadata: Metadata = {

@@ -48,6 +48,11 @@ export const NEON_FOREGROUND = '240 84% 5%' as ColorTokenValue;
 export const ROYAL_FOREGROUND = '270 84% 5%' as ColorTokenValue;
 export const GALAXY_FOREGROUND = '230 84% 5%' as ColorTokenValue;
 export const TANGERINE_FOREGROUND = '35 84% 5%' as ColorTokenValue;
+export const INK = '0.12 0.02 255' as ColorTokenValue;
+export const LIGHT_MUTED_FOREGROUND = '0.5 0.02 255' as ColorTokenValue;
+export const DARK_MUTED_FOREGROUND = '0.7 0.02 255' as ColorTokenValue;
+export const LIGHT_BORDER = '0.6 0.01 255' as ColorTokenValue;
+export const DARK_BORDER = '0.52 0.01 255' as ColorTokenValue;
 
 export function surface(...values: SurfaceTokens): SurfaceTokens {
     return values;

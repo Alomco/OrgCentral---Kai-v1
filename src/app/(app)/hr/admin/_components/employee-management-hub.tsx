@@ -6,7 +6,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import Link from 'next/link';
 import { UsersIcon, UserPlusIcon, UserCheckIcon, UserXIcon } from 'lucide-react';
 
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
@@ -15,8 +14,21 @@ import { listEmployeeProfiles } from '@/server/use-cases/hr/people/list-employee
 import type { EmployeeProfileDTO, EmploymentStatusCode } from '@/server/types/hr/people';
 
 import { formatHumanDate, HrStatCard } from '../../_components';
+import { IntentPrefetchLink } from '@/components/navigation/intent-prefetch-link';
 import type { EmployeeStats } from '../_types';
 import { EmployeeDataOperationsCard } from './employee-data-operations-card';
+
+const STATUS_VARIANTS = new Map<EmploymentStatusCode, 'default' | 'secondary' | 'destructive' | 'outline'>([
+    ['ACTIVE', 'default'],
+    ['ON_LEAVE', 'secondary'],
+    ['OFFBOARDING', 'secondary'],
+    ['INACTIVE', 'destructive'],
+    ['TERMINATED', 'destructive'],
+    ['ARCHIVED', 'outline'],
+]);
+
+const STATUS_SEPARATOR_REGEX = /_/g;
+const WORD_START_REGEX = /\b\w/g;
 
 export interface EmployeeManagementHubProps {
     authorization: RepositoryAuthorizationContext;
@@ -76,12 +88,12 @@ export async function EmployeeManagementHub({ authorization }: EmployeeManagemen
                             <CardTitle>Recent Employees</CardTitle>
                             <CardDescription>Latest additions to your organization</CardDescription>
                         </div>
-                        <Link 
-                            href="/hr/onboarding/new" 
+                        <IntentPrefetchLink
+                            href="/hr/onboarding/new"
                             className="text-sm font-medium text-primary hover:underline"
                         >
                             + Onboard New Employee
-                        </Link>
+                        </IntentPrefetchLink>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -132,28 +144,35 @@ export async function EmployeeManagementHub({ authorization }: EmployeeManagemen
 }
 
 function computeEmployeeStats(profiles: EmployeeProfileDTO[]): EmployeeStats {
-    return {
-        total: profiles.length,
-        active: profiles.filter(p => p.employmentStatus === 'ACTIVE').length,
-        pendingOnboarding: profiles.filter(p => p.employmentStatus === 'OFFBOARDING').length,
-        inactive: profiles.filter(p => p.employmentStatus === 'INACTIVE' || p.employmentStatus === 'TERMINATED').length,
-    };
+    return profiles.reduce<EmployeeStats>((accumulator, profile) => {
+        accumulator.total += 1;
+        if (profile.employmentStatus === 'ACTIVE') {
+            accumulator.active += 1;
+        }
+        if (profile.employmentStatus === 'OFFBOARDING') {
+            accumulator.pendingOnboarding += 1;
+        }
+        if (profile.employmentStatus === 'INACTIVE' || profile.employmentStatus === 'TERMINATED') {
+            accumulator.inactive += 1;
+        }
+        return accumulator;
+    }, {
+        total: 0,
+        active: 0,
+        pendingOnboarding: 0,
+        inactive: 0,
+    });
 }
 
 function getStatusVariant(status: EmploymentStatusCode): 'default' | 'secondary' | 'destructive' | 'outline' {
-    switch (status) {
-        case 'ACTIVE': return 'default';
-        case 'ON_LEAVE': return 'secondary';
-        case 'OFFBOARDING': return 'secondary';
-        case 'INACTIVE': return 'destructive';
-        case 'TERMINATED': return 'destructive';
-        case 'ARCHIVED': return 'outline';
-        default: return 'outline';
-    }
+    return STATUS_VARIANTS.get(status) ?? 'outline';
 }
 
 function formatStatus(status: string): string {
-    return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    return status
+        .replace(STATUS_SEPARATOR_REGEX, ' ')
+        .toLowerCase()
+        .replace(WORD_START_REGEX, (character) => character.toUpperCase());
 }
 
 function EmptyState() {
@@ -163,12 +182,12 @@ function EmptyState() {
             <p className="mt-4 text-sm text-muted-foreground">
                 No employees yet. Start onboarding your first team member!
             </p>
-            <Link 
+            <IntentPrefetchLink
                 href="/hr/onboarding/new"
                 className="mt-4 text-sm font-medium text-primary hover:underline"
             >
                 Onboard First Employee →
-            </Link>
+            </IntentPrefetchLink>
         </div>
     );
 }

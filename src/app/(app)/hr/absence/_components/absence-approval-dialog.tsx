@@ -15,6 +15,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import type { AbsenceMetadata } from '@/server/domain/absences/metadata';
+import { getAbsenceDurationDisplay } from '../absence-duration';
 
 interface AbsenceRequest {
     id: string;
@@ -24,6 +26,7 @@ interface AbsenceRequest {
     endDate: Date;
     hours: number;
     reason?: string;
+    metadata: AbsenceMetadata;
 }
 
 interface AbsenceApprovalDialogProps {
@@ -47,16 +50,6 @@ function formatDateRange(start: Date, end: Date): string {
     });
     if (startString === endString) { return startString; }
     return startString + ' - ' + endString;
-}
-
-function getDayCount(start: Date, end: Date): number {
-    const diff = end.getTime() - start.getTime();
-    return Math.ceil(diff / 86400000) + 1;
-}
-
-function formatHours(hours: number): string {
-    const rounded = Math.round(hours * 100) / 100;
-    return String(rounded) + ' hour' + (rounded === 1 ? '' : 's');
 }
 
 export function AbsenceApprovalDialog({
@@ -104,7 +97,12 @@ export function AbsenceApprovalDialog({
 
     if (!request) { return null; }
 
-    const dayCount = getDayCount(request.startDate, request.endDate);
+    const durationDisplay = getAbsenceDurationDisplay({
+        metadata: request.metadata,
+        startDate: request.startDate,
+        endDate: request.endDate,
+        hours: request.hours,
+    });
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -126,7 +124,8 @@ export function AbsenceApprovalDialog({
                         <div className="text-sm text-muted-foreground">
                             <p>{formatDateRange(request.startDate, request.endDate)}</p>
                             <p className="text-xs">
-                                {dayCount} day{dayCount !== 1 ? 's' : ''} · {formatHours(request.hours)}
+                                {durationDisplay.label}
+                                {durationDisplay.timeRange ? ` · ${durationDisplay.timeRange}` : ''}
                             </p>
                         </div>
                         {request.reason ? (

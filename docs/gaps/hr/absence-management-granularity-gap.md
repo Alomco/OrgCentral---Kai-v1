@@ -53,10 +53,10 @@
   - old/src/app/(app)/hr/absences/page.tsx
 
 ## Gaps (new project)
-1) Partial-day granularity is reduced: the report form captures only hours + dates with no duration type or time range, and approvals show day counts rather than hours.
-   - New: orgcentral/src/app/(app)/hr/absence/_components/report-absence-form.tsx
-   - New: orgcentral/src/app/(app)/hr/absence/_components/absence-approval-dialog.tsx
-   - Old: old/src/app/(app)/hr/absences/page.tsx
+1) Partial-day granularity is restored: report form captures duration type/time range, and list/detail/approval views show hours vs days with time ranges.
+  - New: orgcentral/src/app/(app)/hr/absence/_components/report-absence-form.tsx
+  - New: orgcentral/src/app/(app)/hr/absence/_components/absence-approval-dialog.tsx
+  - Old: old/src/app/(app)/hr/absences/page.tsx
 2) Evidence attachment workflows are implemented: UI supports upload, view, and management of absence attachments.
    - New: orgcentral/src/app/api/hr/absences/[absenceId]/attachments/route.ts
    - New: orgcentral/src/server/use-cases/hr/absences/add-absence-attachments.ts
@@ -92,7 +92,7 @@
    - Old: old/src/app/(app)/hr/admin/AbsenceManagementHub.tsx
 
 ## TODOs
-- [ ] Analyze and redesign absence reporting to capture duration type (days vs hours), start/end times, and computed duration logic; align approvals to show hours vs days.
+- [x] Analyze and redesign absence reporting to capture duration type (days vs hours), start/end times, and computed duration logic; align approvals to show hours vs days.
 - [x] Analyze and implement absence attachment upload/view UI wired to the attachments routes and metadata.
 - [x] Analyze and surface AI validation triggers and status in absence detail views.
 - [x] Analyze and build return-to-work actions that update status to closed and capture comments.
@@ -103,8 +103,8 @@
 - [ ] Analyze and expand admin absence management to include ongoing/history, filters, cancellation, and richer metadata.
 
 ## Actionable TODOs with targets
-- [ ] Extend `orgcentral/src/app/(app)/hr/absence/_components/report-absence-form.tsx` and `orgcentral/src/app/(app)/hr/absence/schema.ts` to support duration type (days vs hours) with start/end time fields and computed duration display.
-- [ ] Update `orgcentral/src/app/(app)/hr/absence/actions.ts` to map partial-day inputs into `report-unplanned-absence` payload and preserve hours overrides.
+- [x] Extend `orgcentral/src/app/(app)/hr/absence/_components/report-absence-form.tsx` and `orgcentral/src/app/(app)/hr/absence/schema.ts` to support duration type (days vs hours) with start/end time fields and computed duration display.
+- [x] Update `orgcentral/src/app/(app)/hr/absence/actions.ts` to map partial-day inputs into `report-unplanned-absence` payload and preserve hours overrides.
 - [x] Add absence attachment UI and wire to `orgcentral/src/app/api/hr/absences/[absenceId]/attachments/route.ts` with metadata matching `orgcentral/src/server/types/hr-absence-schemas.ts`.
 - [x] Expose AI validation controls and status in `orgcentral/src/app/(app)/hr/absence/_components/absence-detail-dialog.tsx`, using `orgcentral/src/app/api/hr/absences/[absenceId]/ai/route.ts`.
 - [x] Add return-to-work dialog to `orgcentral/src/app/(app)/hr/absence/_components/absence-row.tsx` and submit to `orgcentral/src/app/api/hr/absences/[absenceId]/return-to-work/route.ts`.
@@ -122,7 +122,7 @@
 - AI validation UI: implemented
 - Return-to-work UI: implemented
 - Type labels from config: implemented
-- Partial-day granularity: open
+- Partial-day granularity: implemented (duration type/time range surfaced in list/detail/approval/history)
 - Lifecycle views (ongoing/history + notes): partial
 - Absence balance cards: open
 - Absence settings UI: open

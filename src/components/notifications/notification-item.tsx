@@ -20,11 +20,16 @@ import { markHrNotificationRead } from '@/app/(app)/hr/notifications/actions';
 import { toast } from 'sonner';
 
 interface NotificationItemProps {
-  notification: HRNotificationDTO;
+  notification: NotificationSummary;
   compact?: boolean;
   onRead?: (id: string) => void;
   onDelete?: (id: string) => void;
 }
+
+export type NotificationSummary = Pick<
+  HRNotificationDTO,
+  'id' | 'title' | 'message' | 'type' | 'priority' | 'isRead' | 'createdAt' | 'actionUrl' | 'actionLabel'
+>;
 
 const TYPE_ICONS: Record<HRNotificationTypeCode, React.ElementType> = {
   'leave-approval': CheckCircle,

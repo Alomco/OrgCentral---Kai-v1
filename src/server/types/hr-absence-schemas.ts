@@ -11,6 +11,17 @@ const DECISION_STATUSES = new Set<AbsenceStatus>([
     AbsenceStatus.CANCELLED,
 ]);
 
+const ABSENCE_DURATION_TYPES = ['DAYS', 'HOURS'] as const;
+const TIME_RANGE_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+const absenceMetadataSchema = z
+    .object({
+        durationType: z.enum(ABSENCE_DURATION_TYPES).optional(),
+        startTime: z.string().regex(TIME_RANGE_PATTERN, 'Start time must be HH:MM.').optional(),
+        endTime: z.string().regex(TIME_RANGE_PATTERN, 'End time must be HH:MM.').optional(),
+    })
+    .loose();
+
 export const absenceFiltersSchema = z.object({
     userId: z.uuid().optional(),
     status: z.enum(ABSENCE_STATUS_VALUES).optional(),
@@ -29,7 +40,7 @@ export const reportUnplannedAbsenceSchema = z
         hours: z.coerce.number().positive().max(1000).optional(),
         reason: z.string().max(2000).optional(),
         healthStatus: z.enum(HEALTH_STATUS_VALUES).optional().nullable(),
-        metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+        metadata: absenceMetadataSchema.optional().nullable(),
     })
     .refine((value) => Boolean(value.typeId ?? value.typeKey), {
         message: 'Either typeId or typeKey must be provided.',
@@ -45,7 +56,7 @@ export const approveAbsenceSchema = z.object({
         }),
     reason: z.string().max(2000).optional().nullable(),
     healthStatus: z.enum(HEALTH_STATUS_VALUES).optional().nullable(),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const updateAbsenceSchema = z.object({
@@ -54,18 +65,18 @@ export const updateAbsenceSchema = z.object({
     hours: z.coerce.number().positive().max(1000).optional(),
     reason: z.string().max(2000).optional().nullable(),
     healthStatus: z.enum(HEALTH_STATUS_VALUES).optional().nullable(),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const returnToWorkSchema = z.object({
     returnDate: z.coerce.date(),
     comments: z.string().max(2000).optional().nullable(),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const deleteAbsenceSchema = z.object({
     reason: z.string().trim().min(10).max(2000),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 const attachmentMetadataSchema = z.object({
@@ -74,7 +85,7 @@ const attachmentMetadataSchema = z.object({
     contentType: z.string().min(3).max(255),
     fileSize: z.coerce.number().int().positive().max(MAX_ATTACHMENT_BYTES),
     checksum: z.string().min(6).max(256).optional(),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const addAbsenceAttachmentSchema = z.object({
@@ -87,12 +98,12 @@ export const removeAbsenceAttachmentSchema = z.object({
 
 export const acknowledgeAbsenceSchema = z.object({
     note: z.string().max(2000).optional().nullable(),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const cancelAbsenceSchema = z.object({
     reason: z.string().trim().min(5).max(2000),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const absenceTypeInputSchema = z.object({
@@ -103,7 +114,7 @@ export const absenceTypeInputSchema = z.object({
         .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Keys must be lower-case kebab-case.')
         .optional(),
     tracksBalance: z.boolean().default(true),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const absenceTypeRemovalSchema = z
@@ -123,7 +134,7 @@ export const absenceTypeRemovalSchema = z
 export const updateAbsenceSettingsSchema = z.object({
     hoursInWorkDay: z.coerce.number().positive().max(24),
     roundingRule: z.string().trim().max(64).optional().nullable(),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const absenceAiValidationSchema = z.object({
@@ -132,7 +143,7 @@ export const absenceAiValidationSchema = z.object({
     issues: z.array(z.string().max(500)).optional().default([]),
     confidence: z.number().min(0).max(1).optional().nullable(),
     attachmentId: z.uuid().optional(),
-    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+    metadata: absenceMetadataSchema.optional().nullable(),
 });
 
 export const analyzeAbsenceAttachmentSchema = z

@@ -2,6 +2,7 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
 import { getAbsences } from '@/server/use-cases/hr/absences/get-absences';
 import { PrismaUnplannedAbsenceRepository } from '@/server/repositories/prisma/hr/absences/prisma-unplanned-absence-repository';
+import { coerceAbsenceMetadata } from '@/server/domain/absences/metadata';
 
 export interface AbsenceManagerPanels {
     pendingRequests: {
@@ -13,6 +14,7 @@ export interface AbsenceManagerPanels {
         hours: number;
         reason?: string;
         submittedAt: Date;
+        metadata: ReturnType<typeof coerceAbsenceMetadata>;
     }[];
     teamAbsences: {
         id: string;
@@ -76,6 +78,7 @@ export async function buildAbsenceManagerPanels(
                 hours: typeof absence.hours === 'number' ? absence.hours : Number(absence.hours),
                 reason: absence.reason ?? undefined,
                 submittedAt: absence.createdAt,
+                metadata: coerceAbsenceMetadata(absence.metadata),
             };
         });
 

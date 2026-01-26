@@ -7,10 +7,12 @@ import { Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import type { AbsenceMetadata } from '@/server/domain/absences/metadata';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
 import { AbsenceApprovalDialog } from './absence-approval-dialog';
 import { approveAbsenceAction, rejectAbsenceAction } from '../actions';
+import { getAbsenceDurationDisplay } from '../absence-duration';
 
 interface PendingAbsence {
     id: string;
@@ -21,6 +23,7 @@ interface PendingAbsence {
     hours: number;
     reason?: string;
     submittedAt: Date;
+    metadata: AbsenceMetadata;
 }
 
 interface AbsenceApprovalPanelProps {
@@ -39,11 +42,6 @@ function formatDateRange(start: Date, end: Date): string {
     });
     if (startString === endString) { return startString; }
     return startString + ' - ' + endString;
-}
-
-function formatHours(hours: number): string {
-    const rounded = Math.round(hours * 100) / 100;
-    return String(rounded) + ' hour' + (rounded === 1 ? '' : 's');
 }
 
 function formatTimeAgo(date: Date): string {
@@ -94,12 +92,20 @@ export function AbsenceApprovalPanel({
             <CardContent className="space-y-3">
                 {hasRequests ? (
                     <>
-                        {pendingRequests.slice(0, 5).map((request) => (
-                            <div
-                                key={request.id}
-                                className="flex items-start justify-between gap-4 rounded-lg border p-3"
-                            >
-                                <div className="min-w-0 flex-1">
+                        {pendingRequests.slice(0, 5).map((request) => {
+                            const durationDisplay = getAbsenceDurationDisplay({
+                                metadata: request.metadata,
+                                startDate: request.startDate,
+                                endDate: request.endDate,
+                                hours: request.hours,
+                            });
+
+                            return (
+                                <div
+                                    key={request.id}
+                                    className="flex items-start justify-between gap-4 rounded-lg border p-3"
+                                >
+                                    <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
                                         <p className="font-medium text-sm truncate">
                                             {request.employeeName}
@@ -109,8 +115,13 @@ export function AbsenceApprovalPanel({
                                         </Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        {formatDateRange(request.startDate, request.endDate)} · {formatHours(request.hours)}
+                                        {formatDateRange(request.startDate, request.endDate)} · {durationDisplay.label}
                                     </p>
+                                    {durationDisplay.timeRange ? (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {durationDisplay.timeRange}
+                                        </p>
+                                    ) : null}
                                     {request.reason ? (
                                         <p className="text-xs text-muted-foreground mt-1 truncate">
                                             {request.reason}
@@ -129,8 +140,9 @@ export function AbsenceApprovalPanel({
                                         Review
                                     </Button>
                                 </div>
-                            </div>
-                        ))}
+                                </div>
+                            );
+                        })}
                         {pendingRequests.length > 5 ? (
                             <Button variant="ghost" size="sm" className="w-full" asChild>
                                 <Link href="/hr/absence/requests">

@@ -24,7 +24,7 @@ import { HrPageHeader } from '../_components/hr-page-header';
 import { PolicyAdminPanel } from './_components/policy-admin-panel';
 
 function sortPoliciesByEffectiveDateDescending(policies: HRPolicy[]): HRPolicy[] {
-    return policies.slice().sort((left, right) => right.effectiveDate.getTime() - left.effectiveDate.getTime());
+    return policies.toSorted((left, right) => right.effectiveDate.getTime() - left.effectiveDate.getTime());
 }
 
 export default function HrPoliciesPage() {
@@ -43,10 +43,8 @@ async function PoliciesPageContent() {
         auditSource: 'ui:hr:policies:list',
     });
 
-    const { policies } = await listHrPoliciesForUi({ authorization });
-    const sortedPolicies = sortPoliciesByEffectiveDateDescending(policies);
-
-    const adminAuthorization = await getSessionContext(
+    const policiesPromise = listHrPoliciesForUi({ authorization });
+    const adminAuthorizationPromise = getSessionContext(
         {},
         {
             headers: headerStore,
@@ -59,6 +57,12 @@ async function PoliciesPageContent() {
     )
         .then((result) => result.authorization)
         .catch(() => null);
+
+    const [{ policies }, adminAuthorization] = await Promise.all([
+        policiesPromise,
+        adminAuthorizationPromise,
+    ]);
+    const sortedPolicies = sortPoliciesByEffectiveDateDescending(policies);
 
     return (
         <div className="space-y-6">

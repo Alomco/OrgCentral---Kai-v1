@@ -3,6 +3,7 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getTimeTrackingService } from '@/server/services/hr/time-tracking/time-tracking-service.provider';
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { calculateTotalHours } from '@/server/use-cases/hr/time-tracking/utils';
 
 import type { TimeEntryFormState } from './form-state';
@@ -138,7 +139,9 @@ export async function approveTimeEntryAction(
         },
     });
 
-    revalidatePath('/hr/time-tracking');
+    after(() => {
+        revalidatePath('/hr/time-tracking');
+    });
 }
 
 export async function rejectTimeEntryAction(
@@ -156,5 +159,7 @@ export async function rejectTimeEntryAction(
         },
     });
 
-    revalidatePath('/hr/time-tracking');
+    after(() => {
+        revalidatePath('/hr/time-tracking');
+    });
 }

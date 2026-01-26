@@ -6,7 +6,7 @@ Purpose: preserve context for follow-up fixes. Keep changes minimal, ESLint-safe
 - Clean corporate is the default UI style and corporate slate is the default preset.
 - UI style tokens/surfaces are split into modular files under `/styles/ui/cleanCorporateUi`.
 - Theme primitives (cards/buttons/badges) still hardcode glass/gradient/neon variants.
-- UI style is stored client-side only (localStorage), not tenant-scoped.
+- UI style is stored client-side only (localStorage) instead of Zustand persist/localStorage tied to tenant SSR.
 - Contrast audit only checks globals.css, not presets/overrides.
 
 ## Key files (entry points)
@@ -22,7 +22,7 @@ Purpose: preserve context for follow-up fixes. Keep changes minimal, ESLint-safe
 
 ## Issues impacting clean corporate
 - Theme badges and status colors still use fixed semantic styles.
-- UI style is stored client-side only (localStorage), not tenant-scoped.
+- UI style is stored client-side only (localStorage) instead of Zustand persist/localStorage tied to tenant SSR.
 - Contrast audit only checks globals.css, not presets/overrides.
 
 ## Phase TODO (short notes)
@@ -42,7 +42,7 @@ Purpose: preserve context for follow-up fixes. Keep changes minimal, ESLint-safe
 - Ensure reduced-motion and clean corporate disable glow/blur where required. (verify)
 
 ### P4: Tenant + performance
-- Persist UI style per tenant (SSR via `TenantThemeRegistry`) instead of only localStorage. (done)
+- Persist UI style per tenant (SSR via `TenantThemeRegistry`) with Zustand persist/localStorage for client overrides. (done)
 - Avoid extra client JS by using data attributes and CSS variables only.
 
 ### P5: Contrast and validation

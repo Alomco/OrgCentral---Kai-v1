@@ -10,6 +10,7 @@
 - Short checklists (<1 screen) per topic, stored alongside the relevant domain docs.
 - Pointers to reusable templates: repository contracts, server action skeletons, Suspense patterns.
 - UX reminders emphasizing flow quality over visuals.
+- State management guidance: React Query for async server state, Zustand persist/localStorage for client-local state.
 
 ## Guardrails
 - Avoid long essays—focus on snippets agents can paste beside tickets.

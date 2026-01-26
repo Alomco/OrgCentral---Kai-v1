@@ -28,7 +28,7 @@ Purpose: copy the mature frontend that lives in `old/` into the fresh `orgcentra
    - Split global CSS by concern (base, tokens, utilities) to keep files <250 LOC.  
    - Replace any legacy head tags with Next 16 `Metadata` exports.
 2. **Providers island**  
-   - Move `providers.tsx`, `FullCalendarWrapper.tsx`, React Query/TanStack providers, and context wrappers under `src/app/providers.tsx`.  
+   - Move `providers.tsx`, `FullCalendarWrapper.tsx`, React Query/TanStack providers, Zustand store/persist setup, and context wrappers under `src/app/providers.tsx`.  
    - Convert heavy providers (theme, notifications) into cacheable server components that expose lightweight client shims.
 3. **Cross-cutting hooks**  
    - Recreate `BrandingContext`, `NotificationContext`, and `UserContext` in `orgcentral/src/context` with SOLID boundaries (context = interface, provider = implementation).  

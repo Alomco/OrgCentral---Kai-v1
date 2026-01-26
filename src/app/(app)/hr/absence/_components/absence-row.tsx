@@ -21,6 +21,7 @@ import { formatHumanDate } from '../../_components/format-date';
 import { AbsenceDetailDialog, type AbsenceDetailData } from './absence-detail-dialog';
 import { CancelAbsenceDialog } from './cancel-absence-dialog';
 import { ReturnToWorkDialog } from './return-to-work-dialog';
+import { getAbsenceDurationDisplay } from '../absence-duration';
 
 export interface AbsenceRowData {
     id: string;
@@ -49,10 +50,6 @@ function formatDate(value: Date): string {
         return '—';
     }
     return formatHumanDate(value);
-}
-
-function formatHours(value: number): string {
-    return value.toFixed(1);
 }
 
 export function AbsenceRow({ absence, authorization, typeLabels }: AbsenceRowProps) {
@@ -104,6 +101,13 @@ export function AbsenceRow({ absence, authorization, typeLabels }: AbsenceRowPro
         metadata: currentAbsence.metadata,
     };
 
+    const durationDisplay = getAbsenceDurationDisplay({
+        metadata: currentAbsence.metadata,
+        startDate: currentAbsence.startDate,
+        endDate: currentAbsence.endDate,
+        hours: currentAbsence.hours,
+    });
+
     return (
         <>
             <TableRow className="group transition-colors hover:bg-muted/40 motion-reduce:transition-none">
@@ -117,7 +121,12 @@ export function AbsenceRow({ absence, authorization, typeLabels }: AbsenceRowPro
                     {formatDate(currentAbsence.startDate)} – {formatDate(currentAbsence.endDate)}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                    {formatHours(currentAbsence.hours)}h
+                    <div>{durationDisplay.label}</div>
+                    {durationDisplay.timeRange ? (
+                        <div className="text-xs text-muted-foreground">
+                            {durationDisplay.timeRange}
+                        </div>
+                    ) : null}
                 </TableCell>
                 <TableCell>
                     <HrStatusBadge status={currentAbsence.status} />

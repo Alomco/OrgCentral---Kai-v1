@@ -60,7 +60,7 @@ This document outlines the findings from a comprehensive UI/UX and architectural
 ### Issues
 *   **Architecture (Resolved):** Credential login now correctly uses `authClient.signIn.email`, unifying the authentication flow.
 *   **UX Complexity (Medium):** "Advanced Options" (Data Region, Security Level) in the login form are confusing for standard users.
-*   **State Management (Medium):** Admin bootstrap relies on fragile `sessionStorage`.
+*   **State Management (Medium):** Admin bootstrap should use React Query for server state and Zustand persist/localStorage instead of fragile `sessionStorage`.
 *   **Code Quality (Low):** Duplication of UI components (`InputField`) within the form file.
 
 ### Recommendations

@@ -680,7 +680,7 @@ Use this checklist to map legacy RBAC permission keys (OrgPermissionMap + role t
 ### Areas Needing Attention
 1. Partial **Legacy Data Migration** - `metadata.legacyProfile` needs cleanup
 2. Partial **API Route Coverage** - Some features backend-only
-3. Partial **UI State Management** - Forms could use better state handling
+3. Partial **UI State Management** - Forms should use React Query for server state and Zustand persist/localStorage for drafts/preferences
 4. Partial **Error Handling** - Inconsistent error display in UI
 5. Missing **Absence Type Seed** - No default absence type catalog on org creation
 6. Partial **UI Copy/Encoding Cleanup** - Some HR UI strings contain corrupted placeholders

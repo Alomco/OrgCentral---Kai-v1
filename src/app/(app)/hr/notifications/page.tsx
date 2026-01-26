@@ -1,11 +1,15 @@
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { type Metadata } from 'next';
 import { headers as nextHeaders } from 'next/headers';
 
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 import { getHrNotificationsAction } from '@/server/api-adapters/hr/notifications/get-hr-notifications';
 import { NotificationList } from './_components/notification-list';
-import { NotificationFilters } from './_components/notification-filters';
+const NotificationFilters = dynamic(
+  () => import('./_components/notification-filters').then((module) => module.NotificationFilters),
+  { loading: () => <Skeleton className="h-10 w-full rounded-lg" /> },
+);
 import { notificationFilterSchema } from './_schemas/filter-schema';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -31,7 +35,7 @@ export default async function NotificationsPage({ searchParams }: PageProps) {
   
   const filters = parseResult.success ? parseResult.data : {};
   
-  const { notifications } = await getHrNotificationsAction({
+  const notificationsPromise = getHrNotificationsAction({
     authorization,
     userId: session.user.id,
     filters: {
@@ -52,10 +56,19 @@ export default async function NotificationsPage({ searchParams }: PageProps) {
       <NotificationFilters />
 
       <Suspense fallback={<NotificationsLoading />}>
-        <NotificationList notifications={notifications} />
+        <NotificationListSection notificationsPromise={notificationsPromise} />
       </Suspense>
     </div>
   );
+}
+
+async function NotificationListSection({
+  notificationsPromise,
+}: {
+  notificationsPromise: ReturnType<typeof getHrNotificationsAction>;
+}) {
+  const { notifications } = await notificationsPromise;
+  return <NotificationList notifications={notifications} />;
 }
 
 function NotificationsLoading() {

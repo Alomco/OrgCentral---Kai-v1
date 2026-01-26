@@ -21,6 +21,7 @@ import { formatHumanDate } from '../../_components/format-date';
 import { AbsenceAttachmentsPanel } from './absence-attachments-panel';
 import { AbsenceAiValidationPanel } from './absence-ai-validation-panel';
 import type { AbsenceTypeLabelMap } from './absence-row';
+import { getAbsenceDurationDisplay } from '../absence-duration';
 
 export interface AbsenceDetailData {
     id: string;
@@ -97,6 +98,12 @@ export function AbsenceDetailDialog({
     };
     const typeEmoji = typeInfo.emoji ?? '📋';
     const statusStyle = STATUS_STYLES[localAbsence.status] ?? STATUS_STYLES.REPORTED;
+    const durationDisplay = getAbsenceDurationDisplay({
+        metadata: localAbsence.metadata,
+        startDate: localAbsence.startDate,
+        endDate: localAbsence.endDate,
+        hours: localAbsence.hours,
+    });
 
     const handleAbsenceUpdated = (updated: UnplannedAbsence) => {
         const mapped: AbsenceDetailData = {
@@ -147,7 +154,12 @@ export function AbsenceDetailDialog({
                         </DetailRow>
 
                         <DetailRow icon={Clock} label="Duration">
-                            {localAbsence.hours.toFixed(1)} hours
+                            <div>{durationDisplay.label}</div>
+                            {durationDisplay.timeRange ? (
+                                <div className="text-xs text-muted-foreground">
+                                    {durationDisplay.timeRange}
+                                </div>
+                            ) : null}
                         </DetailRow>
 
                         {localAbsence.reason ? (

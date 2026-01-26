@@ -191,7 +191,7 @@
   --muted-foreground: 0.5 0.02 255;
 
   /* Accent: WCAG 2.2 AA Compliant Blue-Teal - Enhanced contrast ratio */
-  --accent: 0.54 0.14 200;
+  --accent: 0.53 0.14 200;
   --accent-foreground: 0.98 0 0;
 
   /* Destructive: WCAG 2.2 AA Compliant Red - Enhanced contrast */
@@ -199,8 +199,8 @@
   --destructive-foreground: 0.98 0 0;
 
   /* Border: WCAG 2.2 AA Compliant - Better contrast */
-  --border: 0.86 0.01 255;
-  --input: 0.86 0.01 255;
+  --border: 0.6 0.01 255;
+  --input: 0.6 0.01 255;
   --ring: 0.55 0.17 250;
 
   /* Charts: WCAG 2.2 AA Compliant Palette - Enhanced contrast ratios */
@@ -264,7 +264,7 @@
   /* Enhanced contrast popover text */
 
   /* Primary: WCAG 2.2 AA Compliant blue in dark mode - Enhanced contrast */
-  --primary: 0.7 0.14 250;
+    --primary: 0.54 0.14 250;
   --primary-foreground: 0.98 0 0;
 
   /* Secondary: WCAG 2.2 AA Compliant dark slate - Enhanced contrast */
@@ -277,16 +277,16 @@
   --muted-foreground: 0.7 0.02 255;
   /* Enhanced contrast muted text */
   /* Accent: WCAG 2.2 AA Compliant teal in dark mode - Enhanced contrast */
-  --accent: 0.66 0.12 200;
+    --accent: 0.52 0.12 200;
   --accent-foreground: 0.98 0 0;
 
   /* Destructive: WCAG 2.2 AA Compliant red - Enhanced contrast */
-  --destructive: 0.65 0.2 30;
+    --destructive: 0.55 0.2 30;
   --destructive-foreground: 0.98 0 0;
 
   /* Border: WCAG 2.2 AA Compliant subtle slate - Enhanced contrast */
-  --border: 0.3 0.02 255;
-  --input: 0.3 0.02 255;
+    --border: 0.52 0.01 255;
+    --input: 0.52 0.01 255;
   --ring: 0.7 0.14 250;
 
   /* Charts: WCAG 2.2 AA Compliant dark mode palette - Enhanced contrast */
@@ -306,12 +306,12 @@
   --sidebar-background: var(--sidebar);
   --sidebar-foreground: 0.96 0.01 255;
   /* Enhanced contrast sidebar text */
-  --sidebar-primary: 0.7 0.14 250;
+    --sidebar-primary: 0.54 0.14 250;
   --sidebar-primary-foreground: 0.98 0 0;
   --sidebar-accent: 0.24 0.02 255;
   --sidebar-accent-foreground: 0.96 0.01 255;
-  --sidebar-border: 0.3 0.02 255;
-  --sidebar-ring: 0.7 0.14 250;
+    --sidebar-border: 0.52 0.01 255;
+    --sidebar-ring: 0.54 0.14 250;
 
   --app-background-gradient: linear-gradient(135deg,
     oklch(var(--background)) 0%,

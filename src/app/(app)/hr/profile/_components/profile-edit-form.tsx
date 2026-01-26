@@ -18,6 +18,7 @@ export function ProfileEditForm({ initialState, onSuccess, onCancel, formId }: P
     const generatedFormId = useId();
     const resolvedFormId = formId ?? generatedFormId;
     const [state, formAction, pending] = useActionState(updateSelfProfileAction, initialState);
+    const successTimeoutReference = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Use a ref to store the latest onSuccess callback to avoid stale closures
     const onSuccessReference = useRef(onSuccess);
@@ -38,13 +39,23 @@ export function ProfileEditForm({ initialState, onSuccess, onCancel, formId }: P
         if (state.status === 'success') {
             toast.success(state.message ?? 'Profile saved successfully');
             // Call the callback after a small delay to ensure the toast is visible
-            setTimeout(() => {
+            if (successTimeoutReference.current) {
+                clearTimeout(successTimeoutReference.current);
+            }
+            successTimeoutReference.current = setTimeout(() => {
                 onSuccessReference.current?.();
             }, 100);
         } else if (state.status === 'error') {
             toast.error(state.message ?? 'Failed to save profile');
         }
     }, [state.status, state.message]);
+
+    useEffect(() => () => {
+        if (successTimeoutReference.current) {
+            clearTimeout(successTimeoutReference.current);
+            successTimeoutReference.current = null;
+        }
+    }, []);
 
     return (
         <ProfileEditFormLayout

@@ -5,7 +5,7 @@
  * Single Responsibility: Interactive tab switching with URL state
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -48,17 +48,13 @@ export interface AdminHubTabsProps {
     defaultTab?: AdminHubTabId;
 }
 
+const VALID_TABS = new Set<AdminHubTabId>(['leave', 'absences', 'employees', 'compliance']);
+
 export function AdminHubTabs({ defaultTab = 'leave' }: AdminHubTabsProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    
-    const activeTab = useMemo(() => {
-        const tabParameter = searchParams.get('tab');
-        if (tabParameter && isValidTab(tabParameter)) {
-            return tabParameter;
-        }
-        return defaultTab;
-    }, [searchParams, defaultTab]);
+    const tabParameter = searchParams.get('tab');
+    const activeTab = tabParameter && isValidTab(tabParameter) ? tabParameter : defaultTab;
 
     const handleTabChange = useCallback((value: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -85,7 +81,7 @@ export function AdminHubTabs({ defaultTab = 'leave' }: AdminHubTabsProps) {
 }
 
 function isValidTab(value: string): value is AdminHubTabId {
-    return ['leave', 'absences', 'employees', 'compliance'].includes(value);
+    return VALID_TABS.has(value as AdminHubTabId);
 }
 
 export { ADMIN_TABS };

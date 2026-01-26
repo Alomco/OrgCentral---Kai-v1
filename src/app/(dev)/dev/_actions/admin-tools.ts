@@ -158,8 +158,10 @@ export async function bootstrapDefaultAdmins(): Promise<{
     message: string;
 }> {
     try {
-        await createGlobalAdmin(DEFAULT_GLOBAL_ADMIN_EMAIL, 'Global Admin');
-        await createGlobalAdmin(DEFAULT_DEV_ADMIN_EMAIL, 'Dev Admin');
+        await Promise.all([
+            createGlobalAdmin(DEFAULT_GLOBAL_ADMIN_EMAIL, 'Global Admin'),
+            createGlobalAdmin(DEFAULT_DEV_ADMIN_EMAIL, 'Dev Admin'),
+        ]);
 
         revalidatePath(DEV_DASHBOARD_PATH);
         return {

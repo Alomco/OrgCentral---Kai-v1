@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { headers as nextHeaders } from 'next/headers';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
@@ -11,7 +12,7 @@ import type { AdminDashboardStats, PendingApprovalItem } from './actions.types';
 /**
  * Fetch admin dashboard statistics
  */
-export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+export const getAdminDashboardStats = cache(async (): Promise<AdminDashboardStats> => {
     const headerStore = await nextHeaders();
     const { authorization } = await getSessionContext(
         {},
@@ -67,12 +68,12 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
     // Upcoming expirations can be added once org-level summary is available
 
     return stats;
-}
+});
 
 /**
  * Fetch pending approval items for HR admin
  */
-export async function getPendingApprovals(): Promise<PendingApprovalItem[]> {
+export const getPendingApprovals = cache(async (): Promise<PendingApprovalItem[]> => {
     const headerStore = await nextHeaders();
     await getSessionContext(
         {},
@@ -87,4 +88,4 @@ export async function getPendingApprovals(): Promise<PendingApprovalItem[]> {
     const items: PendingApprovalItem[] = [];
 
     return items;
-}
+});

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,10 @@ interface Props {
 
 export function LeaveDelegationControl({ delegateFor }: Props) {
     const [open, setOpen] = useState(false);
-    const [value, setValue] = useState(delegateFor ?? '');
+    const [value, setValue] = useState(() => delegateFor ?? '');
     const router = useRouter();
     const searchParams = useSearchParams();
-
-    const derivedDelegate = useMemo(() => delegateFor ?? searchParams.get('delegateFor') ?? '', [delegateFor, searchParams]);
+    const derivedDelegate = delegateFor ?? searchParams.get('delegateFor') ?? '';
 
     function applyDelegation() {
         const next = new URLSearchParams(searchParams.toString());

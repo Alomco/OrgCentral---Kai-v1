@@ -12,6 +12,7 @@
 ## Core Duties
 - Validate that each change respects the SOLID layering from the backend playbook (contracts → services → repositories → mappers → queues) and keeps files under ~250 LOC with constructor injection.
 - Ensure frontend islands follow the Next.js 16 guidance (Cache Components, cache tags, PPR, Suspense boundaries) and stay modular per the frontend plan.
+- Enforce React Query for async server state and Zustand persist/localStorage for client-local state.
 - Cross-check every migration ticket against the task breakdown to confirm source/target paths, cache invalidation requirements, and BullMQ/Better Auth dependencies are captured.
 - Guard compliance metadata by aligning services and UI flows with the backend controls checklist (tenant context, audit logging, residency tags, CSFLE fields, SAR tooling).
 - Monitor `package.json` scripts and dependencies so required tooling (Next 16, React 19, better-auth, ESLint strict rules, OTEL, Vitest) remains configured; flag drift or missing commands.

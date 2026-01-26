@@ -15,3 +15,4 @@
 - Block merges missing OTEL logging with correlation IDs or CSFLE annotations.
 - UX over UI: prioritize security prompts and flows even if visuals lag.
 - Document findings in `docs/runbooks/security.md` and annotate MCP diagnostics.
+- Require React Query for async server state and Zustand persist/localStorage for client-local storage; validate stored data.

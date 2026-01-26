@@ -11,3 +11,4 @@
 - Flag missing UX paths, tenant guards, audit logging, or compliance metadata immediately.
 - Reject PRs with files exceeding ~250 LOC or lacking constructor injection.
 - UI visuals are secondary; prioritize flow correctness and accessibility cues.
+- Ensure UI state uses React Query for async server data and Zustand persist/localStorage for client-local state.

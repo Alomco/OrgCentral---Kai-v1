@@ -54,7 +54,7 @@ This document outlines the phased approach to migrating the legacy Home Page (`o
 
 1.  **`WaitlistForm.tsx` (Client Component)**
     *   **Location:** `src/components/landing/WaitlistForm.tsx`
-    *   **State Management:** Use `useActionState` (React 19) to handle the Server Action state (loading, success, error).
+    *   **State Management:** Use `useActionState` (React 19) for Server Action UI state; use React Query for async server data and Zustand persist/localStorage for client-local state.
     *   **Validation:** Use `zod` schema from `@/server/types/waitlist-types`.
     *   **Action:** Connect to `addToWaitlistAction` from `@/server/actions/waitlist`.
     *   **UI:** Replicate the glassmorphism inputs and loader state.

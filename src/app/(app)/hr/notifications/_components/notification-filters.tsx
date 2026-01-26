@@ -16,6 +16,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { HR_NOTIFICATION_TYPE_VALUES, HR_NOTIFICATION_PRIORITY_VALUES } from '@/server/types/hr/notifications';
 
+const TYPE_LABEL_SEPARATOR_REGEX = /-/g;
+
 export function NotificationFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,7 +73,7 @@ export function NotificationFilters() {
           <SelectItem value="all">All types</SelectItem>
           {HR_NOTIFICATION_TYPE_VALUES.map((type) => (
             <SelectItem key={type} value={type}>
-              {type.replace(/-/g, ' ')}
+              {type.replace(TYPE_LABEL_SEPARATOR_REGEX, ' ')}
             </SelectItem>
           ))}
         </SelectContent>

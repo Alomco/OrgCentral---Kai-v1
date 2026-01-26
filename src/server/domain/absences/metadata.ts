@@ -1,7 +1,12 @@
 import type { Prisma } from '@prisma/client';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 
+export type AbsenceDurationType = 'DAYS' | 'HOURS';
+
 export type AbsenceMetadata = Record<string, unknown> & {
+    durationType?: AbsenceDurationType;
+    startTime?: string;
+    endTime?: string;
     acknowledgements?: AbsenceAcknowledgementEntry[];
     cancellation?: AbsenceCancellationMetadata;
     aiValidation?: AbsenceAiValidationMetadata;

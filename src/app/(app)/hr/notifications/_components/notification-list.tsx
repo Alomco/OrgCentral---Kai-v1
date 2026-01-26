@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { memo, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2, CheckCheck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,25 +17,33 @@ interface NotificationListProps {
 
 export function NotificationList({ notifications }: NotificationListProps) {
   const router = useRouter();
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [isPending, startTransition] = useTransition();
+  const refreshReference = useRef<() => void>(() => router.refresh());
+
+  useEffect(() => {
+    refreshReference.current = () => router.refresh();
+  }, [router]);
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === notifications.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(notifications.map(n => n.id)));
-    }
+    setSelectedIds((current) => {
+      if (current.size === notifications.length) {
+        return new Set();
+      }
+      return new Set(notifications.map((notification) => notification.id));
+    });
   };
 
   const toggleSelect = (id: string) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedIds(newSelected);
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   const handleBulkRead = () => {
@@ -94,7 +102,7 @@ export function NotificationList({ notifications }: NotificationListProps) {
         </div>
         
         <div className="flex items-center gap-2">
-          {selectedIds.size > 0 && (
+          {selectedIds.size > 0 ? (
             <>
               <Button 
                 variant="outline" 
@@ -117,29 +125,53 @@ export function NotificationList({ notifications }: NotificationListProps) {
                 Delete
               </Button>
             </>
-          )}
+          ) : null}
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div
+        className="space-y-2"
+        style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 720px' }}
+      >
         {notifications.map((notification) => (
-          <div key={notification.id} className="flex items-start gap-3">
-            <div className="pt-4 pl-2">
-              <Checkbox 
-                checked={selectedIds.has(notification.id)}
-                onCheckedChange={() => toggleSelect(notification.id)}
-              />
-            </div>
-            <div className="flex-1">
-              <NotificationItem 
-                notification={notification}
-                onRead={() => router.refresh()}
-                onDelete={() => router.refresh()}
-              />
-            </div>
-          </div>
+          <NotificationRow
+            key={notification.id}
+            notification={notification}
+            selected={selectedIds.has(notification.id)}
+            onToggle={() => toggleSelect(notification.id)}
+            onRefresh={refreshReference.current}
+          />
         ))}
       </div>
     </div>
   );
 }
+
+interface NotificationRowProps {
+  notification: HRNotificationDTO;
+  selected: boolean;
+  onToggle: () => void;
+  onRefresh: () => void;
+}
+
+const NotificationRow = memo(function NotificationRow({
+  notification,
+  selected,
+  onToggle,
+  onRefresh,
+}: NotificationRowProps) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="pt-4 pl-2">
+        <Checkbox checked={selected} onCheckedChange={onToggle} />
+      </div>
+      <div className="flex-1">
+        <NotificationItem
+          notification={notification}
+          onRead={onRefresh}
+          onDelete={onRefresh}
+        />
+      </div>
+    </div>
+  );
+});

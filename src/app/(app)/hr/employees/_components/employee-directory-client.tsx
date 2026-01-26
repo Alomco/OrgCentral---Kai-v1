@@ -23,26 +23,31 @@ export function EmployeeDirectoryClient({
     initialResult,
     filterOptions,
 }: EmployeeDirectoryClientProps) {
-    const [result, setResult] = useState(initialResult);
-    const [params, setParams] = useState<Partial<EmployeeSearchParams>>({
+    const [result, setResult] = useState(() => initialResult);
+    const [params, setParams] = useState<Partial<EmployeeSearchParams>>(() => ({
         page: 1,
         pageSize: 20,
-    });
+    }));
     const [isPending, startTransition] = useTransition();
 
     const handleParamsChange = useCallback((newParams: Partial<EmployeeSearchParams>) => {
         setParams(newParams);
-        startTransition(async () => {
-            const newResult = await getEmployeeList(newParams);
-            setResult(newResult);
+        startTransition(() => {
+            getEmployeeList(newParams).then(setResult);
         });
-    }, []);
+    }, [startTransition]);
 
     const handlePageChange = useCallback(
         (page: number) => {
-            handleParamsChange({ ...params, page });
+            setParams((current) => {
+                const nextParams = { ...current, page };
+                startTransition(() => {
+                    getEmployeeList(nextParams).then(setResult);
+                });
+                return nextParams;
+            });
         },
-        [params, handleParamsChange],
+        [startTransition],
     );
 
     return (

@@ -22,12 +22,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 
 import { HrPageHeader } from '../_components/hr-page-header';
-import {
-    HrAdminStatsRow,
-    HrAdminAlerts,
-    HrAdminQuickActions,
-    HrAdminPendingItems,
-} from './_components';
+import { HrAdminAlerts } from './_components/hr-admin-alerts';
+import { HrAdminPendingItems } from './_components/hr-admin-pending-items';
+import { HrAdminQuickActions } from './_components/hr-admin-quick-actions';
+import { HrAdminStatsRow } from './_components/hr-admin-stats-row';
 import { getAdminDashboardStats, getPendingApprovals } from './actions';
 
 export default async function HrAdminPage() {
@@ -40,6 +38,8 @@ export default async function HrAdminPage() {
             auditSource: 'ui:hr:admin',
         },
     );
+
+    const statsPromise = getAdminDashboardStats();
 
     return (
         <div className="space-y-6">
@@ -64,14 +64,14 @@ export default async function HrAdminPage() {
             />
 
             <Suspense fallback={<StatsRowSkeleton />}>
-                <StatsRow />
+                <StatsRow statsPromise={statsPromise} />
             </Suspense>
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <HrAdminQuickActions />
 
                 <Suspense fallback={<CardSkeleton />}>
-                    <AlertsPanel />
+                    <AlertsPanel statsPromise={statsPromise} />
                 </Suspense>
             </div>
 
@@ -82,13 +82,13 @@ export default async function HrAdminPage() {
     );
 }
 
-async function StatsRow() {
-    const stats = await getAdminDashboardStats();
+async function StatsRow({ statsPromise }: { statsPromise: ReturnType<typeof getAdminDashboardStats> }) {
+    const stats = await statsPromise;
     return <HrAdminStatsRow stats={stats} />;
 }
 
-async function AlertsPanel() {
-    const stats = await getAdminDashboardStats();
+async function AlertsPanel({ statsPromise }: { statsPromise: ReturnType<typeof getAdminDashboardStats> }) {
+    const stats = await statsPromise;
     return <HrAdminAlerts stats={stats} />;
 }
 

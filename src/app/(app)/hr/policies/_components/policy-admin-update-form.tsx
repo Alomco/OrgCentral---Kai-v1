@@ -61,7 +61,7 @@ export function PolicyAdminUpdateForm(props: {
 
     useEffect(() => {
         if (state.status === 'success') {
-            void queryClient.invalidateQueries({ queryKey: policyKeys.list() });
+            queryClient.invalidateQueries({ queryKey: policyKeys.list() }).catch(() => null);
         }
     }, [queryClient, state.status]);
 

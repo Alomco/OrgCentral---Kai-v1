@@ -102,7 +102,7 @@ export function AbsenceAttachmentsPanel({
         } finally {
             setIsSubmitting(false);
         }
-    }, [absenceId, attachMutation, onAbsenceUpdated, selectedFile, uploadAttachment]);
+    }, [attachMutation, selectedFile, uploadAttachment]);
 
     const handleRemove = useCallback(async (attachmentId: string) => {
         setIsSubmitting(true);
@@ -113,7 +113,7 @@ export function AbsenceAttachmentsPanel({
         } finally {
             setIsSubmitting(false);
         }
-    }, [absenceId, onAbsenceUpdated, removeMutation]);
+    }, [removeMutation]);
 
     return (
         <div className="space-y-3">

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { MembersListClient } from "../_components/members-list.client";
+import { memberKeys, membersSearchKey } from "../_components/members.api";
 
 const orgId = "org1";
 const baseUrl = `/api/org/${orgId}/members`;
@@ -18,9 +19,12 @@ describe("MembersListClient invalidation", () => {
     );
 
     const qc = new QueryClient();
+    const params = new URLSearchParams({ pageSize: "25" });
+    const query = params.toString();
+    const key = membersSearchKey(params);
     render(
       <QueryClientProvider client={qc}>
-        <MembersListClient orgId={orgId} currentQueryKey="" initial={initial} />
+        <MembersListClient orgId={orgId} currentQueryKey={query} initial={initial} />
       </QueryClientProvider>
     );
 
@@ -30,7 +34,7 @@ describe("MembersListClient invalidation", () => {
       http.get(baseUrl, () => HttpResponse.json({ ...initial, users: [...initial.users, { id: "u2", email: "b@example.com", displayName: "Bob", roles: ["member"], memberships: [{ organizationId: orgId, roles: ["member"], status: "ACTIVE" }] }] })),
     );
 
-    await qc.invalidateQueries({ queryKey: ["org", orgId, "members", ""] });
+    await qc.invalidateQueries({ queryKey: memberKeys.list(orgId, key) });
 
     await waitFor(async () => expect(await screen.findByText(/Bob/)).toBeInTheDocument());
   });

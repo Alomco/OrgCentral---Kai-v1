@@ -59,7 +59,7 @@ export async function exportMembersCsvController(request: Request, orgId: string
 }
 
 function escapeCsv(value: string): string {
-  const v = String(value ?? '');
+  const v = value;
   if (v.includes(',') || v.includes('"') || v.includes('\n')) {
     return '"' + v.replaceAll('"', '""') + '"';
   }

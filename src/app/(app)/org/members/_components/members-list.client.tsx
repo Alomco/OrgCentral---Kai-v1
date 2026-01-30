@@ -1,10 +1,20 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import type { MembershipStatus } from '@prisma/client';
 import { listMembersQuery } from './members.api';
 import type { UserData } from '@/server/types/leave-types';
 import { MemberActions } from './member-actions';
+import { useMembersUiStore } from './members-ui.store';
+
+function ensurePageSize(params: URLSearchParams, defaultSize: number) {
+  if (!params.has('pageSize')) {
+    params.set('pageSize', String(defaultSize));
+  }
+  return params;
+}
 
 export function MembersListClient({
   orgId,
@@ -15,8 +25,28 @@ export function MembersListClient({
   currentQueryKey: string;
   initial: { users: UserData[]; totalCount: number; page: number; pageSize: number };
 }) {
+  const router = useRouter();
+  const defaultSize = useMembersUiStore((s) => s.defaultPageSize);
+  const mounted = useRef(false);
+
   const params = new URLSearchParams(currentQueryKey);
-  const { data } = useQuery({ ...listMembersQuery(orgId, params), initialData: initial });
+  const hasPageSize = params.has('pageSize');
+
+  // If no pageSize in URL, apply user's UI preference and sync URL once
+  useEffect(() => {
+    if (mounted.current) {
+      return;
+    }
+    mounted.current = true;
+    if (!hasPageSize) {
+      const next = new URLSearchParams(currentQueryKey);
+      next.set('pageSize', String(defaultSize));
+      router.replace('?' + next.toString(), { scroll: false });
+    }
+  }, [hasPageSize, defaultSize, router, currentQueryKey]);
+
+  const effective = hasPageSize ? params : ensurePageSize(params, defaultSize);
+  const { data } = useQuery({ ...listMembersQuery(orgId, effective), initialData: initial });
   const users = data.users;
 
   return (
@@ -48,7 +78,7 @@ export function MembersListClient({
                 </div>
               </div>
 
-              <MemberActions orgId={orgId} userId={user.id} initialRoles={initialRoles} status={status} currentQueryKey={currentQueryKey} />
+              <MemberActions orgId={orgId} userId={user.id} initialRoles={initialRoles} status={status} currentQueryKey={effective.toString()} />
             </div>
           );
         })
@@ -56,4 +86,3 @@ export function MembersListClient({
     </div>
   );
 }
-

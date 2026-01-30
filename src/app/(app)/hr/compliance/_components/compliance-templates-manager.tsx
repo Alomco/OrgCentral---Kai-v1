@@ -1,9 +1,8 @@
 'use client';
-
 import { useActionState, useEffect, useMemo, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import type { ChangeEvent } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,14 +12,12 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { ComplianceTemplate } from '@/server/types/compliance-types';
-
 import { FieldError } from '../../_components/field-error';
 import { createComplianceTemplateAction } from '../actions/compliance-templates';
 import type { ComplianceTemplateCreateState } from '../compliance-template-form-utils';
 import { ComplianceTemplateRow } from './compliance-template-row';
 import { ComplianceTemplateGuideCard } from './compliance-template-guide-card';
-import { COMPLIANCE_TEMPLATES_QUERY_KEY, fetchComplianceTemplates } from '../compliance-templates-query';
-import { ComplianceTemplatesFilters } from './compliance-templates-filters.client';
+import { listTemplatesQuery, templatesKey } from '../compliance-templates.api';
 
 const initialCreateState: ComplianceTemplateCreateState = {
     status: 'idle',
@@ -34,23 +31,28 @@ const initialCreateState: ComplianceTemplateCreateState = {
 
 export function ComplianceTemplatesManager(props: { templates: ComplianceTemplate[] }) {
     const queryClient = useQueryClient();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const qValue = searchParams.get('q') ?? '';
+    const qNormalized = qValue.trim().toLowerCase();
     const [state, action, pending] = useActionState(
         createComplianceTemplateAction,
         initialCreateState,
     );
-    const { data: templates = props.templates } = useQuery({
-        queryKey: COMPLIANCE_TEMPLATES_QUERY_KEY,
-        queryFn: fetchComplianceTemplates,
-        initialData: props.templates,
+    const { data: templatesData = { templates: props.templates } } = useQuery({
+        ...listTemplatesQuery(qNormalized),
+        initialData: { templates: props.templates },
     });
+    const templates = templatesData.templates;
     const formReference = useRef<HTMLFormElement | null>(null);
 
     useEffect(() => {
         if (!pending && state.status === 'success') {
-            void queryClient.invalidateQueries({ queryKey: COMPLIANCE_TEMPLATES_QUERY_KEY }).catch(() => null);
+            void queryClient.invalidateQueries({ queryKey: templatesKey.list(qNormalized) }).catch(() => null);
             formReference.current?.reset();
         }
-    }, [pending, queryClient, state.status]);
+    }, [pending, queryClient, qNormalized, state.status]);
 
     useEffect(() => {
         formReference.current?.setAttribute('aria-busy', pending ? 'true' : 'false');
@@ -61,12 +63,7 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
     const versionError = state.fieldErrors?.version;
     const itemsError = state.fieldErrors?.itemsJson;
 
-    const message =
-        state.status === 'error'
-            ? state.message
-            : state.status === 'success'
-                ? state.message
-                : null;
+    const message = state.status === 'error' ? state.message : state.status === 'success' ? state.message : null;
 
     const summary = useMemo(() => {
         const categories = new Set<string>();
@@ -83,16 +80,17 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
         };
     }, [templates]);
 
-    const searchParams = useSearchParams();
-    const q = (searchParams.get('q') ?? '').trim().toLowerCase();
-    const filteredTemplates = useMemo(() => {
-        if (!q) {return templates;}
-        return templates.filter((t) => {
-            const hay = `${t.name} ${t.categoryKey} ${t.version}`.toLowerCase();
-            return hay.includes(q);
-        });
-    }, [q, templates]);
-
+    const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const next = new URLSearchParams(searchParams.toString());
+        const value = event.target.value;
+        if (value) {
+            next.set('q', value);
+        } else {
+            next.delete('q');
+        }
+        const query = next.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    };
 
     return (
         <div className="space-y-6">
@@ -216,6 +214,13 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
                         <CardDescription>Track coverage by category and version.</CardDescription>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <input
+                            aria-label="Search templates"
+                            value={qValue}
+                            onChange={handleSearchChange}
+                            placeholder="Search..."
+                            className="h-8 rounded-md border bg-background px-2 text-sm"
+                        />
                         <Badge variant="secondary">{summary.count} total</Badge>
                         {summary.categories.map((category) => (
                             <Badge key={category} variant="outline" className="text-[11px]">
@@ -228,11 +233,11 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {filteredTemplates.length === 0 ? (
+                    {templates.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No templates configured yet. Seed defaults or add one manually to get started.</p>
                     ) : (
                         <div className="space-y-3">
-                            {filteredTemplates.map((template) => (
+                            {templates.map((template) => (
                                 <ComplianceTemplateRow key={template.id} template={template} />
                             ))}
                         </div>

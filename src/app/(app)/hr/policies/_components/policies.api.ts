@@ -19,7 +19,7 @@ export function listPoliciesQuery(q?: string, nocat?: boolean) {
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) {throw new Error('Failed to load policies');}
       const data = (await res.json()) as unknown as { policies?: HRPolicy[] };
-      const items = Array.isArray(data?.policies) ? data.policies : [];
+      const items = Array.isArray(data.policies) ? data.policies : [];
       return items;
     },
     staleTime: 30_000,

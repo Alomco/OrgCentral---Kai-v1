@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useSyncExternalStore } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 
-import { memberKeys, updateMember } from './members.api';
+import { memberKeys, updateMember, membersSearchKey } from './members.api';
 
 const SELECTABLE_MEMBER_SELECTOR = '[data-bulk-member="select"]';
 const ROLE_SELECTOR = 'select[name="roles"]';
@@ -84,7 +84,7 @@ export function OrgMembersBulkActions({ roleNames, orgId, currentQueryKey }: { r
         },
         onSuccess: async () => {
             if (currentQueryKey) {
-                await queryClient.invalidateQueries({ queryKey: memberKeys.list(orgId, currentQueryKey) });
+                await queryClient.invalidateQueries({ queryKey: memberKeys.list(orgId, membersSearchKey(new URLSearchParams(currentQueryKey))) });
             }
         },
     });

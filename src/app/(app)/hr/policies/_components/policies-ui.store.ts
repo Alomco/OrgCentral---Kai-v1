@@ -4,11 +4,25 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createPersistStorage, createSafeStorage } from '@/lib/stores/storage';
 
-interface PoliciesUiState {\n  // Persist small UI prefs only; no server data\n  nocatDefault: boolean; // whether we disable auto category mapping by default\n  density: 'comfortable' | 'compact';\n  pageSize: number;\n  setNocatDefault: (v: boolean) => void;\n  setDensity: (v: 'comfortable' | 'compact') => void;\n  setPageSize: (n: number) => void;\n}
+interface PoliciesUiState {
+  // Persist small UI prefs only; no server data
+  nocatDefault: boolean;
+  density: 'comfortable' | 'compact';
+  pageSize: number;
+  setNocatDefault: (value: boolean) => void;
+  setDensity: (value: 'comfortable' | 'compact') => void;
+  setPageSize: (value: number) => void;
+}
 
 export const usePoliciesUiStore = create<PoliciesUiState>()(
   persist(
-    (set) => ({\n      nocatDefault: false,\n      density: 'comfortable',\n      pageSize: 25,\n      setNocatDefault: (v) => set({ nocatDefault: v }),\n      setDensity: (v) => set({ density: v }),\n      setPageSize: (n) => set({ pageSize: n }),\n    }),
+    (set) => ({
+      nocatDefault: false,
+      density: 'comfortable',
+      pageSize: 25,
+      setNocatDefault: (value) => set({ nocatDefault: value }),
+      setDensity: (value) => set({ density: value }),
+      setPageSize: (value) => set({ pageSize: value }),
     }),
     {
       name: 'ui:hr:policies',

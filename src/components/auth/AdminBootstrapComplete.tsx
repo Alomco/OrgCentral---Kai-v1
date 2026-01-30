@@ -19,16 +19,18 @@ interface BootstrapState {
 
 export function AdminBootstrapComplete() {
     const router = useRouter();
-    const [state, setState] = useState<BootstrapState>({ status: 'loading' });
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [hasHydrated, setHasHydrated] = useState(() => useAdminBootstrapStore.persist.hasHydrated());
     const clearToken = useAdminBootstrapStore((store) => store.clearToken);
     const token = useAdminBootstrapStore((store) => store.token);
 
     const mutation = useMutation({
         mutationFn: bootstrapAdmin,
+        onMutate: () => {
+            setErrorMessage(null);
+        },
         onSuccess: (result) => {
             clearToken();
-            setState({ status: 'success' });
             router.replace(result.redirectTo ?? '/admin/dashboard');
         },
         onError: (error) => {
@@ -36,7 +38,7 @@ export function AdminBootstrapComplete() {
                 return;
             }
             const message = error instanceof Error ? error.message : 'Unexpected bootstrap error.';
-            setState({ status: 'error', message });
+            setErrorMessage(message);
         },
     });
 
@@ -57,28 +59,24 @@ export function AdminBootstrapComplete() {
     }, []);
 
     useEffect(() => {
-        if (!hasHydrated) {
-            return;
-        }
-
-        // Read token after hydration to avoid SSR/CSR markup drift.
-        if (!token) {
-            queueMicrotask(() => {
-                setState({
-                    status: 'error',
-                    message: 'Missing bootstrap secret. Start again and enter the secret before continuing.',
-                });
-            });
+        if (!hasHydrated || !token) {
             return;
         }
 
         const controller = new AbortController();
 
-        setState({ status: 'loading' });
-        void mutation.mutateAsync({ token, signal: controller.signal });
+        mutation.mutateAsync({ token, signal: controller.signal }).catch(() => null);
 
         return () => controller.abort();
-    }, [clearToken, hasHydrated, mutation, token]);
+    }, [hasHydrated, mutation, token]);
+
+    const missingToken = hasHydrated && !token;
+    const state: BootstrapState = {
+        status: missingToken || errorMessage ? 'error' : mutation.isSuccess ? 'success' : 'loading',
+        message: missingToken
+            ? 'Missing bootstrap secret. Start again and enter the secret before continuing.'
+            : errorMessage ?? undefined,
+    };
 
     if (state.status === 'error') {
         return (

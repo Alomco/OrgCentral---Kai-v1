@@ -14,6 +14,7 @@ import { parseOrgMembersQuery, buildOrgMembersSearchParams, type OrgMembersSearc
 import { OrgMembersPagination } from './_components/org-members-pagination';
 import { OrgMembersFilters } from './_components/org-members-filters';
 import { OrgMembersBulkActions } from './_components/org-members-bulk-actions';
+import { OrgMembersTopControls } from './_components/org-members-top-controls.client';
 
 const membershipStatusSchema = z.enum(['INVITED', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']);
 
@@ -117,7 +118,7 @@ export default async function OrgMembersPage({
 
             <div className="rounded-2xl bg-[oklch(var(--card)/0.6)] p-6 backdrop-blur">
                 <OrgMembersFilters query={query} roleNames={filterRoleNames} />
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap items-center gap-3">
                     <a
                         href={"/api/org/" + authorization.orgId + "/members/export?" + buildOrgMembersSearchParams(query).toString()}
                         className="inline-flex h-8 items-center rounded-md border px-3 text-xs"
@@ -125,9 +126,11 @@ export default async function OrgMembersPage({
                     >
                         Export CSV
                     </a>
+                    <OrgMembersTopControls />
                 </div>
                 <OrgMembersBulkActions orgId={authorization.orgId} currentQueryKey={buildOrgMembersSearchParams(query).toString()} roleNames={filterRoleNames} />
-                <MembersListClient orgId={authorization.orgId} currentQueryKey={buildOrgMembersSearchParams(query).toString()} initial={{ users, totalCount, page, pageSize }} /><div className="mt-4">
+                <MembersListClient orgId={authorization.orgId} currentQueryKey={buildOrgMembersSearchParams(query).toString()} initial={{ users, totalCount, page, pageSize }} />
+                <div className="mt-4">
                     <OrgMembersPagination
                         query={{ ...query, page, pageSize }}
                         totalCount={totalCount}
@@ -140,8 +143,5 @@ export default async function OrgMembersPage({
         </div>
     );
 }
-
-
-
 
 

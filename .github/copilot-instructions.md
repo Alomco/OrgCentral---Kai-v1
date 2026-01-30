@@ -1,5 +1,5 @@
-ï»¿# OrgCentral Ã¢â‚¬â€œ Github Copilot Instructions chat(Short)
-Always use MCP/tools thoughtfully. Keep knowledge updated with .agent and .github folders.
+# OrgCentral Github Copilot Instructions chat(Short)
+Always use MCP/tools thoughtfully. Keep knowledge updated with .agent and .github folders. and check .agent\ARCHITECTURE.md every time to use skills, agents, and tools effectively.
 ## Default rules
 - Keep files <=250 LOC; split into focused modules.
 - No `console.log`; use structured logging.
@@ -61,11 +61,16 @@ outer.refresh().
 outer.refresh().
 ## HR Policies Search + URL Sync
 - Server-side search: /api/hr/policies accepts `?q=` and optional `nocat=1` to disable auto category mapping.
-- Auto-map common q values to categories (benefits, conduct/ethics, security, health/safety, procedures, compliance). Keep client UI chip â€œCategory: â€¦â€ and a Clear button that sets `nocat=1` while preserving q.
-- Client query: compose `policyKeys.list(q,nocat)` and fetch `/api/hr/policies?q=â€¦&nocat=â€¦`.
+- Auto-map common q values to categories (benefits, conduct/ethics, security, health/safety, procedures, compliance). Keep client UI chip “Category: …” and a Clear button that sets `nocat=1` while preserving q.
+- Client query: compose `policyKeys.list(q,nocat)` and fetch `/api/hr/policies?q=…&nocat=…`.
 
 ## Local UI State (Zustand)
 - Persist UI-only prefs (e.g., default `nocat` behavior) under `src/app/(app)/hr/policies/_components/policies-ui.store.ts` using the safe storage helpers. Never store server data.
 
 ## No router.refresh in clients
 - Replace with React Query invalidations on the precise keys (e.g., permissions, members, audit, policies). Forms continue to use `useActionState` and call `invalidateQueries` on success.
+
+## Lists & Key Composition
+- Members list keys must use membersSearchKey(params) to canonicalize query params before composing memberKeys.list(orgId, key); use the same key for optimistic updates and invalidations.
+- Audit Log: include an sr-only hint element with id kbd-gg-hint; the Top button should set ria-describedby="kbd-gg-hint" and support the gg keyboard shortcut.
+- Policies/Compliance: pass q through URL, client Query Keys, and API; keep filters in the URL and avoid outer.refresh().

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ValidationError } from '@/server/errors';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import { getAuditLogRepository } from '@/server/repositories/providers/records/audit-log-repository-provider';
+import { getAuditLogService } from '@/server/services/org/audit/audit-log-service.provider';
 
 const REQUIRED_PERMISSIONS: Record<string, string[]> = { organization: ['update'] };
 const RESOURCE_TYPE = 'org.auditLog';
@@ -41,15 +41,19 @@ export async function listAuditLogsController(request: Request, orgId: string) {
     },
   );
 
-  const repo = getAuditLogRepository();
-  const logs = await repo.findAll(authorization, {
-    orgId: authorization.orgId,
-    eventType: parsed.eventType,
-    action: parsed.action,
-    resource: parsed.resource,
-    userId: parsed.userId,
-    dateFrom: parsed.dateFrom,
-    dateTo: parsed.dateTo,
+  const service = getAuditLogService();
+  const logs = await service.listLogs({
+    authorization,
+    filters: {
+      orgId: authorization.orgId,
+      eventType: parsed.eventType,
+      action: parsed.action,
+      resource: parsed.resource,
+      userId: parsed.userId,
+      dateFrom: parsed.dateFrom,
+      dateTo: parsed.dateTo,
+    },
+    limit: parsed.limit,
   });
 
   // Sort by createdAt desc and apply cursor (createdAt strictly older than cursor)

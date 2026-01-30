@@ -54,7 +54,14 @@ export function NotificationFilters() {
   return (
     <div className="flex flex-wrap items-center gap-4 mb-6">
       <div className="w-64">
-        <Input aria-label="Search notifications" placeholder="Search" defaultValue={q} onChange={(e)=>updateFilters('q', e.target.value.trim().length>0 ? e.target.value : null)} disabled={isPending} className="h-9" />
+        <Input
+          aria-label="Search notifications"
+          placeholder="Search"
+          defaultValue={q}
+          onChange={(event) => updateFilters('q', event.target.value.trim().length > 0 ? event.target.value : null)}
+          disabled={isPending}
+          className="h-9"
+        />
       </div>
       <div className="flex items-center space-x-2">
         <Switch

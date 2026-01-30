@@ -3,6 +3,7 @@ import { headers as nextHeaders } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { UserPlus, Wand2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,12 @@ import { hasPermission } from '@/lib/security/permission-check';
 import { HrPageHeader } from '../_components/hr-page-header';
 import { ChecklistTemplatesPanel } from './_components/checklist-templates-panel';
 import { InviteEmployeePanel } from './_components/invite-employee-panel';
-import { OnboardingInvitationsPanel } from './_components/onboarding-invitations-panel';\nimport dynamic from 'next/dynamic';\nconst OnboardingFiltersClient = dynamic(() => import('./_components/onboarding-filters.client').then(m => m.OnboardingFiltersClient), { ssr: false });
+import { OnboardingInvitationsPanel } from './_components/onboarding-invitations-panel';
+
+const OnboardingFiltersClient = dynamic(
+    () => import('./_components/onboarding-filters.client').then((module) => module.OnboardingFiltersClient),
+    { ssr: false },
+);
 
 function PanelSkeleton() {
     return (
@@ -99,9 +105,12 @@ export default async function HrOnboardingPage() {
             </div>
 
             {canInviteMembers ? (
-                <Suspense fallback={<PanelSkeleton />}>
-                    <OnboardingInvitationsPanel authorization={authorization} />
-                </Suspense>
+                <div className="space-y-3">
+                    <OnboardingFiltersClient />
+                    <Suspense fallback={<PanelSkeleton />}>
+                        <OnboardingInvitationsPanel authorization={authorization} />
+                    </Suspense>
+                </div>
             ) : null}
         </div>
     );

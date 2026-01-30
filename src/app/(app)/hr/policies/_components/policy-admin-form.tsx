@@ -28,7 +28,7 @@ export function PolicyAdminForm({ policyCategories }: PolicyAdminFormProps) {
 
     useEffect(() => {
         if (!pending && state.status === 'success') {
-            void queryClient.invalidateQueries({ queryKey: policyKeys.list() });
+            queryClient.invalidateQueries({ queryKey: policyKeys.list() }).catch(() => null);
             formReference.current?.reset();
         }
     }, [pending, queryClient, state.status]);

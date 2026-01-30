@@ -14,7 +14,7 @@ export function OnboardingFiltersClient() {
           min={1}
           max={200}
           value={limit}
-          onChange={(e) => setLimit(Number(e.target.value) || 25)}
+          onChange={(event) => setLimit(Number(event.target.value) || 25)}
           aria-label="Invitation list size"
         />
       </label>

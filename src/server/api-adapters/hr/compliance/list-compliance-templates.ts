@@ -26,7 +26,16 @@ export async function listComplianceTemplatesController(
 
     const useCaseDeps: ListComplianceTemplatesDependencies = { complianceTemplateRepository };
 
-    const templates = await listComplianceTemplates(useCaseDeps, { authorization });
+    const url = new URL(request.url);
+    const qRaw = (url.searchParams.get('q') ?? '').trim().toLowerCase();
+
+    const all = await listComplianceTemplates(useCaseDeps, { authorization });
+    const templates = qRaw
+        ? all.filter((t) => {
+            const hay = `${t.name} ${t.categoryKey ?? ''} ${t.version ?? ''}`.toLowerCase();
+            return hay.includes(qRaw);
+          })
+        : all;
 
     return { success: true, templates };
 }

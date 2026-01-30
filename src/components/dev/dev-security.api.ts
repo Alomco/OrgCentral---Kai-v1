@@ -4,7 +4,7 @@ export const devSecurityKeys = {
     detail: () => ['dev', 'security'] as const,
 } as const;
 
-export async function fetchDevSecurity(): Promise<DebugSecurityResponse | null> {
+export async function fetchDevelopmentSecurity(): Promise<DebugSecurityResponse | null> {
     const response = await fetch('/api/debug/security', { cache: 'no-store' });
     const body: unknown = await response.json().catch(() => null);
 

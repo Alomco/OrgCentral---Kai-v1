@@ -42,7 +42,7 @@ export function OrgProfileForm({ organization }: { organization: OrganizationDat
             ? state.message ?? 'Saved'
             : undefined;
 
-    const fieldErrors = state.fieldErrors ?? {};
+    const fieldErrors: Partial<Record<string, string[]>> = state.fieldErrors ?? {};
     const errorFor = (name: string): string | undefined => fieldErrors[name]?.[0];
 
     const profileFields: TextFieldConfig[] = [

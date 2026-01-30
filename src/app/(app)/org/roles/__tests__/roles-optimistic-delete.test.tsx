@@ -1,19 +1,30 @@
 ﻿// @vitest-environment jsdom
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { RolesListClient } from "../_components/roles-list.client";
+import type { Role } from "@/server/types/hr-types";
 
 const orgId = "org1";
 const baseUrl = `/api/org/${orgId}/roles`;
 
-const db = { roles: [
-  { id: "r1", name: "admin", description: null, permissions: {} },
-  { id: "r2", name: "member", description: null, permissions: {} },
-] } as any;
+const { db } = vi.hoisted(() => ({
+  db: {
+    roles: [
+      { id: "r1", name: "admin", description: null, permissions: {} },
+      { id: "r2", name: "member", description: null, permissions: {} },
+    ] as Role[],
+  },
+}));
+
+vi.mock("../actions", () => ({
+  createRoleAction: vi.fn(async () => ({ status: "success", message: "Role created." })),
+  updateRoleInlineAction: vi.fn(async () => ({ status: "success", message: "Role updated." })),
+  deleteRoleInlineAction: vi.fn(async () => ({ status: "success", message: "Role deleted." })),
+}));
 
 describe("roles optimistic delete", () => {
   it("removes role immediately and stays removed after invalidate", async () => {
@@ -28,7 +39,7 @@ describe("roles optimistic delete", () => {
     const qc = new QueryClient();
     render(
       <QueryClientProvider client={qc}>
-        <RolesListClient orgId={orgId} initial={db.roles as any} />
+        <RolesListClient orgId={orgId} initial={db.roles} />
       </QueryClientProvider>
     );
 

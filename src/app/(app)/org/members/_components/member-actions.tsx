@@ -3,8 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { MembershipStatus } from '@prisma/client';
 
-import { updateMember, memberKeys } from './members.api';
-import { membersSearchKey } from './members.api';
+import { updateMember, memberKeys, membersSearchKey, type MembersResponse } from './members.api';
 
 function readFormString(formData: FormData, key: string): string {
     const value = formData.get(key);
@@ -13,6 +12,9 @@ function readFormString(formData: FormData, key: string): string {
 
 export function MemberActions(props: { orgId: string; userId: string; initialRoles: string; status: MembershipStatus; currentQueryKey?: string }) {
     const queryClient = useQueryClient();
+    const currentListKey = props.currentQueryKey
+        ? memberKeys.list(props.orgId, membersSearchKey(new URLSearchParams(props.currentQueryKey)))
+        : null;
 
     const updateRoles = useMutation({
         mutationFn: async (form: FormData): Promise<undefined> => {
@@ -24,8 +26,8 @@ export function MemberActions(props: { orgId: string; userId: string; initialRol
             return undefined;
         },
         onSuccess: async () => {
-            if (props.currentQueryKey) {
-                await queryClient.invalidateQueries({ queryKey: memberKeys.list(props.orgId, membersSearchKey(new URLSearchParams(props.currentQueryKey ?? ''))) });
+            if (currentListKey) {
+                await queryClient.invalidateQueries({ queryKey: currentListKey });
             }
         },
     });
@@ -36,8 +38,8 @@ export function MemberActions(props: { orgId: string; userId: string; initialRol
             return undefined;
         },
         onSuccess: async () => {
-            if (props.currentQueryKey) {
-                await queryClient.invalidateQueries({ queryKey: memberKeys.list(props.orgId, membersSearchKey(new URLSearchParams(props.currentQueryKey ?? ''))) });
+            if (currentListKey) {
+                await queryClient.invalidateQueries({ queryKey: currentListKey });
             }
         },
     });
@@ -48,8 +50,8 @@ export function MemberActions(props: { orgId: string; userId: string; initialRol
             return undefined;
         },
         onSuccess: async () => {
-            if (props.currentQueryKey) {
-                await queryClient.invalidateQueries({ queryKey: memberKeys.list(props.orgId, membersSearchKey(new URLSearchParams(props.currentQueryKey ?? ''))) });
+            if (currentListKey) {
+                await queryClient.invalidateQueries({ queryKey: currentListKey });
             }
         },
     });
@@ -59,27 +61,31 @@ export function MemberActions(props: { orgId: string; userId: string; initialRol
 
     const removeFromOrg = useMutation({
         mutationFn: async (): Promise<undefined> => {
-            await updateMember(props.orgId, props.userId, { status: 'SUSPENDED' as any });
+            await updateMember(props.orgId, props.userId, { status: 'SUSPENDED' });
             return undefined;
         },
         onMutate: async () => {
-            if (!props.currentQueryKey) {return { previous: undefined } as { previous?: any };}
-            await queryClient.cancelQueries({ queryKey: memberKeys.list(props.orgId, membersSearchKey(new URLSearchParams(props.currentQueryKey ?? ''))) });
-            const key = memberKeys.list(props.orgId, membersSearchKey(new URLSearchParams(props.currentQueryKey ?? '')));
-            const previous = queryClient.getQueryData<any>(key);
-            if (previous && Array.isArray(previous.users)) {
-                queryClient.setQueryData(key, (old: any) => ({ ...old, users: (old.users as any[]).filter((u) => u.id !== props.userId) }));
+            if (!currentListKey) {
+                return { previous: undefined } as { previous?: MembersResponse };
             }
-            return { previous } as { previous?: any };
+            await queryClient.cancelQueries({ queryKey: currentListKey });
+            const previous = queryClient.getQueryData<MembersResponse>(currentListKey);
+            if (previous) {
+                queryClient.setQueryData<MembersResponse>(currentListKey, {
+                    ...previous,
+                    users: previous.users.filter((user) => user.id !== props.userId),
+                });
+            }
+            return { previous } as { previous?: MembersResponse };
         },
         onError: (_error, _variables, context) => {
-            if (context?.previous && props.currentQueryKey) {
-                queryClient.setQueryData(memberKeys.list(props.orgId, membersSearchKey(new URLSearchParams(props.currentQueryKey ?? ''))), context.previous);
+            if (context?.previous && currentListKey) {
+                queryClient.setQueryData(currentListKey, context.previous);
             }
         },
         onSettled: async () => {
-            if (props.currentQueryKey) {
-                await queryClient.invalidateQueries({ queryKey: memberKeys.list(props.orgId, membersSearchKey(new URLSearchParams(props.currentQueryKey ?? ''))) });
+            if (currentListKey) {
+                await queryClient.invalidateQueries({ queryKey: currentListKey });
             }
         },
     });

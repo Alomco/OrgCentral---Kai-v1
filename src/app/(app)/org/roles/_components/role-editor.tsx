@@ -1,10 +1,11 @@
 ﻿'use client';
 
 import { useActionState, useEffect, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Role } from '@/server/types/hr-types';
 
-import { roleKeys } from './roles.api';
-import { deleteRoleInlineAction, updateRoleInlineAction } from '../actions';
+import { deleteRole, roleKeys } from './roles.api';
+import { updateRoleInlineAction } from '../actions';
 import type { InlineRoleActionState } from '../actions.state';
 
 export function RoleEditor(props: {
@@ -19,10 +20,31 @@ export function RoleEditor(props: {
     updateRoleInlineAction,
     { status: 'idle' },
   );
-  const [deleteState, deleteAction, deletePending] = useActionState<InlineRoleActionState, FormData>(
-    deleteRoleInlineAction,
-    { status: 'idle' },
-  );
+  const deleteRoleMutation = useMutation<undefined, Error, undefined, { previous?: Role[] }>({
+    mutationFn: async () => {
+      await deleteRole(props.orgId, props.roleId);
+      return undefined;
+    },
+    onMutate: async () => {
+      const listKey = roleKeys.list(props.orgId);
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previous = queryClient.getQueryData<Role[]>(listKey);
+      if (previous) {
+        queryClient.setQueryData<Role[]>(listKey, previous.filter((role) => role.id !== props.roleId));
+      }
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      const listKey = roleKeys.list(props.orgId);
+      if (context?.previous) {
+        queryClient.setQueryData(listKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: roleKeys.list(props.orgId) }).catch(() => null);
+      queryClient.removeQueries({ queryKey: roleKeys.detail(props.orgId, props.roleId) });
+    },
+  });
 
   useEffect(() => {
     if (updateState.status === 'success') {
@@ -33,25 +55,16 @@ export function RoleEditor(props: {
     }
   }, [props.orgId, props.roleId, queryClient, updateState.status]);
 
-  useEffect(() => {
-    if (deleteState.status === 'success') {
-      queryClient.invalidateQueries({ queryKey: roleKeys.list(props.orgId) }).catch(() => null);
-    }
-  }, [props.orgId, queryClient, deleteState.status]);
-
   const message =
-    deleteState.status !== 'idle'
-      ? deleteState.message
-      : updateState.status !== 'idle'
-        ? updateState.message
-        : null;
+    updateState.status !== 'idle' ? updateState.message : null;
 
   const messageTone =
-    deleteState.status === 'error' || updateState.status === 'error'
-      ? 'text-xs text-destructive'
-      : 'text-xs text-muted-foreground';
+    updateState.status === 'error' ? 'text-xs text-destructive' : 'text-xs text-muted-foreground';
 
-  const disabled = useMemo(() => updatePending || deletePending, [updatePending, deletePending]);
+  const disabled = useMemo(
+    () => updatePending || deleteRoleMutation.isPending,
+    [updatePending, deleteRoleMutation.isPending],
+  );
 
   return (
     <div className="mt-3 grid gap-3">
@@ -93,16 +106,16 @@ export function RoleEditor(props: {
         </button>
       </form>
 
-      <form action={deleteAction} aria-busy={deletePending}>
-        <input type="hidden" name="roleId" value={props.roleId} />
+      <div aria-busy={deleteRoleMutation.isPending}>
         <button
-          type="submit"
-          disabled={deletePending}
+          type="button"
+          disabled={deleteRoleMutation.isPending}
+          onClick={() => deleteRoleMutation.mutate()}
           className="h-9 w-fit rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground disabled:opacity-70"
         >
-          Delete role
+          {deleteRoleMutation.isPending ? 'Deleting...' : 'Delete role'}
         </button>
-      </form>
+      </div>
     </div>
   );
 }

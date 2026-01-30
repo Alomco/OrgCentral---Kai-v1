@@ -1,5 +1,5 @@
 ﻿// @vitest-environment jsdom
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,11 +7,26 @@ import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { RolesListClient } from "../_components/roles-list.client";
 import { RoleCreateForm } from "../_components/role-create-form";
+import type { RoleCreateState } from "../actions.state";
+import type { Role } from "@/server/types/hr-types";
 
 const orgId = "org1";
 const baseUrl = `/api/org/${orgId}/roles`;
 
-const db = { roles: [{ id: "r1", name: "member", description: null, permissions: {} }] } as any;
+const { db } = vi.hoisted(() => ({
+  db: { roles: [{ id: "r1", name: "member", description: null, permissions: {} }] as Role[] },
+}));
+
+vi.mock("../actions", () => ({
+  createRoleAction: vi.fn(async (_prev: RoleCreateState, formData: FormData) => {
+    const name = typeof formData.get("name") === "string" ? String(formData.get("name")) : "";
+    const description = typeof formData.get("description") === "string" ? String(formData.get("description")).trim() : "";
+    db.roles.push({ id: `r${db.roles.length + 1}`, name, description: description.length > 0 ? description : null, permissions: {} });
+    return { status: "success", message: "Role created." };
+  }),
+  updateRoleInlineAction: vi.fn(async () => ({ status: "success", message: "Role updated." })),
+  deleteRoleInlineAction: vi.fn(async () => ({ status: "success", message: "Role deleted." })),
+}));
 
 describe("roles create flow", () => {
   it("creates and shows new role after mutation", async () => {
@@ -29,7 +44,7 @@ describe("roles create flow", () => {
       <QueryClientProvider client={qc}>
         <div>
           <RoleCreateForm orgId={orgId} />
-          <RolesListClient orgId={orgId} initial={db.roles as any} />
+        <RolesListClient orgId={orgId} initial={db.roles} />
         </div>
       </QueryClientProvider>
     );
@@ -39,7 +54,8 @@ describe("roles create flow", () => {
     await userEvent.type(screen.getByPlaceholderText(/Role name/i), "manager");
     await userEvent.click(screen.getByRole("button", { name: /create/i }));
 
-    await waitFor(async () => expect(await screen.findByText(/manager/i)).toBeInTheDocument());
+    await screen.findByText(/role created/i);
+    await waitFor(() => expect(screen.getByText(/manager/i)).toBeInTheDocument());
   });
 });
 

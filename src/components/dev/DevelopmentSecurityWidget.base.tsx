@@ -17,7 +17,7 @@ import {
   renderTools,
 } from "./DevelopmentSecurityWidget.sections";
 import { useRegisterDevelopmentAction } from "./toolbar";
-import { devSecurityKeys, fetchDevSecurity as fetchDevelopmentSecurity } from "./dev-security.api";
+import { devSecurityKeys, fetchDevelopmentSecurity } from "./dev-security.api";
 
 export function DevelopmentSecurityWidget() {
   const [open, setOpen] = useState(false);

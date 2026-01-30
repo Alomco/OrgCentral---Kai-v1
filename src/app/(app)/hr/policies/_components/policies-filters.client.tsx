@@ -21,7 +21,7 @@ export function PoliciesFiltersClient() {
         aria-label="Search policies"
         placeholder="Search policies..."
         defaultValue={searchParams.get('q') ?? ''}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         disabled={isPending}
         className="h-9"
       />

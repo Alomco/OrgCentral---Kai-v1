@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { UserPlus, Download } from 'lucide-react';
 
@@ -49,6 +49,25 @@ export function EmployeeDirectoryClient({
         setParams(newParams);
     }, []);
 
+    useEffect(() => {
+        let last: number | null = null;
+        function onKey(event: KeyboardEvent) {
+            if (event.key.toLowerCase() !== 'g') {
+                return;
+            }
+            const now = Date.now();
+            if (last && now - last < 450) {
+                const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+                last = null;
+            } else {
+                last = now;
+            }
+        }
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
     const handlePageChange = useCallback(
         (page: number) => {
             setParams((current) => {
@@ -82,6 +101,20 @@ export function EmployeeDirectoryClient({
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
+                        <span id="employees-kbd-gg-hint" className="sr-only">Keyboard: press g twice to jump to the top.</span>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                                window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+                            }}
+                            aria-label="Jump to Top"
+                            aria-describedby="employees-kbd-gg-hint"
+                        >
+                            Top
+                        </Button>
                         <Button variant="outline" size="sm" disabled>
                             <Download className="h-4 w-4 mr-2" />
                             Export

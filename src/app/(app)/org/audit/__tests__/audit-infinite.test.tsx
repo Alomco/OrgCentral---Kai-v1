@@ -42,7 +42,7 @@ describe("audit infinite list", () => {
 
     await waitFor(async () => {
       expect(await screen.findByText('No More')).toBeInTheDocument();
-      expect(screen.getByText(/org.resource/)).toBeInTheDocument();
+      expect(screen.getAllByText(/org.resource/).length).toBeGreaterThan(0);
     });
   });
 });

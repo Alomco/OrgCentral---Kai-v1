@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { headers as nextHeaders } from 'next/headers';
 import { FileText } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -22,7 +21,6 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 import type { HRPolicy } from '@/server/types/hr-ops-types';
 
-import { formatHumanDate } from '../_components/format-date';
 import { HrPageHeader } from '../_components/hr-page-header';
 import { PolicyAdminPanel } from './_components/policy-admin-panel';
 
@@ -38,7 +36,7 @@ export default function HrPoliciesPage() {
     );
 }
 
-async function PoliciesPageContent({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
+async function PoliciesPageContent() {
     const headerStore = await nextHeaders();
     const { authorization } = await getSessionContextOrRedirect({}, {
         headers: headerStore,

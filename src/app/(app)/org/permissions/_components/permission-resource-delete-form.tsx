@@ -1,7 +1,7 @@
-﻿'use client';
+'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
     AlertDialog,
@@ -15,33 +15,51 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import type { PermissionResource } from '@/server/types/security-types';
 
-import { permissionKeys } from './permissions.api';
-import { deletePermissionResourceAction } from '../permission-resource-actions';
-import type { PermissionResourceInlineState } from '../permission-resource-form-utils';
+import { permissionKeys, deletePermissionResource } from './permissions.api';
+
+interface DeleteContext {
+    previousList?: PermissionResource[];
+}
 
 export function PermissionResourceDeleteForm(props: { orgId: string; resourceId: string }) {
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const formReference = useRef<HTMLFormElement | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
     const queryClient = useQueryClient();
-    const [state, formAction, pending] = useActionState<PermissionResourceInlineState, FormData>(
-        deletePermissionResourceAction,
-        { status: 'idle' },
-    );
 
-    useEffect(() => {
-        if (state.status === 'success') {
+    const remove = useMutation<undefined, Error, undefined, DeleteContext>({
+        mutationFn: async () => {
+            await deletePermissionResource(props.orgId, props.resourceId);
+            return undefined;
+        },
+        onMutate: async () => {
+            const listKey = permissionKeys.list(props.orgId);
+            await queryClient.cancelQueries({ queryKey: listKey });
+            const previousList = queryClient.getQueryData<PermissionResource[]>(listKey);
+            if (previousList) {
+                queryClient.setQueryData(listKey, previousList.filter((item) => item.id !== props.resourceId));
+            }
+            return { previousList };
+        },
+        onError: (error, _payload, context) => {
+            const listKey = permissionKeys.list(props.orgId);
+            if (context?.previousList) {
+                queryClient.setQueryData(listKey, context.previousList);
+            }
+            setMessage(error.message || 'Unable to delete resource.');
+        },
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: permissionKeys.list(props.orgId) }).catch(() => null);
-        }
-    }, [props.orgId, queryClient, state.status]);
+        },
+    });
 
     return (
-        <form ref={formReference} action={formAction} className="flex flex-wrap items-center justify-end gap-2" aria-busy={pending}>
-            <input type="hidden" name="resourceId" value={props.resourceId} />
+        <div className="flex flex-wrap items-center justify-end gap-2" aria-busy={remove.isPending}>
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                 <AlertDialogTrigger asChild>
-                    <Button type="button" size="sm" variant="destructive" disabled={pending}>
-                        {pending ? 'Deleting…' : 'Delete'}
+                    <Button type="button" size="sm" variant="destructive" disabled={remove.isPending}>
+                        {remove.isPending ? 'Deleting...' : 'Delete'}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -52,25 +70,26 @@ export function PermissionResourceDeleteForm(props: { orgId: string; resourceId:
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={remove.isPending}>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                            disabled={pending}
+                            disabled={remove.isPending}
                             onClick={() => {
                                 setConfirmOpen(false);
-                                formReference.current?.requestSubmit();
+                                setMessage(null);
+                                remove.mutate(undefined);
                             }}
                         >
-                            {pending ? 'Deleting…' : 'Delete resource'}
+                            {remove.isPending ? 'Deleting...' : 'Delete resource'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
 
-            {state.status === 'error' ? (
+            {message ? (
                 <p className="text-xs text-destructive">
-                    {state.message ?? 'Unable to delete resource.'}
+                    {message}
                 </p>
             ) : null}
-        </form>
+        </div>
     );
 }

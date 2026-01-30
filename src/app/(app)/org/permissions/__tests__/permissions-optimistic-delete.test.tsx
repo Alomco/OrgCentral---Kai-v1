@@ -6,14 +6,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { PermissionResourceManager } from "../_components/permission-resource-manager";
+import { permissionKeys } from "../_components/permissions.api";
+import type { PermissionResource } from "@/server/types/security-types";
 
 const orgId = "org1";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
-const db = { resources: [
+const db: { resources: PermissionResource[] } = { resources: [
   { id: "p1", resource: "org.test", actions: ["read"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
   { id: "p2", resource: "org.temp", actions: ["read","update"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-] } as any;
+] };
 
 describe("permissions optimistic delete", () => {
   it("removes resource immediately and stays removed after invalidate", async () => {
@@ -35,7 +37,11 @@ describe("permissions optimistic delete", () => {
     expect(await screen.findByText(/org\.temp/)).toBeInTheDocument();
 
     // Click the delete trigger button in the org.temp row
-    const row = screen.getByText(/org\.temp/).closest('div')!;
+    const row = screen.getByText(/org\.temp/).closest('div.rounded-lg');
+    if (!row) {
+      throw new Error('Missing permission row');
+    }
+    await userEvent.click(within(row).getByRole('button', { name: /edit/i }));
     const delBtn = within(row).getByRole('button', { name: /delete/i });
     await userEvent.click(delBtn);
 
@@ -46,7 +52,7 @@ describe("permissions optimistic delete", () => {
     // Optimistic removal
     await waitFor(() => expect(screen.queryByText(/org\.temp/)).not.toBeInTheDocument());
 
-    await qc.invalidateQueries({ queryKey: ["org", orgId, "permissions"] });
+    await qc.invalidateQueries({ queryKey: permissionKeys.list(orgId) });
     await waitFor(() => expect(screen.queryByText(/org\.temp/)).not.toBeInTheDocument());
   });
 });

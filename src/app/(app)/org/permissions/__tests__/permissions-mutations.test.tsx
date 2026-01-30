@@ -1,5 +1,5 @@
 ﻿// @vitest-environment jsdom
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,22 +7,54 @@ import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { PermissionResourceManager } from "../_components/permission-resource-manager";
 import { PermissionResourceCreateForm } from "../_components/permission-resource-create-form";
+import type { PermissionResourceCreateState } from "../permission-resource-form-utils";
+import type { PermissionResource } from "@/server/types/security-types";
 
 const orgId = "org1";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
-const db = { resources: [{ id: "p1", resource: "org.test", actions: ["read"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }] } as any;
+const { db } = vi.hoisted(() => ({
+  db: {
+    resources: [{
+      id: "p1",
+      resource: "org.test",
+      actions: ["read"],
+      description: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }] as PermissionResource[],
+  },
+}));
+
+vi.mock("../permission-resource-actions", () => ({
+  createPermissionResourceAction: vi.fn(async (_prev: PermissionResourceCreateState, formData: FormData) => {
+    const resource = typeof formData.get("resource") === "string" ? String(formData.get("resource")) : "";
+    const actionsRaw = typeof formData.get("actions") === "string" ? String(formData.get("actions")) : "";
+    const description = typeof formData.get("description") === "string" ? String(formData.get("description")).trim() : "";
+    const actions = actionsRaw
+      .split(/[\n,]/)
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+    db.resources.push({
+      id: `p${db.resources.length + 1}`,
+      resource,
+      actions,
+      description: description.length > 0 ? description : null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    return {
+      status: "success",
+      message: "Permission resource created.",
+      values: { resource: "", actions: "", description: "" },
+    };
+  }),
+}));
 
 describe("permissions create flow", () => {
   it("creates and shows new resource after mutation", async () => {
     server.resetHandlers(
       http.get(baseUrl, () => HttpResponse.json({ resources: db.resources })),
-      http.post(baseUrl, async ({ request }) => {
-        const body = await request.json() as any;
-        const rec = { id: `p${db.resources.length+1}`, resource: body.resource, actions: body.actions, description: body.description ?? null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-        db.resources.push(rec);
-        return HttpResponse.json({ resource: rec }, { status: 201 });
-      })
     );
 
     const qc = new QueryClient();
@@ -30,18 +62,19 @@ describe("permissions create flow", () => {
       <QueryClientProvider client={qc}>
         <div>
           <PermissionResourceCreateForm orgId={orgId} />
-          <PermissionResourceManager orgId={orgId} resources={db.resources as any} />
+        <PermissionResourceManager orgId={orgId} resources={db.resources} />
         </div>
       </QueryClientProvider>
     );
 
     expect(await screen.findByText(/org\.test/)).toBeInTheDocument();
 
-    await userEvent.type(screen.getByPlaceholderText(/hr\.leave\.request|hr\.leave\.request/i), "org.new");
-    await userEvent.type(screen.getByPlaceholderText(/read|read/i), "read");
+    await userEvent.type(screen.getByLabelText(/Resource key/i), "org.new");
+    await userEvent.type(screen.getByLabelText(/Allowed actions/i), "read");
     await userEvent.click(screen.getByRole("button", { name: /create resource/i }));
 
-    await waitFor(async () => expect(await screen.findByText(/org\.new/)).toBeInTheDocument());
+    await screen.findByText(/permission resource created/i);
+    await waitFor(() => expect(screen.getByText(/org\.new/)).toBeInTheDocument());
   });
 });
 

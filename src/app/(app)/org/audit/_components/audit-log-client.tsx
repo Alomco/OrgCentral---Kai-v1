@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -11,8 +11,8 @@ import {
   buildAuditParams,
   fetchAuditPage,
   toLimitValue,
-  type TextFilterProps,
 } from './audit-log-helpers';
+import { TextFilter } from './audit-log-text-filter';
 
 export function AuditLogClient({ orgId }: { orgId: string }) {
   const searchParams = useSearchParams();
@@ -59,8 +59,10 @@ export function AuditLogClient({ orgId }: { orgId: string }) {
   // Keyboard: press g twice quickly to jump to top
   useEffect(() => {
     let last: number | null = null;
-    function onKey(e: KeyboardEvent) {
-      if (e.key.toLowerCase() !== 'g') {return;}
+    function onKey(event: KeyboardEvent) {
+      if (event.key.toLowerCase() !== 'g') {
+        return;
+      }
       const now = Date.now();
       if (last && now - last < 450) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -75,6 +77,9 @@ export function AuditLogClient({ orgId }: { orgId: string }) {
 
   return (
     <div className="space-y-4">
+      <span id="kbd-gg-hint" className="sr-only">
+        Keyboard: press g twice to jump to the top.
+      </span>
       <div className="rounded-2xl bg-card/60 p-4 backdrop-blur">
         <div className="grid gap-3 md:grid-cols-6">
           <label className="grid gap-1 text-xs">
@@ -91,7 +96,11 @@ export function AuditLogClient({ orgId }: { orgId: string }) {
               aria-label="Filter by event type"
             >
               <option value="">All</option>
-              {EVENT_TYPES.map((t) => (<option key={t} value={t}>{t}</option>))}
+              {EVENT_TYPES.map((eventType) => (
+                <option key={eventType} value={eventType}>
+                  {eventType}
+                </option>
+              ))}
             </select>
           </label>
           <TextFilter
@@ -147,7 +156,7 @@ export function AuditLogClient({ orgId }: { orgId: string }) {
             className="rounded-md border px-3 h-8"
             onClick={() => {
               setFilters((current) => ({ ...current }));
-              void refetch();
+              refetch().catch(() => null);
             }}
           >
             Apply
@@ -175,7 +184,9 @@ export function AuditLogClient({ orgId }: { orgId: string }) {
               <tbody>
                 {logs.map((log) => (
                   <tr key={log.id} className="border-t">
-                    <td className="px-2 py-1 whitespace-nowrap">{new Date(log.createdAt).toLocaleString()}</td>
+                    <td className="px-2 py-1 whitespace-nowrap">
+                      {new Date(log.createdAt).toLocaleString()}
+                    </td>
                     <td className="px-2 py-1">{log.eventType}</td>
                     <td className="px-2 py-1">{log.action}</td>
                     <td className="px-2 py-1">{log.resource}</td>
@@ -191,7 +202,9 @@ export function AuditLogClient({ orgId }: { orgId: string }) {
           <button
             type="button"
             className="rounded-md border px-3 h-8"
-            onClick={() => void refetch()}
+            onClick={() => {
+              refetch().catch(() => null);
+            }}
             aria-label="Refresh"
           >
             Refresh
@@ -200,7 +213,9 @@ export function AuditLogClient({ orgId }: { orgId: string }) {
             type="button"
             className="rounded-md border px-3 h-8"
             disabled={!hasNextPage || isFetchingNextPage}
-            onClick={() => void fetchNextPage()}
+            onClick={() => {
+              fetchNextPage().catch(() => null);
+            }}
             aria-label="Load more audit events"
           >
             {isFetchingNextPage ? 'Loading...' : hasNextPage ? 'Load More' : 'No More'}
@@ -208,29 +223,18 @@ export function AuditLogClient({ orgId }: { orgId: string }) {
           <button
             type="button"
             className="rounded-md border px-3 h-8"
-            onClick={() => { if (typeof window !== 'undefined') {window.scrollTo({ top: 0, behavior: 'smooth' });} }}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
             aria-label="Jump to Top"
+            aria-describedby="kbd-gg-hint"
           >
             Top
           </button>
         </div>
       </div>
     </div>
-  );
-}
-
-function TextFilter({ label, value, onChange, placeholder, type = 'text' }: TextFilterProps) {
-  return (
-    <label className="grid gap-1 text-xs">
-      <span className="text-muted-foreground">{label}</span>
-      <input
-        className="h-8 rounded-md border bg-background px-2"
-        type={type}
-        value={value ?? ''}
-        onChange={(event) => onChange(event.target.value || undefined)}
-        placeholder={placeholder}
-        aria-label={label}
-      />
-    </label>
   );
 }

@@ -6,14 +6,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { PermissionResourceManager } from "../_components/permission-resource-manager";
+import type { PermissionResource } from "@/server/types/security-types";
 
 const orgId = "org1";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
-const db = { resources: [
+const db: { resources: PermissionResource[] } = { resources: [
   { id: "p1", resource: "org.test", actions: ["read"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
   { id: "p2", resource: "org.temp", actions: ["read","update"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-] } as any;
+] };
 
 describe("permissions optimistic delete – rollback on error", () => {
   it("restores the row if server delete fails", async () => {
@@ -25,12 +26,16 @@ describe("permissions optimistic delete – rollback on error", () => {
     const qc = new QueryClient();
     render(
       <QueryClientProvider client={qc}>
-        <PermissionResourceManager orgId={orgId} resources={db.resources as any} />
+        <PermissionResourceManager orgId={orgId} resources={db.resources} />
       </QueryClientProvider>
     );
 
-    const row = await screen.findByText(/org\.temp/);
-    const container = row.closest('div')!;
+    const rowText = await screen.findByText(/org\.temp/);
+    const container = rowText.closest('div.rounded-lg');
+    if (!container) {
+      throw new Error('Missing permission row');
+    }
+    await userEvent.click(within(container).getByRole('button', { name: /edit/i }));
     const delBtn = within(container).getByRole('button', { name: /delete/i });
     await userEvent.click(delBtn);
     const confirm = await screen.findByRole('button', { name: /delete resource/i });

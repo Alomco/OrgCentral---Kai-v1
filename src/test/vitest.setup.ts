@@ -1,4 +1,3 @@
-﻿import '@testing-library/jest-dom/vitest';
 import '@testing-library/jest-dom/vitest';
 /*
  * Test-only runtime setup.
@@ -40,3 +39,22 @@ vi.mock('@/server/logging/audit-logger', () => ({
 
 
 
+
+vi.mock('next/navigation', () => ({
+    useRouter: () => ({
+        replace: vi.fn(),
+        push: vi.fn(),
+        refresh: vi.fn(),
+        prefetch: vi.fn(),
+        back: vi.fn(),
+        forward: vi.fn(),
+    }),
+    usePathname: () => '/',
+    useSearchParams: () => new URLSearchParams(),
+    redirect: vi.fn(),
+    notFound: vi.fn(),
+}));
+
+vi.mock('next/headers', () => ({
+    headers: vi.fn(() => new Headers()),
+}));

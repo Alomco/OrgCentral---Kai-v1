@@ -1,10 +1,13 @@
 ﻿import { ValidationError } from "@/server/errors";
 import { readJson } from "@/server/api-adapters/http/request-utils";
+import { type POLICY_CATEGORY_VALUES } from "@/server/services/hr/policies/hr-policy-schemas";
+
+type PolicyCategoryValue = (typeof POLICY_CATEGORY_VALUES)[number];
 
 function normalizeCategoryQuery(value?: string) {
     if (!value) {return undefined;}
     const k = value.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const map: Record<string, typeof import("@/server/services/hr/policies/hr-policy-schemas").POLICY_CATEGORY_VALUES[number]> = {
+    const map: Record<string, PolicyCategoryValue> = {
         // Benefits
         benefits: "BENEFITS",
         benefit: "BENEFITS",

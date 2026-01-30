@@ -13,11 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { PermissionResource } from '@/server/types/security-types';
 
-import { extractLegacyKeys } from '../permission-resource-utils';
 import { PermissionResourceCreateForm } from './permission-resource-create-form';
 import { PermissionResourceRow } from './permission-resource-row';
-
-type SortOption = 'resource' | 'updated' | 'actions';
+import {
+    buildActionOptions,
+    filterPermissionResources,
+    sortPermissionResources,
+    type SortOption,
+} from './permission-resource-manager.utils';
 
 export function PermissionResourceManager(props: { orgId: string; resources: PermissionResource[] }) {
     const searchParams = useSearchParams();
@@ -36,87 +39,40 @@ export function PermissionResourceManager(props: { orgId: string; resources: Per
         return 'resource';
     });
 
-    const { data } = useQuery({ ...listPermissionResourcesQuery(props.orgId), initialData: props.resources });
-    const liveResources = data ?? [];
-
-    const actionOptions = useMemo(() => {
-        const set = new Set<string>();
-        for (const resource of liveResources) {
-            if (!Array.isArray(resource.actions)) {
-                continue;
+    useEffect(() => {
+        let last: number | null = null;
+        function onKey(event: KeyboardEvent) {
+            if (event.key.toLowerCase() !== 'g') {
+                return;
             }
-            for (const action of resource.actions) {
-                const trimmed = action.trim();
-                if (trimmed.length > 0) {
-                    set.add(trimmed);
-                }
+            const now = Date.now();
+            if (last && now - last < 450) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                last = null;
+            } else {
+                last = now;
             }
         }
-        return Array.from(set).sort((left, right) => left.localeCompare(right));
-    }, [liveResources]);
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
 
-    const filteredResources = useMemo(() => {
-        const search = query.trim().toLowerCase();
-        const selectedActions = new Set(actionFilter);
+    const { data: liveResources = props.resources } = useQuery({
+        ...listPermissionResourcesQuery(props.orgId),
+        initialData: props.resources,
+    });
 
-        return liveResources.filter((resource) => {
-            const actions = Array.isArray(resource.actions) ? resource.actions : [];
-            const matchesActions =
-                selectedActions.size === 0 ||
-                Array.from(selectedActions).every((action) => actions.includes(action));
+    const actionOptions = useMemo(() => buildActionOptions(liveResources), [liveResources]);
 
-            if (!matchesActions) {
-                return false;
-            }
+    const filteredResources = useMemo(
+        () => filterPermissionResources(liveResources, query, actionFilter),
+        [actionFilter, liveResources, query],
+    );
 
-            if (!search) {
-                return true;
-            }
-
-            const legacyKeys = extractLegacyKeys(resource);
-            const haystack = [
-                resource.resource,
-                resource.description ?? '',
-                ...actions,
-                ...legacyKeys,
-            ]
-                .join(' ')
-                .toLowerCase();
-
-            return haystack.includes(search);
-        });
-    }, [actionFilter, liveResources, query]);
-
-    const sortedResources = useMemo(() => {
-        const resources = [...filteredResources];
-
-        if (sortBy === 'updated') {
-            resources.sort((left, right) => {
-                const leftTime = toTimestamp(left.updatedAt);
-                const rightTime = toTimestamp(right.updatedAt);
-                if (rightTime !== leftTime) {
-                    return rightTime - leftTime;
-                }
-                return left.resource.localeCompare(right.resource);
-            });
-            return resources;
-        }
-
-        if (sortBy === 'actions') {
-            resources.sort((left, right) => {
-                const leftCount = Array.isArray(left.actions) ? left.actions.length : 0;
-                const rightCount = Array.isArray(right.actions) ? right.actions.length : 0;
-                if (rightCount !== leftCount) {
-                    return rightCount - leftCount;
-                }
-                return left.resource.localeCompare(right.resource);
-            });
-            return resources;
-        }
-
-        resources.sort((left, right) => left.resource.localeCompare(right.resource));
-        return resources;
-    }, [filteredResources, sortBy]);
+    const sortedResources = useMemo(
+        () => sortPermissionResources(filteredResources, sortBy),
+        [filteredResources, sortBy],
+    );
 
     const totalCount = liveResources.length;
     const filteredCount = sortedResources.length;
@@ -151,6 +107,7 @@ export function PermissionResourceManager(props: { orgId: string; resources: Per
 
     return (
         <div className="space-y-6">
+            <span id="kbd-gg-hint" className="sr-only">Keyboard: press g twice to jump to the top.</span>
             <PermissionResourceCreateForm orgId={props.orgId} />
 
             <div className="space-y-4">
@@ -191,6 +148,17 @@ export function PermissionResourceManager(props: { orgId: string; resources: Per
                                 Clear
                             </Button>
                         ) : null}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3"
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            aria-label="Jump to Top"
+                            aria-describedby="kbd-gg-hint"
+                        >
+                            Top
+                        </Button>
                     </div>
                 </div>
 
@@ -251,10 +219,4 @@ export function PermissionResourceManager(props: { orgId: string; resources: Per
             </div>
         </div>
     );
-}
-
-function toTimestamp(value: Date | string): number {
-    const dateValue = value instanceof Date ? value : new Date(value);
-    const time = dateValue.getTime();
-    return Number.isNaN(time) ? 0 : time;
 }

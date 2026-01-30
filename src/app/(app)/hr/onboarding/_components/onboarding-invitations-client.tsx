@@ -30,7 +30,14 @@ function formatInvitationStatus(status: OnboardingInvitation['status']): string 
 }
 
 export function OnboardingInvitationsClient({ initialInvitations }: OnboardingInvitationsClientProps) {
-    const limitParam = typeof window !== 'undefined' ? Number(new URLSearchParams(window.location.search).get('limit') || '25') : 25;\n    const { data: invitations = initialInvitations } = useQuery({ queryKey: invitationsKey(limitParam), queryFn: () => fetchOnboardingInvitations(limitParam), initialData: initialInvitations });
+    const limitParameter = typeof window !== 'undefined'
+        ? Number(new URLSearchParams(window.location.search).get('limit') ?? '25')
+        : 25;
+    const { data: invitations = initialInvitations } = useQuery({
+        queryKey: invitationsKey(limitParameter),
+        queryFn: () => fetchOnboardingInvitations(limitParameter),
+        initialData: initialInvitations,
+    });
 
     return (
         <Card>

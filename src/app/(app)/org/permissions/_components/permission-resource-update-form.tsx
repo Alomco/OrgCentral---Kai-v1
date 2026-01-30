@@ -1,7 +1,8 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,43 +11,134 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { PermissionResource } from '@/server/types/security-types';
 
-import { stringifyActionList, type PermissionResourceInlineState } from '../permission-resource-form-utils';
+import {
+    parseActionList,
+    stringifyActionList,
+    type FieldErrors,
+    type PermissionResourceFormValues,
+} from '../permission-resource-form-utils';
 import { FieldError } from './field-error';
-import { permissionKeys } from './permissions.api';
-import { updatePermissionResourceAction } from '../permission-resource-actions';
+import { permissionKeys, updatePermissionResource } from './permissions.api';
+
+interface UpdatePayload {
+    resource: string;
+    actions: string;
+    description: string;
+}
+
+interface UpdateContext {
+    previousList?: PermissionResource[];
+    previousDetail?: PermissionResource;
+}
 
 export function PermissionResourceUpdateForm(props: { orgId: string; resource: PermissionResource }) {
-    const formReference = useRef<HTMLFormElement | null>(null);
     const qc = useQueryClient();
+    const [message, setMessage] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors<PermissionResourceFormValues> | undefined>(undefined);
     const actionsText = stringifyActionList(props.resource.actions);
 
-    const [state, formAction, pending] = useActionState<PermissionResourceInlineState, FormData>(
-        updatePermissionResourceAction,
-        { status: 'idle' },
-    );
+    const update = useMutation<undefined, Error, UpdatePayload, UpdateContext>({
+        mutationFn: async (payload) => {
+            const actions = parseActionList(payload.actions);
+            const resource = payload.resource.trim();
+            const description = payload.description.trim();
+            await updatePermissionResource(props.orgId, props.resource.id, {
+                resource,
+                actions,
+                description: description.length > 0 ? description : undefined,
+            });
+            return undefined;
+        },
+        onMutate: async (payload) => {
+            const listKey = permissionKeys.list(props.orgId);
+            const detailKey = permissionKeys.detail(props.orgId, props.resource.id);
+            await Promise.all([
+                qc.cancelQueries({ queryKey: listKey }),
+                qc.cancelQueries({ queryKey: detailKey }),
+            ]);
+            const previousList = qc.getQueryData<PermissionResource[]>(listKey);
+            const previousDetail = qc.getQueryData<PermissionResource>(detailKey);
 
-    useEffect(() => {
-        if (state.status === 'success') {
+            const actions = parseActionList(payload.actions);
+            const description = payload.description.trim();
+            const updated: PermissionResource = {
+                ...props.resource,
+                resource: payload.resource.trim(),
+                actions,
+                description: description.length > 0 ? description : null,
+                updatedAt: new Date().toISOString(),
+            };
+
+            qc.setQueryData<PermissionResource[]>(
+                listKey,
+                (old) => (old ? old.map((item) => (item.id === updated.id ? updated : item)) : old),
+            );
+            qc.setQueryData(detailKey, updated);
+
+            return { previousList, previousDetail };
+        },
+        onError: (error, _payload, context) => {
+            const listKey = permissionKeys.list(props.orgId);
+            const detailKey = permissionKeys.detail(props.orgId, props.resource.id);
+            if (context?.previousList) {
+                qc.setQueryData(listKey, context.previousList);
+            }
+            if (context?.previousDetail) {
+                qc.setQueryData(detailKey, context.previousDetail);
+            }
+            setMessage(error.message || 'Unable to update permission resource.');
+        },
+        onSuccess: () => {
+            setMessage('Permission resource updated.');
+        },
+        onSettled: () => {
+            const listKey = permissionKeys.list(props.orgId);
+            const detailKey = permissionKeys.detail(props.orgId, props.resource.id);
             Promise.all([
-                qc.invalidateQueries({ queryKey: permissionKeys.list(props.orgId) }),
-                qc.invalidateQueries({ queryKey: permissionKeys.detail(props.orgId, props.resource.id) }),
+                qc.invalidateQueries({ queryKey: listKey }),
+                qc.invalidateQueries({ queryKey: detailKey }),
             ]).catch(() => null);
+        },
+    });
+
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setMessage(null);
+        const formData = new FormData(event.currentTarget);
+        const resourceValue = formData.get('resource');
+        const actionsValue = formData.get('actions');
+        const descriptionValue = formData.get('description');
+        const resource = typeof resourceValue === 'string' ? resourceValue : '';
+        const actions = typeof actionsValue === 'string' ? actionsValue : '';
+        const description = typeof descriptionValue === 'string' ? descriptionValue : '';
+
+        const errors: FieldErrors<PermissionResourceFormValues> = {};
+        if (resource.trim().length === 0) {
+            errors.resource = 'Resource name is required.';
         }
-    }, [props.orgId, props.resource.id, qc, state.status]);
+        if (parseActionList(actions).length === 0) {
+            errors.actions = 'At least one action is required.';
+        }
+        if (description.trim().length > 300) {
+            errors.description = 'Description must be 300 characters or less.';
+        }
 
-    const message = state.status === 'error'
-        ? state.message
-        : state.status === 'success'
-            ? state.message ?? 'Permission resource updated.'
-            : null;
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            return;
+        }
 
-    const resourceError = state.fieldErrors?.resource;
-    const actionsError = state.fieldErrors?.actions;
-    const descriptionError = state.fieldErrors?.description;
+        setFieldErrors(undefined);
+        update.mutate({ resource, actions, description });
+    };
+
+    const pending = update.isPending;
+    const resourceError = fieldErrors?.resource;
+    const actionsError = fieldErrors?.actions;
+    const descriptionError = fieldErrors?.description;
 
     return (
-        <form ref={formReference} action={formAction} className="space-y-3" aria-busy={pending}>
-            <input type="hidden" name="resourceId" value={props.resource.id} />
+        <form onSubmit={handleSubmit} className="space-y-3" aria-busy={pending}>
             <fieldset disabled={pending} className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
@@ -97,7 +189,7 @@ export function PermissionResourceUpdateForm(props: { orgId: string; resource: P
                     {pending ? 'Saving...' : 'Save'}
                 </Button>
                 {message ? (
-                    <p className={state.status === 'error' ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
+                    <p className={update.isError ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
                         {message}
                     </p>
                 ) : null}

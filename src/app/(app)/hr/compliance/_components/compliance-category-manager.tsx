@@ -46,9 +46,9 @@ export function ComplianceCategoryManager({ initialCategories }: ComplianceCateg
 
     const loadMessage = isError ? (error instanceof Error ? error.message : 'Unable to load categories.') : null;
     const actionMessage = state.status === 'error'
-        ? state.message ?? 'Unable to save category.'
+        ? state.message
         : state.status === 'success'
-            ? state.message ?? 'Category saved.'
+            ? state.message
             : null;
 
     const statusMessage = loadMessage ?? actionMessage;

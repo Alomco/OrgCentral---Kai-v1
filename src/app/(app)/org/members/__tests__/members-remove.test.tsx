@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { MembersListClient } from "../_components/members-list.client";
+import { memberKeys, membersSearchKey } from "../_components/members.api";
 
 const orgId = 'org1';
 const baseUrl = `/api/org/${orgId}/members`;
@@ -33,10 +34,34 @@ function renderList(query: string) {
 describe('members remove from org', () => {
   it('optimistically removes and stays removed (status=ACTIVE filter)', async () => {
     const query = new URLSearchParams({ status: 'ACTIVE', page: '1', pageSize: '25' }).toString();
+    const mutableUsers = users.map((user) => ({
+      ...user,
+      memberships: user.memberships.map((membership) => ({ ...membership })),
+      roles: [...user.roles],
+    }));
 
+    const expectedKey = membersSearchKey(new URLSearchParams(query));
     server.resetHandlers(
-      http.get(`${baseUrl}?${query}`, () => HttpResponse.json({ users, totalCount: 2, page: 1, pageSize: 25 })),
-      http.put(putUrl('u2'), async () => HttpResponse.json({ success: true }, { status: 200 }))
+      http.get(baseUrl, ({ request }) => {
+        const url = new URL(request.url);
+        const actualKey = membersSearchKey(url.searchParams);
+        if (actualKey !== expectedKey) {
+          return HttpResponse.json({ message: 'bad query' }, { status: 400 });
+        }
+        const status = url.searchParams.get('status');
+        const filtered = status
+          ? mutableUsers.filter((user) => user.memberships.some((member) => member.status === status))
+          : mutableUsers;
+        return HttpResponse.json({ users: filtered, totalCount: filtered.length, page: 1, pageSize: 25 });
+      }),
+      http.put(putUrl('u2'), async ({ request }) => {
+        const body = await request.json() as { status?: string };
+        const target = mutableUsers.find((user) => user.id === 'u2');
+        if (target && target.memberships[0] && body.status) {
+          target.memberships[0].status = body.status as typeof target.memberships[0]['status'];
+        }
+        return HttpResponse.json({ success: true }, { status: 200 });
+      })
     );
 
     const qc = renderList(query);
@@ -47,15 +72,32 @@ describe('members remove from org', () => {
 
     await waitFor(() => expect(screen.queryByText('B')).not.toBeInTheDocument());
 
-    await qc.invalidateQueries({ queryKey: ['org', orgId, 'members', query] });
+    await qc.invalidateQueries({ queryKey: memberKeys.list(orgId, expectedKey) });
     await waitFor(() => expect(screen.queryByText('B')).not.toBeInTheDocument());
   });
 
   it('rolls back on error', async () => {
     const query = new URLSearchParams({ status: 'ACTIVE', page: '1', pageSize: '25' }).toString();
+    const mutableUsers = users.map((user) => ({
+      ...user,
+      memberships: user.memberships.map((membership) => ({ ...membership })),
+      roles: [...user.roles],
+    }));
 
+    const expectedKey = membersSearchKey(new URLSearchParams(query));
     server.resetHandlers(
-      http.get(`${baseUrl}?${query}`, () => HttpResponse.json({ users, totalCount: 2, page: 1, pageSize: 25 })),
+      http.get(baseUrl, ({ request }) => {
+        const url = new URL(request.url);
+        const actualKey = membersSearchKey(url.searchParams);
+        if (actualKey !== expectedKey) {
+          return HttpResponse.json({ message: 'bad query' }, { status: 400 });
+        }
+        const status = url.searchParams.get('status');
+        const filtered = status
+          ? mutableUsers.filter((user) => user.memberships.some((member) => member.status === status))
+          : mutableUsers;
+        return HttpResponse.json({ users: filtered, totalCount: filtered.length, page: 1, pageSize: 25 });
+      }),
       http.put(putUrl('u2'), async () => HttpResponse.json({ message: 'fail' }, { status: 500 }))
     );
 

@@ -6,7 +6,7 @@ export const memberKeys = {
   list: (orgId: string, params: string) => ['org', orgId, 'members', params] as const,
 } as const;
 
-interface MembersResponse {
+export interface MembersResponse {
   users: UserData[];
   totalCount: number;
   page: number;
@@ -60,8 +60,10 @@ export async function updateMember(
 }
 export function membersSearchKey(params: URLSearchParams): string {
   const entries = Array.from(params.entries());
-  entries.sort((a,b)=> a[0]===b[0] ? String(a[1]).localeCompare(String(b[1])) : a[0].localeCompare(b[0]));
+  entries.sort((left, right) => (left[0] === right[0] ? left[1].localeCompare(right[1]) : left[0].localeCompare(right[0])));
   const normalized = new URLSearchParams();
-  for (const [k,v] of entries) normalized.append(k, v);
+  for (const [key, value] of entries) {
+    normalized.append(key, value);
+  }
   return normalized.toString();
 }

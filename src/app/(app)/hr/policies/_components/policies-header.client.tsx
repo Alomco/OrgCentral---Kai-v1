@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,28 @@ export function PoliciesHeaderClient() {
   const setDensity = usePoliciesUiStore((s) => s.setDensity);
   const nextDensity = density === 'comfortable' ? 'compact' : 'comfortable';
 
-  const onRefresh = () => void queryClient.invalidateQueries({ queryKey: policyKeys.list(q || undefined, nocat) });
+  useEffect(() => {
+    let last: number | null = null;
+    function onKey(event: KeyboardEvent) {
+      if (event.key.toLowerCase() !== 'g') {
+        return;
+      }
+      const now = Date.now();
+      if (last && now - last < 450) {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+        last = null;
+      } else {
+        last = now;
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const onRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: policyKeys.list(q || undefined, nocat) }).catch(() => null);
+  };
   const onClearCategoryMap = () => {
     const next = new URLSearchParams(searchParams.toString());
     next.set('nocat', '1');
@@ -47,6 +69,7 @@ export function PoliciesHeaderClient() {
 
   return (
     <div className="flex items-center gap-2">
+      <span id="policies-kbd-gg-hint" className="sr-only">Keyboard: press g twice to jump to the top.</span>
       <Badge variant="secondary">{data.length} {q ? 'matching' : 'total'}</Badge>
       {autoCategory ? (
         <Badge variant="outline" aria-label={`Auto-mapped category ${CATEGORY_LABEL[autoCategory]}`}>Category: {CATEGORY_LABEL[autoCategory]}</Badge>
@@ -74,6 +97,20 @@ export function PoliciesHeaderClient() {
       {autoCategory ? (
         <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={onClearCategoryMap} aria-label="Disable category auto-mapping">Clear</Button>
       ) : null}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="h-7 px-2"
+        onClick={() => {
+          const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+        }}
+        aria-label="Jump to Top"
+        aria-describedby="policies-kbd-gg-hint"
+      >
+        Top
+      </Button>
     </div>
   );
 }

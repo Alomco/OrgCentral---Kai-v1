@@ -14,6 +14,49 @@ import '@testing-library/jest-dom/vitest';
 import type { PrismaClient } from '@prisma/client';
 import { vi } from 'vitest';
 
+interface StorageLike {
+    getItem: (key: string) => string | null;
+    setItem: (key: string, value: string) => void;
+    removeItem: (key: string) => void;
+    clear: () => void;
+    key: (index: number) => string | null;
+    readonly length: number;
+}
+
+const createMemoryStorage = (): StorageLike => {
+    const store = new Map<string, string>();
+    return {
+        getItem: (key) => store.get(key) ?? null,
+        setItem: (key, value) => {
+            store.set(key, String(value));
+        },
+        removeItem: (key) => {
+            store.delete(key);
+        },
+        clear: () => {
+            store.clear();
+        },
+        key: (index) => Array.from(store.keys())[index] ?? null,
+        get length() {
+            return store.size;
+        },
+    } satisfies StorageLike;
+};
+
+if (typeof globalThis.localStorage === 'undefined' || typeof globalThis.localStorage?.getItem !== 'function') {
+    Object.defineProperty(globalThis, 'localStorage', {
+        value: createMemoryStorage(),
+        configurable: true,
+    });
+}
+
+if (typeof globalThis.sessionStorage === 'undefined' || typeof globalThis.sessionStorage?.getItem !== 'function') {
+    Object.defineProperty(globalThis, 'sessionStorage', {
+        value: createMemoryStorage(),
+        configurable: true,
+    });
+}
+
 vi.mock('@/server/lib/prisma', () => {
     const prisma = new Proxy(
         {},

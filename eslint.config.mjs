@@ -38,6 +38,12 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   ...typescriptConfigs,
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+  ]),
   {
     files: ["**/*.{ts,tsx}"],
     rules: {

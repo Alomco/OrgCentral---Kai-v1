@@ -13,8 +13,8 @@ const orgId = "org1";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
 const db: { resources: PermissionResource[] } = { resources: [
-  { id: "p1", resource: "org.test", actions: ["read"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: "p2", resource: "org.temp", actions: ["read","update"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+  { id: "p1", orgId, resource: "org.test", actions: ["read"], description: null, createdAt: new Date(), updatedAt: new Date() },
+  { id: "p2", orgId, resource: "org.temp", actions: ["read","update"], description: null, createdAt: new Date(), updatedAt: new Date() }
 ] };
 
 describe("permissions optimistic delete", () => {
@@ -22,7 +22,7 @@ describe("permissions optimistic delete", () => {
     server.resetHandlers(
       http.get(baseUrl, () => HttpResponse.json({ resources: db.resources })),
       http.delete(`${baseUrl}/p2`, () => {
-        db.resources = db.resources.filter((r: any) => r.id !== "p2");
+        db.resources = db.resources.filter((resource) => resource.id !== "p2");
         return HttpResponse.json({}, { status: 204 });
       })
     );
@@ -30,7 +30,7 @@ describe("permissions optimistic delete", () => {
     const qc = new QueryClient();
     render(
       <QueryClientProvider client={qc}>
-        <PermissionResourceManager orgId={orgId} resources={db.resources as any} />
+        <PermissionResourceManager orgId={orgId} resources={db.resources} />
       </QueryClientProvider>
     );
 
@@ -41,8 +41,9 @@ describe("permissions optimistic delete", () => {
     if (!row) {
       throw new Error('Missing permission row');
     }
-    await userEvent.click(within(row).getByRole('button', { name: /edit/i }));
-    const delBtn = within(row).getByRole('button', { name: /delete/i });
+    const rowElement = row as HTMLElement;
+    await userEvent.click(within(rowElement).getByRole('button', { name: /edit/i }));
+    const delBtn = within(rowElement).getByRole('button', { name: /delete/i });
     await userEvent.click(delBtn);
 
     // Confirm in dialog

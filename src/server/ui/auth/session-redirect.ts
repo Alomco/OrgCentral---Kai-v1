@@ -38,6 +38,11 @@ export async function getSessionContextOrRedirect(
         const loginPath = options.loginPath ?? '/login';
         const notInvitedPath = options.notInvitedPath ?? '/not-invited';
         const accessDeniedPath = options.accessDeniedPath ?? '/access-denied';
+        const postLoginPath = `/api/auth/post-login?next=${encodeURIComponent(nextPath)}`;
+
+        if (decision === 'missing-org') {
+            redirect(postLoginPath);
+        }
 
         if (decision === 'not-invited') {
             redirect(withNext(notInvitedPath, nextPath));
@@ -55,11 +60,14 @@ export async function getSessionContextOrRedirect(
     }
 }
 
-type SessionErrorDecision = 'unauthenticated' | 'not-invited' | 'forbidden';
+    type SessionErrorDecision = 'unauthenticated' | 'not-invited' | 'forbidden' | 'missing-org';
 
 function classifySessionError(error: unknown): SessionErrorDecision | null {
     if (isNotInvitedError(error)) {
         return 'not-invited';
+    }
+    if (isMissingOrgError(error)) {
+        return 'missing-org';
     }
     if (isUnauthenticatedError(error)) {
         return 'unauthenticated';
@@ -79,6 +87,11 @@ function isNotInvitedError(error: unknown): boolean {
         return true;
     }
     return message.includes('Membership not found');
+}
+
+function isMissingOrgError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    return message.includes('organization id was not provided');
 }
 
 function isUnauthenticatedError(error: unknown): boolean {

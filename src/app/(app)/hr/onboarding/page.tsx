@@ -3,7 +3,6 @@ import { headers as nextHeaders } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { UserPlus, Wand2 } from 'lucide-react';
-import dynamic from 'next/dynamic';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -22,11 +21,7 @@ import { HrPageHeader } from '../_components/hr-page-header';
 import { ChecklistTemplatesPanel } from './_components/checklist-templates-panel';
 import { InviteEmployeePanel } from './_components/invite-employee-panel';
 import { OnboardingInvitationsPanel } from './_components/onboarding-invitations-panel';
-
-const OnboardingFiltersClient = dynamic(
-    () => import('./_components/onboarding-filters.client').then((module) => module.OnboardingFiltersClient),
-    { ssr: false },
-);
+import { OnboardingFiltersClient } from './_components/onboarding-filters.client';
 
 function PanelSkeleton() {
     return (

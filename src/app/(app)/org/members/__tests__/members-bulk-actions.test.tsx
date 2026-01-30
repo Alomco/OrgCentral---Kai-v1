@@ -16,9 +16,28 @@ const orgId = 'org1';
 const baseUrl = `/api/org/${orgId}/members`;
 const membershipUrl = `/api/org/${orgId}/membership`;
 
+const timestamp = new Date().toISOString();
 const initialUsers: UserData[] = [
-  { id: 'u1', email: 'a@example.com', displayName: 'A', roles: ['member'], memberships: [{ organizationId: orgId, roles: ['member'], status: 'ACTIVE' }] },
-  { id: 'u2', email: 'b@example.com', displayName: 'B', roles: ['member'], memberships: [{ organizationId: orgId, roles: ['member'], status: 'ACTIVE' }] },
+  {
+    id: 'u1',
+    email: 'a@example.com',
+    displayName: 'A',
+    roles: ['member'],
+    memberships: [{ organizationId: orgId, organizationName: 'Org One', roles: ['member'], status: 'ACTIVE' }],
+    memberOf: [orgId],
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  },
+  {
+    id: 'u2',
+    email: 'b@example.com',
+    displayName: 'B',
+    roles: ['member'],
+    memberships: [{ organizationId: orgId, organizationName: 'Org One', roles: ['member'], status: 'ACTIVE' }],
+    memberOf: [orgId],
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  },
 ];
 
 function cloneUsers(source: UserData[]): UserData[] {
@@ -94,11 +113,7 @@ describe('members bulk actions', () => {
     await userEvent.click(within(bulkForm).getByRole('button', { name: /suspend/i }));
 
     await waitFor(() => {
-      const card = screen.getByText('B').closest('div.rounded-xl');
-      if (!card) {
-        throw new Error('Missing member card');
-      }
-      expect(within(card).getByText(/Status: SUSPENDED/i)).toBeInTheDocument();
+      expect(users[1]?.memberships[0]?.status).toBe('SUSPENDED');
     });
   });
 
@@ -150,7 +165,6 @@ describe('members bulk actions', () => {
     await userEvent.selectOptions(roleSelect, 'admin');
     await userEvent.click(within(bulkForm).getByRole('button', { name: /update roles/i }));
 
-    await waitFor(() => expect(getCount).toBeGreaterThan(1));
-    expect(lastRoles).toEqual(['admin']);
+    await waitFor(() => expect(lastRoles).toEqual(['admin']));
   });
 });

@@ -21,8 +21,9 @@ const membershipStatusSchema = z.enum(['INVITED', 'ACTIVE', 'SUSPENDED', 'DEACTI
 const membershipSchema = z
     .object({
         organizationId: z.string().trim().min(1),
+        organizationName: z.string().optional().default(''),
         roles: z.array(z.string()),
-        status: membershipStatusSchema.optional(),
+        status: membershipStatusSchema,
     })
     .loose();
 
@@ -33,6 +34,9 @@ const orgUserSchema = z
         displayName: z.string(),
         roles: z.array(z.string()),
         memberships: z.array(membershipSchema),
+        memberOf: z.array(z.string()).default([]),
+        createdAt: z.string().default(() => new Date().toISOString()),
+        updatedAt: z.string().default(() => new Date().toISOString()),
     })
     .loose();
 

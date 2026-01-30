@@ -75,6 +75,11 @@ When auto-applying an agent, inform the user:
 
 ## TIER 0: UNIVERSAL RULES (Always Active)
 
+### Next.js Runtime Guardrail
+
+- **Never use** `next/dynamic` with `{ ssr: false }` in Server Components. If client-only behavior is needed, move the dynamic import into a Client Component or import the Client Component directly from the Server Component.
+- **Only export async functions** from files that start with `'use server'`. Do not re-export bindings in those files.
+
 ### 🌐 Language Handling
 
 When user's prompt is NOT in English:

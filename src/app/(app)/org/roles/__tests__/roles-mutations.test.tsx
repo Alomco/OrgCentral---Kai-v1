@@ -10,18 +10,31 @@ import { RoleCreateForm } from "../_components/role-create-form";
 import type { RoleCreateState } from "../actions.state";
 import type { Role } from "@/server/types/hr-types";
 
-const orgId = "org1";
+const { db, orgId } = vi.hoisted(() => {
+  const orgId = "org1";
+  return {
+    orgId,
+    db: {
+      roles: [{ id: "r1", orgId, name: "member", description: null, scope: "ORG", permissions: {}, createdAt: new Date(), updatedAt: new Date() }] as Role[],
+    },
+  };
+});
 const baseUrl = `/api/org/${orgId}/roles`;
-
-const { db } = vi.hoisted(() => ({
-  db: { roles: [{ id: "r1", name: "member", description: null, permissions: {} }] as Role[] },
-}));
 
 vi.mock("../actions", () => ({
   createRoleAction: vi.fn(async (_prev: RoleCreateState, formData: FormData) => {
     const name = typeof formData.get("name") === "string" ? String(formData.get("name")) : "";
     const description = typeof formData.get("description") === "string" ? String(formData.get("description")).trim() : "";
-    db.roles.push({ id: `r${db.roles.length + 1}`, name, description: description.length > 0 ? description : null, permissions: {} });
+    db.roles.push({
+      id: `r${db.roles.length + 1}`,
+      orgId,
+      name,
+      description: description.length > 0 ? description : null,
+      scope: "ORG",
+      permissions: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     return { status: "success", message: "Role created." };
   }),
   updateRoleInlineAction: vi.fn(async () => ({ status: "success", message: "Role updated." })),
@@ -34,7 +47,16 @@ describe("roles create flow", () => {
       http.get(baseUrl, () => HttpResponse.json({ roles: db.roles })),
       http.post(baseUrl, async ({ request }) => {
         const body = await request.json() as any;
-        db.roles.push({ id: "r2", name: body.name, description: body.description ?? null, permissions: {} });
+        db.roles.push({
+          id: "r2",
+          orgId,
+          name: body.name,
+          description: body.description ?? null,
+          scope: "ORG",
+          permissions: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
         return HttpResponse.json({ role: db.roles[db.roles.length - 1] }, { status: 201 });
       })
     );

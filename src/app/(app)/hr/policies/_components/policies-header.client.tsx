@@ -9,7 +9,9 @@ import { usePoliciesUiStore } from './policies-ui.store';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function normalizeCategoryQuery(value?: string) {
-  if (!value) {return undefined as const;}
+  if (!value) {
+    return undefined;
+  }
   const k = value.toLowerCase().replace(/[^a-z0-9]/g, '');
   const map: Record<string, 'BENEFITS'|'CODE_OF_CONDUCT'|'IT_SECURITY'|'HEALTH_SAFETY'|'HR_POLICIES'|'PROCEDURES'|'COMPLIANCE'|'OTHER'> = {
     benefits: 'BENEFITS', benefit: 'BENEFITS', beneficios: 'BENEFITS',

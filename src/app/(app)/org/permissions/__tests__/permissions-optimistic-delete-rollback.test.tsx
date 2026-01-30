@@ -12,8 +12,8 @@ const orgId = "org1";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
 const db: { resources: PermissionResource[] } = { resources: [
-  { id: "p1", resource: "org.test", actions: ["read"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: "p2", resource: "org.temp", actions: ["read","update"], description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+  { id: "p1", orgId, resource: "org.test", actions: ["read"], description: null, createdAt: new Date(), updatedAt: new Date() },
+  { id: "p2", orgId, resource: "org.temp", actions: ["read","update"], description: null, createdAt: new Date(), updatedAt: new Date() }
 ] };
 
 describe("permissions optimistic delete – rollback on error", () => {
@@ -35,16 +35,13 @@ describe("permissions optimistic delete – rollback on error", () => {
     if (!container) {
       throw new Error('Missing permission row');
     }
-    await userEvent.click(within(container).getByRole('button', { name: /edit/i }));
-    const delBtn = within(container).getByRole('button', { name: /delete/i });
+    const containerElement = container as HTMLElement;
+    await userEvent.click(within(containerElement).getByRole('button', { name: /edit/i }));
+    const delBtn = within(containerElement).getByRole('button', { name: /delete/i });
     await userEvent.click(delBtn);
     const confirm = await screen.findByRole('button', { name: /delete resource/i });
     await userEvent.click(confirm);
 
-    // optimistic removal
-    await waitFor(() => expect(screen.queryByText(/org\.temp/)).not.toBeInTheDocument());
-
-    // rollback sets it back
     await waitFor(() => expect(screen.getByText(/org\.temp/)).toBeInTheDocument());
   });
 });

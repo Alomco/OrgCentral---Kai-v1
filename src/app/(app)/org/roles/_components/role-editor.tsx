@@ -110,7 +110,7 @@ export function RoleEditor(props: {
         <button
           type="button"
           disabled={deleteRoleMutation.isPending}
-          onClick={() => deleteRoleMutation.mutate()}
+          onClick={() => deleteRoleMutation.mutate(undefined)}
           className="h-9 w-fit rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground disabled:opacity-70"
         >
           {deleteRoleMutation.isPending ? 'Deleting...' : 'Delete role'}

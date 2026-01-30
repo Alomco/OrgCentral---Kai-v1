@@ -10,9 +10,9 @@ import { appLogger } from '@/server/logging/structured-logger';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getAbsenceService } from '@/server/services/hr/absences/absence-service.provider';
 
-import type { CancelAbsenceFormState } from './form-state';
+import type { CancelAbsenceFormState, ReportAbsenceFormState } from './form-state';
 import { cancelAbsenceSchema } from './schema';
-export { reportAbsenceAction } from './report-absence-action';
+import { reportAbsenceAction as reportAbsenceActionImpl } from './report-absence-action';
 
 type AuthorizationAuditContext = Pick<
     RepositoryAuthorizationContext,
@@ -66,6 +66,14 @@ export async function refreshAbsenceOverviewAction(): Promise<void> {
             dataClassification: auditContext?.dataClassification,
         });
     }
+}
+
+export async function reportAbsenceAction(
+    authorization: RepositoryAuthorizationContext,
+    previousState: ReportAbsenceFormState,
+    formData: FormData,
+): Promise<ReportAbsenceFormState> {
+    return reportAbsenceActionImpl(authorization, previousState, formData);
 }
 
 

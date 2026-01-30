@@ -1,30 +1,32 @@
 ﻿// @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { PermissionResourceManager } from "../_components/permission-resource-manager";
-import { PermissionResourceCreateForm } from "../_components/permission-resource-create-form";
 import type { PermissionResourceCreateState } from "../permission-resource-form-utils";
 import type { PermissionResource } from "@/server/types/security-types";
 
-const orgId = "org1";
+const { db, orgId } = vi.hoisted(() => {
+  const orgId = "org1";
+  return {
+    orgId,
+    db: {
+      resources: [{
+        id: "p1",
+        orgId,
+        resource: "org.test",
+        actions: ["read"],
+        description: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }] as PermissionResource[],
+    },
+  };
+});
 const baseUrl = `/api/org/${orgId}/permissions`;
-
-const { db } = vi.hoisted(() => ({
-  db: {
-    resources: [{
-      id: "p1",
-      resource: "org.test",
-      actions: ["read"],
-      description: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }] as PermissionResource[],
-  },
-}));
 
 vi.mock("../permission-resource-actions", () => ({
   createPermissionResourceAction: vi.fn(async (_prev: PermissionResourceCreateState, formData: FormData) => {
@@ -37,11 +39,12 @@ vi.mock("../permission-resource-actions", () => ({
       .filter((value) => value.length > 0);
     db.resources.push({
       id: `p${db.resources.length + 1}`,
+      orgId,
       resource,
       actions,
       description: description.length > 0 ? description : null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
     return {
       status: "success",
@@ -60,18 +63,20 @@ describe("permissions create flow", () => {
     const qc = new QueryClient();
     render(
       <QueryClientProvider client={qc}>
-        <div>
-          <PermissionResourceCreateForm orgId={orgId} />
         <PermissionResourceManager orgId={orgId} resources={db.resources} />
-        </div>
       </QueryClientProvider>
     );
 
     expect(await screen.findByText(/org\.test/)).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText(/Resource key/i), "org.new");
-    await userEvent.type(screen.getByLabelText(/Allowed actions/i), "read");
-    await userEvent.click(screen.getByRole("button", { name: /create resource/i }));
+    const createHeading = screen.getByText(/add resource/i);
+    const createForm = createHeading.closest('form');
+    if (!createForm) {
+      throw new Error('Missing create form');
+    }
+    await userEvent.type(within(createForm).getByRole('textbox', { name: /resource key/i }), "org.new");
+    await userEvent.type(within(createForm).getByRole('textbox', { name: /allowed actions/i }), "read");
+    await userEvent.click(within(createForm).getByRole("button", { name: /create resource/i }));
 
     await screen.findByText(/permission resource created/i);
     await waitFor(() => expect(screen.getByText(/org\.new/)).toBeInTheDocument());

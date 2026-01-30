@@ -12,7 +12,7 @@ const baseUrl = `/api/org/${orgId}/roles`;
 describe("RolesListClient invalidation", () => {
   beforeEach(() => {
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ roles: [{ id: "r1", name: "member", description: null, permissions: {} }] })),
+      http.get(baseUrl, () => HttpResponse.json({ roles: [{ id: "r1", orgId, name: "member", description: null, scope: "ORG", permissions: {}, createdAt: new Date(), updatedAt: new Date() }] })),
     );
   });
 
@@ -20,7 +20,7 @@ describe("RolesListClient invalidation", () => {
     const qc = new QueryClient();
     render(
       <QueryClientProvider client={qc}>
-        <RolesListClient orgId={orgId} initial={[{ id: "r1", name: "member", description: null, permissions: {} }]} />
+        <RolesListClient orgId={orgId} initial={[{ id: "r1", orgId, name: "member", description: null, scope: "ORG", permissions: {}, createdAt: new Date(), updatedAt: new Date() }]} />
       </QueryClientProvider>
     );
 
@@ -28,8 +28,8 @@ describe("RolesListClient invalidation", () => {
 
     server.resetHandlers(
       http.get(baseUrl, () => HttpResponse.json({ roles: [
-        { id: "r1", name: "member", description: null, permissions: {} },
-        { id: "r2", name: "manager", description: null, permissions: {} },
+        { id: "r1", orgId, name: "member", description: null, scope: "ORG", permissions: {}, createdAt: new Date(), updatedAt: new Date() },
+        { id: "r2", orgId, name: "manager", description: null, scope: "ORG", permissions: {}, createdAt: new Date(), updatedAt: new Date() },
       ] })),
     );
 

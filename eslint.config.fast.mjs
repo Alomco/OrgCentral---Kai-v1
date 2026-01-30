@@ -1,4 +1,4 @@
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 import js from "@eslint/js";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -7,18 +7,19 @@ import importPlugin from "eslint-plugin-import";
 import sonarjs from "eslint-plugin-sonarjs";
 
 export default defineConfig([
-  {
-    ignores: [
-      ".next/**",
-      ".tmp/**",
-      "node_modules/**",
-      "src/components/ui/**",
-      "src/hooks/use-mobile.ts",
-      "**/*.test.*",
-      "**/*.spec.*",
-      "**/__tests__/**",
-    ]
-  },
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    ".tmp/**",
+    "node_modules/**",
+    "src/components/ui/**",
+    "src/hooks/use-mobile.ts",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/__tests__/**",
+  ]),
   js.configs.recommended,
   ...nextVitals,
   ...nextTs,

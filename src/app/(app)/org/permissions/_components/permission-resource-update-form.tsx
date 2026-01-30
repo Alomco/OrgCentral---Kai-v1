@@ -66,7 +66,7 @@ export function PermissionResourceUpdateForm(props: { orgId: string; resource: P
                 resource: payload.resource.trim(),
                 actions,
                 description: description.length > 0 ? description : null,
-                updatedAt: new Date().toISOString(),
+                updatedAt: new Date(),
             };
 
             qc.setQueryData<PermissionResource[]>(

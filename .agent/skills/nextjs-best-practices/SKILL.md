@@ -12,6 +12,11 @@ allowed-tools: Read, Write, Edit, Glob, Grep
 
 ## 1. Server vs Client Components
 
+### Runtime Guardrail
+
+- **Do not use** `next/dynamic` with `{ ssr: false }` inside Server Components. If client-only behavior is required, move the dynamic import into a Client Component or import the Client Component directly from the Server Component.
+- **Only export async functions** from files marked `'use server'`. Avoid re-exporting bindings in those files.
+
 ### Decision Tree
 
 ```

@@ -11,7 +11,7 @@ import type { RoleCreateState } from "../actions.state";
 import type { Role } from "@/server/types/hr-types";
 
 const { db, orgId } = vi.hoisted(() => {
-  const orgId = "org1";
+const orgId = "org-roles-create";
   return {
     orgId,
     db: {
@@ -44,7 +44,7 @@ vi.mock("../actions", () => ({
 describe("roles create flow", () => {
   it("creates and shows new role after mutation", async () => {
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ roles: db.roles })),
+      http.get(baseUrl, () => HttpResponse.json({ roles: [...db.roles] })),
       http.post(baseUrl, async ({ request }) => {
         const body = await request.json() as any;
         db.roles.push({

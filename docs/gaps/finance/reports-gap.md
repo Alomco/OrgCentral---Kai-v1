@@ -10,4 +10,8 @@
 - No finance reporting dashboards or exports.
 
 ## TODO
-- [ ] Analyze and design finance reporting dashboards and export flows for the new stack.
+- [ ] Define finance report set (P&L, balance sheet, cash flow) and filters.
+- [ ] Implement reporting queries/aggregations with org scoping and export endpoints.
+- [ ] Build reporting UI with date ranges, comparisons, and CSV/PDF export.
+- [ ] Add caching/perf guardrails for heavy reports.
+- [ ] Add tests for report accuracy and access control.

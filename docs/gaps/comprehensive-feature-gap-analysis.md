@@ -7,7 +7,7 @@ This document provides a comprehensive analysis of feature incompleteness across
 
 ### Critical Missing Features:
 - **Employee Self-Service Portal**: Limited functionality for employees to manage their own information
-- **Manager Self-Service**: Insufficient tools for managers to oversee their teams effectively
+- **Manager Self-Service (partial)**: Basic manager snapshot exists in HR, but no cross-module oversight
 - **Advanced Reporting & Analytics**: Missing comprehensive reporting capabilities
 - **Mobile Responsiveness**: Lack of mobile-optimized interfaces
 - **Offline Capability**: No offline functionality for critical functions
@@ -16,10 +16,10 @@ This document provides a comprehensive analysis of feature incompleteness across
 
 #### HR Dashboard:
 - Missing personalized insights and analytics (e.g., upcoming deadlines, pending approvals)
-- Missing quick glance at team metrics for managers
+- Partial manager overview: basic team metrics exist, but no compliance/doc KPIs or cross-module approvals
 - Missing urgent notifications/alerts panel
 - Missing configurable widgets for different user roles
-- Missing quick stats for managers (pending approvals, team absences, etc.)
+- Missing manager quick stats across modules (compliance, documents, approvals, reports)
 
 #### Employee Management:
 - Missing bulk operations (bulk updates, bulk invites)
@@ -100,7 +100,7 @@ This document provides a comprehensive analysis of feature incompleteness across
 - Missing customizable onboarding workflows
 - Missing automated email sequences
 - Missing document templates for offer letters, contracts, etc.
-- Missing offboarding module (complete employee lifecycle)
+- Offboarding module exists but parity gaps remain (inline checklist management, owner/due-date fields, deprovision tasks)
 - Missing new hire portal with resources and guides
 
 #### Policy Management:
@@ -168,7 +168,7 @@ This document provides a comprehensive analysis of feature incompleteness across
 - **Integrated Search**: No unified search across all HR data
 - **Common Approval Workflows**: Limited shared workflows spanning multiple modules
 - **Employee Self-Service Portal**: Comprehensive features missing across all modules
-- **Manager Dashboard**: Consolidated team information from all modules missing
+- **Manager Dashboard**: Cross-module consolidation of team information and approvals missing
 
 ## 9. API Completeness & Documentation Gaps
 
@@ -191,7 +191,7 @@ This document provides a comprehensive analysis of feature incompleteness across
 
 ### Critical Priority:
 - [ ] Implement comprehensive employee self-service portal with features across all modules
-- [ ] Develop manager dashboard with consolidated team information from all modules
+- [ ] Expand manager dashboard to include cross-module KPIs (compliance, documents) and approvals
 - [ ] Create unified employee timeline showing all events across modules
 - [ ] Implement cross-module reporting and analytics capabilities
 - [ ] Add comprehensive notification system with multiple channels
@@ -218,14 +218,14 @@ This document provides a comprehensive analysis of feature incompleteness across
 - [ ] Implement advanced document management features
 - [ ] Add comprehensive training and development features
 - [ ] Enhance absence management with medical documentation
-- [ ] Add advanced onboarding and offboarding workflows
+- [ ] Add advanced onboarding workflows and close remaining offboarding parity gaps
 
-## Implementation Status (as of 2026-01-27)
+## Implementation Status (as of 2026-01-31)
 
 | # | Gap Category | Status | Notes |
 |---|--------------|--------|-------|
 | 1 | Employee Self-Service | ❌ OPEN | Limited functionality across all modules |
-| 2 | Manager Self-Service | ❌ OPEN | Insufficient tools for team oversight |
+| 2 | Manager Self-Service | ⚠️ PARTIAL | HR manager snapshot exists; cross-module KPIs/approvals missing |
 | 3 | Advanced Reporting | ❌ OPEN | Missing comprehensive reporting capabilities |
 | 4 | Mobile Responsiveness | ❌ OPEN | Lack of mobile-optimized interfaces |
 | 5 | Cross-Module Integration | ❌ OPEN | Limited connection between different HR functions |

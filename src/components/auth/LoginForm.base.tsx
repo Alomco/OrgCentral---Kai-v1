@@ -127,9 +127,9 @@ export function LoginForm({ initialOrgSlug }: LoginFormProps) {
                 </label>
                 <Link
                     className="text-[13px] font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-                    href="/forgot-password"
+                    href="mailto:support@orgcentral.test?subject=Password%20help"
                 >
-                    Forgot password?
+                    Need help?
                 </Link>
             </div>
 

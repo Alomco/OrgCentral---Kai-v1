@@ -29,7 +29,7 @@ export function buildDefaultSecurityConfiguration(): SecurityConfiguration {
     // PII protection settings
     piiDetectionEnabled: parseBoolean(process.env.PII_DETECTION_ENABLED, true),
     piiMaskingEnabled: parseBoolean(process.env.PII_MASKING_ENABLED, true),
-    piiEncryptionRequired: parseBoolean(process.env.PII_ENCRYPTION_REQUIRED, false),
+    piiEncryptionRequired: parseBoolean(process.env.PII_ENCRYPTION_REQUIRED, true),
 
     // Authentication settings
     mfaRequiredForClassifiedData: (process.env.MFA_REQUIRED_FOR_CLASSIFIED?.split(',') as DataClassificationLevel[] | undefined) ?? ['SECRET', 'TOP_SECRET'],

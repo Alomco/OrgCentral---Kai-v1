@@ -2,7 +2,10 @@ import type { LoginActionResult } from '@/features/auth/login/login-contracts';
 import type { auth } from '@/server/lib/auth';
 import { AbstractBaseService } from '@/server/services/abstract-base-service';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
+import type { IUserRepository } from '@/server/repositories/contracts/org/users/user-repository-contract';
 import type { OrganizationData } from '@/server/types/leave-types';
+import { SecurityConfigurationProvider } from '@/server/security/security-configuration-provider';
+import { getSecurityEventService } from '@/server/services/security/security-event-service.provider';
 import {
     buildPostLoginCallbackUrl,
     buildServiceContext,
@@ -36,6 +39,7 @@ export interface LoginServiceDependencies {
         };
     };
     readonly organizationRepository: IOrganizationRepository;
+    readonly userRepository: IUserRepository;
 }
 
 export interface LoginServiceInput {
@@ -62,11 +66,15 @@ export interface LoginServiceWithCookiesResult {
 export class LoginService extends AbstractBaseService {
     private readonly authClient: LoginServiceDependencies['authClient'];
     private readonly organizationRepository: OrganizationLookupRepository;
+    private readonly userRepository: IUserRepository;
+    private readonly securityConfigProvider: SecurityConfigurationProvider;
 
     constructor(dependencies: LoginServiceDependencies) {
         super();
         this.authClient = dependencies.authClient;
         this.organizationRepository = dependencies.organizationRepository;
+        this.userRepository = dependencies.userRepository;
+        this.securityConfigProvider = SecurityConfigurationProvider.getInstance();
     }
 
     async signIn(input: LoginServiceInput): Promise<LoginActionResult> {
@@ -105,6 +113,20 @@ export class LoginService extends AbstractBaseService {
             requestHeaders: input.request.headers,
         });
         const callbackURL = buildPostLoginCallbackUrl(input.request.headers, orgSlug);
+        const securityConfig = this.securityConfigProvider.getOrgConfig(orgId);
+        const now = new Date();
+
+        const existingUser = await this.userRepository.findByEmail(input.credentials.email);
+        if (existingUser?.lockedUntil && existingUser.lockedUntil > now) {
+            return {
+                result: {
+                    ok: false,
+                    code: 'ACCOUNT_LOCKED',
+                    message: 'Your account is temporarily locked. Please try again later or contact support.',
+                } satisfies LoginActionResult,
+                headers: null,
+            } satisfies LoginServiceWithCookiesResult;
+        }
 
         return this.executeInServiceContext(serviceContext, LOGIN_OPERATION, async () => {
             try {
@@ -134,10 +156,14 @@ export class LoginService extends AbstractBaseService {
                     userEmail: input.credentials.email,
                     residency: dataResidency,
                     classification: dataClassification,
-                    ipAddress: input.request.ipAddress ?? null,
-                    userAgent: input.request.userAgent ?? null,
+                    ipAddress: input.request.ipAddress ?? undefined,
+                    userAgent: input.request.userAgent ?? undefined,
                     timestamp: new Date().toISOString(),
                 });
+
+                if (existingUser) {
+                    await this.userRepository.resetFailedLogin(existingUser.id);
+                }
 
                 return {
                     result: {
@@ -152,6 +178,40 @@ export class LoginService extends AbstractBaseService {
 
                 const reason = failure.code ?? 'UNKNOWN';
 
+                if (existingUser) {
+                    const nextFailedCount = existingUser.failedLoginCount + 1;
+                    if (nextFailedCount >= securityConfig.maxLoginAttempts) {
+                        const lockedUntil = new Date(
+                            now.getTime() + securityConfig.lockoutDurationMinutes * 60 * 1000,
+                        );
+                        await this.userRepository.setLoginLockout(existingUser.id, lockedUntil, nextFailedCount);
+                        await getSecurityEventService().logSecurityEvent({
+                            orgId,
+                            eventType: 'auth.login.lockout',
+                            severity: 'high',
+                            description: 'Account locked due to repeated failed login attempts.',
+                            userId: existingUser.id,
+                            ipAddress: input.request.ipAddress ?? undefined,
+                            userAgent: input.request.userAgent ?? undefined,
+                            metadata: {
+                                orgSlug,
+                                attempts: nextFailedCount,
+                                lockoutMinutes: securityConfig.lockoutDurationMinutes,
+                            },
+                        });
+                        return {
+                            result: {
+                                ok: false,
+                                code: 'ACCOUNT_LOCKED',
+                                message: 'Your account is temporarily locked. Please try again later or contact support.',
+                            } satisfies LoginActionResult,
+                            headers: null,
+                        } satisfies LoginServiceWithCookiesResult;
+                    }
+
+                    await this.userRepository.incrementFailedLogin(existingUser.id);
+                }
+
                 this.logger.warn('auth.login.failure', {
                     action: LOGIN_ACTION,
                     event: 'login_failure',
@@ -160,8 +220,8 @@ export class LoginService extends AbstractBaseService {
                     userEmail: input.credentials.email,
                     residency: dataResidency,
                     classification: dataClassification,
-                    ipAddress: input.request.ipAddress ?? null,
-                    userAgent: input.request.userAgent ?? null,
+                    ipAddress: input.request.ipAddress ?? undefined,
+                    userAgent: input.request.userAgent ?? undefined,
                     timestamp: new Date().toISOString(),
                     reason,
                 });

@@ -2,6 +2,7 @@ import type { LoginActionInput, LoginActionResult } from '@/features/auth/login/
 import { auth } from '@/server/lib/auth';
 import { LoginService, type LoginServiceWithCookiesResult } from '@/server/services/auth/login-service';
 import { buildOrganizationServiceDependencies } from '@/server/repositories/providers/org/organization-service-dependencies';
+import { buildUserServiceDependencies } from '@/server/repositories/providers/org/user-service-dependencies';
 
 export interface LoginUseCaseInput extends LoginActionInput {
     readonly headers: Headers;
@@ -16,6 +17,7 @@ function getLoginService(): LoginService {
             authClient: auth,
             organizationRepository:
                 buildOrganizationServiceDependencies().organizationRepository,
+            userRepository: buildUserServiceDependencies().userRepository,
         })
     );
 }

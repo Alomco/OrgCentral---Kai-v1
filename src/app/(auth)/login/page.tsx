@@ -15,7 +15,7 @@ import { sanitizeNextPath } from '@/server/ui/auth/role-redirect';
 
 export const metadata: Metadata = {
     title: "Login • OrgCentral",
-    description: "Sign in to your OrgCentral account.",
+    description: "Sign in with an invited OrgCentral account.",
 };
 
 type LoginSearchParams = Record<string, string | string[] | undefined>;
@@ -32,7 +32,7 @@ interface LoginPageCopy {
 function getLoginPageCopy(): Promise<LoginPageCopy> {
     return Promise.resolve({
         title: "Welcome back",
-        subtitle: "Sign in to your account to continue.",
+        subtitle: "Sign in with your invited account to continue.",
     });
 }
 
@@ -149,7 +149,7 @@ function AuthFooter() {
     return (
         <div className="flex flex-col items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
             <p className="text-center">
-                Don&apos;t have an account? <Link className="font-semibold text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-300" href="/auth/register">Sign up</Link>
+                Access is invite-only. <Link className="font-semibold text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-300" href="mailto:support@orgcentral.test?subject=Access%20request">Request access</Link>
             </p>
             {isDevelopment ? (
                 <Button asChild variant="outline" size="sm" className="rounded-xl">

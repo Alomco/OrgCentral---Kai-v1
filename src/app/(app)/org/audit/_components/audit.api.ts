@@ -36,7 +36,7 @@ export function listAuditLogsQuery(orgId: string, searchParams: URLSearchParams)
     queryFn: async (): Promise<AuditLogListResponse> => {
       const url = `/api/org/${orgId}/audit/logs?${key}`;
       const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) {throw new Error('Failed to load audit logs');}
+      if (!res.ok) { throw new Error('Failed to load audit logs'); }
       const data = (await res.json()) as AuditLogListResponse;
       return data;
     },

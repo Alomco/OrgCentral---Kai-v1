@@ -26,7 +26,7 @@
 4) Onboarding checklist selection is not filtered to onboarding templates (offboarding/custom templates can appear).
 5) Email existence checks do not surface existing OrgCentral users outside the org (no CTA to invite them).
 6) Pay basis/hourly wage support is missing versus the old wizard.
-7) **Offboarding module:** Missing complete employee lifecycle with offboarding functionality.
+7) **Offboarding module:** Offboarding module exists but parity gaps remain (inline checklist management, owner/due-date fields, deprovision tasks). See hr/offboarding-gap.md.
 8) **Automated task assignments:** Missing automated task assignments and reminders during onboarding.
 9) **Integration with IT systems:** Missing integration with IT systems for equipment, accounts, etc.
 10) **Mentor assignment:** Missing mentor assignment and tracking capabilities.
@@ -43,7 +43,7 @@
 - [x] Analyze and filter onboarding checklist selection to onboarding templates only.
 - [x] Analyze and add existing auth-user detection + invite CTA for cross-org users.
 - [x] Analyze and restore pay basis/hourly wage capture and mapping to contract/profile fields.
-- [ ] Implement complete offboarding module to close the employee lifecycle.
+- [ ] Close remaining offboarding parity gaps (inline checklist management, owner/due-date fields, deprovision tasks).
 - [ ] Add automated task assignments and reminders during onboarding.
 - [ ] Integrate with IT systems for equipment, accounts, and access provisioning.
 - [ ] Implement mentor assignment and tracking capabilities.
@@ -56,7 +56,7 @@
 - orgcentral/docs/gaps/hr/offboarding-gap.md
 - orgcentral/docs/gaps/comprehensive-feature-gap-analysis.md
 
-## Implementation Status (as of 2026-01-27)
+## Implementation Status (as of 2026-01-31)
 
 | # | Gap | Status | Notes |
 |---|-----|--------|-------|
@@ -66,7 +66,7 @@
 | 4 | Checklist filtering | ✅ IMPLEMENTED | Filters by `type: 'onboarding'` in `getChecklistTemplatesForUi` |
 | 5 | Email existence checks | ✅ IMPLEMENTED | `checkEmailForOnboarding` surfaces `auth_user` with CTA to `/org/members` |
 | 6 | Pay basis / hourly wage | ✅ IMPLEMENTED | Full ANNUAL/HOURLY toggle with `salaryBasis`, `hourlyRate`, `annualSalary` |
-| 7 | Offboarding module | ❌ OPEN | Missing complete employee lifecycle |
+| 7 | Offboarding module | ⚠️ PARTIAL | Queue + actions exist; parity gaps remain (inline checklist, owner/due-date, deprovision) |
 | 8 | Automated task assignments | ❌ OPEN | Missing automated reminders and tasks |
 | 9 | IT system integration | ❌ OPEN | No integration with IT for equipment/accounts |
 | 10 | Mentor assignment | ❌ OPEN | No mentor assignment capabilities |
@@ -78,6 +78,6 @@
 ### Remaining Work
 1. **High Priority:** Implement `generateNextEmployeeId` server action (format: `EMP-XXXXXX`)
 2. **High Priority:** Create department migration script for legacy string → UUID conversion
-3. **High Priority:** Implement complete offboarding module
+3. **High Priority:** Close remaining offboarding parity gaps (inline checklist, owner/due-date, deprovision tasks)
 4. **Medium Priority:** Add automated task assignments and reminders
 5. **High Priority:** Integrate with IT systems for equipment and access provisioning

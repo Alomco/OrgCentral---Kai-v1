@@ -11,7 +11,7 @@ export function PoliciesFiltersClient() {
 
   const onChange = useCallback((value: string) => {
     const next = new URLSearchParams(searchParams.toString());
-    if (value.trim().length > 0) {next.set('q', value);} else {next.delete('q');}
+    if (value.trim().length > 0) { next.set('q', value); } else { next.delete('q'); }
     startTransition(() => { router.replace(`?${next.toString()}`, { scroll: false }); });
   }, [router, searchParams]);
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -21,6 +21,7 @@ export function AdminBootstrapComplete() {
     const router = useRouter();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [hasHydrated, setHasHydrated] = useState(() => useAdminBootstrapStore.persist.hasHydrated());
+    const lastBootstrapToken = useRef<string | null>(null);
     const clearToken = useAdminBootstrapStore((store) => store.clearToken);
     const token = useAdminBootstrapStore((store) => store.token);
 
@@ -63,12 +64,17 @@ export function AdminBootstrapComplete() {
             return;
         }
 
+        if (lastBootstrapToken.current === token) {
+            return;
+        }
+
+        lastBootstrapToken.current = token;
         const controller = new AbortController();
 
-        mutation.mutateAsync({ token, signal: controller.signal }).catch(() => null);
+        mutation.mutate({ token, signal: controller.signal });
 
         return () => controller.abort();
-    }, [hasHydrated, mutation, token]);
+    }, [hasHydrated, token, mutation]);
 
     const missingToken = hasHydrated && !token;
     const state: BootstrapState = {

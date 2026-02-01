@@ -13,7 +13,7 @@ function normalizeCategoryQuery(value?: string) {
     return undefined;
   }
   const k = value.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const map: Record<string, 'BENEFITS'|'CODE_OF_CONDUCT'|'IT_SECURITY'|'HEALTH_SAFETY'|'HR_POLICIES'|'PROCEDURES'|'COMPLIANCE'|'OTHER'> = {
+  const map: Record<string, 'BENEFITS' | 'CODE_OF_CONDUCT' | 'IT_SECURITY' | 'HEALTH_SAFETY' | 'HR_POLICIES' | 'PROCEDURES' | 'COMPLIANCE' | 'OTHER'> = {
     benefits: 'BENEFITS', benefit: 'BENEFITS', beneficios: 'BENEFITS',
     codeofconduct: 'CODE_OF_CONDUCT', conduct: 'CODE_OF_CONDUCT', ethics: 'CODE_OF_CONDUCT', behaviour: 'CODE_OF_CONDUCT', behavior: 'CODE_OF_CONDUCT', codigoodeconducta: 'CODE_OF_CONDUCT',
     itsecurity: 'IT_SECURITY', itsafety: 'IT_SECURITY', security: 'IT_SECURITY', seguridad: 'IT_SECURITY', securite: 'IT_SECURITY',

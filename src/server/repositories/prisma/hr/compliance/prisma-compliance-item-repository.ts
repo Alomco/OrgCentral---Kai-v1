@@ -100,6 +100,16 @@ export class PrismaComplianceItemRepository
         return records.map((r) => mapComplianceLogRecordToDomain(r as unknown as ComplianceLogItemRecord));
     }
 
+    async listItemsForOrg(orgId: string, take = 2000): Promise<ComplianceLogItem[]> {
+        const safeTake = Number.isFinite(take) ? Math.max(1, Math.min(5000, take)) : 2000;
+        const records = await this.complianceLog.findMany({
+            where: { orgId },
+            orderBy: { updatedAt: 'desc' },
+            take: safeTake,
+        });
+        return records.map((r) => mapComplianceLogRecordToDomain(r as unknown as ComplianceLogItemRecord));
+    }
+
     async listPendingReviewItemsForOrg(orgId: string, take = 100): Promise<ComplianceLogItem[]> {
         const safeTake = Number.isFinite(take) ? Math.max(1, Math.min(500, take)) : 100;
         const records = await this.complianceLog.findMany({

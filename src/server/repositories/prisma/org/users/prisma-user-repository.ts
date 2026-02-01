@@ -101,6 +101,16 @@ export class PrismaUserRepository extends OrgScopedPrismaRepository implements I
     });
   }
 
+  async setLoginLockout(id: string, lockedUntil: Date, failedLoginCount: number): Promise<User> {
+    return getModelDelegate(this.prisma, 'user').update({
+      where: { id },
+      data: {
+        lockedUntil,
+        failedLoginCount,
+      },
+    });
+  }
+
   // --- IUserRepository implementation ---
   async getUser(tenantId: string, userId: string): Promise<UserData | null> {
     const user = await getModelDelegate(this.prisma, 'user').findUnique({ where: { id: userId } });

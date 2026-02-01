@@ -9,6 +9,7 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import { assertNonEmpty } from '@/server/use-cases/shared/validators';
 import { invalidateComplianceItemsCache } from './shared/cache-helpers';
 import { addDays } from 'date-fns';
+import { recordAuditEvent } from '@/server/logging/audit-logger';
 
 export interface UpdateComplianceItemInput {
     authorization: RepositoryAuthorizationContext;
@@ -61,6 +62,26 @@ export async function updateComplianceItem(
         input.itemId,
         payload,
     );
+
+    await recordAuditEvent({
+        orgId: input.authorization.orgId,
+        userId: input.authorization.userId,
+        eventType: 'DATA_CHANGE',
+        action: 'hr.compliance.item.updated',
+        resource: 'hr.compliance.item',
+        resourceId: result.id,
+        residencyZone: input.authorization.dataResidency,
+        classification: input.authorization.dataClassification,
+        auditSource: input.authorization.auditSource,
+        payload: {
+            targetUserId: result.userId,
+            templateItemId: result.templateItemId,
+            status: result.status,
+            completedAt: result.completedAt ?? null,
+            reviewedAt: result.reviewedAt ?? null,
+            dueDate: result.dueDate ?? null,
+        },
+    });
 
     await invalidateComplianceItemsCache(input.authorization);
     return result;

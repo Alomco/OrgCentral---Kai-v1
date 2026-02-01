@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Clock, Calendar, FileCheck, ArrowRight } from 'lucide-react';
+import { Clock, Calendar, FileCheck, ArrowRight, Timer } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,10 @@ function getItemIcon(type: PendingApprovalItem['type']) {
             return <Calendar className="h-4 w-4 text-blue-500" />;
         case 'compliance':
             return <FileCheck className="h-4 w-4 text-amber-500" />;
+        case 'absence':
+            return <Calendar className="h-4 w-4 text-rose-500" />;
+        case 'time-entry':
+            return <Timer className="h-4 w-4 text-indigo-500" />;
         case 'onboarding':
             return <Clock className="h-4 w-4 text-emerald-500" />;
         default:
@@ -29,6 +33,10 @@ function getItemHref(item: PendingApprovalItem): string {
             return `/hr/leave/${item.id}`;
         case 'compliance':
             return `/hr/compliance/${item.id}`;
+        case 'absence':
+            return '/hr/absence/requests';
+        case 'time-entry':
+            return '/hr/time-tracking';
         case 'onboarding':
             return `/hr/onboarding/${item.id}`;
         default:
@@ -43,9 +51,9 @@ function formatTimeAgo(date: Date): string {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (days > 0) {return `${String(days)}d ago`;}
-    if (hours > 0) {return `${String(hours)}h ago`;}
-    if (minutes > 0) {return `${String(minutes)}m ago`;}
+    if (days > 0) { return `${String(days)}d ago`; }
+    if (hours > 0) { return `${String(hours)}h ago`; }
+    if (minutes > 0) { return `${String(minutes)}m ago`; }
     return 'Just now';
 }
 

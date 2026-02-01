@@ -12,6 +12,7 @@
   - orgcentral/src/app/(app)/hr/admin/page.tsx
   - orgcentral/src/app/(app)/hr/admin/actions.ts
   - orgcentral/src/app/(app)/hr/admin/_components/hr-admin-quick-actions.tsx
+  - Manager snapshot currently shows team leave approvals, absences, timesheets, and anniversaries.
 
 ## Legacy capabilities (old project)
 - HR dashboard included document-expiry and compliance KPIs for employees/managers:
@@ -19,9 +20,14 @@
 - HR admin center highlighted "HR Reports & Analytics" entry and live pending counts from hubs:
   - old/src/app/(app)/hr/admin/page.tsx
 
+## Scope notes
+- This gap owns HR reporting surfaces, admin stats wiring, and exports.
+- Compliance reporting data sources are tracked in `orgcentral/docs/gaps/hr/compliance-gap.md`.
+- Document vault metadata and expiry signals are tracked in `orgcentral/docs/gaps/documents/document-management-gap.md`.
+
 ## Gaps (new project only)
 1) Document/compliance KPIs are missing from HR analytics surfaces.
-   - Old dashboard surfaced "Documents Expiring" and "Compliance" tiles; new HR dashboard and reports page omit those signals.
+   - Old dashboard surfaced "Documents Expiring" and "Compliance" tiles; new HR dashboard omits those signals and manager snapshot does not include them.
 2) HR reports do not include compliance or document-expiry metrics, despite compliance workflows being core in the old dashboard.
 3) HR admin reporting visibility is reduced and stats are placeholders.
    - New admin quick actions do not link to reports, and `getAdminDashboardStats`/`getPendingApprovals` return placeholder values.
@@ -33,35 +39,32 @@
 7) Export functionality for reports is limited or missing - no comprehensive export options for employee data or analytics.
 
 ## TODOs
-- [ ] Analyze and restore document-expiry/compliance KPIs in HR dashboards and reports (compare old HR dashboard to new KPI surfaces).
-- [ ] Analyze and add compliance/document-expiry metrics to HR reports aggregation (tie into compliance data sources).
-- [ ] Analyze and wire HR admin reporting visibility plus real pending/stats data (reports link + non-placeholder stats).
-- [ ] Analyze and link HR admin quick actions to HR reports with role-appropriate routing.
-- [ ] Implement cross-module reporting capabilities that connect data from different modules.
+- [x] Analyze and restore document-expiry/compliance KPIs in HR dashboards and reports (compare old HR dashboard to new KPI surfaces).
+- [x] Analyze and add compliance/document-expiry metrics to HR reports aggregation (tie into compliance data sources).
+- [x] Analyze and wire HR admin reporting visibility plus real pending/stats data (reports link + non-placeholder stats).
+- [x] Analyze and link HR admin quick actions to HR reports with role-appropriate routing.
+- [x] Implement cross-module reporting capabilities that connect data from different modules.
 - [ ] Add advanced analytics features including trend analysis and predictive capabilities.
-- [ ] Implement comprehensive export functionality for reports and employee data.
+- [x] Implement comprehensive export functionality for reports and employee data.
 
 ## Related gaps
 - orgcentral/docs/gaps/documents/document-management-gap.md
 - orgcentral/docs/gaps/hr/compliance-gap.md
 - orgcentral/docs/gaps/comprehensive-feature-gap-analysis.md
 
-## Implementation Status (as of 2026-01-27)
+## Implementation Status (as of 2026-02-01)
 
 | # | Gap | Status | Notes |
 |---|-----|--------|-------|
-| 1 | Document/Compliance KPIs in HR dashboard | ❌ OPEN | KPI grid shows leave/attendance only, no compliance tiles |
-| 2 | Document/Compliance metrics in HR reports | ❌ OPEN | `OrganizationPulseStats` lacks document/compliance fields |
-| 3 | HR Admin stats - real data | ⚠️ PARTIAL | Employee counts real; `pendingLeaveRequests`, `complianceAlerts`, `upcomingExpirations` hardcoded to 0 |
-| 4 | HR Admin pending approvals | ❌ OPEN | `getPendingApprovals` returns empty array placeholder |
-| 5 | HR Admin quick actions → Reports link | ❌ OPEN | No `/hr/reports` entry in quick actions |
-| 6 | Cross-module reporting | ❌ OPEN | No connection between different HR modules for reporting |
+| 1 | Document/Compliance KPIs in HR dashboard | ⚠️ PARTIAL | Compliance + expiring KPIs added; document vault expiry still pending |
+| 2 | Document/Compliance metrics in HR reports | ⚠️ PARTIAL | Compliance KPIs added; document vault expiry still pending |
+| 3 | HR Admin stats - real data | ✅ CLOSED | Pending approvals + compliance/upcoming expirations wired |
+| 4 | HR Admin pending approvals | ✅ CLOSED | Pending approvals populated across HR modules |
+| 5 | HR Admin quick actions → Reports link | ✅ CLOSED | Reports entry present in quick actions |
+| 6 | Cross-module reporting | ✅ CLOSED | Cross-module insights section added to reports |
 | 7 | Advanced analytics | ❌ OPEN | No predictive or trend analysis capabilities |
-| 8 | Report export functionality | ❌ OPEN | Limited or missing export options |
+| 8 | Report export functionality | ✅ CLOSED | CSV/JSON export endpoint wired |
 
 ### Priority Recommendations
-1. **Low effort:** Add `/hr/reports` link to `hr-admin-quick-actions.tsx`
-2. **Medium effort:** Wire `pendingLeaveRequests` in admin stats (leave service exists)
-3. **High effort:** Create document-expiry use-case and add KPI tiles
-4. **High effort:** Implement cross-module reporting capabilities
-5. **High effort:** Add advanced analytics and predictive capabilities
+1. **High effort:** Create document-expiry use-case and add KPI tiles from document vault metadata
+2. **High effort:** Add advanced analytics and predictive capabilities

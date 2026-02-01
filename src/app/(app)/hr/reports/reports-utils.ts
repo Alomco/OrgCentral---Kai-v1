@@ -2,6 +2,7 @@ import type { HRPolicy, UnplannedAbsence, TimeEntry } from '@/server/types/hr-op
 import type { LeaveRequest } from '@/server/types/leave-types';
 import type { TrainingRecord } from '@/server/types/hr-types';
 import type { EmployeeDirectoryStats } from '@/server/use-cases/hr/people/get-employee-directory-stats';
+import type { ComplianceLogItem } from '@/server/types/compliance-types';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -67,11 +68,17 @@ export interface ReportsMetrics {
     timeEntriesPending: number;
     timeEntriesApproved: number;
     totalHoursRecent: number;
+    totalHoursPrev30: number;
     trainingCompleted: number;
     trainingInProgress: number;
     trainingDueSoon: number;
     policyCount: number;
     pendingApprovals: number;
+    complianceTotal: number;
+    complianceOverdue: number;
+    complianceExpiringSoon: number;
+    compliancePendingReview: number;
+    complianceComplete: number;
 }
 
 export function buildReportsMetrics(input: {
@@ -81,6 +88,7 @@ export function buildReportsMetrics(input: {
     timeEntries: TimeEntry[];
     trainingRecords: TrainingRecord[];
     policies: HRPolicy[];
+    complianceItems: ComplianceLogItem[];
     now?: Date;
 }): ReportsMetrics {
     const now = input.now ?? new Date();
@@ -106,6 +114,8 @@ export function buildReportsMetrics(input: {
     const timeEntriesApproved = input.timeEntries.filter((entry) => entry.status === 'APPROVED').length;
     const timeEntriesRecent = input.timeEntries.filter((entry) => isWithin(toDate(entry.date), last30Days, now));
     const totalHoursRecent = timeEntriesRecent.reduce((sum, entry) => sum + coerceNumber(entry.totalHours), 0);
+    const timeEntriesPrevious = input.timeEntries.filter((entry) => isWithin(toDate(entry.date), new Date(now.getTime() - 60 * DAY_MS), last30Days));
+    const totalHoursPrevious30 = timeEntriesPrevious.reduce((sum, entry) => sum + coerceNumber(entry.totalHours), 0);
 
     const trainingCompleted = input.trainingRecords.filter(
         (record) => normalizeTrainingStatus(record.status) === 'completed',
@@ -120,6 +130,19 @@ export function buildReportsMetrics(input: {
     const policyCount = input.policies.length;
     const pendingApprovals = leaveSubmitted + absencesReported + timeEntriesPending;
 
+    const complianceTotal = input.complianceItems.length;
+    const compliancePendingReview = input.complianceItems.filter((item) => item.status === 'PENDING_REVIEW').length;
+    const complianceComplete = input.complianceItems.filter((item) => item.status === 'COMPLETE').length;
+    const complianceOverdue = input.complianceItems.filter((item) => {
+        if (!item.dueDate) {
+            return false;
+        }
+        return item.dueDate < now && item.status !== 'COMPLETE';
+    }).length;
+    const complianceExpiringSoon = input.complianceItems.filter((item) =>
+        isWithin(item.dueDate ?? null, now, next30Days),
+    ).length;
+
     return {
         leaveSubmitted,
         leaveApproved,
@@ -130,10 +153,16 @@ export function buildReportsMetrics(input: {
         timeEntriesPending,
         timeEntriesApproved,
         totalHoursRecent,
+        totalHoursPrev30: totalHoursPrevious30,
         trainingCompleted,
         trainingInProgress,
         trainingDueSoon,
         policyCount,
         pendingApprovals,
+        complianceTotal,
+        complianceOverdue,
+        complianceExpiringSoon,
+        compliancePendingReview,
+        complianceComplete,
     };
 }

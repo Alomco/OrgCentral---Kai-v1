@@ -26,6 +26,7 @@ import { AbsenceApprovalPanel } from './_components/absence-approval-panel';
 import { TeamAbsencePanel } from './_components/team-absence-panel';
 import { AbsenceTrendsCard } from './_components/absence-trends-card';
 import { AbsenceSubnav } from './_components/absence-subnav';
+import { AbsenceBalanceCards } from './_components/absence-balance-cards';
 import { buildInitialReportAbsenceFormState } from './form-state';
 import { buildAbsenceManagerPanels } from './absence-manager-panels';
 import { refreshAbsenceOverviewAction } from './actions';
@@ -112,6 +113,10 @@ export default async function HrAbsencePage() {
                     </Button>
                 </form>
             </div>
+
+            <Suspense fallback={<HrCardSkeleton variant="table" />}>
+                <AbsenceBalanceCards authorization={authorization} absenceTypes={absenceTypes} />
+            </Suspense>
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <ReportAbsenceForm

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { COMPLIANCE_ITEM_STATUSES } from '@/server/types/compliance-types';
+import { COMPLIANCE_STANDARD_KEYS } from '@/server/types/hr/compliance-standards';
 
 const complianceStatusValues = [...COMPLIANCE_ITEM_STATUSES] as [
     (typeof COMPLIANCE_ITEM_STATUSES)[number],
@@ -63,7 +64,15 @@ export const upsertComplianceCategorySchema = z.object({
     key: z.string().min(1).max(64),
     label: z.string().min(1).max(80),
     sortOrder: z.coerce.number().int().min(0).max(10000).optional(),
-    metadata: z.unknown().optional(),
+    regulatoryRefs: z.array(z.enum(COMPLIANCE_STANDARD_KEYS)).max(10).optional(),
 });
 
 export type UpsertComplianceCategoryPayload = z.infer<typeof upsertComplianceCategorySchema>;
+
+export const complianceReminderSettingsSchema = z.object({
+    windowDays: z.coerce.number().int().min(1).max(180),
+    escalationDays: z.array(z.coerce.number().int().min(1).max(180)).max(10),
+    notifyOnComplete: z.coerce.boolean(),
+});
+
+export type ComplianceReminderSettingsPayload = z.infer<typeof complianceReminderSettingsSchema>;

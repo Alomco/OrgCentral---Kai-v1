@@ -5,7 +5,7 @@ import { type POLICY_CATEGORY_VALUES } from "@/server/services/hr/policies/hr-po
 type PolicyCategoryValue = (typeof POLICY_CATEGORY_VALUES)[number];
 
 function normalizeCategoryQuery(value?: string) {
-    if (!value) {return undefined;}
+    if (!value) { return undefined; }
     const k = value.toLowerCase().replace(/[^a-z0-9]/g, "");
     const map: Record<string, PolicyCategoryValue> = {
         // Benefits

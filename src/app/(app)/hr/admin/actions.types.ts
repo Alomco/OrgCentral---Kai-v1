@@ -9,7 +9,7 @@ export interface AdminDashboardStats {
 
 export interface PendingApprovalItem {
     id: string;
-    type: 'leave' | 'compliance' | 'onboarding';
+    type: 'leave' | 'compliance' | 'onboarding' | 'absence' | 'time-entry';
     title: string;
     description: string;
     submittedAt: Date;

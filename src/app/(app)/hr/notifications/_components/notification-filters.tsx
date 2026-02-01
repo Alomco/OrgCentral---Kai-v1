@@ -32,7 +32,7 @@ export function NotificationFilters() {
       params.delete(key);
     }
     params.set('page', '1'); // Reset page on filter change
-    
+
     startTransition(() => {
       router.push(`?${params.toString()}`);
     });
@@ -110,9 +110,9 @@ export function NotificationFilters() {
       </Select>
 
       {hasFilters && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={clearFilters}
           className="h-9 px-2 text-muted-foreground hover:text-foreground"
           disabled={isPending}

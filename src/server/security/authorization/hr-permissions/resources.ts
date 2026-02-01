@@ -57,6 +57,9 @@ export const HR_RESOURCE_TYPE = {
     HR_SETTINGS: 'hr.settings',
     ORG_SETTINGS: 'org.settings',
 
+    // Reports
+    REPORTS: 'hr.reports',
+
     // Time Tracking
     TIME_ENTRY: 'hr.time.entry',
     TIMESHEET: 'hr.time.sheet',

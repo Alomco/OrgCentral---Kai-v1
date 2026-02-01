@@ -88,19 +88,23 @@
    - New: orgcentral/src/app/(app)/hr/settings/_components/hr-settings-form.tsx
    - Old: old/src/app/(app)/hr/admin/AbsenceManagementHub.tsx
 9) Admin absence management is oversimplified: no ongoing/history views, filters, cancel actions, or employee/type labels in the pending table.
-   - New: orgcentral/src/app/(app)/hr/admin/_components/absence-management-hub.tsx
-   - Old: old/src/app/(app)/hr/admin/AbsenceManagementHub.tsx
+    - New: orgcentral/src/app/(app)/hr/admin/_components/absence-management-hub.tsx
+    - Old: old/src/app/(app)/hr/admin/AbsenceManagementHub.tsx
+
+## Scope notes
+- Manager review panels exist; this gap focuses on admin hub and richer lifecycle visibility.
+- Reporting surfaces for absences are tracked in `orgcentral/docs/gaps/hr/reporting-analytics-gap.md`.
 
 ## TODOs
 - [x] Analyze and redesign absence reporting to capture duration type (days vs hours), start/end times, and computed duration logic; align approvals to show hours vs days.
 - [x] Analyze and implement absence attachment upload/view UI wired to the attachments routes and metadata.
 - [x] Analyze and surface AI validation triggers and status in absence detail views.
 - [x] Analyze and build return-to-work actions that update status to closed and capture comments.
-- [ ] Analyze and expand lifecycle views (ongoing vs history segmentation, cancellation reasons, return-to-work notes, acknowledgment notes).
+- [x] Analyze and expand lifecycle views (ongoing vs history segmentation, cancellation reasons, return-to-work notes, acknowledgment notes).
 - [x] Analyze and join absence items to absence type config for labels, tracksBalance flags, and active/inactive state.
-- [ ] Analyze and add absence balance summaries using tracked absence types and leave balances.
-- [ ] Analyze and expose absence settings (hoursInWorkDay, roundingRule) in HR settings backed by AbsenceSettings.
-- [ ] Analyze and expand admin absence management to include ongoing/history, filters, cancellation, and richer metadata.
+- [x] Analyze and add absence balance summaries using tracked absence types and leave balances.
+- [x] Analyze and expose absence settings (hoursInWorkDay, roundingRule) in HR settings backed by AbsenceSettings.
+- [x] Analyze and expand admin absence management to include ongoing/history, filters, cancellation, and richer metadata.
 
 ## Actionable TODOs with targets
 - [x] Extend `orgcentral/src/app/(app)/hr/absence/_components/report-absence-form.tsx` and `orgcentral/src/app/(app)/hr/absence/schema.ts` to support duration type (days vs hours) with start/end time fields and computed duration display.
@@ -108,27 +112,27 @@
 - [x] Add absence attachment UI and wire to `orgcentral/src/app/api/hr/absences/[absenceId]/attachments/route.ts` with metadata matching `orgcentral/src/server/types/hr-absence-schemas.ts`.
 - [x] Expose AI validation controls and status in `orgcentral/src/app/(app)/hr/absence/_components/absence-detail-dialog.tsx`, using `orgcentral/src/app/api/hr/absences/[absenceId]/ai/route.ts`.
 - [x] Add return-to-work dialog to `orgcentral/src/app/(app)/hr/absence/_components/absence-row.tsx` and submit to `orgcentral/src/app/api/hr/absences/[absenceId]/return-to-work/route.ts`.
-- [ ] Split absence list views into ongoing vs history sections in `orgcentral/src/app/(app)/hr/absence/_components/absences-list-panel.tsx` with cancellation reasons and return-to-work notes.
+- [x] Split absence list views into ongoing vs history sections in `orgcentral/src/app/(app)/hr/absence/_components/absences-list-panel.tsx` with cancellation reasons and return-to-work notes.
 - [x] Join absence rows with type config labels by passing `absenceTypes` to `orgcentral/src/app/(app)/hr/absence/_components/absences-list-panel.tsx` and `orgcentral/src/app/(app)/hr/absence/_components/absence-detail-dialog.tsx`.
-- [ ] Add absence balance summary cards to `orgcentral/src/app/(app)/hr/absence/page.tsx` using tracked absence types and leave balance data.
-- [ ] Add AbsenceSettings controls (hoursInWorkDay, roundingRule) to HR settings UI, backed by `orgcentral/src/server/use-cases/hr/absences/update-absence-settings.ts`.
-- [ ] Expand admin absence hub `orgcentral/src/app/(app)/hr/admin/_components/absence-management-hub.tsx` to include ongoing/history views with type labels and cancellation actions.
+- [x] Add absence balance summary cards to `orgcentral/src/app/(app)/hr/absence/page.tsx` using tracked absence types and leave balance data.
+- [x] Add AbsenceSettings controls (hoursInWorkDay, roundingRule) to HR settings UI, backed by `orgcentral/src/server/use-cases/hr/absences/update-absence-settings.ts`.
+- [x] Expand admin absence hub `orgcentral/src/app/(app)/hr/admin/_components/absence-management-hub.tsx` to include ongoing/history views with type labels and cancellation actions.
 
 ## Related gaps
 - orgcentral/docs/gaps/documents/document-management-gap.md
 
-## Implementation status (as of 2026-01-24)
+## Implementation status (as of 2026-02-01)
 - Evidence attachment UI: implemented (Azure presign + attachments)
 - AI validation UI: implemented
 - Return-to-work UI: implemented
 - Type labels from config: implemented
 - Partial-day granularity: implemented (duration type/time range surfaced in list/detail/approval/history)
-- Lifecycle views (ongoing/history + notes): partial
-- Absence balance cards: open
-- Absence settings UI: open
-- Admin hub enhancements: open
+- Lifecycle views (ongoing/history + notes): implemented
+- Absence balance cards: implemented
+- Absence settings UI: implemented
+- Admin hub enhancements: implemented
 
 ### Priority recommendations
-1. Add ongoing vs history segmentation with lifecycle notes.
-2. Add absence balance summaries tied to tracked types.
-3. Expose absence settings in HR settings UI.
+1. ✅ Add ongoing vs history segmentation with lifecycle notes.
+2. ✅ Add absence balance summaries tied to tracked types.
+3. ✅ Expose absence settings in HR settings UI.

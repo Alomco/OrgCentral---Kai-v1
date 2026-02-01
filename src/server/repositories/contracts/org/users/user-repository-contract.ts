@@ -19,6 +19,9 @@ export interface IUserRepository {
   findByEmail(email: string): Promise<User | null>;
   userExistsByEmail(email: string): Promise<boolean>;
   create(input: UserCreationInput): Promise<User>;
+  incrementFailedLogin(userId: string): Promise<User>;
+  resetFailedLogin(userId: string): Promise<User>;
+  setLoginLockout(userId: string, lockedUntil: Date, failedLoginCount: number): Promise<User>;
 
   /**
    * Get user data by ID for a specific tenant

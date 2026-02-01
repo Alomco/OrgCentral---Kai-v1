@@ -36,17 +36,17 @@ Gap: Detailed branding controls and asset upload UX from the old project are mis
 ### Compliance submission UX
 Old Project: Compliance log allowed per-item submissions (documents, completion dates, yes/no, acknowledgements) with inline status changes.
   - old/src/app/(app)/hr/compliance/page.tsx
-New Project: Compliance list is read-only and the detail view is mock data.
+New Project: Submission UI and real data loading are implemented for compliance items.
   - orgcentral/src/app/(app)/hr/compliance/_components/compliance-items-panel.tsx
   - orgcentral/src/app/(app)/hr/compliance/[itemId]/page.tsx
-Gap: End-to-end compliance submission UX is not implemented.
+Gap: UX parity still needs polish (evidence preview, document metadata, admin log), tracked with document/compliance gaps.
 
 ### Absence reporting granularity
 Old Project: Absence form supported days vs hours, time ranges, attachments, AI validation status, and return-to-work flows.
   - old/src/app/(app)/hr/absences/page.tsx
-New Project: Absence form captures dates + hours only; no attachments, AI validation UI, or return-to-work controls.
+New Project: Absence form now supports days vs hours, time ranges, attachments, AI validation, and return-to-work controls.
   - orgcentral/src/app/(app)/hr/absence/_components/report-absence-form.tsx
-Gap: Detailed absence reporting UX has been simplified.
+Gap: Remaining UX parity is in list segmentation and admin hub views (tracked in absence management gap).
 
 ### Employee compliance log UX
 Old Project: Employee profile Documents tab exposed admin compliance log with progress, assignment, and review controls.
@@ -54,14 +54,14 @@ Old Project: Employee profile Documents tab exposed admin compliance log with pr
   - old/src/app/(app)/hr/employees/[id]/AdminComplianceManager.tsx
 New Project: Employee Compliance tab reuses read-only compliance items panel without admin management UI.
   - orgcentral/src/app/(app)/hr/employees/[id]/_components/employee-compliance-tab.tsx
-Gap: Employee-level compliance management UI is missing.
+Gap: Employee-level compliance management UI is missing (coordinate with document/compliance gaps).
 
 ## TODOs
 - [ ] Analyze and design a multi-organization switcher UX that mirrors old selection/enterprise shortcuts.
 - [ ] Analyze and restore branding controls (color pickers, sidebar theme color, asset uploads) with previews.
-- [ ] Analyze and rebuild compliance submission UI with per-item inputs and status updates.
-- [ ] Analyze and restore granular absence reporting UX (time ranges, attachments, AI validation, return-to-work).
-- [ ] Analyze and rebuild employee compliance log/admin management UI.
+- [ ] Audit compliance submission UX for parity (evidence preview, metadata, admin log) after document vault integration.
+- [ ] Audit absence reporting UX for parity (list segmentation + admin hub coordination).
+- [ ] Define the employee compliance log UX and coordinate implementation with compliance/document gaps.
 
 ## Related gaps
 - orgcentral/docs/gaps/hr/compliance-gap.md

@@ -4,7 +4,10 @@ import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session'
 import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 import { buildLeaveAttachmentBlobName, presignAzureBlobUpload } from '@/server/lib/storage/azure-blob-presigner';
 import { getLeaveStorageConfig } from '@/server/config/storage';
-import { ValidationError } from '@/server/errors';
+import {
+    assertAllowedAttachmentContentType,
+    assertAttachmentSizeWithinLimit,
+} from '@/server/lib/uploads/attachment-validation';
 
 const presignSchema = z.object({
     requestId: z.uuid(),
@@ -39,10 +42,8 @@ export async function presignLeaveAttachmentController({ request }: PresignContr
     });
 
     const config = getLeaveStorageConfig();
-    if (payload.fileSize > config.maxBytes) {
-        const maxFileSizeMb = Math.floor(config.maxBytes / 1024 / 1024).toString();
-        throw new ValidationError(`Attachment exceeds maximum size of ${maxFileSizeMb} MB.`);
-    }
+    assertAllowedAttachmentContentType(payload.contentType);
+    assertAttachmentSizeWithinLimit(payload.fileSize, config.maxBytes);
 
     const blobName = buildLeaveAttachmentBlobName(
         authorization.orgId,

@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
 import { ValidationError } from '@/server/errors';
+import { getAbsenceStorageConfig } from '@/server/config/storage';
+import {
+    assertAllowedAttachmentContentType,
+    assertAttachmentSizeWithinLimit,
+} from '@/server/lib/uploads/attachment-validation';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { HR_ACTION, HR_RESOURCE_TYPE, HR_PERMISSION_PROFILE } from '@/server/security/authorization/hr-permissions';
 import { withOrgContext } from '@/server/security/guards';
@@ -14,15 +19,6 @@ const presignSchema = z.object({
     fileName: z.string().min(1).max(180),
     contentType: z.string().min(1),
     fileSize: z.number().int().positive(),
-}).superRefine((value, context) => {
-    const contentType = value.contentType.toLowerCase();
-    if (contentType !== 'application/pdf' && !contentType.startsWith('image/')) {
-        context.addIssue({
-            code: 'custom',
-            message: 'Attachments must be PDF or image files.',
-            path: ['contentType'],
-        });
-    }
 });
 
 export interface PresignAbsenceAttachmentResponse {
@@ -47,6 +43,10 @@ export async function presignAbsenceAttachmentController(
 
     const raw: unknown = await readJson(request);
     const payload = presignSchema.parse(raw);
+    const config = getAbsenceStorageConfig();
+
+    assertAllowedAttachmentContentType(payload.contentType);
+    assertAttachmentSizeWithinLimit(payload.fileSize, config.maxBytes);
     const { session, service } = resolveAbsenceControllerDependencies(dependencies);
 
     const { authorization } = await getSessionContext(session, {

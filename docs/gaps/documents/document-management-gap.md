@@ -25,6 +25,11 @@
 - HR dashboards surfaced documents-expiring KPIs and quick actions for document upload/review:
   - old/src/app/(app)/hr/dashboard/page.tsx
 
+## Scope notes
+- This gap owns the document vault integration, metadata, and evidence storage model.
+- HR dashboard/report KPIs are tracked in `orgcentral/docs/gaps/hr/reporting-analytics-gap.md`.
+- Employee compliance admin views should coordinate with `orgcentral/docs/gaps/hr/compliance-gap.md`.
+
 ## Gaps (document management complexity)
 1) No document vault UI or routes to store/retrieve documents with classification/retention/versioning.
 2) Compliance evidence is stored as raw attachment URLs/strings without document metadata or version history.
@@ -42,8 +47,8 @@
 - [ ] Analyze and surface document classification/retention inputs where documents are created or updated.
 - [ ] Analyze and connect compliance expiry states to item statuses and UI warnings.
 - [ ] Analyze and enhance review queue evidence display with document metadata and previews.
-- [ ] Analyze and add document-expiring KPIs plus quick actions for document upload/review on the HR dashboard.
-- [ ] Analyze and build an employee-level compliance log admin view with assignment and review controls.
+- [ ] Coordinate with HR reporting to surface document-expiring KPIs once vault metadata is available.
+- [ ] Coordinate with HR compliance to add employee-level compliance log admin view after vault integration.
 
 ## Related gaps
 - orgcentral/docs/gaps/hr/compliance-gap.md

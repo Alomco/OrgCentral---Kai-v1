@@ -2,7 +2,7 @@
 
 ## Purpose
 Provide project-specific rules for Codex to preserve coding conventions, security posture, and strict linting.
-
+- always check .codex\ARCHITECTURE.md and update your skills and use the agents/tools effectively.
 ## Non-negotiables
 - Keep files <= 250 LOC; split early and keep modules focused.
 - Maintain the strict ESLint configuration; do not disable rules without explicit approval.
@@ -42,7 +42,8 @@ Provide project-specific rules for Codex to preserve coding conventions, securit
 - Use export async function METHOD(request, { params }: { params: Promise<{ orgId: string }> }) and const { orgId } = await params for org routes.
 - Always return NextResponse.json(result) from controllers; never call services or repositories directly in route files.
 - Validate all inputs with Zod in controllers; enforce orgId and data-classification guards before data access.
-- Prefer React Query for client mutations/queries; avoid outer.refresh() in client flows; invalidate typed query keys.
+- Prefer React Query for client mutations/queries; avoid 
+outer.refresh() in client flows; invalidate typed query keys.
 - Use Zustand only for client-local storage (persist/localStorage) via src/lib/stores/storage.ts.
 
 ## Interaction Decision Framework (HRM)
@@ -56,4 +57,5 @@ Provide project-specific rules for Codex to preserve coding conventions, securit
 - Implementation notes:
   - Always validate at the boundary with Zod (adapters/actions), and enforce orgId/residency/classification guards.
   - For useMutation: compose typed keys; invalidate narrowly; use onMutate for optimistic UI and rollback on error.
-  - For SSR -> CSR continuity: provide initialData to queries and keep filters in the URL; do not use outer.refresh() in client flows.
+  - For SSR -> CSR continuity: provide initialData to queries and keep filters in the URL; do not use 
+outer.refresh() in client flows.

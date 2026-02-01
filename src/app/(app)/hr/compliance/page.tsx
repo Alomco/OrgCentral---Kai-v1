@@ -26,6 +26,8 @@ import { ComplianceTemplatesPanel } from './_components/compliance-templates-pan
 import { BulkAssignDialog } from './_components/bulk-assign-dialog';
 import { ComplianceExpiryPanelLoader } from './_components/compliance-expiry-panel-loader';
 import { ComplianceCategoryManager } from './_components/compliance-category-manager';
+import { ComplianceAnalyticsPanel } from './_components/compliance-analytics-panel';
+import { ComplianceReminderSettingsPanel } from './_components/compliance-reminder-settings-panel';
 
 export const metadata: Metadata = {
     title: 'Compliance',
@@ -109,6 +111,10 @@ export default async function HrCompliancePage() {
                 <ComplianceItemsPanel authorization={authorization} userId={authorization.userId} />
             </Suspense>
 
+            <Suspense fallback={<div className="text-sm text-muted-foreground">Loading compliance analytics…</div>}>
+                <ComplianceAnalyticsPanel authorization={authorization} />
+            </Suspense>
+
             {adminAuthorization ? (
                 <div className="space-y-6">
                     {/* Bulk Assign Action */}
@@ -137,6 +143,9 @@ export default async function HrCompliancePage() {
                     </div>
                     <Suspense fallback={<div className="text-sm text-muted-foreground">Loading expiry data…</div>}>
                         <ComplianceExpiryPanelLoader authorization={adminAuthorization} />
+                    </Suspense>
+                    <Suspense fallback={<div className="text-sm text-muted-foreground">Loading reminder settings…</div>}>
+                        <ComplianceReminderSettingsPanel authorization={adminAuthorization} />
                     </Suspense>
                     <ComplianceCategoryManager initialCategories={[]} />
                     <Suspense fallback={<div className="text-sm text-muted-foreground">Loading templates…</div>}>

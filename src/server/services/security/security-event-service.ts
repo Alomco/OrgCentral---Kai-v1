@@ -7,6 +7,7 @@ import type { JsonRecord } from '@/server/types/json';
 import type { OrgAccessContext, OrgAccessInput } from '@/server/security/guards/core';
 import { assertOrgAccessWithAbac, toTenantScope } from '@/server/security/guards/core';
 import { appLogger } from '@/server/logging/structured-logger';
+import { dispatchSecurityAlert } from './security-alert-dispatcher';
 
 export interface SecurityEventServiceDependencies {
     securityEventRepository: ISecurityEventRepository;
@@ -77,6 +78,19 @@ export class SecurityEventService {
             residency: created.dataResidency,
             correlationId: authorization.correlationId,
         });
+        if (created.severity === 'high' || created.severity === 'critical') {
+            const alertOrgId = created.orgId ?? input.orgId;
+            const alertUserId = created.userId ?? input.userId;
+            await dispatchSecurityAlert({
+                orgId: alertOrgId,
+                eventType: created.eventType,
+                severity: created.severity,
+                description: created.description,
+                userId: alertUserId,
+                correlationId: authorization.correlationId,
+                occurredAt: created.createdAt.toISOString(),
+            });
+        }
         return created;
     }
 

@@ -11,4 +11,8 @@
 - Users cannot update display name, phone, or avatar in the new UI.
 
 ## TODO
-- [ ] Analyze and design account profile editing (name, phone, avatar) with secure storage and audit logging.
+- [ ] Define profile fields and storage (PII classification, org/user scoping).
+- [ ] Add profile update controller with Zod validation, audit logging, and change history.
+- [ ] Implement avatar upload pipeline with file type/size validation and secure storage.
+- [ ] Build profile UI (Server Component + useActionState) for edit/update and avatar preview.
+- [ ] Add tests for validation, upload, and access control.

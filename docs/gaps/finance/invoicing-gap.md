@@ -10,4 +10,8 @@
 - No invoice creation, sending, or status tracking UI.
 
 ## TODO
-- [ ] Analyze and design invoicing flows, templates, and statuses aligned to the new platform services.
+- [ ] Define invoice model, statuses, templates, and tax/line-item rules.
+- [ ] Implement invoicing controllers (create/send/update/pay) with Zod validation.
+- [ ] Build UI for draft/issue/send flows with PDF preview.
+- [ ] Integrate payment provider and notifications for due/paid/failed.
+- [ ] Add tests for totals, status transitions, and permissions.

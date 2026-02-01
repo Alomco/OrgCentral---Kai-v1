@@ -9,7 +9,7 @@ import { PermissionResourceManager } from "../_components/permission-resource-ma
 import { permissionKeys } from "../_components/permissions.api";
 import type { PermissionResource } from "@/server/types/security-types";
 
-const orgId = "org1";
+const orgId = "org-perm-delete";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
 const db: { resources: PermissionResource[] } = { resources: [
@@ -20,7 +20,10 @@ const db: { resources: PermissionResource[] } = { resources: [
 describe("permissions optimistic delete", () => {
   it("removes resource immediately and stays removed after invalidate", async () => {
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ resources: db.resources })),
+      http.get(baseUrl, () => HttpResponse.json({ resources: db.resources.map((resource) => ({
+        ...resource,
+        actions: [...resource.actions],
+      })) })),
       http.delete(`${baseUrl}/p2`, () => {
         db.resources = db.resources.filter((resource) => resource.id !== "p2");
         return HttpResponse.json({}, { status: 204 });

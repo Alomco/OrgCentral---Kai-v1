@@ -5,10 +5,17 @@
 
 ## New project status (orgcentral)
 - No /forgot-password route under orgcentral/src/app/(auth)
-- Login UI still links to /forgot-password in orgcentral/src/components/auth/LoginForm.base.tsx
+- Login UI now routes help requests to support.
+
+## Decision (2026-01-31)
+- Invite-only access. Self-serve password reset UI is intentionally disabled.
+- Users are directed to support/admins for account recovery.
 
 ## Impact
-- Users cannot initiate password reset in-app; link is dead.
+- Users cannot initiate password reset in-app; support workflow is used instead.
 
 ## TODO
-- [ ] Analyze and implement password reset UX and API hooks for the new auth stack.
+- [x] Confirm invite-only policy and keep self-serve reset UI disabled (2026-01-31).
+- [ ] Document support/admin recovery workflow and SLA in a runbook.
+- [ ] Ensure admin-only reset action exists with audit logging and notifications.
+- [ ] If policy changes, implement self-serve reset with rate limiting and verification.

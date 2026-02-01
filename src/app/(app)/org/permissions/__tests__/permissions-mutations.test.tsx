@@ -10,7 +10,7 @@ import type { PermissionResourceCreateState } from "../permission-resource-form-
 import type { PermissionResource } from "@/server/types/security-types";
 
 const { db, orgId } = vi.hoisted(() => {
-  const orgId = "org1";
+const orgId = "org-perm-create";
   return {
     orgId,
     db: {
@@ -57,7 +57,10 @@ vi.mock("../permission-resource-actions", () => ({
 describe("permissions create flow", () => {
   it("creates and shows new resource after mutation", async () => {
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ resources: db.resources })),
+      http.get(baseUrl, () => HttpResponse.json({ resources: db.resources.map((resource) => ({
+        ...resource,
+        actions: [...resource.actions],
+      })) })),
     );
 
     const qc = new QueryClient();

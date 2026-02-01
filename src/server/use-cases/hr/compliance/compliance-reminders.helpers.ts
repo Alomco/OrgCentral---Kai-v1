@@ -21,6 +21,7 @@ export function filterByTemplateRules(
     templateRules: Map<string, { reminderDaysBeforeExpiry?: number | null }>,
     referenceDate: Date,
     fallbackWindowDays: number,
+    escalationDays: number[] = [],
 ): ComplianceLogItem[] {
     return items.filter((item) => {
         const dueDate = item.dueDate;
@@ -40,7 +41,11 @@ export function filterByTemplateRules(
             return daysUntilDue === reminderDays;
         }
 
-        return daysUntilDue <= fallbackWindowDays;
+        if (daysUntilDue <= fallbackWindowDays) {
+            return true;
+        }
+
+        return escalationDays.includes(daysUntilDue);
     });
 }
 
@@ -59,11 +64,12 @@ export async function emitReminder(
     userId: string,
     items: ComplianceLogItem[],
     referenceDate: Date,
+    notifyOnComplete: boolean,
 ): Promise<void> {
     const expiringDocuments = items.filter((item) => item.status === 'COMPLETE');
     const pendingTasks = items.filter((item) => item.status !== 'COMPLETE');
 
-    if (expiringDocuments.length > 0) {
+    if (notifyOnComplete && expiringDocuments.length > 0) {
         await sendNotification({
             deps,
             userId,

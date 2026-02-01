@@ -139,6 +139,57 @@ export class FakeUserRepository implements IUserRepository {
         return resolveValue(false);
     }
 
+    incrementFailedLogin(): Promise<User> {
+        const now = new Date();
+        return resolveValue({
+            id: 'user-1',
+            email: 'user@example.com',
+            displayName: 'User One',
+            status: 'ACTIVE',
+            authProvider: 'better-auth',
+            failedLoginCount: 1,
+            lockedUntil: null,
+            lastLoginAt: null,
+            lastPasswordChange: now,
+            createdAt: now,
+            updatedAt: now,
+        });
+    }
+
+    resetFailedLogin(): Promise<User> {
+        const now = new Date();
+        return resolveValue({
+            id: 'user-1',
+            email: 'user@example.com',
+            displayName: 'User One',
+            status: 'ACTIVE',
+            authProvider: 'better-auth',
+            failedLoginCount: 0,
+            lockedUntil: null,
+            lastLoginAt: null,
+            lastPasswordChange: now,
+            createdAt: now,
+            updatedAt: now,
+        });
+    }
+
+    setLoginLockout(_userId: string, lockedUntil: Date, failedLoginCount: number): Promise<User> {
+        const now = new Date();
+        return resolveValue({
+            id: 'user-1',
+            email: 'user@example.com',
+            displayName: 'User One',
+            status: 'ACTIVE',
+            authProvider: 'better-auth',
+            failedLoginCount,
+            lockedUntil,
+            lastLoginAt: null,
+            lastPasswordChange: now,
+            createdAt: now,
+            updatedAt: now,
+        });
+    }
+
     getUser(): Promise<UserData | null> {
         return resolveValue(this.user ?? null);
     }

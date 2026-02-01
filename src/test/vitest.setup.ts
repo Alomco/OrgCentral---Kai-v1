@@ -28,7 +28,7 @@ const createMemoryStorage = (): StorageLike => {
     return {
         getItem: (key) => store.get(key) ?? null,
         setItem: (key, value) => {
-            store.set(key, String(value));
+            store.set(key, value);
         },
         removeItem: (key) => {
             store.delete(key);
@@ -43,14 +43,14 @@ const createMemoryStorage = (): StorageLike => {
     } satisfies StorageLike;
 };
 
-if (typeof globalThis.localStorage === 'undefined' || typeof globalThis.localStorage?.getItem !== 'function') {
+if (typeof globalThis.localStorage === 'undefined' || typeof globalThis.localStorage.getItem !== 'function') {
     Object.defineProperty(globalThis, 'localStorage', {
         value: createMemoryStorage(),
         configurable: true,
     });
 }
 
-if (typeof globalThis.sessionStorage === 'undefined' || typeof globalThis.sessionStorage?.getItem !== 'function') {
+if (typeof globalThis.sessionStorage === 'undefined' || typeof globalThis.sessionStorage.getItem !== 'function') {
     Object.defineProperty(globalThis, 'sessionStorage', {
         value: createMemoryStorage(),
         configurable: true,

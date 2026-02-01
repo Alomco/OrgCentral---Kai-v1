@@ -4,6 +4,8 @@ import { LoginService, type LoginServiceInput } from '../login-service';
 import type { LoginServiceDependencies } from '../login-service';
 import type { OrganizationData } from '@/server/types/leave-types';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
+import type { IUserRepository } from '@/server/repositories/contracts/org/users/user-repository-contract';
+import type { User } from '@/server/types/hr-types';
 import type { PrismaInputJsonObject } from '@/server/types/prisma';
 import { normalizeLeaveYearStartDate } from '@/server/types/org/leave-year-start-date';
 
@@ -99,6 +101,7 @@ describe('LoginService', () => {
     let signInEmail: ReturnType<typeof vi.fn>;
     let organizationRepository: IOrganizationRepository;
     let getOrganizationBySlug: ReturnType<typeof vi.fn>;
+    let userRepository: IUserRepository;
     let service: LoginService;
 
     beforeEach(() => {
@@ -108,7 +111,41 @@ describe('LoginService', () => {
         const repository = buildRepository();
         organizationRepository = repository.repository;
         getOrganizationBySlug = repository.getOrganizationBySlug;
-        service = new LoginService({ authClient, organizationRepository });
+        const now = new Date();
+        const baseUser: User = {
+            id: 'user-1',
+            email: 'user@example.com',
+            displayName: 'User One',
+            status: 'ACTIVE',
+            authProvider: 'credentials',
+            failedLoginCount: 0,
+            lockedUntil: null,
+            lastLoginAt: null,
+            lastPasswordChange: now,
+            createdAt: now,
+            updatedAt: now,
+        };
+        userRepository = {
+            findById: vi.fn(async () => baseUser),
+            findByEmail: vi.fn(async () => baseUser),
+            userExistsByEmail: vi.fn(async () => true),
+            create: vi.fn(async () => baseUser),
+            incrementFailedLogin: vi.fn(async () => ({ ...baseUser, failedLoginCount: baseUser.failedLoginCount + 1 })),
+            resetFailedLogin: vi.fn(async () => ({ ...baseUser, failedLoginCount: 0 })),
+            setLoginLockout: vi.fn(async (_userId, lockedUntil, failedLoginCount) => ({
+                ...baseUser,
+                lockedUntil,
+                failedLoginCount,
+            })),
+            getUser: vi.fn(async () => null),
+            updateUserMemberships: vi.fn(async () => undefined),
+            addUserToOrganization: vi.fn(async () => undefined),
+            removeUserFromOrganization: vi.fn(async () => undefined),
+            getUsersInOrganization: vi.fn(async () => []),
+            countUsersInOrganization: vi.fn(async () => 0),
+            getUsersInOrganizationPaged: vi.fn(async () => []),
+        };
+        service = new LoginService({ authClient, organizationRepository, userRepository });
     });
 
     it('returns an organization not found error when slug lookup fails', async () => {

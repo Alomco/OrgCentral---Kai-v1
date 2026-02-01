@@ -10,4 +10,8 @@
 - No accounts payable or receivable tracking UI.
 
 ## TODO
-- [ ] Analyze and design AP/AR workflows (vendor, customer, status, and aging) in the new stack.
+- [ ] Define AP/AR data model (vendors/customers, invoices, payments, aging) with classification.
+- [ ] Implement AP/AR controllers with Zod validation, org scoping, and audit logs.
+- [ ] Build AP/AR UI with status workflows and aging views.
+- [ ] Integrate with GL and notifications for due/overdue items.
+- [ ] Add tests for calculations, permissions, and exports.

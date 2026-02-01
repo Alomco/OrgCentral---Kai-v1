@@ -1,11 +1,13 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { IComplianceItemRepository } from '@/server/repositories/contracts/hr/compliance/compliance-item-repository-contract';
 import type { IComplianceTemplateRepository } from '@/server/repositories/contracts/hr/compliance/compliance-template-repository-contract';
+import type { IComplianceReminderSettingsRepository } from '@/server/repositories/contracts/hr/compliance/compliance-reminder-settings-repository-contract';
 import { getHrNotificationService } from '@/server/services/hr/notifications/hr-notification-service.provider';
 import type { HrNotificationServiceContract } from '@/server/repositories/contracts/notifications';
 import { getNotificationService } from '@/server/services/notifications/notification-service.provider';
 import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 import { buildComplianceRepositoryDependencies } from '@/server/repositories/providers/hr/compliance-repository-dependencies';
+import { createComplianceReminderSettingsRepository } from '@/server/repositories/providers/hr/compliance-reminder-settings-repository-provider';
 import {
     emitReminder,
     filterByTemplateRules,
@@ -22,6 +24,7 @@ export interface ComplianceReminderPayload {
 export interface ComplianceReminderDependencies {
     complianceItemRepository: IComplianceItemRepository;
     complianceTemplateRepository?: IComplianceTemplateRepository;
+    complianceReminderSettingsRepository?: IComplianceReminderSettingsRepository;
     notificationService?: HrNotificationServiceContract;
     notificationDispatcher?: NotificationDispatchContract;
 }
@@ -50,6 +53,8 @@ export function buildComplianceReminderDependencies(
     return {
         complianceItemRepository,
         complianceTemplateRepository,
+        complianceReminderSettingsRepository:
+            overrides.complianceReminderSettingsRepository ?? createComplianceReminderSettingsRepository(),
         notificationService: overrides.notificationService ?? getHrNotificationService(),
         notificationDispatcher: overrides.notificationDispatcher ?? getNotificationService(),
     };
@@ -62,12 +67,19 @@ export async function sendComplianceReminders(
     const referenceDate = input.payload.referenceDate ?? new Date();
     const fallbackWindowDays = input.payload.daysUntilExpiry ?? 30;
 
+    const reminderSettings = deps.complianceReminderSettingsRepository
+        ? await deps.complianceReminderSettingsRepository.getSettings(input.authorization.orgId)
+        : null;
+    const windowDays = reminderSettings?.windowDays ?? fallbackWindowDays;
+    const escalationDays = reminderSettings?.escalationDays ?? [];
+    const notifyOnComplete = reminderSettings?.notifyOnComplete ?? false;
+
     const templateRules = await loadTemplateRules(deps.complianceTemplateRepository, input.authorization.orgId);
     const configuredMaxReminderDays = Math.max(
         0,
         ...Array.from(templateRules.values()).map((rule) => rule.reminderDaysBeforeExpiry ?? 0),
     );
-    const effectiveWindowDays = Math.max(fallbackWindowDays, configuredMaxReminderDays);
+    const effectiveWindowDays = Math.max(windowDays, configuredMaxReminderDays);
 
     const allItems = await deps.complianceItemRepository.findExpiringItemsForOrg(
         input.authorization.orgId,
@@ -76,7 +88,13 @@ export async function sendComplianceReminders(
     );
 
     const scopedItems = filterTargetUsers(allItems, input.payload.targetUserIds);
-    const filtered = filterByTemplateRules(scopedItems, templateRules, referenceDate, fallbackWindowDays);
+    const filtered = filterByTemplateRules(
+        scopedItems,
+        templateRules,
+        referenceDate,
+        effectiveWindowDays,
+        escalationDays,
+    );
     if (filtered.length === 0) {
         return { remindersSent: 0, usersTargeted: 0 };
     }
@@ -84,7 +102,7 @@ export async function sendComplianceReminders(
     const grouped = groupByUser(filtered);
     let remindersSent = 0;
     for (const [userId, items] of grouped) {
-        await emitReminder(deps, input.authorization, userId, items, referenceDate);
+        await emitReminder(deps, input.authorization, userId, items, referenceDate, notifyOnComplete);
         remindersSent += 1;
     }
 

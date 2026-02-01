@@ -35,12 +35,14 @@ export interface AbsenceRowData {
     attachments: AbsenceAttachment[];
     returnToWork: ReturnToWorkRecord | null;
     metadata: AbsenceMetadata;
+    lifecycleNotes?: string | null;
 }
 
 export interface AbsenceRowProps {
     absence: AbsenceRowData;
     authorization: RepositoryAuthorizationContext;
     typeLabels: AbsenceTypeLabelMap;
+    showNotes?: boolean;
 }
 
 export type AbsenceTypeLabelMap = Record<string, { label: string; emoji?: string }>;
@@ -52,7 +54,7 @@ function formatDate(value: Date): string {
     return formatHumanDate(value);
 }
 
-export function AbsenceRow({ absence, authorization, typeLabels }: AbsenceRowProps) {
+export function AbsenceRow({ absence, authorization, typeLabels, showNotes = false }: AbsenceRowProps) {
     const [detailOpen, setDetailOpen] = useState(false);
     const [cancelOpen, setCancelOpen] = useState(false);
     const [returnOpen, setReturnOpen] = useState(false);
@@ -134,6 +136,11 @@ export function AbsenceRow({ absence, authorization, typeLabels }: AbsenceRowPro
                 <TableCell className="text-muted-foreground text-sm">
                     {formatDate(currentAbsence.createdAt)}
                 </TableCell>
+                {showNotes ? (
+                    <TableCell className="text-xs text-muted-foreground max-w-[240px]">
+                        {currentAbsence.lifecycleNotes ?? '—'}
+                    </TableCell>
+                ) : null}
                 <TableCell className="text-right">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

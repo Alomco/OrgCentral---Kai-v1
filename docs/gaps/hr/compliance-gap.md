@@ -77,6 +77,11 @@ Old Project: May have had basic compliance tracking.
 New Project: No clear evidence of mapping to specific regulations or standards.
 Gap: Missing integration with regulatory requirements like SOX, HIPAA, GDPR, etc.
 
+## Scope notes
+- Compliance reporting surfaces are tracked in `orgcentral/docs/gaps/hr/reporting-analytics-gap.md`.
+- Document vault integration and evidence metadata are tracked in `orgcentral/docs/gaps/documents/document-management-gap.md`.
+- Employee-level compliance admin views should coordinate with the document and reporting gaps above.
+
 ## TODOs
 - [x] Analyze and implement user submission UI that calls /api/hr/compliance/update with attachments, completion dates, acknowledgements, and notes.
 - [x] Analyze and wire compliance item detail page to real data and align status labels with ComplianceItemStatus.
@@ -84,10 +89,10 @@ Gap: Missing integration with regulatory requirements like SOX, HIPAA, GDPR, etc
 - [x] Analyze and wire bulk assignment to templates/employees with an onAssign action backed by assign-compliance-items.
 - [x] Analyze and surface expiring items in the compliance page using dueDate/expiryDurationDays and the reminders pipeline.
 - [x] Analyze and add a category manager (list/upsert categories) to avoid free-text category keys.
-- [ ] Implement comprehensive compliance reporting and analytics dashboard.
-- [ ] Enhance automated compliance reminders with configurable workflows.
-- [ ] Implement complete compliance audit trail with comprehensive logging.
-- [ ] Add integration with regulatory requirements and standards mapping.
+- [x] Implement compliance reporting data sources and metrics (org-level summaries, trends).
+- [x] Enhance automated compliance reminders with configurable workflows.
+- [ ] Implement complete compliance audit trail with comprehensive logging. (Partial: update/assign/category events logged; review/expiry still pending.)
+- [x] Add integration with regulatory requirements and standards mapping.
 
 ## Actionable TODOs with targets
 - [x] Build interactive item submission UI in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-items-panel.tsx` or a new client detail view, calling `orgcentral/src/app/api/hr/compliance/update/route.ts` with attachments, completedAt, and notes.
@@ -97,16 +102,16 @@ Gap: Missing integration with regulatory requirements like SOX, HIPAA, GDPR, etc
 - [x] Wire `orgcentral/src/app/(app)/hr/compliance/_components/bulk-assign-dialog.tsx` with templates and employees and add an onAssign action that calls `orgcentral/src/app/api/hr/compliance/assign/route.ts`.
 - [x] Surface expiry data in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-expiry-panel.tsx` and mount it on `orgcentral/src/app/(app)/hr/compliance/page.tsx` with a real expiring-items query.
 - [x] Add category manager UI with list/upsert API in `orgcentral/src/app/(app)/hr/compliance/_components/compliance-category-manager.tsx`.
-- [ ] Add compliance reporting dashboard with organizational compliance metrics and trends.
-- [ ] Enhance reminder system with configurable workflows and escalation rules.
-- [ ] Implement comprehensive audit logging for all compliance-related actions.
-- [ ] Add regulatory standards mapping and compliance tracking features.
+- [x] Build compliance reporting queries + summaries in `src/server/use-cases/hr/compliance/*` and expose via adapter controllers for HR reports.
+- [x] Add configurable reminder policies (cadence, escalation rules) in reminder worker/config with audit logging.
+- [ ] Log compliance events (submission, approval, expiry, evidence changes) with classification/residency metadata. (Partial: update/assign/category logged.)
+- [x] Map compliance templates/items to regulatory standards and expose for reporting and audits.
 
 ## Related gaps
 - orgcentral/docs/gaps/hr/reporting-analytics-gap.md
 - orgcentral/docs/gaps/comprehensive-feature-gap-analysis.md
 
-## Implementation Status (as of 2026-01-27)
+## Implementation Status (as of 2026-02-01)
 
 | # | Gap | Status | Implementation |
 |---|-----|--------|----------------|
@@ -116,10 +121,10 @@ Gap: Missing integration with regulatory requirements like SOX, HIPAA, GDPR, etc
 | 4 | Bulk assign dialog wiring | ✅ CLOSED | Templates/employees passed from page; API route called |
 | 5 | Expiry panel not connected | ✅ CLOSED | `compliance-expiry-panel-loader.tsx` with real 30-day expiry query |
 | 6 | Category management UI | ✅ CLOSED | `compliance-category-manager.tsx` with list/upsert API |
-| 7 | Compliance reporting and analytics | ❌ OPEN | Missing comprehensive reporting dashboard |
-| 8 | Automated compliance reminders | ⚠️ PARTIAL | Basic reminders exist, advanced workflows missing |
-| 9 | Compliance audit trail | ❌ OPEN | Incomplete logging of compliance actions |
-| 10 | Regulatory requirements integration | ❌ OPEN | No mapping to specific regulations/standards |
+| 7 | Compliance reporting and analytics | ✅ CLOSED | Org-wide analytics summary + KPI cards on reports/dashboard |
+| 8 | Automated compliance reminders | ✅ CLOSED | Configurable reminder settings (window/escalation/notify) wired into workflow |
+| 9 | Compliance audit trail | ⚠️ PARTIAL | Update/assign/category events logged; review/expiry still pending |
+| 10 | Regulatory requirements integration | ✅ CLOSED | Category mapping to regulatory standards in UI + types |
 
 ### Implemented gaps from this document ✅
 - User-facing submission UI
@@ -130,7 +135,4 @@ Gap: Missing integration with regulatory requirements like SOX, HIPAA, GDPR, etc
 - Category management UI
 
 ### Remaining Work
-1. **High Priority:** Implement comprehensive compliance reporting and analytics
-2. **Medium Priority:** Enhance automated compliance reminders with configurable workflows
-3. **High Priority:** Implement complete compliance audit trail
-4. **High Priority:** Add integration with regulatory requirements and standards mapping
+1. **High Priority:** Complete compliance audit trail for review/expiry events

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ComplianceCategory } from '@/server/types/compliance-types';
+import { COMPLIANCE_STANDARDS } from '@/server/types/hr/compliance-standards';
 import {
     complianceCategoryKeys,
     listComplianceCategoriesQuery,
@@ -23,6 +24,18 @@ interface ComplianceCategoryManagerProps {
 }
 
 const DEFAULT_SORT_ORDER = '100';
+
+function readRegulatoryReferences(category: ComplianceCategory): string[] {
+    const metadata = category.metadata;
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+        return [];
+    }
+    const value = (metadata as Record<string, unknown>).regulatoryRefs;
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    return value.filter((entry) => typeof entry === 'string');
+}
 
 export function ComplianceCategoryManager({ initialCategories }: ComplianceCategoryManagerProps) {
     const formReference = useRef<HTMLFormElement | null>(null);
@@ -74,6 +87,7 @@ export function ComplianceCategoryManager({ initialCategories }: ComplianceCateg
         const keyInput = form.elements.namedItem('category-key') as HTMLInputElement | null;
         const labelInput = form.elements.namedItem('category-label') as HTMLInputElement | null;
         const sortInput = form.elements.namedItem('category-sort-order') as HTMLInputElement | null;
+        const regulatoryReferences = new Set(readRegulatoryReferences(category));
         if (keyInput) {
             keyInput.value = category.key;
         }
@@ -83,6 +97,12 @@ export function ComplianceCategoryManager({ initialCategories }: ComplianceCateg
         if (sortInput) {
             sortInput.value = String(category.sortOrder);
         }
+        const checkboxes = Array.from(
+            form.querySelectorAll<HTMLInputElement>('input[name="category-regulatory-ref"]'),
+        );
+        checkboxes.forEach((checkbox) => {
+            checkbox.checked = regulatoryReferences.has(checkbox.value);
+        });
     };
 
     return (
@@ -131,6 +151,34 @@ export function ComplianceCategoryManager({ initialCategories }: ComplianceCateg
                                 defaultValue={DEFAULT_SORT_ORDER}
                             />
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Regulatory mappings</Label>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                            {COMPLIANCE_STANDARDS.map((standard) => (
+                                <label
+                                    key={standard.key}
+                                    className="flex items-start gap-2 rounded-md border px-3 py-2 text-xs"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="category-regulatory-ref"
+                                        value={standard.key}
+                                        className="mt-0.5"
+                                    />
+                                    <span>
+                                        <span className="font-medium">{standard.label}</span>
+                                        <span className="block text-muted-foreground">
+                                            {standard.description}
+                                        </span>
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Link categories to regulatory standards for reporting and audits.
+                        </p>
                     </div>
 
                     <div className="flex items-center gap-3">

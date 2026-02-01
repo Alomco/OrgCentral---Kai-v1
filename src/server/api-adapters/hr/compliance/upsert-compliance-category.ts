@@ -29,12 +29,16 @@ export async function upsertComplianceCategoryController(
 
     const useCaseDeps: UpsertComplianceCategoryDependencies = { complianceCategoryRepository };
 
+    const metadata: Prisma.JsonValue | undefined = payload.regulatoryRefs?.length
+        ? { regulatoryRefs: payload.regulatoryRefs }
+        : undefined;
+
     const category = await upsertComplianceCategory(useCaseDeps, {
         orgId: authorization.orgId,
         key: payload.key,
         label: payload.label,
         sortOrder: payload.sortOrder,
-        metadata: payload.metadata as Prisma.JsonValue | undefined,
+        metadata,
     });
 
     return { success: true, category };

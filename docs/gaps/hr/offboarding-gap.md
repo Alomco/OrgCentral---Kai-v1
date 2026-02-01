@@ -221,7 +221,7 @@
 - [ ] Add downstream deprovision tasks (directory, payroll, equipment).
 - [ ] Scrub or avoid free-text reasons in audit payloads to prevent PII leakage.
 
-## Implementation Status (as of 2026-01-24)
+## Implementation Status (as of 2026-01-31)
 
 | # | Item | Status | Notes |
 |---|------|--------|-------|

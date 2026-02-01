@@ -12,4 +12,8 @@
 - No per-user control for notification toggles, theme preference, language, or time zone.
 
 ## TODO
-- [ ] Analyze and rebuild per-user preferences with persisted settings and UI toggles in the new stack.
+- [ ] Define preference schema (notifications, theme, locale, time zone) with org/user scoping and classification.
+- [ ] Add preference read/update adapter controller with Zod validation, allowlists, and audit logging.
+- [ ] Build account preferences UI (Server Component + useActionState) with toggles and selects.
+- [ ] Wire preferences to theme/locale/notification delivery.
+- [ ] Add tests for validation, persistence, and permission boundaries.

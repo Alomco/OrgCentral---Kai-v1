@@ -8,13 +8,14 @@ export interface AbsenceRowsProps {
     absences: AbsenceRowData[];
     authorization: RepositoryAuthorizationContext;
     typeLabels: AbsenceTypeLabelMap;
+    showNotes?: boolean;
 }
 
 /**
  * Client wrapper for absence rows with interactive actions.
  * Minimal "use client" island pattern for optimized hydration.
  */
-export function AbsenceRows({ absences, authorization, typeLabels }: AbsenceRowsProps) {
+export function AbsenceRows({ absences, authorization, typeLabels, showNotes }: AbsenceRowsProps) {
     return (
         <>
             {absences.map((absence) => (
@@ -23,6 +24,7 @@ export function AbsenceRows({ absences, authorization, typeLabels }: AbsenceRows
                     absence={absence}
                     authorization={authorization}
                     typeLabels={typeLabels}
+                    showNotes={showNotes}
                 />
             ))}
         </>

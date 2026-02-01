@@ -54,6 +54,7 @@ export class PrismaMembershipRepository extends OrgScopedPrismaRepository implem
         };
     }
 
+
     async createMembershipWithProfile(
         context: RepositoryAuthorizationContext,
         input: MembershipCreationInput,

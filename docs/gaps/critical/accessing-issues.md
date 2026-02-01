@@ -1,52 +1,44 @@
 # Page Access Issues Report
 
 Generated: 2026-01-31T02:50:00+06:00
+Recheck: 2026-01-31T12:20:00+06:00 (headed Chrome)
 
 ## Summary
 
 This document tracks issues encountered while testing page accessibility across the OrgCentral application.
 
-**Status Update**: Public pages load, but authenticated flows now fail with a server-side 500 from `/api/auth/post-login`. Internal pages attempt to resolve org context and hit the failing post-login request.
+**Status Update**: `/api/auth/post-login` no longer returns 500. Public pages load. Protected pages render or redirect without server errors in a non-authenticated session.
 
 ---
 
-## Current Status: Post-login API 500
+## Current Status: Post-login API
 
-**Auth-related routes and internal pages** are blocked by a failing `/api/auth/post-login` call. In headed Chrome, pages redirect or attempt to load with an RSC request that hits the failing route and results in `HTTP ERROR 500`.
-
-**Observed server error (from dev logs):**
-
-```
-Invalid `this.prisma.role.findUnique()` invocation
-The column `(not available)` does not exist in the current database.
-```
-
-This indicates a schema mismatch between Prisma and the database (likely missing columns on the `hr.roles` table).
+**Auth-related routes and internal pages** no longer hit a failing `/api/auth/post-login`. No server-side 500s observed in headed Chrome during page navigation. Unauthenticated access still leads to redirects or shell renders, which is expected.
 
 ---
 
-## Test Results by Page (RECHECK 3 - 2026-01-31T02:50:00+06:00)
+## Test Results by Page (RECHECK 4 - 2026-01-31T12:20:00+06:00)
 
 ### Public Pages
 
 | Page URL | Status | Notes |
 |----------|--------|-------|
 | `/` (Home) | ✅ OK | Fully functional landing page |
-| `/login` | ⚠️ PARTIAL | Page loads, but `/api/auth/post-login` returns 500 shortly after |
-| `/admin-signup` | ✅ OK | Bootstrap form works |
-| `/admin-signup/complete` | ⚠️ BLOCKED | Missing bootstrap secret error shown |
+| `/login` | ✅ OK | Invite-only login UI renders; no 500s observed |
+| `/admin-signup` | ✅ OK | Bootstrap form renders (saw one transient chunk load error in console) |
+| `/admin-signup/complete` | ⚠️ BLOCKED | Missing bootstrap secret error shown (expected without secret) |
 
 ### Internal Pages (Auth/Context Required)
 
 | Page | Status | Error |
 |------|--------|-------|
-| `/dashboard` | ❌ BLOCKED | 500 during `/api/auth/post-login` | 
-| `/admin/dashboard` | ❌ BLOCKED | 500 during `/api/auth/post-login` |
-| `/hr` | ❌ BLOCKED | 500 during `/api/auth/post-login` |
-| `/hr/employees` | ❌ BLOCKED | 500 during `/api/auth/post-login` |
-| `/org/profile` | ❌ BLOCKED | 500 during `/api/auth/post-login` |
-| `/settings` | ❌ BLOCKED | 500 during `/api/auth/post-login` |
-| `/dev` | ❌ BLOCKED | 500 during `/api/auth/post-login` |
+| `/dashboard` | ⚠️ AUTH REQUIRED | Route renders without 500; requires session to fully load |
+| `/admin/dashboard` | ⚠️ AUTH REQUIRED | Shows loading state; no 500 observed |
+| `/hr` | ⚠️ AUTH REQUIRED | Route renders without 500; requires session |
+| `/hr/employees` | ⚠️ AUTH REQUIRED | Route renders without 500; requires session |
+| `/org/profile` | ⚠️ AUTH REQUIRED | Route renders without 500; requires session |
+| `/settings` | ⚠️ AUTH REQUIRED | Redirects to `/org/settings`; no 500 observed |
+| `/dev` | ✅ OK (dev) | Redirects to `/dev/dashboard` and renders dev tools UI |
 
 ---
 
@@ -56,12 +48,12 @@ This indicates a schema mismatch between Prisma and the database (likely missing
    - **Fix**: Resolved compilation errors.
 2. **First Recheck**: 500 Internal Server Errors due to chunk loading failures.
    - **Fix**: Cleared `.next` cache and restarted server.
-3. **Current State**: Application runs, public pages work, but auth context bootstrap fails due to a Prisma/database schema mismatch in `role.findUnique`.
+3. **Current State**: Application runs; `/api/auth/post-login` no longer throws 500. Public pages load; protected pages await valid session.
 
 ---
 
-## Next Steps
-
-1. **Fix Prisma schema mismatch**: Ensure the database schema matches [prisma/schema.prisma](prisma/schema.prisma). Run the correct migration or `prisma db push` for dev.
-2. **Re-test `/api/auth/post-login`**: Confirm the endpoint returns 200 and sets `activeOrganizationId`.
-3. **Re-check internal pages**: Validate `/dashboard`, `/hr`, and `/admin/dashboard` once the API is healthy.
+## TODOs
+- [ ] Validate `/api/auth/post-login` with a real session; confirm `activeOrganizationId` is set.
+- [ ] Verify authenticated access for `/dashboard`, `/hr`, and `/admin/dashboard` with expected redirects.
+- [ ] Re-test `/admin-signup` for the chunk load error and capture console/network logs if reproducible.
+- [ ] Add a smoke test (Playwright or script) for key public/protected routes.

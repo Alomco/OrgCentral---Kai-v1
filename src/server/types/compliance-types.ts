@@ -1,4 +1,5 @@
 import type { PrismaJsonValue } from '@/server/types/prisma';
+import type { ComplianceStandardKey } from '@/server/types/hr/compliance-standards';
 
 export type ComplianceSubDocumentType = 'DOCUMENT' | 'COMPLETION_DATE' | 'YES_NO' | 'ACKNOWLEDGEMENT';
 
@@ -35,9 +36,13 @@ export interface ComplianceCategory {
     key: string;
     label: string;
     sortOrder: number;
-    metadata?: PrismaJsonValue;
+    metadata?: PrismaJsonValue | ComplianceCategoryMetadata;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface ComplianceCategoryMetadata {
+    regulatoryRefs?: ComplianceStandardKey[];
 }
 
 export const COMPLIANCE_ITEM_STATUSES = [

@@ -9,7 +9,7 @@ import { MembersListClient } from "../_components/members-list.client";
 import { memberKeys, membersSearchKey } from "../_components/members.api";
 import type { UserData } from "@/server/types/leave-types";
 
-const orgId = 'org1';
+const orgId = 'org-remove';
 const baseUrl = `/api/org/${orgId}/members`;
 const putUrl = (userId: string) => `/api/org/${orgId}/membership/${userId}`;
 
@@ -116,15 +116,20 @@ describe('members remove from org', () => {
           : mutableUsers;
         return HttpResponse.json({ users: filtered, totalCount: filtered.length, page: 1, pageSize: 25 });
       }),
-      http.put(putUrl('u2'), async () => HttpResponse.json({ message: 'fail' }, { status: 500 }))
+      http.put(putUrl('u2'), async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return HttpResponse.json({ message: 'fail' }, { status: 500 });
+      })
     );
 
-    renderList(query);
+    const qc = renderList(query);
 
     expect(await screen.findByText('B')).toBeInTheDocument();
 
     const btns = await screen.findAllByRole('button', { name: /remove from org/i }); await userEvent.click(btns[btns.length-1]);
 
+    await waitFor(() => expect(screen.queryByText('B')).not.toBeInTheDocument());
+    await qc.invalidateQueries({ queryKey: memberKeys.list(orgId, expectedKey) });
     await waitFor(() => expect(screen.getByText('B')).toBeInTheDocument());
   });
 });

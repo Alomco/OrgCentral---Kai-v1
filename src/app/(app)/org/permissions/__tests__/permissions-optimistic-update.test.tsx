@@ -9,7 +9,7 @@ import { PermissionResourceManager } from "../_components/permission-resource-ma
 import { permissionKeys } from "../_components/permissions.api";
 import type { PermissionResource } from "@/server/types/security-types";
 
-const orgId = "org1";
+const orgId = "org-perm-update";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
 const seed = (): PermissionResource[] => ([{ id: "p1", orgId, resource: "org.test", actions: ["read"], description: "Old", createdAt: new Date(), updatedAt: new Date() }]);
@@ -18,7 +18,10 @@ describe("permissions optimistic update", () => {
   it("updates row instantly and persists after re-fetch", async () => {
     const resources = seed();
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ resources })),
+      http.get(baseUrl, () => HttpResponse.json({ resources: resources.map((resource) => ({
+        ...resource,
+        actions: [...resource.actions],
+      })) })),
       http.put(`${baseUrl}/p1`, async ({ request }) => {
         const body = await request.json() as { resource?: string; actions?: string[]; description?: string | null };
         resources[0] = { ...resources[0], ...body, actions: body.actions ?? resources[0].actions, updatedAt: new Date() };
@@ -57,7 +60,10 @@ describe("permissions optimistic update", () => {
   it("rolls back on update error", async () => {
     const resources = seed();
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ resources })),
+      http.get(baseUrl, () => HttpResponse.json({ resources: resources.map((resource) => ({
+        ...resource,
+        actions: [...resource.actions],
+      })) })),
       http.put(`${baseUrl}/p1`, async () => HttpResponse.json({ message: "fail" }, { status: 500 }))
     );
 

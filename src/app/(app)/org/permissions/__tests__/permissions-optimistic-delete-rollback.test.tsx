@@ -8,7 +8,7 @@ import { server } from "../../../../../../test/msw-setup";
 import { PermissionResourceManager } from "../_components/permission-resource-manager";
 import type { PermissionResource } from "@/server/types/security-types";
 
-const orgId = "org1";
+const orgId = "org-perm-delete-rollback";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
 const db: { resources: PermissionResource[] } = { resources: [
@@ -19,7 +19,10 @@ const db: { resources: PermissionResource[] } = { resources: [
 describe("permissions optimistic delete – rollback on error", () => {
   it("restores the row if server delete fails", async () => {
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ resources: db.resources })),
+      http.get(baseUrl, () => HttpResponse.json({ resources: db.resources.map((resource) => ({
+        ...resource,
+        actions: [...resource.actions],
+      })) })),
       http.delete(`${baseUrl}/p2`, () => HttpResponse.json({ message: 'fail' }, { status: 500 }))
     );
 

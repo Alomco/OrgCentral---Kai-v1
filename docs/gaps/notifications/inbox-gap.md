@@ -12,4 +12,8 @@
 - Users cannot manage all system, HR, and finance notifications in one place.
 
 ## TODO
-- [ ] Analyze and design a unified notifications inbox with filters, bulk actions, and category support.
+- [ ] Define unified notification schema and category taxonomy across modules.
+- [ ] Implement inbox controllers with read/unread, bulk actions, and filters.
+- [ ] Build inbox UI with filters, bulk actions, and category tabs.
+- [ ] Wire preferences to delivery and inbox visibility (mute/subscribe).
+- [ ] Add tests for notification lifecycle and permissions.

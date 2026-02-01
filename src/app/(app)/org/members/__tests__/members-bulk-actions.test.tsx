@@ -7,12 +7,12 @@ import { http, HttpResponse } from "msw";
 import { server } from "../../../../../../test/msw-setup";
 import { MembersListClient } from "../_components/members-list.client";
 import { OrgMembersBulkActions } from "../_components/org-members-bulk-actions";
-import { membersSearchKey } from "../_components/members.api";
+import { memberKeys, membersSearchKey } from "../_components/members.api";
 import type { UserData } from "@/server/types/leave-types";
 import type { MembershipStatus } from "@prisma/client";
 
 
-const orgId = 'org1';
+const orgId = 'org-bulk';
 const baseUrl = `/api/org/${orgId}/members`;
 const membershipUrl = `/api/org/${orgId}/membership`;
 
@@ -83,7 +83,12 @@ describe('members bulk actions', () => {
         if (actualKey !== expectedKey) {
           return HttpResponse.json({ message: 'bad query' }, { status: 400 });
         }
-        return HttpResponse.json({ users: cloneUsers(users), totalCount: users.length, page: 1, pageSize: 25 });
+        const status = url.searchParams.get('status');
+        const filtered = status
+          ? users.filter((user) => user.memberships.some((member) => member.status === status))
+          : users;
+        const normalized = cloneUsers(filtered);
+        return HttpResponse.json({ users: normalized, totalCount: normalized.length, page: 1, pageSize: 25 });
       }),
       http.put(`${membershipUrl}/:userId`, async ({ params, request }) => {
         const body = (await request.json()) as { status?: string; roles?: string[] };
@@ -101,7 +106,7 @@ describe('members bulk actions', () => {
       })
     );
 
-    renderHarness(query, users);
+    const qc = renderHarness(query, users);
 
     const selectB = await screen.findByLabelText('Select B');
     await userEvent.click(selectB);
@@ -111,9 +116,11 @@ describe('members bulk actions', () => {
       throw new Error('Missing bulk actions form');
     }
     await userEvent.click(within(bulkForm).getByRole('button', { name: /suspend/i }));
+    await screen.findByText(/updated/i);
+    await qc.invalidateQueries({ queryKey: memberKeys.list(orgId, expectedKey) });
 
     await waitFor(() => {
-      expect(users[1]?.memberships[0]?.status).toBe('SUSPENDED');
+      expect(screen.queryByText('B')).not.toBeInTheDocument();
     });
   });
 
@@ -136,7 +143,12 @@ describe('members bulk actions', () => {
         if (actualKey !== expectedKey) {
           return HttpResponse.json({ message: 'bad query' }, { status: 400 });
         }
-        return HttpResponse.json({ users: cloneUsers(users), totalCount: users.length, page: 1, pageSize: 25 });
+        const status = url.searchParams.get('status');
+        const filtered = status
+          ? users.filter((user) => user.memberships.some((member) => member.status === status))
+          : users;
+        const normalized = cloneUsers(filtered);
+        return HttpResponse.json({ users: normalized, totalCount: normalized.length, page: 1, pageSize: 25 });
       }),
       http.put(`${membershipUrl}/:userId`, async ({ params, request }) => {
         const body = (await request.json()) as { status?: string; roles?: string[] };
@@ -152,7 +164,7 @@ describe('members bulk actions', () => {
       })
     );
 
-    renderHarness(query, users);
+    const qc = renderHarness(query, users);
 
     const selectB = await screen.findByLabelText('Select B');
     await userEvent.click(selectB);
@@ -164,7 +176,10 @@ describe('members bulk actions', () => {
     const roleSelect = within(bulkForm).getByRole('combobox', { name: /new role/i });
     await userEvent.selectOptions(roleSelect, 'admin');
     await userEvent.click(within(bulkForm).getByRole('button', { name: /update roles/i }));
+    await screen.findByText(/updated/i);
+    await qc.invalidateQueries({ queryKey: memberKeys.list(orgId, expectedKey) });
 
     await waitFor(() => expect(lastRoles).toEqual(['admin']));
+    await waitFor(() => expect(getCount).toBeGreaterThan(0));
   });
 });

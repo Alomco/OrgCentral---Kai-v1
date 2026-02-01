@@ -10,4 +10,8 @@
 - No chart of accounts UI for finance operations.
 
 ## TODO
-- [ ] Analyze and design a chart of accounts module using the new data model and permissions.
+- [ ] Define chart of accounts schema (hierarchy, types, normal balance) and import strategy.
+- [ ] Implement CRUD controllers with validation, audit logging, and lock-period support.
+- [ ] Build UI for account hierarchy management and mapping.
+- [ ] Integrate with reporting/ledger to enforce account usage.
+- [ ] Add tests for permissions and data integrity.

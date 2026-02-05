@@ -7,7 +7,7 @@ import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { OnboardingFeedbackRecord } from '@/server/types/hr/onboarding-feedback';
 import { CACHE_SCOPE_ONBOARDING_FEEDBACK } from '@/server/repositories/cache-scopes';
-import { buildOnboardingFeedbackDependencies } from './feedback-repository-dependencies';
+import { buildOnboardingFeedbackDependencies } from '@/server/repositories/providers/hr/onboarding-feedback-repository-dependencies';
 import { listOnboardingFeedback } from './list-feedback';
 
 export interface GetOnboardingFeedbackForUiInput {

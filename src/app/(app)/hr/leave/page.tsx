@@ -73,7 +73,7 @@ export default async function HrLeavePage() {
     }).catch(() => null);
 
     const profile = profileResult?.profile ?? null;
-    const employeeId = profile?.id ?? null;
+    const employeeId = profile?.userId ?? null;
 
     const managerProfileResult = profile?.managerUserId
         ? await peopleService.getEmployeeProfileByUser({

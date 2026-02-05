@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { createDocumentTemplate } from '@/server/use-cases/records/documents/create-document-template';
-import { buildDocumentTemplateDependencies } from '@/server/use-cases/records/documents/document-template-dependencies';
+import { buildDocumentTemplateDependencies } from '@/server/repositories/providers/records/document-template-repository-provider';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ONBOARDING_DOCUMENT_TEMPLATES } from '@/server/repositories/cache-scopes';
 import type { DocumentType } from '@/server/types/records/document-vault';

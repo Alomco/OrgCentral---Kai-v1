@@ -6,7 +6,7 @@ import type {
 } from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
-const INVITATION_MANAGER_ROLES = new Set(['orgAdmin', 'owner', 'hr']);
+const INVITATION_MANAGER_ROLES = new Set(['globalAdmin', 'orgAdmin', 'owner', 'hr']);
 
 export interface ListOnboardingInvitationsDependencies {
 	onboardingInvitationRepository: IOnboardingInvitationRepository;

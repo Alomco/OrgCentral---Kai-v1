@@ -1,5 +1,5 @@
 import type { JsonRecord } from '@/server/types/json';
-import type { PrismaJsonValue } from '@/server/types/prisma';
+import { PrismaDecimal, type PrismaDecimal as PrismaDecimalType, type PrismaJsonValue } from '@/server/types/prisma';
 import type {
     OnboardingMetricDefinitionRecord,
     OnboardingMetricResultRecord,
@@ -11,7 +11,7 @@ export interface OnboardingMetricDefinitionPrismaRecord {
     key: string;
     label: string;
     unit: string | null;
-    targetValue: string | number | null;
+    targetValue: PrismaDecimalType | string | number | null;
     thresholds: PrismaJsonValue | null;
     isActive: boolean;
     metadata: PrismaJsonValue | null;
@@ -30,7 +30,7 @@ export interface OnboardingMetricResultPrismaRecord {
     orgId: string;
     employeeId: string;
     metricId: string;
-    value: string | number | null;
+    value: PrismaDecimalType | string | number | null;
     valueText: string | null;
     source: OnboardingMetricResultRecord['source'];
     measuredAt: Date | string;
@@ -48,13 +48,14 @@ export interface OnboardingMetricResultPrismaRecord {
 export function mapOnboardingMetricDefinitionRecordToDomain(
     record: OnboardingMetricDefinitionPrismaRecord,
 ): OnboardingMetricDefinitionRecord {
+    const targetValue = normalizeDecimal(record.targetValue);
     return {
         id: record.id,
         orgId: record.orgId,
         key: record.key,
         label: record.label,
         unit: record.unit ?? undefined,
-        targetValue: record.targetValue ?? undefined,
+        targetValue: targetValue ?? undefined,
         thresholds: (record.thresholds ?? undefined) as JsonRecord | null | undefined,
         isActive: record.isActive,
         metadata: (record.metadata ?? undefined) as JsonRecord | null | undefined,
@@ -72,12 +73,13 @@ export function mapOnboardingMetricDefinitionRecordToDomain(
 export function mapOnboardingMetricResultRecordToDomain(
     record: OnboardingMetricResultPrismaRecord,
 ): OnboardingMetricResultRecord {
+    const value = normalizeDecimal(record.value);
     return {
         id: record.id,
         orgId: record.orgId,
         employeeId: record.employeeId,
         metricId: record.metricId,
-        value: record.value ?? undefined,
+        value: value ?? undefined,
         valueText: record.valueText ?? undefined,
         source: record.source,
         measuredAt: record.measuredAt,
@@ -91,4 +93,14 @@ export function mapOnboardingMetricResultRecordToDomain(
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
     };
+}
+
+function normalizeDecimal(value: PrismaDecimalType | string | number | null | undefined): string | number | null | undefined {
+    if (value === null || value === undefined) {
+        return value;
+    }
+    if (value instanceof PrismaDecimal) {
+        return value.toString();
+    }
+    return value;
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { DevelopmentSecurityWidget } from "@/components/dev/DevelopmentSecurityWidget";
 import { DevelopmentToolbar, DevelopmentToolbarProvider } from "@/components/dev/toolbar";
 import { TenantThemeRegistry } from "@/components/theme/tenant-theme-registry";
@@ -39,21 +40,23 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased ${motionStyles.motionRoot}`}
         suppressHydrationWarning
       >
-        <Providers>
-          <ThemeProvider>
-            <UiStyleProvider>
-              <DevelopmentToolbarProvider>
-                {process.env.NODE_ENV === "development" ? (
-                  <>
-                    <DevelopmentSecurityWidget />
-                    <DevelopmentToolbar />
-                  </>
-                ) : null}
-                <TenantThemeRegistry orgId={null}>{children}</TenantThemeRegistry>
-              </DevelopmentToolbarProvider>
-            </UiStyleProvider>
-          </ThemeProvider>
-        </Providers>
+        <NuqsAdapter>
+          <Providers>
+            <ThemeProvider>
+              <UiStyleProvider>
+                <DevelopmentToolbarProvider>
+                  {process.env.NODE_ENV === "development" ? (
+                    <>
+                      <DevelopmentSecurityWidget />
+                      <DevelopmentToolbar />
+                    </>
+                  ) : null}
+                  <TenantThemeRegistry orgId={null}>{children}</TenantThemeRegistry>
+                </DevelopmentToolbarProvider>
+              </UiStyleProvider>
+            </ThemeProvider>
+          </Providers>
+        </NuqsAdapter>
       </body>
     </html>
   );

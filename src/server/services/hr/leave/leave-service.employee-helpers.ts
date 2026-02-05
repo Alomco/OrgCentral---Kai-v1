@@ -10,14 +10,27 @@ export async function ensureEmployeeByEmployeeNumber(
     employeeNumber: string,
 ): Promise<EmployeeProfileDTO> {
     const normalizedEmployeeNumber = employeeNumber.trim();
+
     if (typeof profileRepository.findByEmployeeNumber !== 'function') {
         throw new ValidationError('Profile repository is misconfigured.');
     }
-    const profile = await profileRepository.findByEmployeeNumber(orgId, normalizedEmployeeNumber);
-    if (!profile) {
-        throw new EntityNotFoundError('Employee profile', { orgId, employeeNumber: normalizedEmployeeNumber });
+
+    const byEmployeeNumber = await profileRepository.findByEmployeeNumber(orgId, normalizedEmployeeNumber);
+    if (byEmployeeNumber) {
+        return byEmployeeNumber;
     }
-    return profile;
+
+    const byUserId = await profileRepository.getEmployeeProfileByUser(orgId, normalizedEmployeeNumber);
+    if (byUserId) {
+        return byUserId;
+    }
+
+    const byProfileId = await profileRepository.getEmployeeProfile(orgId, normalizedEmployeeNumber);
+    if (byProfileId) {
+        return byProfileId;
+    }
+
+    throw new EntityNotFoundError('Employee profile', { orgId, employeeNumber: normalizedEmployeeNumber });
 }
 
 export async function resolveEmployeeFromProfile(
@@ -34,7 +47,12 @@ export async function resolveEmployeeFromProfile(
     if (!profile.employeeNumber) {
         throw new ValidationError('Employee profile is missing an employee number.');
     }
-    if (employeeId && employeeId !== profile.employeeNumber) {
+    if (
+        employeeId &&
+        employeeId !== profile.userId &&
+        employeeId !== profile.employeeNumber &&
+        employeeId !== profile.id
+    ) {
         throw new ValidationError('Submitted employeeId does not match the employee profile.');
     }
 
@@ -43,7 +61,7 @@ export async function resolveEmployeeFromProfile(
     const resolvedName = displayName ?? (composedName.length > 0 ? composedName : undefined);
     const employeeName = resolvedName ?? fallbackName ?? 'Employee';
 
-    return { employeeId: profile.employeeNumber, employeeName };
+    return { employeeId: profile.userId, employeeName };
 }
 
 export function serializeLeaveFilters(

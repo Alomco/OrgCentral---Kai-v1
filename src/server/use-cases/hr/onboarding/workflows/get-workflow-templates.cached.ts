@@ -8,7 +8,7 @@ import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { OnboardingWorkflowTemplateRecord, WorkflowTemplateType } from '@/server/types/hr/onboarding-workflow-templates';
 import { CACHE_SCOPE_ONBOARDING_WORKFLOW_TEMPLATES } from '@/server/repositories/cache-scopes';
-import { buildOnboardingWorkflowDependencies } from './workflow-repository-dependencies';
+import { buildOnboardingWorkflowDependencies } from '@/server/repositories/providers/hr/onboarding-workflow-repository-dependencies';
 import { listWorkflowTemplates } from './list-workflow-templates';
 
 export interface GetWorkflowTemplatesForUiInput {

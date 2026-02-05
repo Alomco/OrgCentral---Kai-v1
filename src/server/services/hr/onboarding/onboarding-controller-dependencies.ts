@@ -1,28 +1,20 @@
 import { resolveBillingService } from '@/server/services/billing/billing-service.provider';
 import { buildOnboardingServiceDependencies } from '@/server/repositories/providers/hr/onboarding-service-dependencies';
+import { buildOnboardingAutomationRepositoryDependencies } from '@/server/repositories/providers/hr/onboarding-automation-repository-dependencies';
+import { buildOnboardingWorkflowDependencies } from '@/server/repositories/providers/hr/onboarding-workflow-repository-dependencies';
+import { buildEmailSequenceDependencies } from '@/server/repositories/providers/hr/onboarding-email-sequence-repository-dependencies';
+import { buildOnboardingMetricsDependencies } from '@/server/repositories/providers/hr/onboarding-metrics-repository-dependencies';
 import { buildPeopleServiceDependencies } from '@/server/repositories/providers/hr/people-service-dependencies';
 import { buildMembershipRepositoryDependencies } from '@/server/repositories/providers/org/membership-service-dependencies';
 import { buildOrganizationServiceDependencies } from '@/server/repositories/providers/org/organization-service-dependencies';
 import { buildUserServiceDependencies } from '@/server/repositories/providers/org/user-service-dependencies';
+import { buildDocumentTemplateDependencies } from '@/server/repositories/providers/records/document-template-repository-provider';
 import type { GetSessionDependencies } from '@/server/use-cases/auth/sessions/get-session';
 import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
 import type { IOnboardingInvitationRepository } from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
 import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
 import type { IUserRepository } from '@/server/repositories/contracts/org/users/user-repository-contract';
 import type { CompleteOnboardingInviteDependencies } from '@/server/use-cases/hr/onboarding/complete-onboarding-invite';
-import {
-    PrismaMentorAssignmentRepository,
-    PrismaProvisioningTaskRepository,
-    PrismaOnboardingWorkflowTemplateRepository,
-    PrismaOnboardingWorkflowRunRepository,
-    PrismaEmailSequenceTemplateRepository,
-    PrismaEmailSequenceEnrollmentRepository,
-    PrismaEmailSequenceDeliveryRepository,
-    PrismaOnboardingMetricDefinitionRepository,
-    PrismaOnboardingMetricResultRepository,
-    PrismaDocumentTemplateAssignmentRepository,
-} from '@/server/repositories/prisma/hr/onboarding';
-import { PrismaDocumentTemplateRepository } from '@/server/repositories/prisma/records/documents';
 
 const { profileRepo: profileRepository, contractRepo: employmentContractRepository } = buildPeopleServiceDependencies();
 const {
@@ -34,17 +26,14 @@ const { organizationRepository } = buildOrganizationServiceDependencies();
 const { userRepository } = buildUserServiceDependencies();
 const { membershipRepository } = buildMembershipRepositoryDependencies();
 const billingService = resolveBillingService() ?? undefined;
-const mentorAssignmentRepository = new PrismaMentorAssignmentRepository();
-const provisioningTaskRepository = new PrismaProvisioningTaskRepository();
-const workflowTemplateRepository = new PrismaOnboardingWorkflowTemplateRepository();
-const workflowRunRepository = new PrismaOnboardingWorkflowRunRepository();
-const emailSequenceTemplateRepository = new PrismaEmailSequenceTemplateRepository();
-const emailSequenceEnrollmentRepository = new PrismaEmailSequenceEnrollmentRepository();
-const emailSequenceDeliveryRepository = new PrismaEmailSequenceDeliveryRepository();
-const onboardingMetricDefinitionRepository = new PrismaOnboardingMetricDefinitionRepository();
-const onboardingMetricResultRepository = new PrismaOnboardingMetricResultRepository();
-const documentTemplateAssignmentRepository = new PrismaDocumentTemplateAssignmentRepository();
-const documentTemplateRepository = new PrismaDocumentTemplateRepository();
+const { mentorAssignmentRepository, provisioningTaskRepository, documentTemplateAssignmentRepository } =
+    buildOnboardingAutomationRepositoryDependencies();
+const { workflowTemplateRepository, workflowRunRepository } = buildOnboardingWorkflowDependencies();
+const { templateRepository: emailSequenceTemplateRepository, enrollmentRepository: emailSequenceEnrollmentRepository, deliveryRepository: emailSequenceDeliveryRepository } =
+    buildEmailSequenceDependencies();
+const { definitionRepository: onboardingMetricDefinitionRepository, resultRepository: onboardingMetricResultRepository } =
+    buildOnboardingMetricsDependencies();
+const { documentTemplateRepository } = buildDocumentTemplateDependencies();
 
 export interface ResolvedOnboardingControllerDependencies {
     session: GetSessionDependencies;

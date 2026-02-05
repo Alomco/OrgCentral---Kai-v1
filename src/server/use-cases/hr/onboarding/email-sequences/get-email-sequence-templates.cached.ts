@@ -8,7 +8,7 @@ import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { EmailSequenceTemplateRecord, EmailSequenceTrigger } from '@/server/types/hr/onboarding-email-sequences';
 import { CACHE_SCOPE_ONBOARDING_EMAIL_SEQUENCES } from '@/server/repositories/cache-scopes';
-import { buildEmailSequenceDependencies } from './sequence-repository-dependencies';
+import { buildEmailSequenceDependencies } from '@/server/repositories/providers/hr/onboarding-email-sequence-repository-dependencies';
 import { listEmailSequenceTemplates } from './list-email-sequence-templates';
 
 export interface GetEmailSequenceTemplatesForUiInput {

@@ -168,6 +168,13 @@ model EmployeeProfile {
   leaveBalances LeaveBalance[]    @relation("ProfileLeaveBalances")
   checklistInstances ChecklistInstance[] @relation("EmployeeChecklistInstances")
   offboardingRecords Offboarding[]
+  mentorAssignments MentorAssignment[]
+  provisioningTasks ProvisioningTask[]
+  onboardingWorkflowRuns OnboardingWorkflowRun[]
+  emailSequenceEnrollments EmailSequenceEnrollment[]
+  onboardingMetricResults OnboardingMetricResult[]
+  onboardingFeedback OnboardingFeedback[]
+  documentTemplateAssignments DocumentTemplateAssignment[]
   department    Department?       @relation("DepartmentProfiles", fields: [departmentId], references: [id], onDelete: SetNull)
 
   @@unique([orgId, userId])

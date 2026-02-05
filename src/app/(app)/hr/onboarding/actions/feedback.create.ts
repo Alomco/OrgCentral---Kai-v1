@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { createOnboardingFeedback } from '@/server/use-cases/hr/onboarding/feedback/create-feedback';
-import { buildOnboardingFeedbackDependencies } from '@/server/use-cases/hr/onboarding/feedback/feedback-repository-dependencies';
+import { buildOnboardingFeedbackDependencies } from '@/server/repositories/providers/hr/onboarding-feedback-repository-dependencies';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ONBOARDING_FEEDBACK } from '@/server/repositories/cache-scopes';
 

@@ -9,6 +9,7 @@ import type {
     OnboardingWorkflowTemplateUpdateInput,
     OnboardingWorkflowTemplateRecord,
 } from '@/server/types/hr/onboarding-workflow-templates';
+import type { JsonValue } from '@/server/types/json';
 import { RepositoryAuthorizationError } from '@/server/repositories/security';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { mapWorkflowTemplateRecordToDomain } from '@/server/repositories/mappers/hr/onboarding/workflow-template-mapper';
@@ -18,6 +19,13 @@ export class PrismaOnboardingWorkflowTemplateRepository
     implements IOnboardingWorkflowTemplateRepository {
     private get templates(): PrismaClient['onboardingWorkflowTemplate'] {
         return this.prisma.onboardingWorkflowTemplate;
+    }
+
+    private normalizeRequiredJson(value: JsonValue): Prisma.InputJsonValue | Prisma.JsonNullValueInput {
+        if (value === null) {
+            return Prisma.JsonNull;
+        }
+        return value as Prisma.InputJsonValue;
     }
 
     private async ensureOrg(templateId: string, orgId: string): Promise<PrismaWorkflowTemplate> {
@@ -30,7 +38,7 @@ export class PrismaOnboardingWorkflowTemplateRepository
 
     async createTemplate(input: OnboardingWorkflowTemplateCreateInput): Promise<OnboardingWorkflowTemplateRecord> {
         const metadata = toPrismaInputJson(input.metadata);
-        const definition = toPrismaInputJson(input.definition);
+        const definition = this.normalizeRequiredJson(input.definition);
         const record = await this.templates.create({
             data: {
                 orgId: input.orgId,
@@ -39,7 +47,7 @@ export class PrismaOnboardingWorkflowTemplateRepository
                 templateType: input.templateType,
                 version: input.version ?? 1,
                 isActive: input.isActive ?? true,
-                definition: definition ?? Prisma.JsonNull,
+                definition,
                 metadata: metadata ?? Prisma.JsonNull,
                 dataClassification: input.dataClassification,
                 residencyTag: input.residencyTag,
@@ -59,7 +67,7 @@ export class PrismaOnboardingWorkflowTemplateRepository
     ): Promise<OnboardingWorkflowTemplateRecord> {
         await this.ensureOrg(templateId, orgId);
         const metadata = updates.metadata !== undefined ? toPrismaInputJson(updates.metadata) : undefined;
-        const definition = updates.definition !== undefined ? toPrismaInputJson(updates.definition) : undefined;
+        const definition = updates.definition !== undefined ? this.normalizeRequiredJson(updates.definition) : undefined;
         const record = await this.templates.update({
             where: { id: templateId },
             data: {

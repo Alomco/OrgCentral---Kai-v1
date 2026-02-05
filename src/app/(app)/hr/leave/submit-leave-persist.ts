@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 import { requireSessionUser } from '@/server/api-adapters/http/session-helpers';
 import { getLeaveService } from '@/server/services/hr/leave/leave-service.provider';
+import { appLogger } from '@/server/logging/structured-logger';
 
 import { parseClientAttachments, readFormString } from './lib/leave-request-helpers';
 import type { LeaveRequestFormState } from './form-state';
@@ -50,7 +51,22 @@ export async function persistRequest(params: {
     };
 
     const leaveService = getLeaveService();
-    await leaveService.submitLeaveRequest({ authorization: session.authorization, request });
+    try {
+        await leaveService.submitLeaveRequest({ authorization: session.authorization, request });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unable to submit leave request.';
+        appLogger.error('hr.leave.submit.failed', {
+            orgId: session.authorization.orgId,
+            requestId,
+            error: message,
+        });
+        return {
+            status: 'error',
+            message,
+            fieldErrors: undefined,
+            values: parsedData,
+        };
+    }
 
     const attachments = parseClientAttachments(readFormString(formData, 'attachments'));
     if (attachments.length > 0) {

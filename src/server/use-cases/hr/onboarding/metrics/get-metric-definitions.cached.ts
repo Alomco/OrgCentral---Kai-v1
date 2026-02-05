@@ -7,7 +7,7 @@ import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { OnboardingMetricDefinitionRecord } from '@/server/types/hr/onboarding-metrics';
 import { CACHE_SCOPE_ONBOARDING_METRICS } from '@/server/repositories/cache-scopes';
-import { buildOnboardingMetricsDependencies } from './metrics-repository-dependencies';
+import { buildOnboardingMetricsDependencies } from '@/server/repositories/providers/hr/onboarding-metrics-repository-dependencies';
 import { listMetricDefinitions } from './list-metric-definitions';
 
 export interface GetMetricDefinitionsForUiInput {

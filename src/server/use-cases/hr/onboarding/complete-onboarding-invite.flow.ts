@@ -136,3 +136,27 @@ export function buildUserActivationPayload(
     status: MembershipStatus.ACTIVE,
   };
 }
+
+export function canLinkExistingProfile(
+  profile: Awaited<ReturnType<IEmployeeProfileRepository['findByEmployeeNumber']>>,
+  targetEmail: string,
+): boolean {
+  if (!profile) {
+    return false;
+  }
+
+  const normalizedTarget = targetEmail.trim().toLowerCase();
+  const matchesEmail = [profile.email, profile.personalEmail]
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .some((value) => value.trim().toLowerCase() === normalizedTarget);
+
+  if (matchesEmail) {
+    return true;
+  }
+
+  const metadata = profile.metadata;
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+    return false;
+  }
+  return (metadata as Record<string, unknown>).preboarding === true;
+}

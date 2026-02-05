@@ -34,7 +34,7 @@ export const themePresetsGroupA = {
         emoji: '??',
         accents: accents(cyberpunkPrimary, WHITE, '0.6538 0.2133 354.06', INK, cyberpunkPrimary, '0.6538 0.2133 354.06', cyberpunkPrimary, HSL_CHART_CYAN, HSL_CHART_YELLOW, HSL_CHART_ORANGE, '0.6075 0.2126 296.39', WHITE, '0.6164 0.2078 354.57', WHITE, cyberpunkPrimary),
         light: surface('0.9791 0.0084 302.80', '0.1993 0.0696 296.41', '0.9900 0.0035 302.87', '0.9456 0.0127 302.72', LIGHT_MUTED_FOREGROUND, LIGHT_BORDER, '0.9722 0.0074 302.81', '0.2995 0.0705 299.02'),
-        dark: surface('0.1705 0.0381 299.25', '0.9657 0.0056 302.84', '0.2091 0.0481 299.12', '0.2480 0.0540 299.35', DARK_MUTED_FOREGROUND, DARK_BORDER, '0.1886 0.0461 298.83', '0.9138 0.0143 302.69'),
+        dark: surface('0.1500 0.0350 299.25', '0.9750 0.0060 302.84', '0.2250 0.0500 299.12', '0.3000 0.0500 299.35', '0.8200 0.0150 255.00', '0.6000 0.0150 255.00', '0.1350 0.0400 298.83', '0.9500 0.0100 302.69'),
     }),
     'ocean-depths': makePreset({
         id: 'ocean-depths',

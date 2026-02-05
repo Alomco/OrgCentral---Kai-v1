@@ -276,6 +276,8 @@ model Membership {
   submittedComplianceRecords  ComplianceRecord[] @relation("ComplianceSubmitter")
   submittedStatutoryReports   StatutoryReport[]  @relation("ReportSubmitter")
   complianceLogItems     ComplianceLogItem[] @relation("MembershipComplianceLogItems")
+  mentorAssignments      MentorAssignment[] @relation("MentorAssignmentMentor")
+  provisioningRequests   ProvisioningTask[] @relation("ProvisioningRequester")
   @@id([orgId, userId])
   @@index([userId])
   @@index([orgId, status])

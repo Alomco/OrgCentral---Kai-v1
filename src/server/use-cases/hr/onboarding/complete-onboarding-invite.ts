@@ -1,42 +1,14 @@
 import { EntityNotFoundError, ValidationError } from '@/server/errors';
-import type { IEmployeeProfileRepository } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
-import type { IEmploymentContractRepository } from '@/server/repositories/contracts/hr/people/employment-contract-repository-contract';
-import type {
-    IChecklistInstanceRepository,
-} from '@/server/repositories/contracts/hr/onboarding/checklist-instance-repository-contract';
-import type {
-    IChecklistTemplateRepository,
-} from '@/server/repositories/contracts/hr/onboarding/checklist-template-repository-contract';
-import type {
-    IOnboardingInvitationRepository,
-} from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
-import type { IMentorAssignmentRepository } from '@/server/repositories/contracts/hr/onboarding/mentor-assignment-repository-contract';
-import type { IProvisioningTaskRepository } from '@/server/repositories/contracts/hr/onboarding/provisioning-task-repository-contract';
-import type {
-    IOnboardingWorkflowTemplateRepository,
-    IOnboardingWorkflowRunRepository,
-} from '@/server/repositories/contracts/hr/onboarding/workflow-template-repository-contract';
-import type {
-    IEmailSequenceTemplateRepository,
-    IEmailSequenceEnrollmentRepository,
-    IEmailSequenceDeliveryRepository,
-} from '@/server/repositories/contracts/hr/onboarding/email-sequence-repository-contract';
-import type { IDocumentTemplateAssignmentRepository } from '@/server/repositories/contracts/hr/onboarding/document-template-assignment-repository-contract';
-import type { IDocumentTemplateRepository } from '@/server/repositories/contracts/records/document-template-repository-contract';
-import type {
-    IOnboardingMetricDefinitionRepository,
-    IOnboardingMetricResultRepository,
-} from '@/server/repositories/contracts/hr/onboarding/onboarding-metric-repository-contract';
-import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
-import type { IMembershipRepository } from '@/server/repositories/contracts/org/membership';
-import type { BillingServiceContract } from '@/server/services/billing/billing-service.provider';
 import { normalizeToken } from '@/server/use-cases/shared';
-import { recordAuditEvent } from '@/server/logging/audit-logger';
 import { syncBetterAuthUserToPrisma } from '@/server/lib/auth-sync';
 import {
     createEmployeeProfile,
-    type CreateEmployeeProfileTransactionRunner,
 } from '@/server/use-cases/hr/people/create-employee-profile';
+import type {
+    CompleteOnboardingInviteDependencies,
+    CompleteOnboardingInviteInput,
+    CompleteOnboardingInviteResult,
+} from './complete-onboarding-invite.types';
 import {
     buildAuthorizationForInvite,
     buildChecklistConfig,
@@ -53,58 +25,17 @@ import {
     ensureMembership,
     handleExistingProfile,
     linkProfileIfNeeded,
+    canLinkExistingProfile,
 } from './complete-onboarding-invite.flow';
 import { applyOnboardingAutomation } from './apply-onboarding-automation';
+import { recordOnboardingInviteAcceptedAudit } from './complete-onboarding-invite.audit';
 
-export interface CompleteOnboardingInviteInput {
-    inviteToken: string;
-    userId: string;
-    actorEmail: string;
-    request?: {
-        ipAddress?: string;
-        userAgent?: string;
-    };
-}
+export type {
+    CompleteOnboardingInviteDependencies,
+    CompleteOnboardingInviteInput,
+    CompleteOnboardingInviteResult,
+} from './complete-onboarding-invite.types';
 
-export interface CompleteOnboardingInviteDependencies {
-    onboardingInvitationRepository: IOnboardingInvitationRepository;
-    organizationRepository: IOrganizationRepository;
-    employeeProfileRepository: IEmployeeProfileRepository;
-    membershipRepository: IMembershipRepository;
-    billingService?: BillingServiceContract;
-    employmentContractRepository?: IEmploymentContractRepository;
-    checklistTemplateRepository?: IChecklistTemplateRepository;
-    checklistInstanceRepository?: IChecklistInstanceRepository;
-    transactionRunner?: CreateEmployeeProfileTransactionRunner;
-    mentorAssignmentRepository: IMentorAssignmentRepository;
-    provisioningTaskRepository: IProvisioningTaskRepository;
-    workflowTemplateRepository: IOnboardingWorkflowTemplateRepository;
-    workflowRunRepository: IOnboardingWorkflowRunRepository;
-    emailSequenceTemplateRepository: IEmailSequenceTemplateRepository;
-    emailSequenceEnrollmentRepository: IEmailSequenceEnrollmentRepository;
-    emailSequenceDeliveryRepository: IEmailSequenceDeliveryRepository;
-    documentTemplateAssignmentRepository: IDocumentTemplateAssignmentRepository;
-    documentTemplateRepository: IDocumentTemplateRepository;
-    onboardingMetricDefinitionRepository: IOnboardingMetricDefinitionRepository;
-    onboardingMetricResultRepository: IOnboardingMetricResultRepository;
-}
-
-export interface CompleteOnboardingInviteResult {
-    success: true;
-    organizationId: string;
-    organizationName: string;
-    employeeNumber: string;
-    profileId: string;
-    roles: string[];
-    alreadyMember: boolean;
-    contractCreated?: boolean;
-    checklistInstanceId?: string;
-    workflowRunId?: string;
-    emailSequenceEnrollmentId?: string;
-    provisioningTaskIds?: string[];
-    documentAssignmentIds?: string[];
-    metricsRecorded?: string[];
-}
 
 export async function completeOnboardingInvite(
     deps: CompleteOnboardingInviteDependencies,
@@ -125,6 +56,7 @@ export async function completeOnboardingInvite(
 
     const authorization = buildAuthorizationForInvite(organization, input.userId);
     const payload = extractOnboardingPayload(invitation);
+    const automationPayload = invitation.onboardingData;
     const employeeNumber = resolveEmployeeNumber(payload);
 
     await syncBetterAuthUserToPrisma({
@@ -240,33 +172,21 @@ export async function completeOnboardingInvite(
             employeeId: profile.id,
             invitationToken: invitation.token,
             targetEmail: payload.email ?? invitation.targetEmail,
-            payload,
+            payload: automationPayload,
         },
     );
 
-    await recordAuditEvent({
-        orgId: organization.id,
-        userId: input.userId,
-        eventType: 'AUTH',
-        action: 'hr.onboarding.invitation.accepted',
-        resource: 'hr.onboarding.invitation',
-        resourceId: organization.id,
-        residencyZone: organization.dataResidency,
-        classification: organization.dataClassification,
-        auditSource: authorization.auditSource,
-        payload: {
-            alreadyMember: membershipResult.alreadyMember,
-            contractCreated: Boolean(creationResult.contractCreated),
-            checklistCreated: Boolean(creationResult.checklistInstanceId),
-            mentorAssigned: automationResult.mentorAssigned,
-            workflowRunId: automationResult.workflowRunId,
-            emailSequenceEnrollmentId: automationResult.emailSequenceEnrollmentId,
-            provisioningTaskCount: automationResult.provisioningTaskIds.length,
-            documentAssignmentCount: automationResult.documentAssignmentIds.length,
-            metricsRecorded: automationResult.metricsRecorded,
-            ipAddress: input.request?.ipAddress,
-            userAgent: input.request?.userAgent,
+    await recordOnboardingInviteAcceptedAudit({
+        authorization,
+        organization: {
+            id: organization.id,
+            dataResidency: organization.dataResidency,
+            dataClassification: organization.dataClassification,
         },
+        request: input.request,
+        membership: membershipResult,
+        creation: creationResult,
+        automation: automationResult,
     });
 
     return {
@@ -288,24 +208,3 @@ export async function completeOnboardingInvite(
 }
 
 const INVITATION_RESOURCE = 'Onboarding invitation';
-
-function canLinkExistingProfile(profile: Awaited<ReturnType<IEmployeeProfileRepository['findByEmployeeNumber']>>, targetEmail: string): boolean {
-    if (!profile) {
-        return false;
-    }
-
-    const normalizedTarget = targetEmail.trim().toLowerCase();
-    const matchesEmail = [profile.email, profile.personalEmail]
-        .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-        .some((value) => value.trim().toLowerCase() === normalizedTarget);
-
-    if (matchesEmail) {
-        return true;
-    }
-
-    const metadata = profile.metadata;
-    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
-        return false;
-    }
-    return (metadata as Record<string, unknown>).preboarding === true;
-}

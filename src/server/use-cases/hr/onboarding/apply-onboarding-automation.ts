@@ -9,7 +9,7 @@ import type { IDocumentTemplateAssignmentRepository } from '@/server/repositorie
 import type { IDocumentTemplateRepository } from '@/server/repositories/contracts/records/document-template-repository-contract';
 import type { IOnboardingMetricDefinitionRepository, IOnboardingMetricResultRepository } from '@/server/repositories/contracts/hr/onboarding/onboarding-metric-repository-contract';
 import type { ProvisioningTaskType } from '@/server/types/hr/provisioning-tasks';
-import type { JsonRecord, JsonValue } from '@/server/types/json';
+import { ensureMetricDefinition, normalizeSequenceSteps } from './apply-onboarding-automation.helpers';
 import { assertOrgAccessWithAbac } from '@/server/security/guards';
 
 export interface ApplyOnboardingAutomationDependencies {
@@ -46,6 +46,7 @@ export interface ApplyOnboardingAutomationResult {
 }
 
 const DEFAULT_PROVISIONING_TASKS: ProvisioningTaskType[] = ['ACCOUNT', 'EQUIPMENT', 'ACCESS'];
+const ONBOARDING_INVITE_SOURCE = 'onboarding-invite';
 
 export async function applyOnboardingAutomation(
     deps: ApplyOnboardingAutomationDependencies,
@@ -58,7 +59,7 @@ export async function applyOnboardingAutomation(
         correlationId: input.authorization.correlationId,
         action: 'hr.onboarding.automation.apply',
         resourceType: 'hr.onboarding',
-        resourceAttributes: { employeeId: input.employeeId },
+        resourceAttributes: { employeeId: input.employeeId, userId: input.authorization.userId },
     });
 
     const now = deps.now ?? (() => new Date());
@@ -79,7 +80,7 @@ export async function applyOnboardingAutomation(
                 mentorOrgId: input.authorization.orgId,
                 mentorUserId: mentorProfile.userId,
                 reason: 'onboarding',
-                metadata: { source: 'onboarding-invite' },
+                metadata: { source: ONBOARDING_INVITE_SOURCE },
                 dataClassification: input.authorization.dataClassification,
                 residencyTag: input.authorization.dataResidency,
                 auditSource: input.authorization.auditSource,
@@ -101,7 +102,7 @@ export async function applyOnboardingAutomation(
                 orgId: input.authorization.orgId,
                 employeeId: input.employeeId,
                 templateId: template.id,
-                metadata: { source: 'onboarding-invite', templateVersion: template.version },
+                metadata: { source: ONBOARDING_INVITE_SOURCE, templateVersion: template.version },
                 dataClassification: input.authorization.dataClassification,
                 residencyTag: input.authorization.dataResidency,
                 auditSource: input.authorization.auditSource,
@@ -126,7 +127,7 @@ export async function applyOnboardingAutomation(
                 invitationToken: input.invitationToken,
                 targetEmail: input.targetEmail,
                 startedAt: now(),
-                metadata: { source: 'onboarding-invite' },
+                metadata: { source: ONBOARDING_INVITE_SOURCE },
                 dataClassification: input.authorization.dataClassification,
                 residencyTag: input.authorization.dataResidency,
                 auditSource: input.authorization.auditSource,
@@ -163,7 +164,7 @@ export async function applyOnboardingAutomation(
             requestedByUserId: input.authorization.userId,
             taskType: taskType as ProvisioningTaskType,
             instructions: 'Provision onboarding resources',
-            metadata: { source: 'onboarding-invite' },
+            metadata: { source: ONBOARDING_INVITE_SOURCE },
             dataClassification: input.authorization.dataClassification,
             residencyTag: input.authorization.dataResidency,
             auditSource: input.authorization.auditSource,
@@ -186,7 +187,7 @@ export async function applyOnboardingAutomation(
             employeeId: input.employeeId,
             templateId: template.id,
             status: 'PENDING',
-            metadata: { source: 'onboarding-invite' },
+            metadata: { source: ONBOARDING_INVITE_SOURCE },
             dataClassification: input.authorization.dataClassification,
             residencyTag: input.authorization.dataResidency,
             auditSource: input.authorization.auditSource,
@@ -206,7 +207,7 @@ export async function applyOnboardingAutomation(
             valueText: 'accepted',
             source: 'SYSTEM',
             measuredAt: now(),
-            metadata: { source: 'onboarding-invite' },
+            metadata: { source: ONBOARDING_INVITE_SOURCE },
             dataClassification: input.authorization.dataClassification,
             residencyTag: input.authorization.dataResidency,
             auditSource: input.authorization.auditSource,
@@ -226,68 +227,3 @@ export async function applyOnboardingAutomation(
     };
 }
 
-interface NormalizedSequenceStep {
-    key: string;
-    scheduledAt: Date;
-    metadata: JsonRecord;
-}
-
-function normalizeSequenceSteps(steps: JsonValue): NormalizedSequenceStep[] {
-    if (!Array.isArray(steps)) {
-        return [];
-    }
-
-    const now = new Date();
-    return steps
-        .map((step, index) => {
-            if (!isJsonRecord(step)) {
-                return null;
-            }
-            const key = typeof step.key === 'string' ? step.key : `step-${index + 1}`;
-            const delayDays = typeof step.delayDays === 'number' ? step.delayDays : 0;
-            const delayHours = typeof step.delayHours === 'number' ? step.delayHours : 0;
-            const scheduledAt = new Date(now.getTime() + (delayDays * 24 + delayHours) * 60 * 60 * 1000);
-            return {
-                key,
-                scheduledAt,
-                metadata: step,
-            } satisfies NormalizedSequenceStep;
-        })
-        .filter((value): value is NormalizedSequenceStep => Boolean(value));
-}
-
-function isJsonRecord(value: JsonValue): value is JsonRecord {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-async function ensureMetricDefinition(
-    deps: ApplyOnboardingAutomationDependencies,
-    authorization: RepositoryAuthorizationContext,
-    key: string,
-    label: string,
-): Promise<{ id: string; key: string } | null> {
-    const definitions = await deps.onboardingMetricDefinitionRepository.listDefinitions(
-        authorization.orgId,
-        { isActive: true },
-    );
-    const existing = definitions.find((definition) => definition.key === key);
-    if (existing) {
-        return { id: existing.id, key: existing.key };
-    }
-    const created = await deps.onboardingMetricDefinitionRepository.createDefinition({
-        orgId: authorization.orgId,
-        key,
-        label,
-        unit: 'count',
-        targetValue: null,
-        thresholds: null,
-        isActive: true,
-        metadata: { source: 'system' },
-        dataClassification: authorization.dataClassification,
-        residencyTag: authorization.dataResidency,
-        auditSource: authorization.auditSource,
-        correlationId: authorization.correlationId,
-        createdBy: authorization.userId,
-    });
-    return { id: created.id, key: created.key };
-}

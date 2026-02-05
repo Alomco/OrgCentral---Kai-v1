@@ -191,7 +191,7 @@ function normalizeSequenceSteps(steps: JsonValue): NormalizedSequenceStep[] {
             if (!isJsonRecord(step)) {
                 return null;
             }
-            const key = typeof step.key === 'string' ? step.key : `step-${index + 1}`;
+            const key = typeof step.key === 'string' ? step.key : `step-${String(index + 1)}`;
             const delayDays = typeof step.delayDays === 'number' ? step.delayDays : 0;
             const delayHours = typeof step.delayHours === 'number' ? step.delayHours : 0;
             const scheduledAt = new Date(now.getTime() + (delayDays * 24 + delayHours) * 60 * 60 * 1000);

@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { updateWorkflowTemplate } from '@/server/use-cases/hr/onboarding/workflows/update-workflow-template';
-import { buildOnboardingWorkflowDependencies } from '@/server/use-cases/hr/onboarding/workflows/workflow-repository-dependencies';
+import { buildOnboardingWorkflowDependencies } from '@/server/repositories/providers/hr/onboarding-workflow-repository-dependencies';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ONBOARDING_WORKFLOW_TEMPLATES } from '@/server/repositories/cache-scopes';
 

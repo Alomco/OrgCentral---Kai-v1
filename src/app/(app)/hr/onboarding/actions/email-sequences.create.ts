@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { createEmailSequenceTemplate } from '@/server/use-cases/hr/onboarding/email-sequences/create-email-sequence-template';
-import { buildEmailSequenceDependencies } from '@/server/use-cases/hr/onboarding/email-sequences/sequence-repository-dependencies';
+import { buildEmailSequenceDependencies } from '@/server/repositories/providers/hr/onboarding-email-sequence-repository-dependencies';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ONBOARDING_EMAIL_SEQUENCES } from '@/server/repositories/cache-scopes';
 import type { JsonValue } from '@/server/types/json';

@@ -44,12 +44,18 @@ export function EmployeeOffboardingCard({
     canComplete,
 }: EmployeeOffboardingCardProps) {
     const [mode, setMode] = useState<'DIRECT' | 'CHECKLIST'>('DIRECT');
-    const [startState, startAction, startPending] = useActionState(startOffboardingAction, INITIAL_STATE);
-    const [completeState, completeAction, completePending] = useActionState(
+    const [startState, startAction, startPending] = useActionState<OffboardingActionState, FormData>(
+        startOffboardingAction,
+        INITIAL_STATE,
+    );
+    const [completeState, completeAction, completePending] = useActionState<OffboardingActionState, FormData>(
         completeOffboardingAction,
         INITIAL_STATE,
     );
-    const [cancelState, cancelAction, cancelPending] = useActionState(cancelOffboardingAction, INITIAL_STATE);
+    const [cancelState, cancelAction, cancelPending] = useActionState<OffboardingActionState, FormData>(
+        cancelOffboardingAction,
+        INITIAL_STATE,
+    );
 
     const statusLabel = status ? formatOffboardingStatus(status) : 'Not started';
     const statusVariant = status ? resolveOffboardingStatusVariant(status) : 'outline';

@@ -8,7 +8,7 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { DocumentTemplateRecord } from '@/server/types/records/document-templates';
 import type { DocumentType } from '@/server/types/records/document-vault';
 import { CACHE_SCOPE_ONBOARDING_DOCUMENT_TEMPLATES } from '@/server/repositories/cache-scopes';
-import { buildDocumentTemplateDependencies } from './document-template-dependencies';
+import { buildDocumentTemplateDependencies } from '@/server/repositories/providers/records/document-template-repository-provider';
 import { listDocumentTemplates } from './list-document-templates';
 
 export interface GetDocumentTemplatesForUiInput {

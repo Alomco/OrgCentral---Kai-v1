@@ -126,4 +126,18 @@ export const MEMBER_POLICIES: AbacPolicy[] = [
         condition: MEMBER_SUBJECT,
         priority: MEMBER_POLICY_PRIORITY,
     },
+    {
+        id: 'default:abac:member:apply-onboarding-automation',
+        description: 'Members can apply onboarding automation for their own invite acceptance.',
+        effect: 'allow',
+        actions: ['hr.onboarding.automation.apply'],
+        resources: ['hr.onboarding'],
+        condition: {
+            ...MEMBER_SUBJECT,
+            resource: {
+                userId: { op: 'eq', value: '$subject.userId' },
+            },
+        },
+        priority: MEMBER_POLICY_PRIORITY + 5,
+    },
 ];

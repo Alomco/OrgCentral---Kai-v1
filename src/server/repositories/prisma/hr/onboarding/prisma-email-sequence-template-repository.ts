@@ -9,6 +9,7 @@ import type {
     EmailSequenceTemplateUpdateInput,
     EmailSequenceTemplateRecord,
 } from '@/server/types/hr/onboarding-email-sequences';
+import type { JsonValue } from '@/server/types/json';
 import { RepositoryAuthorizationError } from '@/server/repositories/security';
 import { toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { mapEmailSequenceTemplateRecordToDomain } from '@/server/repositories/mappers/hr/onboarding/email-sequence-mapper';
@@ -16,6 +17,13 @@ import { mapEmailSequenceTemplateRecordToDomain } from '@/server/repositories/ma
 export class PrismaEmailSequenceTemplateRepository extends BasePrismaRepository implements IEmailSequenceTemplateRepository {
     private get templates(): PrismaClient['emailSequenceTemplate'] {
         return this.prisma.emailSequenceTemplate;
+    }
+
+    private normalizeRequiredJson(value: JsonValue): Prisma.InputJsonValue | Prisma.JsonNullValueInput {
+        if (value === null) {
+            return Prisma.JsonNull;
+        }
+        return value as Prisma.InputJsonValue;
     }
 
     private async ensureOrg(templateId: string, orgId: string): Promise<PrismaEmailSequenceTemplate> {
@@ -28,7 +36,7 @@ export class PrismaEmailSequenceTemplateRepository extends BasePrismaRepository 
 
     async createTemplate(input: EmailSequenceTemplateCreateInput): Promise<EmailSequenceTemplateRecord> {
         const metadata = toPrismaInputJson(input.metadata);
-        const steps = toPrismaInputJson(input.steps);
+        const steps = this.normalizeRequiredJson(input.steps);
         const record = await this.templates.create({
             data: {
                 orgId: input.orgId,
@@ -36,7 +44,7 @@ export class PrismaEmailSequenceTemplateRepository extends BasePrismaRepository 
                 description: input.description ?? null,
                 trigger: input.trigger,
                 isActive: input.isActive ?? true,
-                steps: steps ?? Prisma.JsonNull,
+                steps,
                 metadata: metadata ?? Prisma.JsonNull,
                 dataClassification: input.dataClassification,
                 residencyTag: input.residencyTag,
@@ -56,7 +64,7 @@ export class PrismaEmailSequenceTemplateRepository extends BasePrismaRepository 
     ): Promise<EmailSequenceTemplateRecord> {
         await this.ensureOrg(templateId, orgId);
         const metadata = updates.metadata !== undefined ? toPrismaInputJson(updates.metadata) : undefined;
-        const steps = updates.steps !== undefined ? toPrismaInputJson(updates.steps) : undefined;
+        const steps = updates.steps !== undefined ? this.normalizeRequiredJson(updates.steps) : undefined;
         const record = await this.templates.update({
             where: { id: templateId },
             data: {

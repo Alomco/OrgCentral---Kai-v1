@@ -421,6 +421,8 @@ model Offboarding {
   org       Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   employee  EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   checklistInstance ChecklistInstance? @relation("OffboardingChecklistInstance", fields: [checklistInstanceId], references: [id], onDelete: SetNull)
+  provisioningTasks ProvisioningTask[]
+  workflowRuns      OnboardingWorkflowRun[]
 
   @@index([orgId, employeeId])
   @@index([orgId, status])
@@ -635,6 +637,7 @@ model EmailSequenceDelivery {
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
 
+  org        Organization             @relation(fields: [orgId], references: [id], onDelete: Cascade)
   enrollment EmailSequenceEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
 
   @@index([orgId, status, scheduledAt])

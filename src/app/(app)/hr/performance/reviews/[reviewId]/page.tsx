@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { ArrowLeft, Calendar, User } from 'lucide-react';
 import { addDays } from 'date-fns';
 
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -55,12 +56,15 @@ function formatDate(date: Date | string | null | undefined): string {
 export default async function ReviewDetailPage({ params }: ReviewDetailPageProps) {
     const { reviewId } = await params;
     const headerStore = await nextHeaders();
-    await getSessionContextOrRedirect(
+    await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.PERFORMANCE_READ,
             auditSource: 'ui:hr:performance:review-detail',
+            action: HR_ACTION.READ,
+            resourceType: HR_RESOURCE_TYPE.PERFORMANCE_REVIEW,
+            resourceAttributes: { reviewId },
         },
     );
 

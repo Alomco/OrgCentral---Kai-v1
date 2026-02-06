@@ -61,7 +61,7 @@ export async function resolveEmployeeFromProfile(
     const resolvedName = displayName ?? (composedName.length > 0 ? composedName : undefined);
     const employeeName = resolvedName ?? fallbackName ?? 'Employee';
 
-    return { employeeId: profile.userId, employeeName };
+    return { employeeId: profile.employeeNumber, employeeName };
 }
 
 export function serializeLeaveFilters(

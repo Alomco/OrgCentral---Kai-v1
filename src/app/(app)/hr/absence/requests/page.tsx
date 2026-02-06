@@ -22,9 +22,13 @@ import { TeamAbsencePanel } from '../_components/team-absence-panel';
 import { buildAbsenceManagerPanels } from '../absence-manager-panels';
 import { AbsenceSubnav } from '../_components/absence-subnav';
 import { refreshAbsenceRequestsAction } from './actions';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import {
+    HR_ACTION,
+    HR_ANY_PERMISSION_PROFILE,
+    HR_PERMISSION_PROFILE,
+    HR_RESOURCE_TYPE,
+} from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect, getOptionalHrAuthorization } from '@/server/ui/auth/hr-session';
 import { listAbsenceTypeConfigsForUi } from '@/server/use-cases/hr/absences/list-absence-type-configs.cached';
 import { getAbsencesForUi } from '@/server/use-cases/hr/absences/get-absences.cached';
 import { buildAbsenceRequestSummary } from './absence-request-utils';
@@ -38,18 +42,18 @@ export default async function HrAbsenceRequestsPage() {
     const headerStore = await nextHeaders();
     const correlationId = headerStore.get('x-correlation-id') ?? undefined;
 
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
             requiredAnyPermissions: [
-                { [HR_RESOURCE.HR_ABSENCE]: ['read'] },
-                { employeeProfile: ['read'] },
+                HR_PERMISSION_PROFILE.ABSENCE_LIST,
+                HR_PERMISSION_PROFILE.PROFILE_READ,
             ],
             auditSource: 'ui:hr:absence:requests',
             correlationId,
             action: HR_ACTION.LIST,
-            resourceType: HR_RESOURCE.HR_ABSENCE,
+            resourceType: HR_RESOURCE_TYPE.ABSENCE,
             resourceAttributes: {
                 scope: 'requests',
                 correlationId,
@@ -57,20 +61,18 @@ export default async function HrAbsenceRequestsPage() {
         },
     );
 
-    const managerAuthorization = await getSessionContext(
+    const managerAuthorization = await getOptionalHrAuthorization(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['read'] },
+            requiredAnyPermissions: HR_ANY_PERMISSION_PROFILE.ABSENCE_MANAGEMENT,
             auditSource: 'ui:hr:absence:requests:manager',
             correlationId,
             action: HR_ACTION.LIST,
-            resourceType: HR_RESOURCE.HR_ABSENCE,
+            resourceType: HR_RESOURCE_TYPE.ABSENCE,
             resourceAttributes: { view: 'team', correlationId },
         },
-    )
-        .then((result) => result.authorization)
-        .catch(() => null);
+    );
 
     const isManager = managerAuthorization !== null;
 

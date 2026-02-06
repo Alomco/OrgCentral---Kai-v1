@@ -1,7 +1,3 @@
-/**
- * TODO: Refactor this file (currently > 250 LOC).
- * Action: Split into smaller modules and ensure adherence to SOLID principles, Dependency Injection, and Design Patterns.
- */
 import type Stripe from 'stripe';
 
 import type { BillingWebhookEvent } from '@/server/services/billing/billing-gateway';
@@ -28,7 +24,6 @@ const PAYMENT_METHOD_DETACHED = 'payment_method.detached';
 export function parseStripeWebhookEvent(input: {
   stripe: Stripe;
   webhookSecret: string;
-  priceIds: Set<string>;
   signature: string;
   payload: string;
 }): BillingWebhookEvent {
@@ -43,12 +38,12 @@ export function parseStripeWebhookEvent(input: {
     return checkoutEvent;
   }
 
-  const subscriptionEvent = handleSubscriptionEvent(event, input.priceIds);
+  const subscriptionEvent = handleSubscriptionEvent(event);
   if (subscriptionEvent) {
     return subscriptionEvent;
   }
 
-  const invoiceEvent = handleInvoiceEvent(event, input.priceIds);
+  const invoiceEvent = handleInvoiceEvent(event);
   if (invoiceEvent) {
     return invoiceEvent;
   }
@@ -89,7 +84,6 @@ function handleCheckoutEvent(event: Stripe.Event): BillingWebhookEvent | null {
 
 function handleSubscriptionEvent(
   event: Stripe.Event,
-  priceIds: Set<string>,
 ): BillingWebhookEvent | null {
   if (!event.type.startsWith('customer.subscription.')) {
     return null;
@@ -100,7 +94,7 @@ function handleSubscriptionEvent(
     return null;
   }
 
-  const snapshot = toSubscriptionSnapshot(subscriptionObject, priceIds);
+  const snapshot = toSubscriptionSnapshot(subscriptionObject);
   const createdAt = new Date(event.created * 1000);
 
   if (event.type === 'customer.subscription.created') {
@@ -118,7 +112,6 @@ function handleSubscriptionEvent(
 
 function handleInvoiceEvent(
   event: Stripe.Event,
-  priceIds: Set<string>,
 ): BillingWebhookEvent | null {
   if (!event.type.startsWith('invoice.')) {
     return null;
@@ -129,7 +122,7 @@ function handleInvoiceEvent(
     return null;
   }
 
-  const snapshot = toInvoiceSnapshot(invoiceObject, priceIds);
+  const snapshot = toInvoiceSnapshot(invoiceObject);
   const createdAt = new Date(event.created * 1000);
 
   if (event.type === 'invoice.created') {

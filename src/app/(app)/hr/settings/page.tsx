@@ -14,7 +14,8 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { HrSettingsPanel } from './_components/hr-settings-panel';
 import { AbsenceSettingsPanel } from './_components/absence-settings-panel';
 import { AbsenceTypeConfigPanel } from './_components/absence-type-config-panel';
@@ -53,12 +54,14 @@ function HrSettingsSkeletonCard() {
 export default async function HrSettingsPage() {
     const headerStore = await nextHeaders();
 
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['update'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.SETTINGS_UPDATE,
             auditSource: 'ui:hr-settings:page',
+            action: HR_ACTION.UPDATE,
+            resourceType: HR_RESOURCE_TYPE.HR_SETTINGS,
         },
     );
 

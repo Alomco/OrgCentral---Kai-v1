@@ -12,7 +12,8 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { HrPageHeader } from '../../_components/hr-page-header';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { LeaveManagementHub } from "../_components/leave-management-hub";
 
 export const metadata: Metadata = {
@@ -26,12 +27,15 @@ interface PageProps {
 
 export default async function LeaveAdminPage({ searchParams }: PageProps) {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['update'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.LEAVE_MANAGE,
             auditSource: 'ui:hr:admin:leave',
+            action: HR_ACTION.MANAGE,
+            resourceType: HR_RESOURCE_TYPE.LEAVE_REQUEST,
+            resourceAttributes: { view: 'admin' },
         },
     );
 

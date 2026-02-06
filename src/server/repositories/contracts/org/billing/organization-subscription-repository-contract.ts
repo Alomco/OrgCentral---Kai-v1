@@ -38,4 +38,10 @@ export interface IOrganizationSubscriptionRepository {
     orgId: string,
     seatCount: number,
   ): Promise<OrganizationSubscriptionData>;
+
+  updatePrice(
+    context: RepositoryAuthorizationContext,
+    orgId: string,
+    stripePriceId: string,
+  ): Promise<OrganizationSubscriptionData>;
 }

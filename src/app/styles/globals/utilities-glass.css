@@ -95,10 +95,11 @@
   }
 
   .hr-dashboard-surface {
-    --ui-border-opacity: 0.18;
+    --ui-border-opacity: 0.22;
   }
 
   .dark .hr-dashboard-surface {
-    --ui-border-opacity: 0.26;
+    --ui-border-opacity: 0.38;
+    --ui-surface-depth-color: var(--primary);
   }
 }

@@ -37,7 +37,7 @@ interface NavItemRenderProps extends SharedNavState {
 }
 
 const activeIconTileClassName =
-    'bg-sidebar-primary/20 text-sidebar-primary-foreground ring-1 ring-primary/25'
+    'bg-sidebar-primary/22 text-sidebar-primary ring-1 ring-sidebar-primary/35 shadow-[0_0_0_1px_oklch(var(--sidebar-border)/0.45)]'
 
 const inactiveIconTileClassName =
     'bg-sidebar-accent/30 text-sidebar-foreground/70 group-hover/navitem:bg-sidebar-accent/45 group-hover/navitem:text-sidebar-foreground'
@@ -56,9 +56,9 @@ function CollapsedAccordionNavItem({ item, isActive }: NavItemRenderProps) {
                         'w-full justify-center rounded-lg transition-all duration-300 ease-in-out group/navitem h-auto',
                         'group-data-[collapsible=icon]:justify-center',
                         isActive &&
-                        'bg-sidebar-accent/40 ring-1 ring-sidebar-border/60',
+                        'bg-sidebar-accent ring-1 ring-sidebar-border/70',
                         !isActive &&
-                        'hover:bg-sidebar-accent/30'
+                        'hover:bg-sidebar-accent/65'
                     )}
                 >
                     <div className="flex w-full items-center justify-center">
@@ -109,11 +109,11 @@ function ExpandedAccordionNavItem({ item, isActive, pathname, open }: NavItemRen
                 className={cn(
                     'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
                     'transition-all duration-300 ease-in-out',
-                    'hover:bg-sidebar-accent/30',
+                    'hover:bg-sidebar-accent/65',
                     'group/nav',
                     '[&[data-state=open]>svg]:rotate-180 [&>svg]:transition-transform [&>svg]:duration-300',
                     isActive &&
-                    'relative bg-sidebar-accent/40 ring-1 ring-sidebar-border/60 before:absolute before:inset-y-2 before:left-2 before:w-1 before:rounded-full before:bg-primary/40'
+                    'relative bg-sidebar-accent text-sidebar-accent-foreground ring-1 ring-sidebar-border/70 before:absolute before:inset-y-2 before:left-2 before:w-1 before:rounded-full before:bg-sidebar-primary/70'
                 )}
             >
                 <div className="flex flex-1 items-center gap-3">
@@ -131,7 +131,7 @@ function ExpandedAccordionNavItem({ item, isActive, pathname, open }: NavItemRen
                     <span
                         className={cn(
                             'text-sm font-medium transition-all duration-300',
-                            isActive && 'text-sidebar-foreground'
+                            isActive && 'text-sidebar-accent-foreground'
                         )}
                     >
                         {item.label}

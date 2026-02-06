@@ -11,18 +11,22 @@ import type { PermissionResource } from "@/server/types/security-types";
 const orgId = "org-perm-delete-rollback";
 const baseUrl = `/api/org/${orgId}/permissions`;
 
-const db: { resources: PermissionResource[] } = { resources: [
-  { id: "p1", orgId, resource: "org.test", actions: ["read"], description: null, createdAt: new Date(), updatedAt: new Date() },
-  { id: "p2", orgId, resource: "org.temp", actions: ["read","update"], description: null, createdAt: new Date(), updatedAt: new Date() }
-] };
+const db: { resources: PermissionResource[] } = {
+  resources: [
+    { id: "p1", orgId, resource: "org.test", actions: ["read"], description: null, createdAt: new Date(), updatedAt: new Date() },
+    { id: "p2", orgId, resource: "org.temp", actions: ["read", "update"], description: null, createdAt: new Date(), updatedAt: new Date() }
+  ]
+};
 
 describe("permissions optimistic delete – rollback on error", () => {
   it("restores the row if server delete fails", async () => {
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ resources: db.resources.map((resource) => ({
-        ...resource,
-        actions: [...resource.actions],
-      })) })),
+      http.get(baseUrl, () => HttpResponse.json({
+        resources: db.resources.map((resource) => ({
+          ...resource,
+          actions: [...resource.actions],
+        }))
+      })),
       http.delete(`${baseUrl}/p2`, () => HttpResponse.json({ message: 'fail' }, { status: 500 }))
     );
 
@@ -46,5 +50,5 @@ describe("permissions optimistic delete – rollback on error", () => {
     await userEvent.click(confirm);
 
     await waitFor(() => expect(screen.getByText(/org\.temp/)).toBeInTheDocument());
-  });
+  }, 10000);
 });

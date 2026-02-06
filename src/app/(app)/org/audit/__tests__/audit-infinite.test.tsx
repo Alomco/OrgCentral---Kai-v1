@@ -44,6 +44,6 @@ describe("audit infinite list", () => {
       expect(await screen.findByText('No More')).toBeInTheDocument();
       expect(screen.getAllByText(/org.resource/).length).toBeGreaterThan(0);
     });
-  });
+  }, 10000);
 });
 

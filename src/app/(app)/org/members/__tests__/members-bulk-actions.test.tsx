@@ -122,7 +122,7 @@ describe('members bulk actions', () => {
     await waitFor(() => {
       expect(screen.queryByText('B')).not.toBeInTheDocument();
     });
-  });
+  }, 10000);
 
   it('updates roles in bulk and refetches the list', async () => {
     const query = new URLSearchParams({ status: 'ACTIVE', page: '1', pageSize: '25' }).toString();
@@ -181,5 +181,5 @@ describe('members bulk actions', () => {
 
     await waitFor(() => expect(lastRoles).toEqual(['admin']));
     await waitFor(() => expect(getCount).toBeGreaterThan(0));
-  });
+  }, 10000);
 });

@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { invalidateAbsenceScopeCache } from '@/server/use-cases/hr/absences/cache-helpers';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
 import { appLogger } from '@/server/logging/structured-logger';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
@@ -24,13 +24,13 @@ export async function refreshAbsenceRequestsAction(): Promise<void> {
             {
                 headers: headerStore,
                 requiredAnyPermissions: [
-                    { [HR_RESOURCE.HR_ABSENCE]: ['read'] },
-                    { employeeProfile: ['read'] },
+                    HR_PERMISSION_PROFILE.ABSENCE_LIST,
+                    HR_PERMISSION_PROFILE.PROFILE_READ,
                 ],
                 auditSource: 'ui:hr:absence:requests:refresh',
                 correlationId,
                 action: HR_ACTION.LIST,
-                resourceType: HR_RESOURCE.HR_ABSENCE,
+                resourceType: HR_RESOURCE_TYPE.ABSENCE,
                 resourceAttributes: {
                     scope: 'requests',
                     correlationId,

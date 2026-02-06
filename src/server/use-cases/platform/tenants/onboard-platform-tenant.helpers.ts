@@ -20,9 +20,69 @@ export async function ensureBuiltinRoles(
     const existing = await roleRepository.getRolesByOrganization(orgId);
     const byName = new Map(existing.map((role) => [role.name, role]));
 
+    const normalizePermissions = (input: Role['permissions']): Record<string, string[]> => {
+        if (!input || typeof input !== 'object' || Array.isArray(input)) {
+            return {};
+        }
+        return Object.entries(input as Record<string, unknown>).reduce<Record<string, string[]>>(
+            (accumulator, [resource, actions]) => {
+                if (!Array.isArray(actions)) {
+                    return accumulator;
+                }
+                const filtered = actions.filter((action): action is string => typeof action === 'string');
+                if (filtered.length > 0) {
+                    accumulator[resource] = filtered;
+                }
+                return accumulator;
+            },
+            {});
+    };
+
+    const permissionsEqual = (left: Role['permissions'], right: Role['permissions']): boolean => {
+        const normalizedLeft = normalizePermissions(left);
+        const normalizedRight = normalizePermissions(right);
+        const leftKeys = Object.keys(normalizedLeft).sort();
+        const rightKeys = Object.keys(normalizedRight).sort();
+        if (leftKeys.length !== rightKeys.length) {
+            return false;
+        }
+        for (let index = 0; index < leftKeys.length; index += 1) {
+            if (leftKeys[index] !== rightKeys[index]) {
+                return false;
+            }
+            const leftActions = Array.from(new Set(normalizedLeft[leftKeys[index]] ?? [])).sort();
+            const rightActions = Array.from(new Set(normalizedRight[rightKeys[index]] ?? [])).sort();
+            if (leftActions.length !== rightActions.length) {
+                return false;
+            }
+            for (let actionIndex = 0; actionIndex < leftActions.length; actionIndex += 1) {
+                if (leftActions[actionIndex] !== rightActions[actionIndex]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
     for (const roleKey of TENANT_ROLE_KEYS) {
         const template = ROLE_TEMPLATES[roleKey];
-        if (byName.has(template.name)) {
+        const existingRole = byName.get(template.name);
+        if (existingRole) {
+            const shouldSync = Boolean(template.isSystem) && (existingRole.isSystem ?? true);
+            if (shouldSync && (
+                !permissionsEqual(existingRole.permissions, template.permissions as Role['permissions']) ||
+                existingRole.description !== template.description ||
+                existingRole.scope !== template.scope ||
+                existingRole.isDefault !== template.isDefault
+            )) {
+                await roleRepository.updateRole(orgId, existingRole.id, {
+                    description: template.description,
+                    scope: template.scope,
+                    permissions: template.permissions as Role['permissions'],
+                    isSystem: template.isSystem ?? false,
+                    isDefault: template.isDefault ?? false,
+                });
+            }
             continue;
         }
         await roleRepository.createRole(orgId, {

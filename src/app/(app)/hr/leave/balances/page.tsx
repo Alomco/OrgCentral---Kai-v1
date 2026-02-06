@@ -17,10 +17,10 @@ import { Separator } from '@/components/ui/separator';
 import { HrPageHeader } from '../../_components/hr-page-header';
 import { LeaveSubnav } from '../_components/leave-subnav';
 import { LeaveBalanceGrid } from '../_components/leave-request-form.sections';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
 import { getLeaveBalanceForUi } from '@/server/use-cases/hr/leave/get-leave-balance.cached';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 import { refreshLeaveBalancesAction } from './actions';
 import { calculateLeaveBalanceTotals, resolveBalanceYear } from './balance-utils';
 
@@ -37,18 +37,18 @@ export default async function HrLeaveBalancesPage({ searchParams }: PageProps) {
     const headerStore = await nextHeaders();
     const correlationId = headerStore.get('x-correlation-id') ?? undefined;
 
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
             requiredAnyPermissions: [
-                { [HR_RESOURCE.HR_LEAVE_BALANCE]: ['read'] },
-                { employeeProfile: ['read'] },
+                HR_PERMISSION_PROFILE.LEAVE_BALANCE_READ,
+                HR_PERMISSION_PROFILE.PROFILE_READ,
             ],
             auditSource: 'ui:hr:leave:balances',
             correlationId,
             action: HR_ACTION.READ,
-            resourceType: HR_RESOURCE.HR_LEAVE_BALANCE,
+            resourceType: HR_RESOURCE_TYPE.LEAVE_BALANCE,
             resourceAttributes: {
                 scope: 'balances',
                 correlationId,

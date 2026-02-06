@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import type { NavItem } from './app-sidebar-nav'
 
 const activeIconTileClassName =
-    'bg-sidebar-primary/20 text-sidebar-primary-foreground ring-1 ring-primary/25'
+    'bg-sidebar-primary/22 text-sidebar-primary ring-1 ring-sidebar-primary/35 shadow-[0_0_0_1px_oklch(var(--sidebar-border)/0.45)]'
 
 export function StandardNavItem({ item, isActive, open, isSubItem = false }: {
     item: NavItem
@@ -28,9 +28,9 @@ export function StandardNavItem({ item, isActive, open, isSubItem = false }: {
                 'w-full justify-start rounded-lg transition-all duration-200 ease-in-out group/navitem h-auto',
                 'group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0',
                 isActive &&
-                'relative bg-sidebar-accent/40 ring-1 ring-sidebar-border/60 before:absolute before:inset-y-2 before:left-2 before:w-1 before:rounded-full before:bg-primary/40',
+                'relative bg-sidebar-accent text-sidebar-accent-foreground ring-1 ring-sidebar-border/70 before:absolute before:inset-y-2 before:left-2 before:w-1 before:rounded-full before:bg-sidebar-primary/70',
                 !isActive &&
-                'hover:bg-sidebar-accent/30'
+                'hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground'
             )}
         >
             <Link
@@ -57,7 +57,7 @@ export function StandardNavItem({ item, isActive, open, isSubItem = false }: {
                             'shrink-0 transition-all duration-300',
                             isSubItem ? 'h-4 w-4' : 'h-5 w-5',
                             'group-data-[collapsible=icon]:h-5 group-data-[collapsible=icon]:w-5',
-                            isActive && 'text-sidebar-foreground'
+                            isActive && 'text-sidebar-primary'
                         )}
                     />
                 </div>
@@ -65,9 +65,9 @@ export function StandardNavItem({ item, isActive, open, isSubItem = false }: {
                     className={cn(
                         'group-data-[collapsible=icon]:hidden text-sm transition-all duration-300',
                         !isSubItem && 'font-medium',
-                        isSubItem && 'font-normal text-sidebar-foreground/80',
-                        isActive && !isSubItem && 'text-sidebar-foreground font-semibold',
-                        isActive && isSubItem && 'text-sidebar-foreground font-medium'
+                        isSubItem && 'font-normal text-sidebar-foreground/82',
+                        isActive && !isSubItem && 'text-sidebar-accent-foreground font-semibold',
+                        isActive && isSubItem && 'text-sidebar-accent-foreground font-medium'
                     )}
                 >
                     {item.label}

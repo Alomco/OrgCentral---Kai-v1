@@ -14,7 +14,8 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { listPolicyAcknowledgmentsForUi } from '@/server/use-cases/hr/policies/list-policy-acknowledgments.cached';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { formatHumanDateTime } from '../../../_components/format-date';
 
@@ -76,10 +77,13 @@ export default function HrPolicyAcknowledgmentsPage({ params }: { params: { poli
 
 async function AcknowledgmentsCard({ policyId }: { policyId: string }) {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect({}, {
+    const { authorization } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { organization: ['update'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.POLICY_MANAGE,
         auditSource: 'ui:hr:policies:acknowledgments:list',
+        action: HR_ACTION.LIST,
+        resourceType: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
+        resourceAttributes: { policyId },
     });
 
     let response:

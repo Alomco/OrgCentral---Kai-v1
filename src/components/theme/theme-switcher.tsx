@@ -76,21 +76,21 @@ export function ThemeSwitcher() {
                     <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0">
                         <TabsTrigger
                             value="mode"
-                            className="flex-1 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                            className="flex-1 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-[oklch(var(--ring)/0.7)] data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
                         >
                             <Moon className="mr-2 h-4 w-4" />
                             Mode
                         </TabsTrigger>
                         <TabsTrigger
                             value="colors"
-                            className="flex-1 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                            className="flex-1 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-[oklch(var(--ring)/0.7)] data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
                         >
                             <Palette className="mr-2 h-4 w-4" />
                             Colors
                         </TabsTrigger>
                         <TabsTrigger
                             value="styles"
-                            className="flex-1 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                            className="flex-1 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-[oklch(var(--ring)/0.7)] data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
                         >
                             <Sparkles className="mr-2 h-4 w-4" />
                             UI Style

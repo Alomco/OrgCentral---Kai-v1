@@ -13,9 +13,13 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import {
+    HR_ACTION,
+    HR_ANY_PERMISSION_PROFILE,
+    HR_PERMISSION_PROFILE,
+    HR_RESOURCE_TYPE,
+} from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect, getOptionalHrAuthorization } from '@/server/ui/auth/hr-session';
 import { listAbsenceTypeConfigsForUi } from '@/server/use-cases/hr/absences/list-absence-type-configs.cached';
 
 import { HrPageHeader } from '../_components/hr-page-header';
@@ -40,15 +44,15 @@ export default async function HrAbsencePage() {
     const headerStore = await nextHeaders();
     const correlationId = headerStore.get('x-correlation-id') ?? undefined;
 
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { employeeProfile: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.ABSENCE_READ,
             auditSource: 'ui:hr:absence',
             correlationId,
             action: HR_ACTION.READ,
-            resourceType: HR_RESOURCE.HR_ABSENCE,
+            resourceType: HR_RESOURCE_TYPE.ABSENCE,
             resourceAttributes: {
                 scope: 'overview',
                 correlationId,
@@ -56,20 +60,18 @@ export default async function HrAbsencePage() {
         },
     );
 
-    const managerAuthorization = await getSessionContext(
+    const managerAuthorization = await getOptionalHrAuthorization(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['read'] },
+            requiredAnyPermissions: HR_ANY_PERMISSION_PROFILE.ABSENCE_MANAGEMENT,
             auditSource: 'ui:hr:absence:manager',
             correlationId,
             action: HR_ACTION.LIST,
-            resourceType: HR_RESOURCE.HR_ABSENCE,
+            resourceType: HR_RESOURCE_TYPE.ABSENCE,
             resourceAttributes: { view: 'team', correlationId },
         },
-    )
-        .then((result) => result.authorization)
-        .catch(() => null);
+    );
 
     const isManager = managerAuthorization !== null;
 

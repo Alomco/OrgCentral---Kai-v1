@@ -11,8 +11,8 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect, getOptionalHrAuthorization } from '@/server/ui/auth/hr-session';
 import { HrPageHeader } from '../_components/hr-page-header';
 import { HrCardSkeleton } from '../_components/hr-card-skeleton';
 import { TimeEntriesPanel } from './_components/time-entries-panel';
@@ -23,25 +23,25 @@ import { buildPendingTimeEntries } from './pending-entries';
 
 export default async function HrTimeTrackingPage() {
     const headerStore = await nextHeaders();
-    const managerAuthorizationPromise = getSessionContext(
+    const managerAuthorizationPromise = getOptionalHrAuthorization(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_LIST,
             auditSource: 'ui:hr:time-tracking:manager',
-            action: 'list',
-            resourceType: 'hr.time-entry',
+            action: HR_ACTION.LIST,
+            resourceType: HR_RESOURCE_TYPE.TIME_ENTRY,
             resourceAttributes: { view: 'team' },
         },
-    )
-        .then((result) => result.authorization)
-        .catch(() => null);
-    const { authorization } = await getSessionContextOrRedirect(
+    );
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { employeeProfile: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_LIST,
             auditSource: 'ui:hr:time-tracking',
+            action: HR_ACTION.LIST,
+            resourceType: HR_RESOURCE_TYPE.TIME_ENTRY,
         },
     );
     const managerAuthorization = await managerAuthorizationPromise;

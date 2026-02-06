@@ -104,7 +104,7 @@ export function GradientOrb({ className, color = 'primary', position = 'top-righ
     const colorClass = {
         primary: 'bg-gradient-to-br from-primary/40 via-primary/20 to-transparent',
         accent: 'bg-gradient-to-br from-accent/40 via-accent/20 to-transparent',
-        multi: 'bg-gradient-to-br from-primary/30 via-accent/25 to-secondary/20',
+        multi: 'bg-gradient-to-br from-primary/28 via-chart-2/20 to-secondary/18',
     }[color];
 
     return (

@@ -34,7 +34,7 @@ export async function handleChecklistMode(params: {
     const items = mapTemplateItemsToProgress(template.items);
     const instance = await deps.checklistInstanceRepository.createInstance({
         orgId: input.authorization.orgId,
-        employeeId: profile.employeeNumber,
+        employeeId: profile.id,
         templateId: template.id,
         templateName: template.name,
         items,

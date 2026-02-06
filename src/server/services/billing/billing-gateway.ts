@@ -7,11 +7,14 @@ import type {
 export interface BillingCheckoutSessionInput {
   orgId: string;
   userId: string;
+  customerId?: string;
   customerEmail?: string | null;
   seatCount: number;
   successUrl: string;
   cancelUrl: string;
   priceId: string;
+  billingStartAt: Date;
+  cadence: 'monthly' | 'annual';
 }
 
 export interface BillingCheckoutSessionResult {
@@ -37,6 +40,16 @@ export interface BillingSetupIntentInput {
 
 export interface BillingSetupIntentResult {
   clientSecret: string;
+}
+
+export interface BillingCustomerCreateInput {
+  orgId: string;
+  userId: string;
+  email?: string | null;
+}
+
+export interface BillingCustomerCreateResult {
+  customerId: string;
 }
 
 export interface PaymentMethodSummary {
@@ -128,8 +141,10 @@ export type BillingWebhookEvent =
 
 export interface BillingGateway {
   createCheckoutSession(input: BillingCheckoutSessionInput): Promise<BillingCheckoutSessionResult>;
+  createCustomer(input: BillingCustomerCreateInput): Promise<BillingCustomerCreateResult>;
   createSetupIntent(input: BillingSetupIntentInput): Promise<BillingSetupIntentResult>;
   listPaymentMethods(customerId: string): Promise<PaymentMethodSummary[]>;
+  getPaymentMethodCustomerId(paymentMethodId: string): Promise<string | null>;
   detachPaymentMethod(paymentMethodId: string): Promise<void>;
   setDefaultPaymentMethod(input: { customerId: string; paymentMethodId: string }): Promise<void>;
   previewUpcomingInvoice(customerId: string): Promise<BillingInvoicePreview | null>;

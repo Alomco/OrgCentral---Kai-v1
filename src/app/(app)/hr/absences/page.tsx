@@ -15,8 +15,8 @@ import {
 import { HrPageHeader } from '../_components/hr-page-header';
 import { HrCardSkeleton } from '../_components/hr-card-skeleton';
 import { AbsenceListPanel } from '../absence/_components/absences-list-panel';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 export const metadata: Metadata = {
     title: 'Absence History',
@@ -27,15 +27,15 @@ export default async function HrAbsencesPage() {
     const headerStore = await nextHeaders();
     const correlationId = headerStore.get('x-correlation-id') ?? undefined;
 
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { employeeProfile: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.ABSENCE_LIST,
             auditSource: 'ui:hr:absences',
             correlationId,
             action: HR_ACTION.LIST,
-            resourceType: HR_RESOURCE.HR_ABSENCE,
+            resourceType: HR_RESOURCE_TYPE.ABSENCE,
             resourceAttributes: { scope: 'history', correlationId },
         },
     );

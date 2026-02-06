@@ -8,15 +8,15 @@ import type { PlatformTenantDetail } from '@/server/types/platform/tenant-admin'
 import type { BreakGlassApproval } from '@/server/types/platform/break-glass';
 
 const authorization: RepositoryAuthorizationContext = {
-    orgId: '00000000-0000-0000-0000-000000000010',
-    userId: '00000000-0000-0000-0000-000000000011',
+    orgId: '22222222-2222-4222-8222-222222222210',
+    userId: '22222222-2222-4222-8222-222222222211',
     roleKey: 'globalAdmin',
     permissions: { platformTenants: ['update'] },
     dataResidency: 'UK_ONLY',
     dataClassification: 'OFFICIAL',
     auditSource: 'test',
     tenantScope: {
-        orgId: '00000000-0000-0000-0000-000000000010',
+        orgId: '22222222-2222-4222-8222-222222222210',
         dataResidency: 'UK_ONLY',
         dataClassification: 'OFFICIAL',
         auditSource: 'test',
@@ -35,7 +35,7 @@ const authorization: RepositoryAuthorizationContext = {
 };
 
 const mockTenant: PlatformTenantDetail = {
-    id: '00000000-0000-0000-0000-000000000020',
+    id: '22222222-2222-4222-8222-222222222220',
     name: 'Acme',
     slug: 'acme',
     status: 'ACTIVE',
@@ -59,13 +59,13 @@ const tenantRepository: IPlatformTenantRepository = {
 };
 
 const mockApproval: BreakGlassApproval = {
-    id: '00000000-0000-0000-0000-000000000030',
+    id: '22222222-2222-4222-8222-222222222230',
     orgId: authorization.orgId,
     dataResidency: 'UK_ONLY',
     dataClassification: 'OFFICIAL',
     auditSource: 'test',
     requestedBy: authorization.userId,
-    approvedBy: '00000000-0000-0000-0000-000000000031',
+    approvedBy: '22222222-2222-4222-8222-222222222231',
     reason: 'required',
     scope: 'tenant-status',
     status: 'APPROVED',

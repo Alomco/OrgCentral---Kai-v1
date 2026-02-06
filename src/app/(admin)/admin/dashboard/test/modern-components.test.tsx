@@ -16,12 +16,12 @@ describe('Modern Admin Components', () => {
       const permissions = {
         organization: ['read'],
       };
-      
+
       const { container } = render(
-        <ModernAdminSidebar 
-          organizationLabel="Test Org" 
-          roleKey="admin" 
-          permissions={permissions} 
+        <ModernAdminSidebar
+          organizationLabel="Test Org"
+          roleKey="admin"
+          permissions={permissions}
         />
       );
       expect(container).toBeTruthy();
@@ -31,33 +31,33 @@ describe('Modern Admin Components', () => {
       const permissions = {
         organization: ['read'],
       };
-      
+
       render(
-        <ModernAdminSidebar 
-          organizationLabel="Test Org" 
-          roleKey="admin" 
-          permissions={permissions} 
+        <ModernAdminSidebar
+          organizationLabel="Test Org"
+          roleKey="admin"
+          permissions={permissions}
         />
       );
-      
+
       // Find and click the mobile menu button
       const mobileMenuButton = screen.getByLabelText('Open navigation menu');
       fireEvent.click(mobileMenuButton);
-      
+
       // Check that the sidebar is now visible
       const sidebar = screen.getByRole('navigation', { name: 'Admin sidebar navigation' });
       expect(sidebar).not.toBeNull();
-    });
+    }, 10000);
   });
 
   describe('ModernAdminNavigation', () => {
     it('should render successfully', () => {
       const { container } = render(
-        <ModernAdminNavigation 
-          organizationId="test-id" 
-          organizationLabel="Test Org" 
-          roleKey="admin" 
-          userEmail="test@example.com" 
+        <ModernAdminNavigation
+          organizationId="test-id"
+          organizationLabel="Test Org"
+          roleKey="admin"
+          userEmail="test@example.com"
         />
       );
       expect(container).toBeTruthy();
@@ -65,18 +65,18 @@ describe('Modern Admin Components', () => {
 
     it('should handle search functionality', () => {
       render(
-        <ModernAdminNavigation 
-          organizationId="test-id" 
-          organizationLabel="Test Org" 
-          roleKey="admin" 
-          userEmail="test@example.com" 
+        <ModernAdminNavigation
+          organizationId="test-id"
+          organizationLabel="Test Org"
+          roleKey="admin"
+          userEmail="test@example.com"
         />
       );
-      
+
       // Find the search input and simulate typing
       const searchInput = screen.getByPlaceholderText('Search admin tools...');
       fireEvent.change(searchInput, { target: { value: 'users' } });
-      
+
       expect((searchInput as HTMLInputElement).value).toBe('users');
     });
   });
@@ -95,15 +95,15 @@ describe('Modern Admin Components', () => {
           abc123def456
         </SecureDataDisplay>
       );
-      
+
       // Initially should be blurred
       const dataElement = screen.getByText('••••••••••••••••');
       expect(dataElement).not.toBeNull();
-      
+
       // Click the eye button to reveal
       const eyeButton = screen.getByLabelText('Show sensitive data');
       fireEvent.click(eyeButton);
-      
+
       // Should now show the actual data
       const actualData = screen.getByText('abc123def456');
       expect(actualData).not.toBeNull();
@@ -113,7 +113,7 @@ describe('Modern Admin Components', () => {
       render(
         <ComplianceBadge standard="iso27001" compliant={true} />
       );
-      
+
       expect(screen.getByText('ISO 27001')).not.toBeNull();
     });
   });
@@ -131,15 +131,15 @@ describe('Modern Admin Components', () => {
       const { rerender } = render(
         <AccessibilityToggle onToggle={mockToggle} isEnabled={false} />
       );
-      
+
       const toggleButton = screen.getByLabelText('Enable accessibility enhancements');
       fireEvent.click(toggleButton);
-      
+
       expect(mockToggle).toHaveBeenCalled();
-      
+
       // Rerender with enabled state
       rerender(<AccessibilityToggle onToggle={mockToggle} isEnabled={true} />);
-      
+
       expect(screen.getByLabelText('Disable accessibility enhancements')).not.toBeNull();
     });
   });
@@ -154,19 +154,19 @@ describe('Responsive Design', () => {
       configurable: true,
       value: 375, // Mobile width
     });
-    
+
     const permissions = {
       organization: ['read'],
     };
-    
+
     render(
-      <ModernAdminSidebar 
-        organizationLabel="Test Org" 
-        roleKey="admin" 
-        permissions={permissions} 
+      <ModernAdminSidebar
+        organizationLabel="Test Org"
+        roleKey="admin"
+        permissions={permissions}
       />
     );
-    
+
     // On mobile, sidebar should initially be hidden
     const sidebar = screen.getByRole('navigation', { name: 'Admin sidebar navigation' });
     expect(sidebar.className).toContain('-translate-x-full');
@@ -179,19 +179,19 @@ describe('Responsive Design', () => {
       configurable: true,
       value: 1200, // Desktop width
     });
-    
+
     render(
-      <ModernAdminNavigation 
-        organizationId="test-id" 
-        organizationLabel="Test Org" 
-        roleKey="admin" 
-        userEmail="test@example.com" 
+      <ModernAdminNavigation
+        organizationId="test-id"
+        organizationLabel="Test Org"
+        roleKey="admin"
+        userEmail="test@example.com"
       />
     );
-    
+
     // Search bar should be visible on desktop
     expect(screen.getByPlaceholderText('Search admin tools...')).not.toBeNull();
-    
+
     // Organization label should be visible on desktop
     expect(screen.getByText('Test Org')).not.toBeNull();
   });

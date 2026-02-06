@@ -118,6 +118,9 @@ export const HR_PERMISSION_PROFILE = {
     ORG_SETTINGS_READ: { [r.ORG_SETTINGS]: [a.READ] } satisfies OrgPermissionMap,
     ORG_SETTINGS_UPDATE: { [r.ORG_SETTINGS]: [a.UPDATE] } satisfies OrgPermissionMap,
 
+    // Reports permissions
+    REPORTS_READ: { [r.REPORTS]: [a.READ] } satisfies OrgPermissionMap,
+
     // Time Tracking permissions
     TIME_ENTRY_READ: { [r.TIME_ENTRY]: [a.READ] } satisfies OrgPermissionMap,
     TIME_ENTRY_LIST: { [r.TIME_ENTRY]: [a.LIST] } satisfies OrgPermissionMap,

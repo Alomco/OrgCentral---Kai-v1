@@ -43,6 +43,21 @@ export const billingPlanAssignSchema = z.object({
     prorationBehavior: z.enum(['create_prorations', 'always_invoice', 'none']).optional(),
 });
 
+export const billingPlanAssignmentRecordSchema = z.object({
+    id: z.uuid(),
+    orgId: z.uuid(),
+    dataResidency: z.enum(['UK_ONLY', 'UK_AND_EEA', 'GLOBAL_RESTRICTED']),
+    dataClassification: z.enum(['OFFICIAL', 'OFFICIAL_SENSITIVE', 'SECRET', 'TOP_SECRET']),
+    auditSource: z.string().min(1),
+    tenantId: z.uuid(),
+    planId: z.uuid(),
+    effectiveFrom: z.string(),
+    effectiveTo: z.string().nullable().optional(),
+    status: z.enum(['PENDING', 'ACTIVE', 'RETIRED']),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+});
+
 export type BillingPlanCreateInput = z.infer<typeof billingPlanCreateSchema>;
 export type BillingPlanUpdateInput = z.infer<typeof billingPlanUpdateSchema>;
 export type BillingPlanAssignInput = z.infer<typeof billingPlanAssignSchema>;

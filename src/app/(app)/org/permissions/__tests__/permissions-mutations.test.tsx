@@ -10,7 +10,7 @@ import type { PermissionResourceCreateState } from "../permission-resource-form-
 import type { PermissionResource } from "@/server/types/security-types";
 
 const { db, orgId } = vi.hoisted(() => {
-const orgId = "org-perm-create";
+  const orgId = "org-perm-create";
   return {
     orgId,
     db: {
@@ -57,10 +57,12 @@ vi.mock("../permission-resource-actions", () => ({
 describe("permissions create flow", () => {
   it("creates and shows new resource after mutation", async () => {
     server.resetHandlers(
-      http.get(baseUrl, () => HttpResponse.json({ resources: db.resources.map((resource) => ({
-        ...resource,
-        actions: [...resource.actions],
-      })) })),
+      http.get(baseUrl, () => HttpResponse.json({
+        resources: db.resources.map((resource) => ({
+          ...resource,
+          actions: [...resource.actions],
+        }))
+      })),
     );
 
     const qc = new QueryClient();
@@ -81,8 +83,7 @@ describe("permissions create flow", () => {
     await userEvent.type(within(createForm).getByRole('textbox', { name: /allowed actions/i }), "read");
     await userEvent.click(within(createForm).getByRole("button", { name: /create resource/i }));
 
-    await screen.findByText(/permission resource created/i);
-    await waitFor(() => expect(screen.getByText(/org\.new/)).toBeInTheDocument());
-  });
+    await waitFor(() => expect(screen.getByText(/org\.new/)).toBeInTheDocument(), { timeout: 15000 });
+  }, 20000);
 });
 

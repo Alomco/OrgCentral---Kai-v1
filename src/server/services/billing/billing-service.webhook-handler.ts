@@ -77,6 +77,7 @@ export async function handleBillingWebhookEvent(
       await deps.billingInvoiceRepository.upsertInvoice(authorization, {
         orgId,
         stripeInvoiceId: event.invoice.stripeInvoiceId,
+        stripeEventCreatedAt: event.stripeEventCreatedAt,
         status: event.invoice.status,
         amountDue: event.invoice.amountDue,
         amountPaid: event.invoice.amountPaid,
@@ -108,7 +109,7 @@ export async function handleBillingWebhookEvent(
     case 'payment_method.detached': {
       const subscription = await resolveSubscriptionByCustomerId(deps, event.stripeCustomerId);
       if (!subscription) {
-        appLogger.warn(MISSING_ORG_ID_MESSAGE, {
+        appLogger.info('billing.webhook.customer-unbound', {
           eventType: event.type,
           customerId: event.stripeCustomerId,
         });
@@ -136,7 +137,7 @@ export async function handleBillingWebhookEvent(
     case 'setup_intent.succeeded': {
       const subscription = await resolveSubscriptionByCustomerId(deps, event.stripeCustomerId);
       if (!subscription) {
-        appLogger.warn(MISSING_ORG_ID_MESSAGE, {
+        appLogger.info('billing.webhook.customer-unbound', {
           eventType: event.type,
           customerId: event.stripeCustomerId,
         });

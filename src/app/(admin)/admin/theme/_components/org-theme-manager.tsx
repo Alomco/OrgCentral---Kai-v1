@@ -118,7 +118,7 @@ export function OrgThemeManager({ orgId, currentPresetId, currentUiStyleId }: Or
                                 <Input
                                     id="primaryColor"
                                     name="primaryColor"
-                                    placeholder="0.58 0.23 286"
+                                    placeholder="0.4244 0.1809 265.64"
                                     className="font-mono"
                                 />
                             </div>
@@ -127,7 +127,7 @@ export function OrgThemeManager({ orgId, currentPresetId, currentUiStyleId }: Or
                                 <Input
                                     id="accentColor"
                                     name="accentColor"
-                                    placeholder="0.62 0.24 330"
+                                    placeholder="0.7686 0.1647 70.08"
                                     className="font-mono"
                                 />
                             </div>

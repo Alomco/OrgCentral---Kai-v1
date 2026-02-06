@@ -4,8 +4,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
+import {
+    HR_ACTION,
+    HR_ANY_PERMISSION_PROFILE,
+    HR_PERMISSION_PROFILE,
+    HR_RESOURCE_TYPE,
+} from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { PrismaComplianceItemRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-item-repository';
 import { PrismaComplianceTemplateRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-template-repository';
 import { PrismaComplianceCategoryRepository } from '@/server/repositories/prisma/hr/compliance/prisma-compliance-category-repository';
@@ -39,14 +44,14 @@ export default async function ComplianceItemDetailPage({
     const { userId: requestedUserId } = (await searchParams) ?? {};
     const headerStore = await nextHeaders();
 
-    const baseAccess = await getSessionContextOrRedirect(
+    const baseAccess = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { employeeProfile: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.COMPLIANCE_READ,
             auditSource: 'ui:hr:compliance:detail',
-            action: 'read',
-            resourceType: 'hr.compliance',
+            action: HR_ACTION.READ,
+            resourceType: HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
             resourceAttributes: { itemId },
         },
     );
@@ -59,14 +64,14 @@ export default async function ComplianceItemDetailPage({
     }
 
     if (targetUserId !== baseAccess.authorization.userId) {
-        const elevated = await getSessionContext(
+        const elevated = await getHrSessionContextOrRedirect(
             {},
             {
                 headers: headerStore,
-                requiredPermissions: { organization: ['read'] },
+                requiredAnyPermissions: HR_ANY_PERMISSION_PROFILE.COMPLIANCE_MANAGEMENT,
                 auditSource: 'ui:hr:compliance:detail.elevated',
-                action: 'read',
-                resourceType: 'hr.compliance',
+                action: HR_ACTION.READ,
+                resourceType: HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
                 resourceAttributes: { itemId, targetUserId },
             },
         );

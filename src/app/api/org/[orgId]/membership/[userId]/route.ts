@@ -3,12 +3,13 @@ import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
 import { updateMembershipController } from '@/server/api-adapters/org/membership/membership-route-controllers';
 
 interface RouteParams {
-  params: { orgId: string; userId: string };
+  params: Promise<{ orgId: string; userId: string }>;
 }
 
-export async function PUT(request: Request, context: RouteParams): Promise<NextResponse> {
+export async function PUT(request: Request, { params }: RouteParams): Promise<NextResponse> {
   try {
-    const result = await updateMembershipController(request, context.params.orgId, context.params.userId);
+    const { orgId, userId } = await params;
+    const result = await updateMembershipController(request, orgId, userId);
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     return buildErrorResponse(error);

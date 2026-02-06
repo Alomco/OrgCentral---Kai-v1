@@ -22,6 +22,7 @@ export const billingSettingsSchema = z.object({
     billingEmail: z.string(),
     billingCadence: z.enum(['monthly', 'annual']),
     autoRenew: z.boolean(),
+    billingCustomerId: z.string().trim().min(1).optional(),
     invoicePrefix: z.string().trim().max(24).optional(),
     vatNumber: z.string().trim().max(32).optional(),
     billingAddress: z
@@ -75,6 +76,7 @@ export const defaultOrgSettings: OrgSettings = {
         billingEmail: '',
         billingCadence: 'monthly',
         autoRenew: true,
+        billingCustomerId: undefined,
         invoicePrefix: undefined,
         vatNumber: undefined,
         billingAddress: undefined,

@@ -13,8 +13,8 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { OffboardingQueuePanel } from './_components/offboarding-queue-panel';
@@ -30,12 +30,12 @@ interface OffboardingPageProps {
 
 export default async function OffboardingPage({ searchParams }: OffboardingPageProps) {
     const headerStore = await nextHeaders();
-    const session = await getSessionContextOrRedirect({}, {
+    const session = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { [HR_RESOURCE.HR_OFFBOARDING]: ['list'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.OFFBOARDING_LIST,
         auditSource: 'ui:hr:offboarding:queue',
         action: HR_ACTION.LIST,
-        resourceType: HR_RESOURCE.HR_OFFBOARDING,
+        resourceType: HR_RESOURCE_TYPE.OFFBOARDING,
     });
 
     const resolvedSearchParams = (await searchParams) ?? {};

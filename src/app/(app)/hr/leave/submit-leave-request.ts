@@ -42,6 +42,7 @@ export async function handleSubmitLeaveRequest(previous: LeaveRequestFormState, 
 
     return persistRequest({
         session: submissionContext.context.session,
+        employeeNumber: submissionContext.context.employeeNumber,
         policy: submissionContext.context.policy,
         parsedData: submissionContext.context.parsedData,
         dates: submissionContext.context.dates,

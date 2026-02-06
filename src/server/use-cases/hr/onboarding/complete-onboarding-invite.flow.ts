@@ -58,7 +58,7 @@ export async function handleExistingProfile(params: {
       dependencies: createProfileDependencies(deps),
       authorization,
       onboardingChecklist,
-      employeeIdentifier: employeeNumber,
+      employeeId: employeeNumber,
     });
   }
 

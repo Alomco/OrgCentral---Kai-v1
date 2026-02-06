@@ -45,7 +45,7 @@ export function BillingSettingsForm({
     });
 
     return (
-        <form action={formAction} className="space-y-4 rounded-2xl bg-card/10 p-6 backdrop-blur">
+        <form action={formAction} className="space-y-4 rounded-2xl border border-border bg-card/60 p-6 shadow-sm">
             <div>
                 <p className="text-sm font-semibold text-foreground">Billing preferences</p>
                 <p className="text-xs text-muted-foreground">
@@ -60,7 +60,7 @@ export function BillingSettingsForm({
                         name="billing-email"
                         defaultValue={state.billingEmail}
                         placeholder="billing@company.com"
-                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     />
                 </label>
                 <label className="flex flex-col gap-2 rounded-xl border border-border px-4 py-3">
@@ -68,7 +68,7 @@ export function BillingSettingsForm({
                     <select
                         name="billing-cadence"
                         defaultValue={state.billingCadence}
-                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                         <option value="monthly">Monthly</option>
                         <option value="annual">Annual</option>
@@ -81,7 +81,7 @@ export function BillingSettingsForm({
                         name="billing-auto-renew"
                         key={state.autoRenew ? 'enabled' : 'disabled'}
                         defaultChecked={state.autoRenew}
-                        className="h-4 w-4 rounded border-border text-primary"
+                        className="h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     />
                 </label>
             </div>
@@ -93,7 +93,7 @@ export function BillingSettingsForm({
                         name="billing-invoice-prefix"
                         defaultValue={state.invoicePrefix ?? ''}
                         placeholder="ACME-"
-                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     />
                 </label>
                 <label className="flex flex-col gap-2 rounded-xl border border-border px-4 py-3">
@@ -103,11 +103,11 @@ export function BillingSettingsForm({
                         name="billing-vat-number"
                         defaultValue={state.vatNumber ?? ''}
                         placeholder="GB123456789"
-                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     />
                 </label>
             </div>
-            <div className="rounded-2xl border border-border bg-background p-4">
+            <div className="rounded-2xl border border-border bg-background/80 p-4">
                 <p className="text-sm font-semibold text-foreground">Billing address</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <label className="flex flex-col gap-2">
@@ -116,7 +116,7 @@ export function BillingSettingsForm({
                             type="text"
                             name="billing-address-line1"
                             defaultValue={state.billingAddress?.line1 ?? ''}
-                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         />
                     </label>
                     <label className="flex flex-col gap-2">
@@ -125,7 +125,7 @@ export function BillingSettingsForm({
                             type="text"
                             name="billing-address-line2"
                             defaultValue={state.billingAddress?.line2 ?? ''}
-                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         />
                     </label>
                     <label className="flex flex-col gap-2">
@@ -134,7 +134,7 @@ export function BillingSettingsForm({
                             type="text"
                             name="billing-address-city"
                             defaultValue={state.billingAddress?.city ?? ''}
-                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         />
                     </label>
                     <label className="flex flex-col gap-2">
@@ -143,7 +143,7 @@ export function BillingSettingsForm({
                             type="text"
                             name="billing-address-postcode"
                             defaultValue={state.billingAddress?.postcode ?? ''}
-                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         />
                     </label>
                     <label className="flex flex-col gap-2 sm:col-span-2">
@@ -152,7 +152,7 @@ export function BillingSettingsForm({
                             type="text"
                             name="billing-address-country"
                             defaultValue={state.billingAddress?.country ?? 'GB'}
-                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         />
                     </label>
                 </div>

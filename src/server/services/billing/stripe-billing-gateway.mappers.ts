@@ -9,6 +9,10 @@ import type {
 } from '@/server/services/billing/billing-gateway';
 import type { BillingConfig } from '@/server/services/billing/billing-config';
 import type { BillingInvoiceStatus, BillingSubscriptionStatus, PaymentMethodType } from '@/server/types/billing-types';
+import {
+  resolveBillableSeatCountFromInvoiceLines,
+  resolveBillableSeatCountFromSubscriptionItem,
+} from '@/server/services/billing/billing-seat-metrics';
 
 const STATUS_MAP: Record<Stripe.Subscription.Status, BillingSubscriptionStatus> = {
   incomplete: 'INCOMPLETE',
@@ -99,11 +103,10 @@ export function toPaymentMethodSummary(
 
 export function toSubscriptionSnapshot(
   subscription: Stripe.Subscription,
-  priceIds: Set<string>,
 ): BillingSubscriptionSnapshot {
-  const item = subscription.items.data.find((entry) => priceIds.has(entry.price.id));
+  const item = resolveSubscriptionItem(subscription);
   if (!item) {
-    throw new Error('Stripe subscription is missing the expected price item.');
+    throw new Error('Stripe subscription is missing a recurring price item.');
   }
 
   const customerId =
@@ -120,7 +123,7 @@ export function toSubscriptionSnapshot(
     stripeSubscriptionItemId: item.id,
     stripePriceId: item.price.id,
     status: STATUS_MAP[subscription.status],
-    seatCount: item.quantity ?? 1,
+    seatCount: resolveBillableSeatCountFromSubscriptionItem(item),
     currentPeriodEnd: new Date(subscription.current_period_end * 1000),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
     metadata,
@@ -129,7 +132,6 @@ export function toSubscriptionSnapshot(
 
 export function toInvoiceSnapshot(
   invoice: Stripe.Invoice,
-  priceIds: Set<string>,
 ): BillingInvoiceSnapshot {
   const status = invoice.status ? INVOICE_STATUS_MAP[invoice.status] : 'DRAFT';
   const customerId =
@@ -152,7 +154,7 @@ export function toInvoiceSnapshot(
     currency: invoice.currency,
     periodStart: new Date(invoice.period_start * 1000),
     periodEnd: new Date(invoice.period_end * 1000),
-    userCount: resolveInvoiceSeatCount(invoice, priceIds),
+    userCount: resolveInvoiceSeatCount(invoice),
     invoiceUrl: invoice.hosted_invoice_url ?? null,
     invoicePdf: invoice.invoice_pdf ?? null,
     paidAt: invoice.status_transitions.paid_at
@@ -164,7 +166,6 @@ export function toInvoiceSnapshot(
 
 export function toInvoicePreview(
   invoice: Stripe.Invoice | Stripe.UpcomingInvoice,
-  priceIds: Set<string>,
 ): BillingInvoicePreview {
   const customerId =
     typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? '';
@@ -175,7 +176,7 @@ export function toInvoicePreview(
     currency: invoice.currency,
     periodStart: new Date(invoice.period_start * 1000),
     periodEnd: new Date(invoice.period_end * 1000),
-    userCount: resolveInvoiceSeatCount(invoice, priceIds),
+    userCount: resolveInvoiceSeatCount(invoice),
   };
 }
 
@@ -186,12 +187,15 @@ function getMetadataValue(metadata: Stripe.Metadata | null, key: string): string
   return Object.prototype.hasOwnProperty.call(metadata, key) ? metadata[key] : null;
 }
 
-function resolveInvoiceSeatCount(invoice: Stripe.Invoice | Stripe.UpcomingInvoice, priceIds: Set<string>): number {
-  const line = invoice.lines.data.find((entry) => entry.price && priceIds.has(entry.price.id));
-  if (!line) {
-    return 1;
-  }
-  return line.quantity ?? 1;
+function resolveInvoiceSeatCount(invoice: Stripe.Invoice | Stripe.UpcomingInvoice): number {
+  const lines = invoice.lines.data
+    .filter((line) => line.type === 'subscription')
+    .map((line) => ({
+      quantity: line.quantity ?? null,
+      priceId: line.price?.id ?? null,
+    }));
+
+  return resolveBillableSeatCountFromInvoiceLines(lines);
 }
 
 function resolveInvoiceOrgId(invoice: Stripe.Invoice): string | null {
@@ -211,4 +215,14 @@ function mapPaymentMethodType(type: Stripe.PaymentMethod.Type): PaymentMethodTyp
     return 'SEPA_DEBIT';
   }
   return 'CARD';
+}
+
+function resolveSubscriptionItem(subscription: Stripe.Subscription): Stripe.SubscriptionItem | null {
+  const recurringItems = subscription.items.data.filter((item) => Boolean(item.price.recurring));
+  if (recurringItems.length === 0) {
+    return null;
+  }
+
+  const licensedItem = recurringItems.find((item) => item.price.recurring?.usage_type === 'licensed');
+  return licensedItem ?? recurringItems[0];
 }

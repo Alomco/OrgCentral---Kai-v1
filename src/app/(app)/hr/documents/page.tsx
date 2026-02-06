@@ -12,7 +12,8 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { HrPageHeader } from '../_components/hr-page-header';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { listDocumentsForUi } from '@/server/use-cases/records/documents/list-documents.cached';
 import { DocumentVaultPanel } from './_components/document-vault-panel';
 
@@ -23,12 +24,15 @@ export const metadata: Metadata = {
 
 export default async function DocumentVaultPage() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['update'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.ORG_SETTINGS_UPDATE,
             auditSource: 'ui:hr:documents',
+            action: HR_ACTION.READ,
+            resourceType: HR_RESOURCE_TYPE.ORG_SETTINGS,
+            resourceAttributes: { scope: 'documents' },
         },
     );
 

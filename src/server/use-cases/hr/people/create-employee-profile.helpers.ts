@@ -80,7 +80,7 @@ export async function instantiateOnboardingChecklist(params: {
   dependencies: CreateEmployeeProfileDependencies;
   authorization: RepositoryAuthorizationContext;
   onboardingChecklist: OnboardingChecklistConfig;
-  employeeIdentifier: string;
+  employeeId: string;
 }): Promise<string | undefined> {
   const templateId = normalizeTemplateId(params.onboardingChecklist.templateId);
   if (!templateId) {
@@ -94,7 +94,7 @@ export async function instantiateOnboardingChecklist(params: {
 
   const existing = await checklistInstanceRepository.getActiveInstanceForEmployee(
     params.authorization.orgId,
-    params.employeeIdentifier,
+    params.employeeId,
   );
   if (existing) {
     return existing.id;
@@ -110,7 +110,7 @@ export async function instantiateOnboardingChecklist(params: {
 
   const instance = await checklistInstanceRepository.createInstance({
     orgId: params.authorization.orgId,
-    employeeId: params.employeeIdentifier,
+    employeeId: params.employeeId,
     templateId: template.id,
     templateName: template.name,
     items,

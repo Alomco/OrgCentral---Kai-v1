@@ -12,8 +12,8 @@ import type { IPlatformTenantRepository } from '@/server/repositories/contracts/
 import type { PlatformTenantDetail } from '@/server/types/platform/tenant-admin';
 
 const authorization: RepositoryAuthorizationContext = {
-    orgId: '00000000-0000-0000-0000-000000000040',
-    userId: '00000000-0000-0000-0000-000000000041',
+    orgId: '11111111-1111-4111-8111-111111111140',
+    userId: '11111111-1111-4111-8111-111111111141',
     roleKey: 'globalAdmin',
     permissions: { platformBillingPlans: ['assign'] },
     dataResidency: 'UK_ONLY',
@@ -39,7 +39,7 @@ const authorization: RepositoryAuthorizationContext = {
 };
 
 const draftPlan: BillingPlan = {
-    id: '00000000-0000-0000-0000-000000000042',
+    id: '11111111-1111-4111-8111-111111111142',
     orgId: authorization.orgId,
     dataResidency: authorization.dataResidency,
     dataClassification: authorization.dataClassification,
@@ -60,12 +60,12 @@ const draftPlan: BillingPlan = {
 };
 
 const mockAssignment: BillingPlanAssignment = {
-    id: '00000000-0000-0000-0000-000000000050',
+    id: '11111111-1111-4111-8111-111111111150',
     orgId: authorization.orgId,
     dataResidency: authorization.dataResidency,
     dataClassification: authorization.dataClassification,
     auditSource: authorization.auditSource,
-    tenantId: 'tenant',
+    tenantId: '11111111-1111-4111-8111-111111111151',
     planId: draftPlan.id,
     effectiveFrom: new Date().toISOString(),
     effectiveTo: null,
@@ -75,7 +75,7 @@ const mockAssignment: BillingPlanAssignment = {
 };
 
 const mockTenant: PlatformTenantDetail = {
-    id: 'tenant',
+    id: '11111111-1111-4111-8111-111111111151',
     name: 'Tenant',
     slug: 'tenant',
     status: 'ACTIVE',
@@ -101,8 +101,8 @@ const billingPlanRepository: IBillingPlanRepository = {
 };
 
 const mockSubscription: OrganizationSubscriptionData = {
-    id: '00000000-0000-0000-0000-000000000051',
-    orgId: 'tenant',
+    id: '11111111-1111-4111-8111-111111111152',
+    orgId: '11111111-1111-4111-8111-111111111151',
     stripeCustomerId: 'cus',
     stripeSubscriptionId: 'sub',
     stripeSubscriptionItemId: 'item',
@@ -134,8 +134,10 @@ const tenantRepository: IPlatformTenantRepository = {
 
 const billingGateway: BillingGateway = {
     createCheckoutSession: vi.fn(),
+    createCustomer: vi.fn(),
     createSetupIntent: vi.fn(),
     listPaymentMethods: vi.fn(),
+    getPaymentMethodCustomerId: vi.fn(),
     detachPaymentMethod: vi.fn(),
     setDefaultPaymentMethod: vi.fn(),
     previewUpcomingInvoice: vi.fn(),
@@ -152,7 +154,7 @@ describe('assignBillingPlanToTenant', () => {
                 { billingPlanRepository, subscriptionRepository, billingGateway, tenantRepository },
                 {
                     authorization,
-                    request: { tenantId: 'tenant', planId: draftPlan.id },
+                    request: { tenantId: '11111111-1111-4111-8111-111111111151', planId: draftPlan.id },
                 },
             ),
         ).rejects.toThrow('Only active billing plans can be assigned');

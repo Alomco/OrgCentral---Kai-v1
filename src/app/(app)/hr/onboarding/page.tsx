@@ -14,7 +14,8 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { hasPermission } from '@/lib/security/permission-check';
 
 import { HrPageHeader } from '../_components/hr-page-header';
@@ -39,10 +40,18 @@ function PanelSkeleton() {
 
 export default async function HrOnboardingPage() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect({}, {
+    const { authorization } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { organization: ['read'] },
+        requiredAnyPermissions: [
+            HR_PERMISSION_PROFILE.ONBOARDING_READ,
+            HR_PERMISSION_PROFILE.ONBOARDING_SEND,
+            { member: ['invite'] },
+            { organization: ['update'] },
+        ],
         auditSource: 'ui:hr:onboarding',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_TASK,
+        resourceAttributes: { view: 'page' },
     });
 
     const canInviteMembers =

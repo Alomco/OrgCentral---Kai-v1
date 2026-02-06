@@ -22,6 +22,19 @@ const tangerineAccent: ColorTokenValue = '0.7121 0.1760 49.98';
 const rubyPrimary: ColorTokenValue = '0.5907 0.2277 21.33';
 const corporatePrimary: ColorTokenValue = '0.4899 0.1991 262.15';
 const corporateAccent: ColorTokenValue = '0.5679 0.1167 237.25';
+const horizonPrimaryLight: ColorTokenValue = '0.4244 0.1809 265.64';
+const horizonPrimaryDark: ColorTokenValue = '0.5461 0.2152 262.88';
+const horizonAccentAmber: ColorTokenValue = '0.7686 0.1647 70.08';
+const horizonAccentForeground: ColorTokenValue = '0.2077 0.0398 265.75';
+const horizonSignalBlue: ColorTokenValue = '0.6231 0.1880 259.81';
+const horizonSignalTeal: ColorTokenValue = '0.7971 0.1339 211.53';
+const horizonSignalGreen: ColorTokenValue = '0.7227 0.1920 149.58';
+const horizonSignalViolet: ColorTokenValue = '0.6056 0.2189 292.72';
+const horizonForegroundLight: ColorTokenValue = '0.3791 0.1378 265.52';
+const horizonForegroundDark: ColorTokenValue = '0.9288 0.0126 255.51';
+const horizonSidebarAccentLight: ColorTokenValue = '0.9619 0.0179 272.31';
+const horizonSidebarAccentDark: ColorTokenValue = '0.2795 0.0368 260.03';
+const horizonSurfaceDark: ColorTokenValue = '0.2101 0.0318 264.66';
 
 export const themePresetsGroupB = {
     'inferno-red': makePreset({
@@ -110,6 +123,66 @@ export const themePresetsGroupB = {
             DARK_BORDER,
             '0.2088 0.0176 256.83',
             '0.9210 0.0088 247.92',
+        ),
+    }),
+    'horizon-blue': makePreset({
+        id: 'horizon-blue',
+        name: 'Horizon Blue',
+        description: 'Future-ready blue with amber signals',
+        emoji: 'HB',
+        accents: accents(
+            horizonPrimaryLight,
+            WHITE,
+            horizonAccentAmber,
+            horizonAccentForeground,
+            horizonSignalBlue,
+            horizonSignalBlue,
+            horizonSignalTeal,
+            horizonSignalGreen,
+            horizonAccentAmber,
+            horizonSignalViolet,
+            horizonPrimaryLight,
+            WHITE,
+            horizonSidebarAccentLight,
+            horizonForegroundLight,
+            horizonSignalBlue,
+        ),
+        darkAccents: accents(
+            horizonPrimaryDark,
+            WHITE,
+            horizonAccentAmber,
+            horizonAccentForeground,
+            horizonPrimaryDark,
+            horizonSignalBlue,
+            horizonSignalTeal,
+            horizonSignalGreen,
+            horizonAccentAmber,
+            horizonSignalViolet,
+            horizonPrimaryDark,
+            WHITE,
+            horizonSidebarAccentDark,
+            horizonForegroundDark,
+            horizonPrimaryDark,
+        ),
+        light: surface(
+            '0.9842 0.0034 247.86',
+            horizonForegroundLight,
+            '0.9965 0.0017 247.84',
+            '0.9683 0.0069 247.90',
+            '0.4455 0.0374 257.28',
+            horizonForegroundDark,
+            '0.9683 0.0069 247.90',
+            horizonForegroundLight,
+        ),
+        dark: surface(
+            '0.1802 0.0325 266.62',
+            horizonForegroundDark,
+            horizonSurfaceDark,
+            horizonSidebarAccentDark,
+            '0.7107 0.0351 256.79',
+            '0.3717 0.0392 257.29',
+            horizonSurfaceDark,
+            horizonForegroundDark,
         ),
     }),
 } as const satisfies Record<string, ThemePreset>;

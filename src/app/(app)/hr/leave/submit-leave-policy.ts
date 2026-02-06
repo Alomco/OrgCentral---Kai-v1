@@ -34,6 +34,18 @@ export async function buildSubmissionContext(
         payload: { userId },
     }).catch(() => null);
     const departmentId = profileResult?.profile?.departmentId ?? null;
+    const employeeNumber = profileResult?.profile?.employeeNumber;
+    if (!employeeNumber) {
+        return {
+            kind: 'error',
+            state: {
+                status: 'error',
+                message: 'Employee number is required to submit leave requests.',
+                fieldErrors: undefined,
+                values: parsedData,
+            },
+        };
+    }
 
     const leaveService = getLeaveService();
     const existingRequestsResult = await leaveService.listLeaveRequests({
@@ -87,6 +99,7 @@ export async function buildSubmissionContext(
         kind: 'ok',
         context: {
             session,
+            employeeNumber,
             parsedData,
             dates,
             policy,

@@ -17,10 +17,10 @@ export interface DevelopmentThemeWidgetProps {
 const STYLE_ELEMENT_ID = 'orgcentral-dev-theme-overrides';
 
 const DEMO_OVERRIDES: Record<string, string> = {
-    primary: '257 74% 64%',
-    'primary-foreground': '260 100% 98%',
-    'sidebar-background': '258 54% 18%',
-    'sidebar-foreground': '260 40% 96%',
+    primary: '0.5461 0.2152 262.88',
+    'primary-foreground': '1.0000 0.0000 0.00',
+    'sidebar-background': '0.2101 0.0318 264.66',
+    'sidebar-foreground': '0.9288 0.0126 255.51',
 };
 
 function buildCss(overrides: Record<string, string> | null): string {

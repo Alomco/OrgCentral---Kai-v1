@@ -72,12 +72,12 @@ export class ResendNotificationAdapter implements NotificationDeliveryAdapter {
   private buildHtml(payload: NotificationDeliveryPayload): string {
     const safeBody = payload.body.replace(/\n/g, '<br/>');
     const cta = payload.actionUrl
-      ? `<p style="margin-top:16px;"><a href="${payload.actionUrl}" style="padding:10px 14px;background:#111827;color:#ffffff;border-radius:8px;text-decoration:none;">Open</a></p>`
+      ? `<p style="margin-top:16px;"><a href="${payload.actionUrl}" style="padding:10px 14px;background:#1E40AF;color:#ffffff;border-radius:8px;text-decoration:none;">Open</a></p>`
       : '';
-    return `<div style="font-family:Inter,Arial,sans-serif;font-size:14px;color:#111827;">
+    return `<div style="font-family:Inter,Arial,sans-serif;font-size:14px;color:#1E3A8A;">
       <p>${safeBody}</p>
       ${cta}
-      <p style="color:#6b7280;font-size:12px;margin-top:24px;">Notification sent for org ${payload.orgId}</p>
+      <p style="color:#475569;font-size:12px;margin-top:24px;">Notification sent for org ${payload.orgId}</p>
     </div>`;
   }
 }

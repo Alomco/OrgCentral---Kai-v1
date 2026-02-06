@@ -1,6 +1,8 @@
 import Stripe from 'stripe';
 
 import type {
+  BillingCustomerCreateInput,
+  BillingCustomerCreateResult,
   BillingCheckoutSessionInput,
   BillingCheckoutSessionResult,
   BillingGateway,
@@ -16,7 +18,7 @@ import type {
   PaymentMethodSummary,
 } from '@/server/services/billing/billing-gateway';
 import type { BillingConfig } from '@/server/services/billing/billing-config';
-import { resolveBillingPriceIds } from '@/server/services/billing/billing-preferences';
+import { toStripeTrialEndTimestamp } from '@/server/services/billing/billing-cycle-policy';
 import {
   buildSupportedPaymentMethodTypes,
   toInvoicePreview,
@@ -29,7 +31,6 @@ const DEFAULT_STRIPE_API_VERSION: Stripe.LatestApiVersion = '2024-04-10';
 export class StripeBillingGateway implements BillingGateway {
   private readonly stripe: Stripe;
   private readonly webhookSecret: string;
-  private readonly priceIds: Set<string>;
   private readonly supportedPaymentMethodTypes: BillingPaymentMethodType[];
 
   constructor(config: BillingConfig) {
@@ -37,7 +38,6 @@ export class StripeBillingGateway implements BillingGateway {
       apiVersion: (config.stripeApiVersion ?? DEFAULT_STRIPE_API_VERSION) as Stripe.LatestApiVersion,
     });
     this.webhookSecret = config.stripeWebhookSecret;
-    this.priceIds = new Set(resolveBillingPriceIds(config));
     this.supportedPaymentMethodTypes = buildSupportedPaymentMethodTypes(config);
   }
 
@@ -48,16 +48,23 @@ export class StripeBillingGateway implements BillingGateway {
       mode: 'subscription',
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
-      customer_email: input.customerEmail ?? undefined,
+      customer: input.customerId,
+      customer_email: input.customerId ? undefined : input.customerEmail ?? undefined,
       client_reference_id: input.orgId,
       metadata: {
         orgId: input.orgId,
         userId: input.userId,
+        billingCadence: input.cadence,
+        billingStartAt: input.billingStartAt.toISOString(),
       },
       subscription_data: {
+        trial_end: toStripeTrialEndTimestamp(input.billingStartAt),
+        proration_behavior: 'none',
         metadata: {
           orgId: input.orgId,
           userId: input.userId,
+          billingCadence: input.cadence,
+          billingStartAt: input.billingStartAt.toISOString(),
         },
       },
       line_items: [
@@ -73,6 +80,17 @@ export class StripeBillingGateway implements BillingGateway {
     }
 
     return { id: session.id, url: session.url };
+  }
+
+  async createCustomer(input: BillingCustomerCreateInput): Promise<BillingCustomerCreateResult> {
+    const customer = await this.stripe.customers.create({
+      email: input.email ?? undefined,
+      metadata: {
+        orgId: input.orgId,
+        userId: input.userId,
+      },
+    });
+    return { customerId: customer.id };
   }
 
   async createPortalSession(
@@ -123,6 +141,14 @@ export class StripeBillingGateway implements BillingGateway {
     return methods.map((method) => toPaymentMethodSummary(method, defaultPaymentMethodId));
   }
 
+  async getPaymentMethodCustomerId(paymentMethodId: string): Promise<string | null> {
+    const method = await this.stripe.paymentMethods.retrieve(paymentMethodId);
+    if (!method.customer) {
+      return null;
+    }
+    return typeof method.customer === 'string' ? method.customer : method.customer.id;
+  }
+
   async detachPaymentMethod(paymentMethodId: string): Promise<void> {
     await this.stripe.paymentMethods.detach(paymentMethodId);
   }
@@ -139,7 +165,7 @@ export class StripeBillingGateway implements BillingGateway {
   async previewUpcomingInvoice(customerId: string): Promise<BillingInvoicePreview | null> {
     try {
       const invoice = await this.stripe.invoices.retrieveUpcoming({ customer: customerId });
-      return toInvoicePreview(invoice, this.priceIds);
+      return toInvoicePreview(invoice);
     } catch (error) {
       if (error instanceof Stripe.errors.StripeError && error.code === 'invoice_upcoming_none') {
         return null;
@@ -192,7 +218,6 @@ export class StripeBillingGateway implements BillingGateway {
     return parseStripeWebhookEvent({
       stripe: this.stripe,
       webhookSecret: this.webhookSecret,
-      priceIds: this.priceIds,
       signature: input.signature,
       payload: input.payload,
     });

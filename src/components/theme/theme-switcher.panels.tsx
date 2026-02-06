@@ -33,7 +33,7 @@ export function ModePanel({ modeOptions, currentMode, onSelect, setOpen }: ModeP
                         onKeyDown={(event) => handleRadioKeyDown(event, modeOptions, currentMode, onSelect)}
                         className={cn(
                             'flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition-all',
-                            'border-primary bg-primary/5 text-primary',
+                            'border-[oklch(var(--ring)/0.55)] bg-[oklch(var(--sidebar-accent)/0.82)] text-foreground shadow-[0_0_0_1px_oklch(var(--ring)/0.2)]',
                             FOCUS_RING_CLASSES,
                         )}
                     >
@@ -101,17 +101,17 @@ export function ColorPanel<TThemeId extends string = string>({
                                 setOpen(false);
                             }}
                             onKeyDown={(event) => handleRadioKeyDown(event, navItems, activeThemeId, onSelect)}
-                            className={cn(
-                                'group relative w-full rounded-lg border p-3 text-left transition-all duration-200',
-                                'hover:scale-[1.02]',
-                                'border-primary bg-primary/5',
-                                FOCUS_RING_CLASSES,
-                            )}
+                        className={cn(
+                            'group relative w-full rounded-lg border p-3 text-left transition-all duration-200',
+                            'hover:scale-[1.02]',
+                            'border-[oklch(var(--ring)/0.55)] bg-[oklch(var(--sidebar-accent)/0.82)] shadow-[0_0_0_1px_oklch(var(--ring)/0.2)]',
+                            FOCUS_RING_CLASSES,
+                        )}
                         >
                             <div className="orgcentral-theme-swatch mb-2 h-10 w-full rounded-md" data-theme-id={theme.id} />
                             <div className="flex items-center justify-between">
                                 <span className="truncate text-xs font-medium">{theme.name}</span>
-                                <Check className="h-3 w-3 shrink-0 text-primary" />
+                                <Check className="h-3 w-3 shrink-0 text-foreground" />
                             </div>
                         </button>
                     ) : (
@@ -168,7 +168,7 @@ export function StylePanel({ styles, currentStyle, onSelect, setOpen }: StylePan
                         onKeyDown={(event) => handleRadioKeyDown(event, styles, currentStyle, onSelect)}
                         className={cn(
                             'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all',
-                            'border-primary bg-primary/5',
+                            'border-[oklch(var(--ring)/0.55)] bg-[oklch(var(--sidebar-accent)/0.82)] text-foreground shadow-[0_0_0_1px_oklch(var(--ring)/0.2)]',
                             FOCUS_RING_CLASSES,
                         )}
                     >
@@ -179,7 +179,7 @@ export function StylePanel({ styles, currentStyle, onSelect, setOpen }: StylePan
                                 {style.description}
                             </div>
                         </div>
-                        <Check className="h-4 w-4 shrink-0 text-primary" />
+                        <Check className="h-4 w-4 shrink-0 text-foreground" />
                     </button>
                 ) : (
                     <button

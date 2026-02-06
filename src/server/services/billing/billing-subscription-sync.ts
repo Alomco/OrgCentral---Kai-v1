@@ -1,5 +1,6 @@
 import { ValidationError } from '@/server/errors';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { resolveTenantBillingPlan } from '@/server/repositories/platform/billing-plan-runtime-resolver';
 import type { IOrganizationSubscriptionRepository } from '@/server/repositories/contracts/org/billing';
 import type { BillingGateway } from '@/server/services/billing/billing-gateway';
 import type { BillingConfig } from '@/server/services/billing/billing-config';
@@ -31,7 +32,9 @@ export async function syncBillingSubscriptionPreferences(
     return;
   }
 
-  const nextPriceId = resolveBillingPriceId(input.billingCadence, deps.billingConfig);
+  const assignedPlan = await resolveTenantBillingPlan(input.authorization);
+  const nextPriceId = assignedPlan?.plan.stripePriceId
+    ?? resolveBillingPriceId(input.billingCadence, deps.billingConfig);
   const nextCancelAtPeriodEnd = !input.autoRenew;
 
   const priceChanged = subscription.stripePriceId !== nextPriceId;

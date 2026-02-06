@@ -9,7 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getEmployeeProfileByUserForUi } from '@/server/use-cases/hr/people/get-employee-profile-by-user.cached';
 import type { EmployeeProfile } from '@/server/types/hr-types';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { ProfileContainer } from './_components/profile-container';
 import {
@@ -23,10 +24,12 @@ import {
 
 export default async function HrProfilePage() {
     const headerStore = await nextHeaders();
-    const { authorization, session } = await getSessionContextOrRedirect({}, {
+    const { authorization, session } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.PROFILE_READ,
         auditSource: 'ui:hr:profile',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE_TYPE.EMPLOYEE_PROFILE,
     });
 
     const profilePromise = getEmployeeProfileByUserForUi({ authorization, userId: authorization.userId });

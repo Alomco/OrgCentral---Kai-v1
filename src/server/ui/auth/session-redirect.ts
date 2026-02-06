@@ -6,7 +6,7 @@ import { getSessionContext, type GetSessionDependencies, type GetSessionInput, t
 
 const DEFAULT_FALLBACK_NEXT_PATH = '/dashboard';
 
-interface SessionRedirectOptions {
+export interface SessionRedirectOptions {
     /** Optional explicit next path to preserve. When omitted, we attempt to infer from request headers. */
     nextPath?: string | null;
     /** Where unauthenticated users should be redirected. Default: /login */
@@ -60,7 +60,7 @@ export async function getSessionContextOrRedirect(
     }
 }
 
-    type SessionErrorDecision = 'unauthenticated' | 'not-invited' | 'forbidden' | 'missing-org';
+type SessionErrorDecision = 'unauthenticated' | 'not-invited' | 'forbidden' | 'missing-org';
 
 function classifySessionError(error: unknown): SessionErrorDecision | null {
     if (isNotInvitedError(error)) {

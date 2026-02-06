@@ -112,6 +112,12 @@ Developed a comprehensive security policy enforcement engine in `src/server/secu
 - Action-based security responses
 - Policy evaluation caching
 
+### Break-Glass Controls (Platform Admin)
+- **Approval validation**: scope, target tenant, action/resource match, data residency/classification, and expiry enforcement.
+- **Rate limiting**: request/approval endpoints are protected against burst activity.
+- **Consumption audit**: approvals are consumed with a dedicated audit event for traceability.
+- **UI audit metadata**: platform tool actions now emit explicit `action`/`resourceType` metadata during session authorization.
+
 ### Incident Response Workflow
 Created a structured incident response workflow in `src/server/security/security-incident-response-workflow.ts`:
 - Incident classification and severity levels

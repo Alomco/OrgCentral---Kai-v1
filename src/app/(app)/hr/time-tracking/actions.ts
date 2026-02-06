@@ -5,6 +5,8 @@ import { after } from 'next/server';
 import { headers } from 'next/headers';
 
 import { authAction } from '@/server/actions/auth-action';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { buildHrAuthActionOptions } from '@/server/ui/auth/hr-session';
 import { getTimeTrackingService } from '@/server/services/hr/time-tracking/time-tracking-service.provider';
 import { calculateTotalHours } from '@/server/use-cases/hr/time-tracking/utils';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
@@ -14,7 +16,7 @@ import { createTimeEntrySchema } from './schema';
 import { buildPendingTimeEntries, type PendingTimeEntry } from './pending-entries';
 
 const AUDIT_PREFIX = 'action:hr:time-tracking';
-const RESOURCE_TYPE = 'hr.time-entry';
+const RESOURCE_TYPE = HR_RESOURCE_TYPE.TIME_ENTRY;
 
 function formDataString(value: FormDataEntryValue | null): string {
     return typeof value === 'string' ? value : '';
@@ -84,12 +86,12 @@ export async function createTimeEntryAction(
         const overtimeHours = totalHours ? Math.max(0, totalHours - 8) : 0;
 
         await authAction(
-            {
+            buildHrAuthActionOptions({
+                requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_CREATE,
                 auditSource: `${AUDIT_PREFIX}:create`,
-                requiredPermissions: { employeeProfile: ['read'] },
-                action: 'create',
+                action: HR_ACTION.CREATE,
                 resourceType: RESOURCE_TYPE,
-            },
+            }),
             async ({ authorization }) => {
                 await service.createTimeEntry({
                     authorization,
@@ -148,9 +150,9 @@ export async function getPendingTimeEntriesAction(): Promise<PendingTimeEntry[]>
             {},
             {
                 headers: headerStore,
-                requiredPermissions: { organization: ['read'] },
+                requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_LIST,
                 auditSource: `${AUDIT_PREFIX}:pending`,
-                action: 'list',
+                action: HR_ACTION.LIST,
                 resourceType: RESOURCE_TYPE,
                 resourceAttributes: { view: 'team' },
             },
@@ -168,13 +170,13 @@ export async function approveTimeEntryAction(
 ): Promise<void> {
     const service = getTimeTrackingService();
     await authAction(
-        {
+        buildHrAuthActionOptions({
+            requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_APPROVE,
             auditSource: `${AUDIT_PREFIX}:approve`,
-            requiredPermissions: { organization: ['read'] },
-            action: 'update',
+            action: HR_ACTION.UPDATE,
             resourceType: RESOURCE_TYPE,
             resourceAttributes: { entryId },
-        },
+        }),
         async ({ authorization }) => {
             await service.approveTimeEntry({
                 authorization,
@@ -198,13 +200,13 @@ export async function rejectTimeEntryAction(
 ): Promise<void> {
     const service = getTimeTrackingService();
     await authAction(
-        {
+        buildHrAuthActionOptions({
+            requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_APPROVE,
             auditSource: `${AUDIT_PREFIX}:reject`,
-            requiredPermissions: { organization: ['read'] },
-            action: 'update',
+            action: HR_ACTION.UPDATE,
             resourceType: RESOURCE_TYPE,
             resourceAttributes: { entryId },
-        },
+        }),
         async ({ authorization }) => {
             await service.approveTimeEntry({
                 authorization,

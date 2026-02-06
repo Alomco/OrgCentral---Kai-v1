@@ -49,7 +49,7 @@ function renderComplianceReminder(payload: NotificationDispatchPayload): Rendere
         <h1 style="font-size:18px;margin-bottom:8px;">${escapeHtml(title)}</h1>
         <p style="margin-bottom:16px;">${escapeHtml(message)}</p>
         ${rows ? `<ul style="padding-left:18px;margin:0 0 12px 0;">${rows}</ul>` : ''}
-        <p style="color:#6b7280;font-size:13px;">Reference date: ${escapeHtml(formatDate(data.referenceDate))}</p>
+        <p style="color:#475569;font-size:13px;">Reference date: ${escapeHtml(formatDate(data.referenceDate))}</p>
     `;
 
     return {
@@ -86,7 +86,7 @@ function renderFallbackTemplate(payload: NotificationDispatchPayload): RenderedN
     const subject = `Notification: ${payload.templateKey}`;
     const content = `
         <h1 style="font-size:18px;margin-bottom:8px;">${escapeHtml(subject)}</h1>
-        <pre style="background:#f3f4f6;padding:12px;border-radius:8px;white-space:pre-wrap;font-size:13px;">
+        <pre style="background:#F1F5F9;padding:12px;border-radius:8px;white-space:pre-wrap;font-size:13px;">
 ${escapeHtml(JSON.stringify(payload.data ?? {}, null, 2))}
         </pre>
     `;

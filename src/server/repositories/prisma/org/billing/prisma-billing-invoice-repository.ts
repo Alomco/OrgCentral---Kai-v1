@@ -9,6 +9,10 @@ import { OrgScopedPrismaRepository } from '@/server/repositories/prisma/org/org-
 import { getModelDelegate, toPrismaInputJson } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { mapBillingInvoiceToData } from '@/server/repositories/mappers/org/billing/billing-invoice-mapper';
 import { CACHE_SCOPE_BILLING_INVOICES } from '@/server/repositories/cache-scopes';
+import {
+  mergeInvoiceMetadataWithStripeEvent,
+  shouldIgnoreStaleInvoiceEvent,
+} from '@/server/lib/billing/invoice-event-order';
 import { Prisma } from '@/server/types/prisma';
 
 export class PrismaBillingInvoiceRepository
@@ -81,9 +85,24 @@ export class PrismaBillingInvoiceRepository
       throw new Error('Cross-tenant billing invoice update rejected.');
     }
 
+    const existing = await getModelDelegate(this.prisma, 'billingInvoice').findUnique({
+      where: { stripeInvoiceId: input.stripeInvoiceId },
+    });
+
+    const incomingEventAt = input.stripeEventCreatedAt ?? null;
+    if (existing && shouldIgnoreStaleInvoiceEvent(existing.metadata ?? null, incomingEventAt)) {
+      return mapBillingInvoiceToData(existing);
+    }
+
+    const metadataRecord = mergeInvoiceMetadataWithStripeEvent({
+      existingMetadata: existing?.metadata ?? null,
+      incomingMetadata: input.metadata ?? null,
+      stripeEventCreatedAt: incomingEventAt,
+    });
+
     const metadata =
-      input.metadata && Object.keys(input.metadata).length > 0
-        ? toPrismaInputJson(input.metadata)
+      Object.keys(metadataRecord).length > 0
+        ? toPrismaInputJson(metadataRecord)
         : Prisma.JsonNull;
 
     const record = await getModelDelegate(this.prisma, 'billingInvoice').upsert({

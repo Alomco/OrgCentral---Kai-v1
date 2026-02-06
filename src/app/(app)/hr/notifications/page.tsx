@@ -5,7 +5,8 @@ import { headers as nextHeaders } from 'next/headers';
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
 
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { NotificationList } from './_components/notification-list';
 const NotificationFilters = dynamic(
   () => import('./_components/notification-filters').then((module) => module.NotificationFilters),
@@ -36,10 +37,12 @@ interface PageProps {
 
 export default async function NotificationsPage({ searchParams }: PageProps) {
   const headerStore = await nextHeaders();
-  await getSessionContextOrRedirect({}, {
+  await getHrSessionContextOrRedirect({}, {
     headers: headerStore,
-    requiredPermissions: { organization: ['read'] },
+    requiredPermissions: HR_PERMISSION_PROFILE.NOTIFICATION_LIST,
     auditSource: 'page:hr:notifications',
+    action: HR_ACTION.LIST,
+    resourceType: HR_RESOURCE_TYPE.NOTIFICATION,
   });
 
   const resolvedParams = await searchParams;
@@ -52,36 +55,36 @@ export default async function NotificationsPage({ searchParams }: PageProps) {
   return (
     <div className="flex h-full flex-col space-y-6 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-[1400px] space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/hr">HR</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Notifications</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/hr">HR</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Notifications</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
-      <HrPageHeader
-        title="Notifications"
-        description="Stay updated with HR tasks and announcements."
-        icon={<Bell className="h-5 w-5" />}
-        actions={(
-          <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
-            <Link href="/hr/notifications/settings">Notification settings</Link>
-          </Button>
-        )}
-      />
+        <HrPageHeader
+          title="Notifications"
+          description="Stay updated with HR tasks and announcements."
+          icon={<Bell className="h-5 w-5" />}
+          actions={(
+            <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+              <Link href="/hr/notifications/settings">Notification settings</Link>
+            </Button>
+          )}
+        />
 
-      <NotificationFilters />
+        <NotificationFilters />
 
-      <Suspense fallback={<NotificationsLoading />}>
-        <NotificationListSection notificationsPromise={notificationsPromise} filters={filters} />
-      </Suspense>
+        <Suspense fallback={<NotificationsLoading />}>
+          <NotificationListSection notificationsPromise={notificationsPromise} filters={filters} />
+        </Suspense>
       </div>
     </div>
   );

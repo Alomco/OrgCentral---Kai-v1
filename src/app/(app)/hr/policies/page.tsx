@@ -17,8 +17,8 @@ import { PoliciesHeaderClient } from './_components/policies-header.client';
 import { PoliciesFiltersClient } from './_components/policies-filters.client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { listHrPoliciesForUi } from '@/server/use-cases/hr/policies/list-hr-policies.cached';
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect, getOptionalHrAuthorization } from '@/server/ui/auth/hr-session';
 import type { HRPolicy } from '@/server/types/hr-ops-types';
 
 import { HrPageHeader } from '../_components/hr-page-header';
@@ -38,26 +38,26 @@ export default function HrPoliciesPage() {
 
 async function PoliciesPageContent() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect({}, {
+    const { authorization } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.POLICY_LIST,
         auditSource: 'ui:hr:policies:list',
+        action: HR_ACTION.LIST,
+        resourceType: HR_RESOURCE_TYPE.POLICY,
     });
 
     const policiesPromise = listHrPoliciesForUi({ authorization });
-    const adminAuthorizationPromise = getSessionContext(
+    const adminAuthorizationPromise = getOptionalHrAuthorization(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['update'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.POLICY_MANAGE,
             auditSource: 'ui:hr:policies:admin',
-            action: 'read',
-            resourceType: 'hr.policy',
+            action: HR_ACTION.MANAGE,
+            resourceType: HR_RESOURCE_TYPE.POLICY,
             resourceAttributes: { view: 'admin' },
         },
-    )
-        .then((result) => result.authorization)
-        .catch(() => null);
+    );
 
     const [{ policies }, adminAuthorization] = await Promise.all([
         policiesPromise,

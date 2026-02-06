@@ -31,7 +31,7 @@ export function NotificationSettingsForm({
     });
 
     return (
-        <form action={formAction} className="space-y-4 rounded-2xl bg-card/10 p-6 backdrop-blur">
+        <form action={formAction} className="space-y-4 rounded-2xl border border-border bg-card/60 p-6 shadow-sm">
             <div>
                 <p className="text-sm font-semibold text-foreground">Notification defaults</p>
                 <p className="text-xs text-muted-foreground">
@@ -44,7 +44,7 @@ export function NotificationSettingsForm({
                     <select
                         name="notifications-admin-digest"
                         defaultValue={state.adminDigest}
-                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                         <option value="off">Off</option>
                         <option value="daily">Daily</option>
@@ -58,7 +58,7 @@ export function NotificationSettingsForm({
                         name="notifications-security-alerts"
                         key={state.securityAlerts ? 'enabled' : 'disabled'}
                         defaultChecked={state.securityAlerts}
-                        className="h-4 w-4 rounded border-border text-primary"
+                        className="h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     />
                 </label>
                 <label className="flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3">
@@ -68,7 +68,7 @@ export function NotificationSettingsForm({
                         name="notifications-product-updates"
                         key={state.productUpdates ? 'enabled' : 'disabled'}
                         defaultChecked={state.productUpdates}
-                        className="h-4 w-4 rounded border-border text-primary"
+                        className="h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     />
                 </label>
             </div>

@@ -15,7 +15,8 @@ import { Button } from '@/components/ui/button';
 import { HrPageHeader } from '../_components/hr-page-header';
 import { ReportsContent } from './_components/reports-content';
 import { buildReportsMetrics } from './reports-utils';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { getEmployeeDirectoryStatsForUi } from '@/server/use-cases/hr/people/get-employee-directory-stats.cached';
 import { getLeaveRequestsForUi } from '@/server/use-cases/hr/leave/get-leave-requests.cached';
 import { getAbsencesForUi } from '@/server/use-cases/hr/absences/get-absences.cached';
@@ -32,12 +33,14 @@ export const metadata: Metadata = {
 
 export default async function HrReportsPage() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['update'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.REPORTS_READ,
             auditSource: 'ui:hr:reports',
+            action: HR_ACTION.READ,
+            resourceType: HR_RESOURCE_TYPE.REPORTS,
         },
     );
 

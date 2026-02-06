@@ -12,7 +12,8 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { hasPermission } from '@/lib/security/permission-check';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import {
     DashboardSkeleton,
@@ -44,10 +45,12 @@ export default function HrDashboardPage() {
 
 async function DashboardContent() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect({}, {
+    const { authorization } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.PROFILE_READ,
         auditSource: 'ui:hr:dashboard',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE_TYPE.EMPLOYEE_PROFILE,
     });
 
     const isAdmin = hasPermission(authorization.permissions, 'organization', 'update');

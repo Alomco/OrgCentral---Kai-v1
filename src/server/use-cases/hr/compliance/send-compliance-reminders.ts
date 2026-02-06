@@ -93,7 +93,7 @@ export async function sendComplianceReminders(
         scopedItems,
         templateRules,
         referenceDate,
-        effectiveWindowDays,
+        windowDays,
         escalationDays,
     );
     if (filtered.length === 0) {

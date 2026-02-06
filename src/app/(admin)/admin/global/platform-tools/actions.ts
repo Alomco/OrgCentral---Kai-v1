@@ -28,6 +28,9 @@ export async function requestToolBreakGlassAction(
             headers: headerStore,
             requiredPermissions: { platformBreakGlass: ['request'] },
             auditSource: 'ui:admin:tools:break-glass',
+            action: 'request',
+            resourceType: 'breakGlassApproval',
+            resourceAttributes: { scope: 'platform-tools' },
         },
     );
 
@@ -70,6 +73,8 @@ export async function executePlatformToolAction(
             headers: headerStore,
             requiredPermissions: { platformTools: ['execute'] },
             auditSource: 'ui:admin:tools:execute',
+            action: 'execute',
+            resourceType: 'platformTool',
         },
     );
 

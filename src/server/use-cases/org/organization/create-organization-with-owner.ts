@@ -8,14 +8,14 @@ import type { IAbacPolicyRepository } from '@/server/repositories/contracts/org/
 import type { IPermissionResourceRepository } from '@/server/repositories/contracts/org/permissions/permission-resource-repository-contract';
 import type { IAbsenceTypeConfigRepository } from '@/server/repositories/contracts/hr/absences/absence-type-config-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import { ROLE_TEMPLATES } from '@/server/security/role-templates';
-import { TENANT_ROLE_KEYS } from '@/server/security/role-constants';
-import { DEFAULT_BOOTSTRAP_POLICIES } from '@/server/security/abac-constants';
 import type { OrganizationData } from '@/server/types/leave-types';
-import type { Role } from '@/server/types/hr-types';
 import { buildAuthorizationContext, generateEmployeeNumber } from '@/server/use-cases/shared/builders';
 import { seedPermissionResources } from '@/server/use-cases/org/permissions/seed-permission-resources';
 import { seedDefaultAbsenceTypes } from '@/server/use-cases/hr/absences/seed-default-absence-types';
+import {
+    ensureAbacPolicies,
+    ensureBuiltinRoles,
+} from '@/server/use-cases/org/organization/organization-bootstrap';
 
 import { createOrganization } from './create-organization';
 
@@ -117,56 +117,6 @@ export async function createOrganizationWithOwner(
     return { organization };
 }
 
-async function ensureBuiltinRoles(
-    roleRepository: CreateOrganizationWithOwnerDependencies['roleRepository'],
-    orgId: string,
-): Promise<void> {
-    const existing = await roleRepository.getRolesByOrganization(orgId);
-    const byName = new Map(existing.map((role) => [role.name, role]));
-
-    for (const roleKey of TENANT_ROLE_KEYS) {
-        const template = ROLE_TEMPLATES[roleKey];
-        if (byName.has(template.name)) {
-            continue;
-        }
-        await roleRepository.createRole(orgId, {
-            orgId,
-            name: template.name,
-            description: template.description,
-            scope: template.scope,
-            permissions: template.permissions as Role['permissions'],
-            inheritsRoleIds: [],
-            isSystem: template.isSystem ?? false,
-            isDefault: template.isDefault ?? false,
-        });
-    }
-
-    const refreshed = await roleRepository.getRolesByOrganization(orgId);
-    const refreshedByName = new Map(refreshed.map((role) => [role.name, role]));
-
-    for (const roleKey of TENANT_ROLE_KEYS) {
-        const template = ROLE_TEMPLATES[roleKey];
-        const role = refreshedByName.get(template.name);
-        if (!role || !template.inherits?.length) {
-            continue;
-        }
-        const inheritedRoleIds = template.inherits
-            .map((name) => refreshedByName.get(name)?.id)
-            .filter((id): id is string => typeof id === 'string');
-        await roleRepository.updateRole(orgId, role.id, { inheritsRoleIds: inheritedRoleIds });
-    }
-}
-
-async function ensureAbacPolicies(
-    abacRepository: CreateOrganizationWithOwnerDependencies['abacPolicyRepository'],
-    orgId: string,
-): Promise<void> {
-    const existing = await abacRepository.getPoliciesForOrg(orgId);
-    if (existing.length > 0) {
-        return;
-    }
-    await abacRepository.setPoliciesForOrg(orgId, DEFAULT_BOOTSTRAP_POLICIES);
-}
 
 function buildOwnerContext(
     organization: OrganizationData,

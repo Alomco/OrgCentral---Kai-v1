@@ -2,13 +2,9 @@ import type { ReactNode } from 'react';
 import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
 
-import { AppHeader } from '@/components/layout/app-header';
-import { AppSidebar } from '@/components/layout/app-sidebar';
-import { SidebarInset } from '@/components/ui/sidebar';
 import { SkipLink } from '@/components/ui/skip-link';
 import { TenantThemeRegistry } from '@/components/theme/tenant-theme-registry';
-import { DevelopmentThemeWidget } from '@/components/dev/DevelopmentThemeWidget';
-import { AppClientProviders } from '@/app/(app)/_components/app-client-providers';
+import { AppLayoutClientShell } from '@/app/(app)/_components/app-layout-client-shell';
 import { getOrgBranding } from '@/server/branding/get-org-branding';
 import { listHrNotifications } from '@/app/(app)/hr/notifications/actions';
 import { buildAppSessionSnapshot, buildOrgBrandingSnapshot } from '@/server/ui/app-context-snapshots';
@@ -40,12 +36,20 @@ export async function AppLayoutShell({ children }: { children: ReactNode }) {
     ]);
 
     const branding = brandingResult.status === 'fulfilled' ? brandingResult.value : null;
-    const { notifications = [], unreadCount = 0 } = 
+    const { notifications = [], unreadCount = 0 } =
         notificationsResult.status === 'fulfilled' ? notificationsResult.value : {};
 
     const sessionSnapshot = buildAppSessionSnapshot(session, authorization);
     const brandingSnapshot = buildOrgBrandingSnapshot(branding);
     const showDevelopmentThemeWidget = process.env.NODE_ENV === 'development';
+
+    const background = (
+        <>
+            <FloatingParticles count={6} />
+            <GradientOrb position="top-right" color="multi" className="opacity-24" />
+            <GradientOrb position="bottom-left" color="multi" className="opacity-10" />
+        </>
+    );
 
     return (
         <TenantThemeRegistry
@@ -56,39 +60,20 @@ export async function AppLayoutShell({ children }: { children: ReactNode }) {
             }}
         >
             <SkipLink targetId="app-main-content" />
-            <AppSidebar
+            <AppLayoutClientShell
                 session={session}
                 authorization={authorization}
                 organizationLabel={branding?.companyName ?? null}
-            />
-            <SidebarInset className="flex h-svh flex-col relative min-h-0 transition-colors duration-300">
-                {/* 🌌 Background Decoration */}
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                    <FloatingParticles count={6} />
-                    <GradientOrb position="top-right" color="primary" className="opacity-40" />
-                    <GradientOrb position="bottom-left" color="accent" className="opacity-20" />
-                </div>
-
-                {/* Content */}
-                <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-                    <AppHeader 
-                        session={session} 
-                        authorization={authorization} 
-                        branding={branding} 
-                        notifications={notifications}
-                        unreadCount={unreadCount}
-                    />
-                    <main id="app-main-content" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto">
-                        <AppClientProviders session={sessionSnapshot} branding={brandingSnapshot}>
-                            {children}
-                        </AppClientProviders>
-                        <DevelopmentThemeWidget
-                            enabled={showDevelopmentThemeWidget}
-                            orgId={authorization.orgId}
-                        />
-                    </main>
-                </div>
-            </SidebarInset>
+                branding={branding}
+                notifications={notifications}
+                unreadCount={unreadCount}
+                sessionSnapshot={sessionSnapshot}
+                brandingSnapshot={brandingSnapshot}
+                showDevelopmentThemeWidget={showDevelopmentThemeWidget}
+                background={background}
+            >
+                {children}
+            </AppLayoutClientShell>
         </TenantThemeRegistry>
     );
 }

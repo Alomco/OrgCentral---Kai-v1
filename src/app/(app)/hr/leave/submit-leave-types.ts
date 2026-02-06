@@ -49,6 +49,7 @@ export interface PolicyContext {
 
 export interface SubmissionContext {
     session: SessionContext;
+    employeeNumber: string;
     parsedData: LeaveRequestFormValues;
     dates: ParsedDates;
     policy: PolicyContext;

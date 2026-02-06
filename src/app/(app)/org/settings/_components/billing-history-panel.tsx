@@ -11,7 +11,7 @@ export async function BillingHistoryPanel({
   const invoices = await getBillingInvoicesForUi(authorization);
 
   return (
-    <div className="rounded-2xl border border-border bg-card/35 p-5">
+    <div className="rounded-2xl border border-border bg-card/60 p-5 shadow-sm">
       <div>
         <p className="text-sm font-semibold text-foreground">Billing history</p>
         <p className="text-xs text-muted-foreground">
@@ -40,7 +40,7 @@ function InvoiceRow({ invoice }: { invoice: BillingInvoiceData }) {
   const invoiceLink = invoice.invoicePdf ?? invoice.invoiceUrl;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background/80 p-3 text-sm">
       <div>
         <p className="font-semibold text-foreground">{period}</p>
         <p className="text-xs text-muted-foreground">
@@ -53,7 +53,7 @@ function InvoiceRow({ invoice }: { invoice: BillingInvoiceData }) {
         {invoiceLink ? (
           <a
             href={invoiceLink}
-            className="text-xs font-medium text-primary hover:underline"
+            className="text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             target="_blank"
             rel="noreferrer"
           >

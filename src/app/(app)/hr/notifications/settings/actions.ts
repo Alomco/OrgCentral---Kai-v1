@@ -5,7 +5,8 @@ import type { Prisma } from '@prisma/client';
 
 import { toActionState, type ActionState } from '@/server/actions/action-state';
 import { authAction } from '@/server/actions/auth-action';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { buildHrAuthActionOptions } from '@/server/ui/auth/hr-session';
 import { getNotificationPreferencesAction } from '@/server/api-adapters/hr/notifications/get-notification-preferences';
 import { updateNotificationPreferenceAction } from '@/server/api-adapters/hr/notifications/update-notification-preference';
 import type { NotificationPreference } from '@/server/types/hr-types';
@@ -45,13 +46,13 @@ const updatePreferenceSchema = z.object({
 export async function getNotificationPreferences(): Promise<ActionState<{ preferences: NotificationPreference[] }>> {
   return toActionState(() =>
     authAction(
-      {
+      buildHrAuthActionOptions({
+        requiredPermissions: HR_PERMISSION_PROFILE.NOTIFICATION_READ,
         auditSource: `${AUDIT_PREFIX}:list`,
         action: HR_ACTION.READ,
-        resourceType: HR_RESOURCE.HR_NOTIFICATION,
-        requiredPermissions: { [HR_RESOURCE.HR_NOTIFICATION]: [HR_ACTION.READ] },
+        resourceType: HR_RESOURCE_TYPE.NOTIFICATION,
         resourceAttributes: { view: 'preferences' },
-      },
+      }),
       async ({ authorization }) => {
         return getNotificationPreferencesAction({ authorization });
       }
@@ -66,13 +67,13 @@ export async function updateNotificationPreference(
 
   return toActionState(() =>
     authAction(
-      {
+      buildHrAuthActionOptions({
+        requiredPermissions: HR_PERMISSION_PROFILE.NOTIFICATION_MANAGE,
         auditSource: `${AUDIT_PREFIX}:update`,
         action: HR_ACTION.UPDATE,
-        resourceType: HR_RESOURCE.HR_NOTIFICATION,
-        requiredPermissions: { [HR_RESOURCE.HR_NOTIFICATION]: [HR_ACTION.UPDATE] },
+        resourceType: HR_RESOURCE_TYPE.NOTIFICATION,
         resourceAttributes: { preferenceId: parsed.preferenceId },
-      },
+      }),
       async ({ authorization }) => {
         return updateNotificationPreferenceAction({
           authorization,

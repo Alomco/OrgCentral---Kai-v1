@@ -15,10 +15,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { HrPageHeader } from '../../_components/hr-page-header';
 import { LeaveSubnav } from '../_components/leave-subnav';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
 import { getLeaveRequestsForUi } from '@/server/use-cases/hr/leave/get-leave-requests.cached';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 import { LeaveRequestsPanel } from '../_components/leave-requests-panel';
 import { parseLeaveApprovalMetadata } from '../lib/leave-approval-metadata';
 import { refreshLeaveRequestsAction } from './actions';
@@ -33,18 +33,18 @@ export default async function HrLeaveRequestsPage() {
     const headerStore = await nextHeaders();
     const correlationId = headerStore.get('x-correlation-id') ?? undefined;
 
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
             requiredAnyPermissions: [
-                { [HR_RESOURCE.HR_LEAVE]: ['read'] },
-                { employeeProfile: ['read'] },
+                HR_PERMISSION_PROFILE.LEAVE_READ,
+                HR_PERMISSION_PROFILE.PROFILE_READ,
             ],
             auditSource: 'ui:hr:leave:requests',
             correlationId,
             action: HR_ACTION.LIST,
-            resourceType: HR_RESOURCE.HR_LEAVE,
+            resourceType: HR_RESOURCE_TYPE.LEAVE_REQUEST,
             resourceAttributes: {
                 scope: 'requests',
                 correlationId,

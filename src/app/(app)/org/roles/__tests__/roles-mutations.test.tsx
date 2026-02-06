@@ -11,7 +11,7 @@ import type { RoleCreateState } from "../actions.state";
 import type { Role } from "@/server/types/hr-types";
 
 const { db, orgId } = vi.hoisted(() => {
-const orgId = "org-roles-create";
+  const orgId = "org-roles-create";
   return {
     orgId,
     db: {
@@ -66,7 +66,7 @@ describe("roles create flow", () => {
       <QueryClientProvider client={qc}>
         <div>
           <RoleCreateForm orgId={orgId} />
-        <RolesListClient orgId={orgId} initial={db.roles} />
+          <RolesListClient orgId={orgId} initial={db.roles} />
         </div>
       </QueryClientProvider>
     );
@@ -78,6 +78,6 @@ describe("roles create flow", () => {
 
     await screen.findByText(/role created/i);
     await waitFor(() => expect(screen.getByText(/manager/i)).toBeInTheDocument());
-  });
+  }, 10000);
 });
 

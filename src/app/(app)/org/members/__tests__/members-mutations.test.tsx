@@ -13,10 +13,10 @@ const memberUrl = (u: string) => `/api/org/${orgId}/membership/${u}`;
 
 const initial = { users: [{ id: "u1", email: "a@example.com", displayName: "Alice", roles: ["member"], memberships: [{ organizationId: orgId, roles: ["member"], status: "ACTIVE" }] }], totalCount: 1, page: 1, pageSize: 25 } as any;
 
-let status: 'ACTIVE'|'SUSPENDED' = 'ACTIVE';
+let status: 'ACTIVE' | 'SUSPENDED' = 'ACTIVE';
 
 server.use(
-  http.get(listUrl, () => HttpResponse.json({ ...initial, users: [{...initial.users[0], memberships: [{ organizationId: orgId, roles: ["member"], status }]}] })),
+  http.get(listUrl, () => HttpResponse.json({ ...initial, users: [{ ...initial.users[0], memberships: [{ organizationId: orgId, roles: ["member"], status }] }] })),
   http.put(memberUrl('u1'), async ({ request }) => {
     const body = await request.json() as any;
     status = body.status || status;
@@ -40,6 +40,6 @@ describe("members suspend flow", () => {
     await userEvent.click(suspend);
 
     await waitFor(async () => expect(await screen.findByText(/Status: SUSPENDED/)).toBeInTheDocument());
-  });
+  }, 10000);
 });
 

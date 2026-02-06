@@ -4,7 +4,8 @@ import { headers as nextHeaders } from 'next/headers';
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
 
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { getNotificationPreferencesAction } from '@/server/api-adapters/hr/notifications/get-notification-preferences';
 import { NotificationSettingsForm } from './notification-settings-form';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,10 +39,13 @@ async function getPreferencesWithCache(
 
 export default async function NotificationSettingsPage() {
   const headerStore = await nextHeaders();
-  const { authorization, session } = await getSessionContextOrRedirect({}, {
+  const { authorization, session } = await getHrSessionContextOrRedirect({}, {
     headers: headerStore,
-    requiredPermissions: { organization: ['read'] },
+    requiredPermissions: HR_PERMISSION_PROFILE.NOTIFICATION_READ,
     auditSource: 'page:hr:notifications:settings',
+    action: HR_ACTION.READ,
+    resourceType: HR_RESOURCE_TYPE.NOTIFICATION,
+    resourceAttributes: { view: 'preferences' },
   });
 
   // Ensure defaults exist

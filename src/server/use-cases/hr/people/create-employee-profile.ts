@@ -78,14 +78,19 @@ export async function createEmployeeProfile(
     contractPayload,
   });
 
+  const profile = await dependencies.employeeProfileRepository.getEmployeeProfileByUser(
+    orgId,
+    input.profileData.userId,
+  );
+
   let checklistInstanceId: string | undefined;
   const onboardingChecklist = resolveOnboardingChecklistConfig(input);
-  if (onboardingChecklist) {
+  if (onboardingChecklist && profile) {
     checklistInstanceId = await instantiateOnboardingChecklist({
       dependencies,
       authorization: input.authorization,
       onboardingChecklist,
-      employeeIdentifier: input.profileData.employeeNumber,
+      employeeId: profile.id,
     });
   }
 

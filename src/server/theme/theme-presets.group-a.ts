@@ -18,6 +18,13 @@ import {
 import type { ThemePreset } from './theme-presets.shared';
 
 const cyberpunkPrimary: ColorTokenValue = '0.5424 0.2454 293.02';
+const cyberpunkAccent: ColorTokenValue = '0.7041 0.1211 185.38';
+const cyberpunkChartBlue: ColorTokenValue = '0.6395 0.1445 240.11';
+const cyberpunkSidebarAccent: ColorTokenValue = '0.9143 0.0271 228.62';
+const cyberpunkSidebarAccentForeground: ColorTokenValue = '0.2414 0.0329 249.30';
+const cyberpunkDarkAccent: ColorTokenValue = '0.7394 0.1145 199.26';
+const cyberpunkDarkAccentForeground: ColorTokenValue = '0.1498 0.0182 254.79';
+const cyberpunkDarkRing: ColorTokenValue = '0.6311 0.1736 262.39';
 const sunsetPrimary: ColorTokenValue = '0.7065 0.1860 48.13';
 const sunsetAccent: ColorTokenValue = '0.6108 0.2162 18.15';
 const forestPrimary: ColorTokenValue = '0.6902 0.1481 162.37';
@@ -30,9 +37,42 @@ export const themePresetsGroupA = {
     'cyberpunk-purple': makePreset({
         id: 'cyberpunk-purple',
         name: 'Cyberpunk Purple',
-        description: 'Vibrant purple and pink with neon accents',
+        description: 'Electric purple with cyan neon accents',
         emoji: '??',
-        accents: accents(cyberpunkPrimary, WHITE, '0.6538 0.2133 354.06', INK, cyberpunkPrimary, '0.6538 0.2133 354.06', cyberpunkPrimary, HSL_CHART_CYAN, HSL_CHART_YELLOW, HSL_CHART_ORANGE, '0.6075 0.2126 296.39', WHITE, '0.6164 0.2078 354.57', WHITE, cyberpunkPrimary),
+        accents: accents(
+            cyberpunkPrimary,
+            WHITE,
+            cyberpunkAccent,
+            INK,
+            cyberpunkPrimary,
+            cyberpunkChartBlue,
+            cyberpunkPrimary,
+            HSL_CHART_CYAN,
+            HSL_CHART_YELLOW,
+            HSL_CHART_ORANGE,
+            '0.6075 0.2126 296.39',
+            WHITE,
+            cyberpunkSidebarAccent,
+            cyberpunkSidebarAccentForeground,
+            cyberpunkPrimary,
+        ),
+        darkAccents: accents(
+            cyberpunkPrimary,
+            WHITE,
+            cyberpunkDarkAccent,
+            cyberpunkDarkAccentForeground,
+            cyberpunkDarkRing,
+            cyberpunkChartBlue,
+            cyberpunkPrimary,
+            HSL_CHART_CYAN,
+            HSL_CHART_YELLOW,
+            HSL_CHART_ORANGE,
+            '0.6075 0.2126 296.39',
+            WHITE,
+            '0.3000 0.0500 299.35',
+            '0.9750 0.0060 302.84',
+            cyberpunkDarkRing,
+        ),
         light: surface('0.9791 0.0084 302.80', '0.1993 0.0696 296.41', '0.9900 0.0035 302.87', '0.9456 0.0127 302.72', LIGHT_MUTED_FOREGROUND, LIGHT_BORDER, '0.9722 0.0074 302.81', '0.2995 0.0705 299.02'),
         dark: surface('0.1500 0.0350 299.25', '0.9750 0.0060 302.84', '0.2250 0.0500 299.12', '0.3000 0.0500 299.35', '0.8200 0.0150 255.00', '0.6000 0.0150 255.00', '0.1350 0.0400 298.83', '0.9500 0.0100 302.69'),
     }),
@@ -41,7 +81,7 @@ export const themePresetsGroupA = {
         name: 'Ocean Depths',
         description: 'Deep blues and cyan with aquatic vibes',
         emoji: '??',
-        accents: accents(HSL_CHART_CYAN, INK, '0.7041 0.1211 185.38', INK, HSL_CHART_CYAN, '0.7041 0.1211 185.38', HSL_CHART_CYAN, '0.5742 0.2135 262.12', HSL_CHART_YELLOW, HSL_CHART_ORANGE, '0.8318 0.1437 185.27', WHITE, '0.6395 0.1445 240.11', WHITE, HSL_CHART_CYAN),
+        accents: accents(HSL_CHART_CYAN, INK, cyberpunkAccent, INK, HSL_CHART_CYAN, cyberpunkAccent, HSL_CHART_CYAN, '0.5742 0.2135 262.12', HSL_CHART_YELLOW, HSL_CHART_ORANGE, '0.8318 0.1437 185.27', WHITE, '0.6395 0.1445 240.11', WHITE, HSL_CHART_CYAN),
         light: surface('0.9853 0.0051 228.82', '0.2322 0.0330 249.41', '0.9926 0.0021 228.78', '0.9477 0.0105 228.90', LIGHT_MUTED_FOREGROUND, LIGHT_BORDER, '0.9777 0.0051 228.82', '0.3141 0.0398 249.20'),
         dark: surface('0.1940 0.0243 240.73', '0.9396 0.0069 228.85', '0.2389 0.0310 240.86', '0.2808 0.0313 240.36', DARK_MUTED_FOREGROUND, DARK_BORDER, '0.2165 0.0266 240.66', '0.9244 0.0087 228.87'),
     }),

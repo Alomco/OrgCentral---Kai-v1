@@ -12,7 +12,7 @@ export default function HrLayout({ children }: { children: ReactNode }) {
             <div className="relative isolate hr-page-shell">
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 -z-20 gradient-mesh opacity-35 dark:opacity-45 saturate-110 blur-2xl"
+                    className="pointer-events-none absolute inset-0 -z-20 gradient-mesh opacity-30 dark:opacity-30 saturate-100 blur-2xl"
                 />
                 <div
                     aria-hidden="true"

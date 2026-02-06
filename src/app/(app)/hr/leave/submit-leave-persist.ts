@@ -14,6 +14,7 @@ import type { LeaveRequest } from '@/server/types/leave-types';
 
 export async function persistRequest(params: {
     session: SessionContext;
+    employeeNumber: string;
     policy: PolicyContext;
     parsedData: LeaveRequestFormValues;
     dates: { startDate: string; endDate: string };
@@ -21,7 +22,7 @@ export async function persistRequest(params: {
     balanceWarning: string | null;
     formData: FormData;
 }): Promise<LeaveRequestFormState> {
-    const { session, policy, parsedData, dates, departmentId, balanceWarning, formData } = params;
+    const { session, employeeNumber, policy, parsedData, dates, departmentId, balanceWarning, formData } = params;
     const { userId } = requireSessionUser(session.session);
     const requestId = readFormString(formData, 'requestId') || randomUUID();
     const employeeName = session.session.user.name.length > 0
@@ -31,7 +32,7 @@ export async function persistRequest(params: {
     const request: Omit<LeaveRequest, 'createdAt'> & { hoursPerDay: number } = {
         id: requestId,
         orgId: session.authorization.orgId,
-        employeeId: session.authorization.userId,
+        employeeId: employeeNumber,
         userId: session.authorization.userId,
         employeeName,
         departmentId,

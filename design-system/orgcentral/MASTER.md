@@ -7,8 +7,8 @@
 ---
 
 **Project:** OrgCentral
-**Generated:** 2026-02-05 20:25:42
-**Category:** Analytics Dashboard
+**Generated:** 2026-02-06 19:51:22
+**Category:** SaaS (General)
 
 ---
 
@@ -18,13 +18,13 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#7C3AED` | `--color-primary` |
-| Secondary | `#A78BFA` | `--color-secondary` |
-| CTA/Accent | `#F97316` | `--color-cta` |
-| Background | `#FAF5FF` | `--color-background` |
-| Text | `#4C1D95` | `--color-text` |
+| Primary | `#1E40AF` | `--color-primary` |
+| Secondary | `#F1F5F9` | `--color-secondary` |
+| CTA/Accent | `#F59E0B` | `--color-cta` |
+| Background | `#F8FAFC` | `--color-background` |
+| Text | `#1E3A8A` | `--color-text` |
 
-**Color Notes:** Event theme colors + Excitement accents
+**Color Notes:** Deep blue core, amber CTA, bright support blue `#3B82F6` for rings/charts.
 
 ### Typography
 
@@ -68,7 +68,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #F97316;
+  background: #F59E0B;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -85,8 +85,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #7C3AED;
-  border: 2px solid #7C3AED;
+  color: #1E40AF;
+  border: 2px solid #1E40AF;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -99,7 +99,7 @@
 
 ```css
 .card {
-  background: #FAF5FF;
+  background: #F8FAFC;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -125,9 +125,9 @@
 }
 
 .input:focus {
-  border-color: #7C3AED;
+  border-color: #1E40AF;
   outline: none;
-  box-shadow: 0 0 0 3px #7C3AED20;
+  box-shadow: 0 0 0 3px #1E40AF20;
 }
 ```
 
@@ -153,19 +153,19 @@
 
 ## Style Guidelines
 
-**Style:** Data-Dense Dashboard
+**Style:** Glassmorphism
 
-**Keywords:** Multiple charts/widgets, data tables, KPI cards, minimal padding, grid layout, space-efficient, maximum data visibility
+**Keywords:** Frosted glass, transparent, blurred background, layered, vibrant background, light source, depth, multi-layer
 
-**Best For:** Business intelligence dashboards, financial analytics, enterprise reporting, operational dashboards, data warehousing
+**Best For:** Modern SaaS, financial dashboards, high-end corporate, lifestyle apps, modal overlays, navigation
 
-**Key Effects:** Hover tooltips, chart zoom on click, row highlighting on hover, smooth filter animations, data loading spinners
+**Key Effects:** Backdrop blur (10-20px), subtle border (1px solid rgba white 0.2), light reflection, Z-depth
 
 ### Page Pattern
 
 **Pattern Name:** Enterprise Gateway
 
-- **Conversion Strategy:**  logo carousel
+- **Conversion Strategy:**  logo carousel,  tab switching for industries, Path selection (I am a...). Mega menu navigation. Trust signals prominent.
 - **CTA Placement:** Contact Sales (Primary) + Login (Secondary)
 - **Section Order:** 1. Hero (Video/Mission), 2. Solutions by Industry, 3. Solutions by Role, 4. Client Logos, 5. Contact Sales
 
@@ -173,8 +173,8 @@
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Ornate design
-- ❌ No filtering
+- ❌ Excessive animation
+- ❌ Dark mode by default
 
 ### Additional Forbidden Patterns
 

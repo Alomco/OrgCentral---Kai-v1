@@ -8,6 +8,8 @@ import { after } from 'next/server';
 
 import { toActionState, type ActionState } from '@/server/actions/action-state';
 import { authAction } from '@/server/actions/auth-action';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { buildHrAuthActionOptions } from '@/server/ui/auth/hr-session';
 import { markHrNotificationReadAction as markReadAdapter } from '@/server/api-adapters/hr/notifications/mark-hr-notification-read';
 import { markAllHrNotificationsReadAction as markAllReadAdapter } from '@/server/api-adapters/hr/notifications/mark-all-hr-notifications-read';
 import { deleteHrNotificationAction as deleteAdapter } from '@/server/api-adapters/hr/notifications/delete-hr-notification';
@@ -19,7 +21,6 @@ import { notificationFilterSchema, type NotificationFilters } from './_schemas/f
 import type { NotificationSummary } from '@/components/notifications/notification-item';
 
 const AUDIT_PREFIX = 'action:hr:notifications';
-const RESOURCE_TYPE = 'hr.notifications';
 const NOTIFICATIONS_PATH = '/hr/notifications';
 const NOTIFICATIONS_LIMIT = 50;
 const VALID_NOTIFICATION_TYPES = new Set<HRNotificationTypeCode>(HR_NOTIFICATION_TYPE_VALUES);
@@ -51,10 +52,11 @@ export async function listHrNotifications(
     {},
     {
       headers: headerStore,
-      requiredPermissions: { organization: ['read'] },
+      requiredPermissions: HR_PERMISSION_PROFILE.NOTIFICATION_LIST,
       auditSource: `${AUDIT_PREFIX}:list`,
-      action: 'list',
-      resourceType: RESOURCE_TYPE,
+      action: HR_ACTION.LIST,
+      resourceType: HR_RESOURCE_TYPE.NOTIFICATION,
+      resourceAttributes: { view: 'list' },
     },
   );
 
@@ -102,12 +104,13 @@ export async function markHrNotificationRead(
 
   return toActionState(() =>
     authAction(
-      {
+      buildHrAuthActionOptions({
+        requiredPermissions: HR_PERMISSION_PROFILE.NOTIFICATION_MANAGE,
         auditSource: `${AUDIT_PREFIX}:mark-read`,
-        action: 'update',
-        resourceType: RESOURCE_TYPE,
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE_TYPE.NOTIFICATION,
         resourceAttributes: { notificationId: parsed.notificationId },
-      },
+      }),
       async ({ authorization }) => {
         const result = await markReadAdapter({
           authorization,
@@ -132,11 +135,13 @@ export async function markAllHrNotificationsRead(
 
   return toActionState(() =>
     authAction(
-      {
+      buildHrAuthActionOptions({
+        requiredPermissions: HR_PERMISSION_PROFILE.NOTIFICATION_MANAGE,
         auditSource: `${AUDIT_PREFIX}:mark-all-read`,
-        action: 'update',
-        resourceType: RESOURCE_TYPE,
-      },
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE_TYPE.NOTIFICATION,
+        resourceAttributes: { view: 'list' },
+      }),
       async ({ authorization }) => {
         const result = await markAllReadAdapter({
           authorization,
@@ -160,12 +165,13 @@ export async function deleteHrNotification(
 
   return toActionState(() =>
     authAction(
-      {
+      buildHrAuthActionOptions({
+        requiredPermissions: HR_PERMISSION_PROFILE.NOTIFICATION_MANAGE,
         auditSource: `${AUDIT_PREFIX}:delete`,
-        action: 'delete',
-        resourceType: RESOURCE_TYPE,
+        action: HR_ACTION.DELETE,
+        resourceType: HR_RESOURCE_TYPE.NOTIFICATION,
         resourceAttributes: { notificationId: parsed.notificationId },
-      },
+      }),
       async ({ authorization }) => {
         const result = await deleteAdapter({
           authorization,

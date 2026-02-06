@@ -13,7 +13,8 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { getEmployeeProfileForUi } from '@/server/use-cases/hr/people/get-employee-profile.cached';
 
 import { HrPageHeader } from '../../_components/hr-page-header';
@@ -33,10 +34,13 @@ interface EmployeeDetailPageProps {
 
 export default async function EmployeeDetailPage({ params, searchParams }: EmployeeDetailPageProps) {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect({}, {
+    const { authorization } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { organization: ['update'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.PROFILE_READ,
         auditSource: 'ui:hr:employees:detail',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE_TYPE.EMPLOYEE_PROFILE,
+        resourceAttributes: { profileId: (await params).id },
     });
 
     const routeParams = await params;

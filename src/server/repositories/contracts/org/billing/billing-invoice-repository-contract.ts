@@ -4,6 +4,7 @@ import type { BillingInvoiceData, BillingInvoiceStatus } from '@/server/types/bi
 export interface BillingInvoiceUpsertInput {
   orgId: string;
   stripeInvoiceId: string;
+  stripeEventCreatedAt?: Date | null;
   status: BillingInvoiceStatus;
   amountDue: number;
   amountPaid: number;

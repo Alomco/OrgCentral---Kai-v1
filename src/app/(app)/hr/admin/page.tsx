@@ -19,7 +19,8 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { HrAdminAlerts } from './_components/hr-admin-alerts';
@@ -30,12 +31,15 @@ import { getAdminDashboardStats, getPendingApprovals } from './actions';
 
 export default async function HrAdminPage() {
     const headerStore = await nextHeaders();
-    await getSessionContextOrRedirect(
+    await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['update'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.ORG_SETTINGS_UPDATE,
             auditSource: 'ui:hr:admin',
+            action: HR_ACTION.MANAGE,
+            resourceType: HR_RESOURCE_TYPE.ORG_SETTINGS,
+            resourceAttributes: { view: 'admin' },
         },
     );
 

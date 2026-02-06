@@ -16,11 +16,17 @@ export const SidebarContext = React.createContext<SidebarContextProps | null>(
     null
 )
 
+const fallbackSidebarContext: SidebarContextProps = {
+    state: "expanded",
+    open: true,
+    setOpen: () => { },
+    openMobile: false,
+    setOpenMobile: () => { },
+    isMobile: false,
+    toggleSidebar: () => { },
+}
+
 export function useSidebar(): SidebarContextProps {
     const context = React.useContext(SidebarContext)
-    if (!context) {
-        throw new Error("useSidebar must be used within a SidebarProvider.")
-    }
-
-    return context
+    return context ?? fallbackSidebarContext
 }

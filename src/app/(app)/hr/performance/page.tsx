@@ -12,8 +12,13 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
+import {
+    HR_ACTION,
+    HR_ANY_PERMISSION_PROFILE,
+    HR_PERMISSION_PROFILE,
+    HR_RESOURCE_TYPE,
+} from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect, getOptionalHrAuthorization } from '@/server/ui/auth/hr-session';
 import { getPerformanceReviewsForUi } from '@/server/use-cases/hr/performance/get-performance-reviews.cached';
 import { listPerformanceGoalsByReviewForUi } from '@/server/use-cases/hr/performance/list-performance-goals-by-review.cached';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
@@ -62,29 +67,29 @@ function computeStats(reviews: Awaited<ReturnType<typeof getPerformanceReviewsFo
 
 export default async function HrPerformancePage() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { employeeProfile: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.PERFORMANCE_LIST,
             auditSource: 'ui:hr:performance',
+            action: HR_ACTION.LIST,
+            resourceType: HR_RESOURCE_TYPE.PERFORMANCE_REVIEW,
         },
     );
 
     // Check for manager permissions
-    const managerAuthorization = await getSessionContext(
+    const managerAuthorization = await getOptionalHrAuthorization(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['read'] },
+            requiredAnyPermissions: HR_ANY_PERMISSION_PROFILE.PERFORMANCE_MANAGEMENT,
             auditSource: 'ui:hr:performance:manager',
-            action: 'list',
-            resourceType: 'hr.performance',
+            action: HR_ACTION.LIST,
+            resourceType: HR_RESOURCE_TYPE.PERFORMANCE_REVIEW,
             resourceAttributes: { view: 'team' },
         },
-    )
-        .then((result) => result.authorization)
-        .catch(() => null);
+    );
 
     const isManager = managerAuthorization !== null;
 

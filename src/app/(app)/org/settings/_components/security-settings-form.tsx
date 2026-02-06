@@ -33,7 +33,7 @@ export function SecuritySettingsForm({
     });
 
     return (
-        <form action={formAction} className="space-y-4 rounded-2xl bg-card/10 p-6 backdrop-blur">
+        <form action={formAction} className="space-y-4 rounded-2xl border border-border bg-card/60 p-6 shadow-sm">
             <div>
                 <p className="text-sm font-semibold text-foreground">Security defaults</p>
                 <p className="text-xs text-muted-foreground">
@@ -48,7 +48,7 @@ export function SecuritySettingsForm({
                         name="security-mfa-required"
                         key={state.mfaRequired ? 'enabled' : 'disabled'}
                         defaultChecked={state.mfaRequired}
-                        className="h-4 w-4 rounded border-border text-primary"
+                        className="h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     />
                 </label>
                 <label className="flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3">
@@ -58,7 +58,7 @@ export function SecuritySettingsForm({
                         name="security-ip-allowlist"
                         key={state.ipAllowlistEnabled ? 'enabled' : 'disabled'}
                         defaultChecked={state.ipAllowlistEnabled}
-                        className="h-4 w-4 rounded border-border text-primary"
+                        className="h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     />
                 </label>
                 <label className="flex flex-col gap-2 rounded-xl border border-border px-4 py-3">
@@ -66,7 +66,7 @@ export function SecuritySettingsForm({
                     <select
                         name="security-session-timeout"
                         defaultValue={String(state.sessionTimeoutMinutes)}
-                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                         <option value="120">2 hours</option>
                         <option value="240">4 hours</option>
@@ -83,7 +83,7 @@ export function SecuritySettingsForm({
                     rows={4}
                     defaultValue={state.ipAllowlist.join('\n')}
                     placeholder="192.0.2.10&#10;198.51.100.0"
-                    className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 />
                 <span className="text-xs text-muted-foreground">
                     Add one IP per line before enabling the allowlist.

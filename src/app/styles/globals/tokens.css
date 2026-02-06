@@ -26,70 +26,70 @@
   /* Modern Border Radius with Golden Ratio */
   --radius: 0.618rem; /* φ⁻¹ */
   --radius-2xl: calc(var(--radius) + 8px);
-  /* WCAG 2.2 AA Compliant Color System - Enhanced Contrast */
-  --background: 0.968 0.022 245;
-  --foreground: 0.18 0.02 255;
+  /* WCAG 2.2 AA Compliant Color System - Future Blue + Amber */
+  --background: 0.9842 0.0034 247.86;
+  --foreground: 0.3791 0.1378 265.52;
 
   /* Cards with subtle gradient capability */
-  --card: 0.992 0.008 245;
-  --card-foreground: 0.2 0.02 255;
+  --card: 0.9965 0.0017 247.84;
+  --card-foreground: 0.3791 0.1378 265.52;
 
-  --popover: 0.99 0.01 245;
-  --popover-foreground: 0.2 0.02 255;
+  --popover: 0.9965 0.0017 247.84;
+  --popover-foreground: 0.3791 0.1378 265.52;
 
-  /* Primary: WCAG 2.2 AA Compliant Corporate Blue - Enhanced contrast ratio */
-  --primary: 0.52 0.18 252;
-  --primary-foreground: 0.98 0 0;
+  /* Primary: Future Blue */
+  --primary: 0.4244 0.1809 265.64;
+  --primary-foreground: 1 0 0;
 
-  /* Secondary: WCAG 2.2 AA Compliant neutral - Better contrast */
-  --secondary: 0.958 0.014 250;
-  --secondary-foreground: 0.24 0.02 250;
+  /* Secondary: Cloud Surface */
+  --secondary: 0.9683 0.0069 247.90;
+  --secondary-foreground: 0.3791 0.1378 265.52;
 
-  /* Muted: WCAG 2.2 AA Compliant slate-gray - Better contrast */
-  --muted: 0.95 0.014 255;
-  --muted-foreground: 0.38 0.02 255;
+  /* Muted: Subtle surface */
+  --muted: 0.9683 0.0069 247.90;
+  --muted-foreground: 0.4455 0.0374 257.28;
 
-  /* Accent: WCAG 2.2 AA Compliant Blue-Teal - Enhanced contrast ratio */
-  --accent: 0.54 0.16 210;
-  --accent-foreground: 0.98 0 0;
+  /* Accent: Amber for CTA */
+  --accent: 0.7686 0.1647 70.08;
+  --accent-foreground: 0.2077 0.0398 265.75;
 
-  /* Destructive: WCAG 2.2 AA Compliant Red - Enhanced contrast */
-  --destructive: 0.55 0.2 30;
-  --destructive-foreground: 0.98 0 0;
+  /* Destructive: Clear red */
+  --destructive: 0.6368 0.2078 25.33;
+  --destructive-foreground: 1 0 0;
 
-  /* Border: WCAG 2.2 AA Compliant - Better contrast */
-  --border: 0.9 0.006 255;
-  --input: 0.9 0.006 255;
-  --ring: 0.56 0.2 252;
+  /* Border: crisp and visible */
+  --border: 0.9288 0.0126 255.51;
+  --input: 0.9288 0.0126 255.51;
+  --ring: 0.6231 0.1880 259.81;
 
-  /* Charts: WCAG 2.2 AA Compliant Palette - Enhanced contrast ratios */
-  --chart-1: 0.53 0.2 252;
-  /* Blue - Enhanced contrast */
-  --chart-2: 0.6 0.17 210;
-  /* Teal - Enhanced contrast */
-  --chart-3: 0.6 0.15 150;
-  /* Green - Enhanced contrast */
-  --chart-4: 0.78 0.16 90;
-  /* Yellow - Enhanced contrast */
-  --chart-5: 0.7 0.18 40;
-  /* Orange - Enhanced contrast */
+  /* Charts: High-contrast data palette */
+  --chart-1: 0.6231 0.1880 259.81;
+  /* Blue */
+  --chart-2: 0.7971 0.1339 211.53;
+  /* Teal */
+  --chart-3: 0.7227 0.1920 149.58;
+  /* Green */
+  --chart-4: 0.7686 0.1647 70.08;
+  /* Amber */
+  --chart-5: 0.6056 0.2189 292.72;
+  /* Violet */
 
-  /* Sidebar: WCAG 2.2 AA Compliant - Better contrast ratios */
-  --sidebar: 0.955 0.018 245;
+  /* Sidebar: clear hierarchy */
+  --sidebar: 0.9683 0.0069 247.90;
   --sidebar-background: var(--sidebar);
-  --sidebar-foreground: 0.24 0.02 255;
-  --sidebar-primary: 0.53 0.2 252;
-  --sidebar-primary-foreground: 0.98 0 0;
-  --sidebar-accent: 0.94 0.016 245;
-  --sidebar-accent-foreground: 0.24 0.02 255;
-  --sidebar-border: 0.9 0.008 255;
-  --sidebar-ring: 0.56 0.2 252;
+  --sidebar-foreground: 0.3791 0.1378 265.52;
+  --sidebar-primary: 0.4244 0.1809 265.64;
+  --sidebar-primary-foreground: 1 0 0;
+  --sidebar-accent: 0.9619 0.0179 272.31;
+  --sidebar-accent-foreground: 0.3791 0.1378 265.52;
+  --sidebar-border: 0.9288 0.0126 255.51;
+  --sidebar-ring: 0.6231 0.1880 259.81;
 
   --app-background-gradient: linear-gradient(135deg,
     oklch(var(--background)) 0%,
-    oklch(var(--secondary) / 0.7) 30%,
+    oklch(var(--secondary) / 0.75) 30%,
     oklch(var(--muted) / 0.8) 60%,
-    oklch(var(--accent) / 0.12) 100%
+    oklch(var(--primary) / 0.08) 100%
   );
   --app-gradient-primary: linear-gradient(135deg, oklch(var(--primary)) 0%, oklch(var(--accent)) 100%);
   --app-gradient-cool: linear-gradient(135deg, oklch(var(--chart-3)) 0%, oklch(var(--chart-2)) 100%);
@@ -153,74 +153,69 @@ select {
 }
 
 .dark {
-  /* Dark Mode: WCAG 2.2 AA Compliant Slate-Blue with enhanced contrast */
-  --background: 0.12 0.01 255;
-  /* Deep slate - Enhanced contrast */
-  --foreground: 0.96 0.01 255;
-  /* Enhanced contrast light text */
+  /* Dark Mode: Deep navy with electric accents */
+  --background: 0.1802 0.0325 266.62;
+  --foreground: 0.9288 0.0126 255.51;
 
-  --card: 0.16 0.01 255;
-  --card-foreground: 0.96 0.01 255;
-  /* Enhanced contrast card text */
+  --card: 0.2101 0.0318 264.66;
+  --card-foreground: 0.9288 0.0126 255.51;
 
-  --popover: 0.16 0.01 255;
-  --popover-foreground: 0.96 0.01 255;
-  /* Enhanced contrast popover text */
+  --popover: 0.2101 0.0318 264.66;
+  --popover-foreground: 0.9288 0.0126 255.51;
 
-  /* Primary: WCAG 2.2 AA Compliant blue in dark mode - Enhanced contrast */
-  --primary: 0.56 0.16 250;
-  --primary-foreground: 0.98 0 0;
+  /* Primary: vivid blue that supports white text */
+  --primary: 0.5461 0.2152 262.88;
+  --primary-foreground: 1 0 0;
 
-  /* Secondary: WCAG 2.2 AA Compliant dark slate - Enhanced contrast */
-  --secondary: 0.24 0.02 255;
-  --secondary-foreground: 0.96 0.01 255;
-  /* Enhanced contrast secondary text */
+  /* Secondary: structured dark surface */
+  --secondary: 0.2795 0.0368 260.03;
+  --secondary-foreground: 0.9288 0.0126 255.51;
 
-  /* Muted: WCAG 2.2 AA Compliant darker slate - Enhanced contrast */
-  --muted: 0.24 0.02 255;
-  --muted-foreground: 0.72 0.02 255;
-  /* Enhanced contrast muted text */
-  /* Accent: WCAG 2.2 AA Compliant teal in dark mode - Enhanced contrast */
-  --accent: 0.54 0.14 200;
-  --accent-foreground: 0.98 0 0;
+  /* Muted: dark surface with readable text */
+  --muted: 0.2795 0.0368 260.03;
+  --muted-foreground: 0.7107 0.0351 256.79;
 
-  /* Destructive: WCAG 2.2 AA Compliant red - Enhanced contrast */
-  --destructive: 0.55 0.2 30;
-  --destructive-foreground: 0.98 0 0;
+  /* Accent: amber highlight */
+  --accent: 0.7686 0.1647 70.08;
+  --accent-foreground: 0.2077 0.0398 265.75;
 
-  /* Border: WCAG 2.2 AA Compliant subtle slate - Enhanced contrast */
-  --border: 0.42 0.01 255;
-  --input: 0.42 0.01 255;
-  --ring: 0.72 0.16 250;
+  /* Destructive: clear red */
+  --destructive: 0.6368 0.2078 25.33;
+  --destructive-foreground: 1 0 0;
 
-  /* Charts: WCAG 2.2 AA Compliant dark mode palette - Enhanced contrast */
-  --chart-1: 0.66 0.15 200;
-  /* Teal - Enhanced contrast */
-  --chart-2: 0.7 0.16 250;
-  /* Blue - Enhanced contrast */
-  --chart-3: 0.68 0.13 150;
-  /* Green - Enhanced contrast */
-  --chart-4: 0.8 0.15 90;
-  /* Yellow - Enhanced contrast */
-  --chart-5: 0.72 0.17 40;
-  /* Orange - Enhanced contrast */
+  /* Border: visible on dark surfaces */
+  --border: 0.3717 0.0392 257.29;
+  --input: 0.3717 0.0392 257.29;
+  --ring: 0.5461 0.2152 262.88;
 
-  /* Sidebar: WCAG 2.2 AA Compliant deep slate with enhanced contrast */
-  --sidebar: 0.16 0.01 255;
+  /* Charts: vibrant against dark */
+  --chart-1: 0.6231 0.1880 259.81;
+  /* Blue */
+  --chart-2: 0.7971 0.1339 211.53;
+  /* Teal */
+  --chart-3: 0.7227 0.1920 149.58;
+  /* Green */
+  --chart-4: 0.7686 0.1647 70.08;
+  /* Amber */
+  --chart-5: 0.6056 0.2189 292.72;
+  /* Violet */
+
+  /* Sidebar: elevated dark surface */
+  --sidebar: 0.2101 0.0318 264.66;
   --sidebar-background: var(--sidebar);
-  --sidebar-foreground: 0.96 0.01 255;
-  /* Enhanced contrast sidebar text */
-  --sidebar-primary: 0.56 0.16 250;
-  --sidebar-primary-foreground: 0.98 0 0;
-  --sidebar-accent: 0.24 0.02 255;
-  --sidebar-accent-foreground: 0.96 0.01 255;
-  --sidebar-border: 0.42 0.01 255;
-  --sidebar-ring: 0.56 0.16 250;
+  --sidebar-foreground: 0.9288 0.0126 255.51;
+  --sidebar-primary: 0.5461 0.2152 262.88;
+  --sidebar-primary-foreground: 1 0 0;
+  --sidebar-accent: 0.2795 0.0368 260.03;
+  --sidebar-accent-foreground: 0.9288 0.0126 255.51;
+  --sidebar-border: 0.3717 0.0392 257.29;
+  --sidebar-ring: 0.5461 0.2152 262.88;
 
   --app-background-gradient: linear-gradient(135deg,
     oklch(var(--background)) 0%,
-    oklch(var(--secondary) / 0.35) 45%,
-    oklch(var(--accent) / 0.2) 100%
+    oklch(var(--secondary) / 0.42) 45%,
+    oklch(var(--primary) / 0.14) 82%,
+    oklch(var(--background)) 100%
   );
   --app-shadow-primary: 0 8px 25px oklch(var(--primary) / 0.35);
   --app-shadow-primary-strong: 0 15px 35px oklch(var(--primary) / 0.5);

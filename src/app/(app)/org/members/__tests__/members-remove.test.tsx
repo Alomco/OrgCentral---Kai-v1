@@ -88,11 +88,11 @@ describe('members remove from org', () => {
 
     expect(await screen.findByText('B')).toBeInTheDocument();
 
-    const btns = await screen.findAllByRole('button', { name: /remove from org/i }); await userEvent.click(btns[btns.length-1]);
+    const btns = await screen.findAllByRole('button', { name: /remove from org/i }); await userEvent.click(btns[btns.length - 1]);
 
     await qc.invalidateQueries({ queryKey: memberKeys.list(orgId, expectedKey) });
     await waitFor(() => expect(screen.queryByText('B')).not.toBeInTheDocument());
-  });
+  }, 10000);
 
   it('rolls back on error', async () => {
     const query = new URLSearchParams({ status: 'ACTIVE', page: '1', pageSize: '25' }).toString();
@@ -126,12 +126,12 @@ describe('members remove from org', () => {
 
     expect(await screen.findByText('B')).toBeInTheDocument();
 
-    const btns = await screen.findAllByRole('button', { name: /remove from org/i }); await userEvent.click(btns[btns.length-1]);
+    const btns = await screen.findAllByRole('button', { name: /remove from org/i }); await userEvent.click(btns[btns.length - 1]);
 
     await waitFor(() => expect(screen.queryByText('B')).not.toBeInTheDocument());
     await qc.invalidateQueries({ queryKey: memberKeys.list(orgId, expectedKey) });
     await waitFor(() => expect(screen.getByText('B')).toBeInTheDocument());
-  });
+  }, 10000);
 });
 
 

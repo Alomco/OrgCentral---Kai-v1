@@ -11,7 +11,8 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { HrCardSkeleton } from '../_components/hr-card-skeleton';
@@ -21,12 +22,14 @@ import { buildInitialEnrollTrainingFormState } from './form-state';
 
 export default async function HrTrainingPage() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect(
+    const { authorization } = await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { employeeProfile: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.TRAINING_LIST,
             auditSource: 'ui:hr:training',
+            action: HR_ACTION.LIST,
+            resourceType: HR_RESOURCE_TYPE.TRAINING_RECORD,
         },
     );
 

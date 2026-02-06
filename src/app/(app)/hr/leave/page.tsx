@@ -13,8 +13,8 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { buildInitialLeaveRequestFormState } from './form-state';
@@ -53,14 +53,14 @@ function LeaveRequestsSkeleton() {
 export default async function HrLeavePage() {
     const headerStore = await nextHeaders();
     const correlationId = headerStore.get('x-correlation-id') ?? undefined;
-    const { authorization } = await getSessionContextOrRedirect({}, {
+    const { authorization } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
         requiredAnyPermissions: [
-            { [HR_RESOURCE.HR_LEAVE]: ['read'] },
-            { employeeProfile: ['read'] },
+            HR_PERMISSION_PROFILE.LEAVE_READ,
+            HR_PERMISSION_PROFILE.PROFILE_READ,
         ],
         action: HR_ACTION.READ,
-        resourceType: HR_RESOURCE.HR_LEAVE,
+        resourceType: HR_RESOURCE_TYPE.LEAVE_REQUEST,
         resourceAttributes: { scope: 'self', correlationId },
         auditSource: 'ui:hr:leave',
         correlationId,

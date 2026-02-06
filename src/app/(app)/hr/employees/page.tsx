@@ -16,7 +16,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { EmployeeDirectoryClient } from './_components/employee-directory-client';
@@ -34,12 +35,15 @@ export const metadata: Metadata = {
 
 export default async function HrEmployeesPage() {
     const headerStore = await nextHeaders();
-    await getSessionContextOrRedirect(
+    await getHrSessionContextOrRedirect(
         {},
         {
             headers: headerStore,
-            requiredPermissions: { organization: ['read'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.PROFILE_LIST,
             auditSource: 'ui:hr:employees',
+            action: HR_ACTION.LIST,
+            resourceType: HR_RESOURCE_TYPE.EMPLOYEE_PROFILE,
+            resourceAttributes: { view: 'directory' },
         },
     );
 

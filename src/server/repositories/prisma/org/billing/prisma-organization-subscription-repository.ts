@@ -11,6 +11,7 @@ import { CACHE_SCOPE_BILLING_SUBSCRIPTION } from '@/server/repositories/cache-sc
 import { PrismaTypes } from '@/server/types/prisma';
 
 const SUBSCRIPTION_NOT_FOUND_MESSAGE = 'Organization subscription not found.';
+const CROSS_TENANT_SUBSCRIPTION_UPDATE_MESSAGE = 'Cross-tenant subscription update rejected.';
 
 export class PrismaOrganizationSubscriptionRepository
   extends OrgScopedPrismaRepository
@@ -49,7 +50,7 @@ export class PrismaOrganizationSubscriptionRepository
     input: OrganizationSubscriptionUpsertInput,
   ): Promise<OrganizationSubscriptionData> {
     if (input.orgId !== context.orgId) {
-      throw new Error('Cross-tenant subscription update rejected.');
+      throw new Error(CROSS_TENANT_SUBSCRIPTION_UPDATE_MESSAGE);
     }
 
     const existing = await getModelDelegate(this.prisma, 'organizationSubscription').findUnique({
@@ -109,7 +110,7 @@ export class PrismaOrganizationSubscriptionRepository
     seatCount: number,
   ): Promise<OrganizationSubscriptionData> {
     if (orgId !== context.orgId) {
-      throw new Error('Cross-tenant subscription update rejected.');
+      throw new Error(CROSS_TENANT_SUBSCRIPTION_UPDATE_MESSAGE);
     }
 
     const existing = await getModelDelegate(this.prisma, 'organizationSubscription').findUnique({
@@ -124,6 +125,36 @@ export class PrismaOrganizationSubscriptionRepository
       where: { orgId },
       data: {
         seatCount,
+        dataClassification: context.dataClassification,
+        residencyTag: context.dataResidency,
+      },
+    });
+
+    await this.invalidateCache(context, CACHE_SCOPE_BILLING_SUBSCRIPTION);
+    return mapOrganizationSubscriptionToData(subscription);
+  }
+
+  async updatePrice(
+    context: RepositoryAuthorizationContext,
+    orgId: string,
+    stripePriceId: string,
+  ): Promise<OrganizationSubscriptionData> {
+    if (orgId !== context.orgId) {
+      throw new Error(CROSS_TENANT_SUBSCRIPTION_UPDATE_MESSAGE);
+    }
+
+    const existing = await getModelDelegate(this.prisma, 'organizationSubscription').findUnique({
+      where: { orgId },
+    });
+
+    if (!existing) {
+      throw new Error(SUBSCRIPTION_NOT_FOUND_MESSAGE);
+    }
+
+    const subscription = await getModelDelegate(this.prisma, 'organizationSubscription').update({
+      where: { orgId },
+      data: {
+        stripePriceId,
         dataClassification: context.dataClassification,
         residencyTag: context.dataResidency,
       },

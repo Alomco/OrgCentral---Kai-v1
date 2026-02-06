@@ -1,11 +1,21 @@
 import { Prisma } from '@/server/types/prisma';
-import type { PrismaClientInstance } from '@/server/types/prisma';
 import { toPrismaInputJson, type JsonLike } from '@/server/repositories/prisma/helpers/prisma-utils';
 import { ValidationError } from '@/server/errors';
 import type { ZodType } from 'zod';
 
+export interface PlatformSettingStoreClient {
+    platformSetting: {
+        findUnique(args: { where: { id: string } }): Promise<{ id: string; metadata: Prisma.JsonValue | null } | null>;
+        upsert(args: {
+            where: { id: string };
+            create: { id: string; metadata: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput };
+            update: { metadata: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput };
+        }): Promise<{ id: string; metadata: Prisma.JsonValue | null }>;
+    };
+}
+
 export interface PlatformJsonStoreDependencies {
-    prisma: PrismaClientInstance;
+    prisma: PlatformSettingStoreClient;
 }
 
 export async function loadPlatformSettingJson<TValue>(

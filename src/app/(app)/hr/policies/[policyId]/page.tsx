@@ -17,7 +17,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getHrPolicyForUi } from '@/server/use-cases/hr/policies/get-hr-policy.cached';
 import { getPolicyAcknowledgmentForUi } from '@/server/use-cases/hr/policies/get-policy-acknowledgment.cached';
 import type { PolicyAcknowledgment } from '@/server/types/hr-ops-types';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { hasPermission } from '@/lib/security/permission-check';
 
 import { formatHumanDate, formatHumanDateTime } from '../../_components/format-date';
@@ -54,10 +55,13 @@ export default function HrPolicyPage({ params }: { params: { policyId: string } 
 
 async function PolicyPageContent({ policyId }: { policyId: string }) {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect({}, {
+    const { authorization } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.POLICY_READ,
         auditSource: 'ui:hr:policies:get',
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE_TYPE.POLICY,
+        resourceAttributes: { policyId },
     });
 
     const [{ policy }, { acknowledgment }] = await Promise.all([

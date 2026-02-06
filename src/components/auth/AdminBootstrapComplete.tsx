@@ -99,7 +99,7 @@ export function AdminBootstrapComplete() {
     if (state.status === 'error') {
         return (
             <div className="space-y-4">
-                <Alert variant="destructive">
+                <Alert variant="destructive" role="alert" aria-live="assertive">
                     <ShieldAlert className="h-4 w-4" />
                     <AlertTitle>Bootstrap failed</AlertTitle>
                     <AlertDescription>
@@ -120,7 +120,7 @@ export function AdminBootstrapComplete() {
 
     return (
         <div className="space-y-4">
-            <Alert>
+            <Alert role="status" aria-live="polite">
                 {state.status === 'success' ? (
                     <ShieldCheck className="h-4 w-4" />
                 ) : (

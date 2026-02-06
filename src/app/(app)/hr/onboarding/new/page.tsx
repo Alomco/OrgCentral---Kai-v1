@@ -13,7 +13,8 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
+import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 import { hasPermission } from '@/lib/security/permission-check';
 import { getChecklistTemplatesForUi } from '@/server/use-cases/hr/onboarding/templates/get-checklist-templates.cached';
 import { getWorkflowTemplatesForUi } from '@/server/use-cases/hr/onboarding/workflows/get-workflow-templates.cached';
@@ -77,10 +78,17 @@ function resolveManagerLabel(profile: EmployeeProfile): string {
 
 export default async function OnboardingWizardPage() {
     const headerStore = await nextHeaders();
-    const { authorization } = await getSessionContextOrRedirect({}, {
+    const { authorization } = await getHrSessionContextOrRedirect({}, {
         headers: headerStore,
-        requiredPermissions: { member: ['invite'] },
+        requiredAnyPermissions: [
+            HR_PERMISSION_PROFILE.ONBOARDING_SEND,
+            { member: ['invite'] },
+            { organization: ['update'] },
+        ],
         auditSource: 'ui:hr:onboarding:wizard',
+        action: HR_ACTION.SEND,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_INVITE,
+        resourceAttributes: { view: 'wizard' },
     });
 
     const canInviteMembers =

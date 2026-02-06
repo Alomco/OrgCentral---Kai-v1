@@ -54,7 +54,7 @@ export function OrgBrandingForm({ branding, orgId }: { branding: OrgBranding | n
 
                     <label className="grid gap-1">
                         <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Primary color</span>
-                        <Input name="primaryColor" defaultValue={branding?.primaryColor ?? ''} placeholder="#3B82F6" />
+                        <Input name="primaryColor" defaultValue={branding?.primaryColor ?? ''} placeholder="#1E40AF" />
                     </label>
 
                     <label className="grid gap-1">
@@ -64,7 +64,7 @@ export function OrgBrandingForm({ branding, orgId }: { branding: OrgBranding | n
 
                     <label className="grid gap-1">
                         <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Accent color</span>
-                        <Input name="accentColor" defaultValue={branding?.accentColor ?? ''} placeholder="#22C55E" />
+                        <Input name="accentColor" defaultValue={branding?.accentColor ?? ''} placeholder="#F59E0B" />
                     </label>
                 </div>
 

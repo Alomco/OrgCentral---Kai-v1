@@ -25,7 +25,7 @@ export function InvitePolicyForm({
     const [state, formAction] = useActionState(action, { ...initialInvitePolicyState, open: defaultOpen });
 
     return (
-        <form action={formAction} className="space-y-4 rounded-2xl bg-card/10 p-6 backdrop-blur">
+        <form action={formAction} className="space-y-4 rounded-2xl border border-border bg-card/60 p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
                 <div>
                     <p className="text-sm font-semibold text-foreground">Allow invite links</p>
@@ -33,7 +33,7 @@ export function InvitePolicyForm({
                         When enabled, admins can share invite links without pre-approving emails.
                     </p>
                 </div>
-                <label className="relative inline-flex cursor-pointer items-center">
+                <label className="relative inline-flex cursor-pointer items-center rounded-full focus-within:ring-2 focus-within:ring-primary/40 focus-within:ring-offset-2 focus-within:ring-offset-background">
                     <input
                         type="checkbox"
                         name="invite-open"
@@ -42,8 +42,8 @@ export function InvitePolicyForm({
                         aria-label="Allow invite links"
                         className="peer sr-only"
                     />
-                    <div className="h-6 w-11 rounded-full bg-muted transition peer-checked:bg-primary" />
-                    <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-background transition peer-checked:translate-x-5" />
+                    <div className="h-6 w-11 rounded-full bg-muted transition-colors peer-checked:bg-primary" />
+                    <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-background transition-transform peer-checked:translate-x-5" />
                 </label>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">

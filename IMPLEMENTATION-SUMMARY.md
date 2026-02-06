@@ -1,5 +1,22 @@
 # ✨ Multi-Tenant Theme System Implementation Summary
 
+## ✅ 2026-02-06 Security + A11y Updates
+
+### Admin Bootstrap Accessibility
+- Added screen-reader-friendly error messaging and live status updates.
+- Improved OAuth button loading semantics with `aria-busy` and SVG `aria-hidden`.
+
+### Break-Glass Security Alignment
+- Platform tools now include explicit `action`/`resourceType` metadata when authorizing.
+- Break-glass enforcement confirms scope, target tenant, data residency/classification, expiry, and consumption audit trail.
+
+### HR Compliance + Leave Reliability
+- Compliance reminders now respect the configured fallback window for non-templated items.
+- Leave helper returns the canonical employee number for downstream workflows.
+
+### Test Stability
+- Increased Vitest default timeout to reduce UI test flakiness.
+
 ## 🎉 Completed Deliverables
 
 ### 1. **11 Professional Color Palettes** 🎨

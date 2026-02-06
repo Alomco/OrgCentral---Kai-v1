@@ -31,6 +31,7 @@ export const ROLE_PERMISSION_STATEMENTS: Record<string, readonly string[]> = {
     'hr.onboarding.task': ['read', 'list', 'create', 'update', 'delete', 'complete'],
     'hr.onboarding.checklist': ['read', 'update', 'complete'],
     'hr.checklist.template': ['read', 'list', 'create', 'update', 'delete'],
+    'hr.offboarding': ['read', 'list', 'create', 'update', 'complete', 'cancel'],
     'hr.people.profile': ['read', 'list', 'create', 'update', 'delete'],
     'hr.people.contract': ['read', 'list', 'create', 'update', 'delete'],
     'hr.performance.review': ['read', 'list', 'create', 'update', 'delete'],

@@ -35,7 +35,7 @@ export async function EmployeeOverviewTab({ authorization, profile }: EmployeeOv
         complianceService.getStatusForUser(authorization, profile.userId).catch(() => null),
         getActiveChecklistForEmployee(
             { checklistInstanceRepository: checklistRepository },
-            { authorization, employeeId: profile.employeeNumber },
+            { authorization, employeeId: profile.id },
         ),
     ]);
 

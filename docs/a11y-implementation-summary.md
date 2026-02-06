@@ -222,6 +222,12 @@ pnpm a11y:scan || echo "⚠️ A11y issues detected"
 - ✅ Heading hierarchy
 - ✅ Focus management
 
+### Admin Bootstrap Accessibility Updates (2026-02-06)
+- ✅ Error messages now announce with `role="alert"`.
+- ✅ OAuth buttons expose busy state (`aria-busy`).
+- ✅ Input error association via `aria-describedby` + `aria-invalid`.
+- ✅ Bootstrap completion status uses `role="status"` with polite live updates.
+
 ### ISO 27001 Alignment
 - Accessibility as part of security posture
 - Inclusive design reduces attack surface

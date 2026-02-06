@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
         padding: 32,
         fontSize: 11,
         fontFamily: 'Helvetica',
-        color: '#111827',
+        color: '#1E3A8A',
     },
     title: {
         fontSize: 18,
@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 10,
-        color: '#6b7280',
+        color: '#475569',
         marginBottom: 16,
     },
     sectionTitle: {
@@ -28,10 +28,10 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 4,
         borderBottomWidth: 0.5,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: '#E2E8F0',
     },
     label: {
-        color: '#374151',
+        color: '#475569',
     },
     value: {
         fontWeight: 600,

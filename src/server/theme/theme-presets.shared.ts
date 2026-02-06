@@ -125,15 +125,26 @@ export function makePreset(options: {
     description: string;
     emoji: string;
     accents: AccentTokens;
+    darkAccents?: AccentTokens;
     light: SurfaceTokens;
     dark: SurfaceTokens;
 }): ThemePreset {
+    const lightTokens = buildTokens(defaultThemeTokens, options.light, options.accents);
+    const darkTokens = buildTokens(defaultDarkThemeTokens, options.dark, options.darkAccents ?? options.accents);
+
+    if (!options.darkAccents) {
+        // Keep dark sidebars readable even when presets provide light-tinted sidebar accents.
+        darkTokens['sidebar-accent'] = options.dark[3];
+        darkTokens['sidebar-accent-foreground'] = options.dark[1];
+        darkTokens['sidebar-border'] = options.dark[5];
+    }
+
     return {
         id: options.id,
         name: options.name,
         description: options.description,
         emoji: options.emoji,
-        tokens: buildTokens(defaultThemeTokens, options.light, options.accents),
-        darkTokens: buildTokens(defaultDarkThemeTokens, options.dark, options.accents),
+        tokens: lightTokens,
+        darkTokens,
     };
 }

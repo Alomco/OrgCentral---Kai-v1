@@ -7,14 +7,15 @@ import {
 } from '@/server/api-adapters/hr/performance/review-route-controllers';
 
 interface RouteParams {
-    params: {
+    params: Promise<{
         reviewId?: string;
-    };
+    }>;
 }
 
 export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const result = await listPerformanceGoalsForReviewRouteController(request, params.reviewId ?? '');
+            const resolvedParams = await params;
+        const result = await listPerformanceGoalsForReviewRouteController(request, resolvedParams.reviewId ?? '');
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
@@ -23,7 +24,8 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
 
 export async function POST(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const result = await addPerformanceGoalForReviewRouteController(request, params.reviewId ?? '');
+            const resolvedParams = await params;
+        const result = await addPerformanceGoalForReviewRouteController(request, resolvedParams.reviewId ?? '');
         return NextResponse.json(result, { status: 201 });
     } catch (error) {
         return buildErrorResponse(error);

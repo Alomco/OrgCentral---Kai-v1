@@ -104,7 +104,7 @@ export function LeaveApprovalForm({ requestId }: LeaveApprovalFormProps) {
 
             {/* Status feedback */}
             {approveState.status === 'success' && (
-                <span className="text-xs text-emerald-600">✓ Approved</span>
+                <span className="text-xs text-success">✓ Approved</span>
             )}
             {approveState.status === 'error' && (
                 <span className="text-xs text-destructive max-w-[200px] text-right truncate">

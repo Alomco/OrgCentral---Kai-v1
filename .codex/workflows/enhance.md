@@ -1,4 +1,4 @@
----
+﻿---
 description: Add or update features in existing application. Used for iterative development.
 ---
 
@@ -15,7 +15,7 @@ This command adds features or makes updates to existing application.
 ### Steps:
 
 1. **Understand Current State**
-   - Load project state with `python .agent/scripts/session_manager.py info`
+   - Load project state with `python .codex/scripts/session_manager.py info`
    - Understand existing features, tech stack
 
 2. **Plan Changes**
@@ -61,3 +61,4 @@ This command adds features or makes updates to existing application.
 - Get approval for major changes
 - Warn on conflicting requests (e.g., "use Firebase" when project uses PostgreSQL)
 - Commit each change with git
+

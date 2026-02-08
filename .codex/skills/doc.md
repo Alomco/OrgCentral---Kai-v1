@@ -1,48 +1,48 @@
-# Antigravity Skills
+﻿# Antigravity Skills
 
-> **Hướng dẫn tạo và sử dụng Skills trong Antigravity Kit**
-
----
-
-## 📋 Giới thiệu
-
-Mặc dù các mô hình cơ bản của Antigravity (như Gemini) là những mô hình đa năng mạnh mẽ, nhưng chúng không biết ngữ cảnh dự án cụ thể hoặc các tiêu chuẩn của nhóm bạn. Việc tải từng quy tắc hoặc công cụ vào cửa sổ ngữ cảnh của tác nhân sẽ dẫn đến tình trạng "phình to công cụ", chi phí cao hơn, độ trễ và sự nhầm lẫn.
-
-**Antigravity Skills** giải quyết vấn đề này thông qua tính năng **Progressive Disclosure**. Kỹ năng là một gói kiến thức chuyên biệt, ở trạng thái không hoạt động cho đến khi cần. Thông tin này chỉ được tải vào ngữ cảnh của tác nhân khi yêu cầu cụ thể của bạn khớp với nội dung mô tả của kỹ năng.
+> **HÆ°á»›ng dáº«n táº¡o vÃ  sá»­ dá»¥ng Skills trong Antigravity Kit**
 
 ---
 
-## 📁 Cấu trúc và Phạm vi
+## ðŸ“‹ Giá»›i thiá»‡u
 
-Kỹ năng là các gói dựa trên thư mục. Bạn có thể xác định các phạm vi này tuỳ thuộc vào nhu cầu:
+Máº·c dÃ¹ cÃ¡c mÃ´ hÃ¬nh cÆ¡ báº£n cá»§a Antigravity (nhÆ° Gemini) lÃ  nhá»¯ng mÃ´ hÃ¬nh Ä‘a nÄƒng máº¡nh máº½, nhÆ°ng chÃºng khÃ´ng biáº¿t ngá»¯ cáº£nh dá»± Ã¡n cá»¥ thá»ƒ hoáº·c cÃ¡c tiÃªu chuáº©n cá»§a nhÃ³m báº¡n. Viá»‡c táº£i tá»«ng quy táº¯c hoáº·c cÃ´ng cá»¥ vÃ o cá»­a sá»• ngá»¯ cáº£nh cá»§a tÃ¡c nhÃ¢n sáº½ dáº«n Ä‘áº¿n tÃ¬nh tráº¡ng "phÃ¬nh to cÃ´ng cá»¥", chi phÃ­ cao hÆ¡n, Ä‘á»™ trá»… vÃ  sá»± nháº§m láº«n.
 
-| Phạm vi | Đường dẫn | Mô tả |
+**Antigravity Skills** giáº£i quyáº¿t váº¥n Ä‘á» nÃ y thÃ´ng qua tÃ­nh nÄƒng **Progressive Disclosure**. Ká»¹ nÄƒng lÃ  má»™t gÃ³i kiáº¿n thá»©c chuyÃªn biá»‡t, á»Ÿ tráº¡ng thÃ¡i khÃ´ng hoáº¡t Ä‘á»™ng cho Ä‘áº¿n khi cáº§n. ThÃ´ng tin nÃ y chá»‰ Ä‘Æ°á»£c táº£i vÃ o ngá»¯ cáº£nh cá»§a tÃ¡c nhÃ¢n khi yÃªu cáº§u cá»¥ thá»ƒ cá»§a báº¡n khá»›p vá»›i ná»™i dung mÃ´ táº£ cá»§a ká»¹ nÄƒng.
+
+---
+
+## ðŸ“ Cáº¥u trÃºc vÃ  Pháº¡m vi
+
+Ká»¹ nÄƒng lÃ  cÃ¡c gÃ³i dá»±a trÃªn thÆ° má»¥c. Báº¡n cÃ³ thá»ƒ xÃ¡c Ä‘á»‹nh cÃ¡c pháº¡m vi nÃ y tuá»³ thuá»™c vÃ o nhu cáº§u:
+
+| Pháº¡m vi | ÄÆ°á»ng dáº«n | MÃ´ táº£ |
 |---------|-----------|-------|
-| **Workspace** | `<workspace-root>/.agent/skills/` | Chỉ có trong một dự án cụ thể |
+| **Workspace** | `<workspace-root>/.codex/skills/` | Chá»‰ cÃ³ trong má»™t dá»± Ã¡n cá»¥ thá»ƒ |
 
-### Cấu trúc thư mục kỹ năng
+### Cáº¥u trÃºc thÆ° má»¥c ká»¹ nÄƒng
 
 ```
 my-skill/
-├── SKILL.md      # (Required) Metadata & instructions
-├── scripts/      # (Optional) Python or Bash scripts
-├── references/   # (Optional) Text, documentation, templates
-└── assets/       # (Optional) Images or logos
+â”œâ”€â”€ SKILL.md      # (Required) Metadata & instructions
+â”œâ”€â”€ scripts/      # (Optional) Python or Bash scripts
+â”œâ”€â”€ references/   # (Optional) Text, documentation, templates
+â””â”€â”€ assets/       # (Optional) Images or logos
 ```
 
 ---
 
-## 🔍 Ví dụ 1: Code Review Skill
+## ðŸ” VÃ­ dá»¥ 1: Code Review Skill
 
-Đây là một kỹ năng chỉ có hướng dẫn (instruction-only), chỉ cần tạo file `SKILL.md`.
+ÄÃ¢y lÃ  má»™t ká»¹ nÄƒng chá»‰ cÃ³ hÆ°á»›ng dáº«n (instruction-only), chá»‰ cáº§n táº¡o file `SKILL.md`.
 
-### Bước 1: Tạo thư mục
+### BÆ°á»›c 1: Táº¡o thÆ° má»¥c
 
 ```bash
 mkdir -p ~/.gemini/antigravity/skills/code-review
 ```
 
-### Bước 2: Tạo SKILL.md
+### BÆ°á»›c 2: Táº¡o SKILL.md
 
 ```markdown
 ---
@@ -68,11 +68,11 @@ When reviewing code, follow these steps:
 - Suggest alternatives when possible
 ```
 
-> **Lưu ý**: File `SKILL.md` chứa siêu dữ liệu (name, description) ở trên cùng, sau đó là các chỉ dẫn. Agent sẽ chỉ đọc siêu dữ liệu và chỉ tải hướng dẫn khi cần.
+> **LÆ°u Ã½**: File `SKILL.md` chá»©a siÃªu dá»¯ liá»‡u (name, description) á»Ÿ trÃªn cÃ¹ng, sau Ä‘Ã³ lÃ  cÃ¡c chá»‰ dáº«n. Agent sáº½ chá»‰ Ä‘á»c siÃªu dá»¯ liá»‡u vÃ  chá»‰ táº£i hÆ°á»›ng dáº«n khi cáº§n.
 
-### Dùng thử
+### DÃ¹ng thá»­
 
-Tạo file `demo_bad_code.py`:
+Táº¡o file `demo_bad_code.py`:
 
 ```python
 import time
@@ -108,23 +108,23 @@ if __name__ == "__main__":
 
 **Prompt**: `review the @demo_bad_code.py file`
 
-Agent sẽ tự động xác định kỹ năng `code-review`, tải thông tin và thực hiện theo hướng dẫn.
+Agent sáº½ tá»± Ä‘á»™ng xÃ¡c Ä‘á»‹nh ká»¹ nÄƒng `code-review`, táº£i thÃ´ng tin vÃ  thá»±c hiá»‡n theo hÆ°á»›ng dáº«n.
 
 ---
 
-## 📄 Ví dụ 2: License Header Skill
+## ðŸ“„ VÃ­ dá»¥ 2: License Header Skill
 
-Kỹ năng này sử dụng file tham chiếu (reference file) trong thư mục `resources/`.
+Ká»¹ nÄƒng nÃ y sá»­ dá»¥ng file tham chiáº¿u (reference file) trong thÆ° má»¥c `resources/`.
 
-### Bước 1: Tạo thư mục
+### BÆ°á»›c 1: Táº¡o thÆ° má»¥c
 
 ```bash
-mkdir -p .agent/skills/license-header-adder/resources
+mkdir -p .codex/skills/<your-skill-name>/resources
 ```
 
-### Bước 2: Tạo file template
+### BÆ°á»›c 2: Táº¡o file template
 
-**`.agent/skills/license-header-adder/resources/HEADER.txt`**:
+**`.codex/skills/<your-skill-name>/resources/HEADER.txt`**:
 
 ```
 /*
@@ -134,9 +134,9 @@ mkdir -p .agent/skills/license-header-adder/resources
  */
 ```
 
-### Bước 3: Tạo SKILL.md
+### BÆ°á»›c 3: Táº¡o SKILL.md
 
-**`.agent/skills/license-header-adder/SKILL.md`**:
+**`.codex/skills/<your-skill-name>/SKILL.md`**:
 
 ```markdown
 ---
@@ -157,21 +157,21 @@ This skill ensures that all new source files have the correct copyright header.
    - For Python/Shell, convert to `#` comments.
 ```
 
-### Dùng thử
+### DÃ¹ng thá»­
 
 **Prompt**: `Create a new Python script named data_processor.py that prints 'Hello World'.`
 
-Agent sẽ đọc template, chuyển đổi comments theo kiểu Python và tự động thêm vào đầu file.
+Agent sáº½ Ä‘á»c template, chuyá»ƒn Ä‘á»•i comments theo kiá»ƒu Python vÃ  tá»± Ä‘á»™ng thÃªm vÃ o Ä‘áº§u file.
 
 ---
 
-## 🎯 Kết luận
+## ðŸŽ¯ Káº¿t luáº­n
 
-Bằng cách tạo Skills, bạn đã biến mô hình AI đa năng thành một chuyên gia cho dự án của mình:
+Báº±ng cÃ¡ch táº¡o Skills, báº¡n Ä‘Ã£ biáº¿n mÃ´ hÃ¬nh AI Ä‘a nÄƒng thÃ nh má»™t chuyÃªn gia cho dá»± Ã¡n cá»§a mÃ¬nh:
 
-- ✅ Hệ thống hoá các best practices
-- ✅ Tuân theo quy tắc đánh giá code
-- ✅ Tự động thêm license headers
-- ✅ Agent tự động biết cách làm việc với nhóm của bạn
+- âœ… Há»‡ thá»‘ng hoÃ¡ cÃ¡c best practices
+- âœ… TuÃ¢n theo quy táº¯c Ä‘Ã¡nh giÃ¡ code
+- âœ… Tá»± Ä‘á»™ng thÃªm license headers
+- âœ… Agent tá»± Ä‘á»™ng biáº¿t cÃ¡ch lÃ m viá»‡c vá»›i nhÃ³m cá»§a báº¡n
 
-Thay vì liên tục nhắc AI "nhớ thêm license" hoặc "sửa format commit", giờ đây Agent sẽ tự động thực hiện!
+Thay vÃ¬ liÃªn tá»¥c nháº¯c AI "nhá»› thÃªm license" hoáº·c "sá»­a format commit", giá» Ä‘Ã¢y Agent sáº½ tá»± Ä‘á»™ng thá»±c hiá»‡n!

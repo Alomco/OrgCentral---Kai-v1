@@ -3,12 +3,13 @@ import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
 import { listInvitationsController } from '@/server/api-adapters/org/invitations/invitation-route-controllers';
 
 interface RouteParams {
-    params: { orgId: string };
+    params: Promise<{ orgId: string }>;
 }
 
 export async function GET(request: Request, context: RouteParams): Promise<NextResponse> {
     try {
-        const result = await listInvitationsController(request, context.params.orgId);
+        const { orgId } = await context.params;
+        const result = await listInvitationsController(request, orgId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);

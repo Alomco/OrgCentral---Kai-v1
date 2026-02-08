@@ -23,8 +23,8 @@ function AlertItem({ icon, title, count, href, variant }: AlertItemProps) {
     if (count === 0) { return null; }
 
     const variantStyles = {
-        warning: 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/50',
-        destructive: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50',
+        warning: 'border-warning/20 bg-warning/10',
+        destructive: 'border-destructive/20 bg-destructive/10',
         default: 'border-border bg-muted/50',
     };
 
@@ -79,14 +79,14 @@ export function HrAdminAlerts({ stats }: HrAdminAlertsProps) {
                 {hasAlerts ? (
                     <>
                         <AlertItem
-                            icon={<FileWarning className="h-4 w-4 text-red-500" />}
+                            icon={<FileWarning className="h-4 w-4 text-destructive" />}
                             title="Overdue Compliance Items"
                             count={stats.complianceAlerts}
                             href="/hr/compliance"
                             variant="destructive"
                         />
                         <AlertItem
-                            icon={<Clock className="h-4 w-4 text-amber-500" />}
+                            icon={<Clock className="h-4 w-4 text-warning" />}
                             title="Expiring Soon"
                             count={stats.upcomingExpirations}
                             href="/hr/compliance"
@@ -102,7 +102,7 @@ export function HrAdminAlerts({ stats }: HrAdminAlertsProps) {
                     </>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
-                        <CheckCircle2 className="h-8 w-8 text-emerald-500 mb-2" />
+                        <CheckCircle2 className="h-8 w-8 text-success mb-2" />
                         <p className="text-sm font-medium">All Clear!</p>
                         <p className="text-xs text-muted-foreground">
                             No pending alerts at this time

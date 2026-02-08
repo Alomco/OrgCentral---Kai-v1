@@ -1,4 +1,4 @@
----
+﻿---
 trigger: always_on
 ---
 
@@ -14,7 +14,7 @@ trigger: always_on
 
 ### 1. Modular Skill Loading Protocol
 
-Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Read specific sections.
+Agent activated â†’ Check frontmatter "skills:" â†’ Read SKILL.md (INDEX) â†’ Read specific sections.
 
 - **Selective Reading:** DO NOT read ALL files in a skill folder. Read `SKILL.md` first, then only read sections matching the user's request.
 - **Rule Priority:** P0 (GEMINI.md) > P1 (Agent .md) > P2 (SKILL.md). All rules are binding.
@@ -22,12 +22,12 @@ Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Re
 ### 2. Enforcement Protocol
 
 1. **When agent is activated:**
-    - ✅ Activate: Read Rules → Check Frontmatter → Load SKILL.md → Apply All.
-2. **Forbidden:** Never skip reading agent rules or skill instructions. "Read → Understand → Apply" is mandatory.
+    - âœ… Activate: Read Rules â†’ Check Frontmatter â†’ Load SKILL.md â†’ Apply All.
+2. **Forbidden:** Never skip reading agent rules or skill instructions. "Read â†’ Understand â†’ Apply" is mandatory.
 
 ---
 
-## 📥 REQUEST CLASSIFIER (STEP 1)
+## ðŸ“¥ REQUEST CLASSIFIER (STEP 1)
 
 **Before ANY action, classify the request:**
 
@@ -42,11 +42,11 @@ Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Re
 
 ---
 
-## 🤖 INTELLIGENT AGENT ROUTING (STEP 2 - AUTO)
+## ðŸ¤– INTELLIGENT AGENT ROUTING (STEP 2 - AUTO)
 
 **ALWAYS ACTIVE: Before responding to ANY request, automatically analyze and select the best agent(s).**
 
-> 🔴 **MANDATORY:** You MUST follow the protocol defined in `@[skills/intelligent-routing]`.
+> ðŸ”´ **MANDATORY:** You MUST follow the protocol defined in `@[skills/intelligent-routing]`.
 
 ### Auto-Selection Protocol
 
@@ -60,7 +60,7 @@ Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Re
 When auto-applying an agent, inform the user:
 
 ```markdown
-🤖 **Applying knowledge of `@[agent-name]`...**
+ðŸ¤– **Applying knowledge of `@[agent-name]`...**
 
 [Continue with specialized response]
 ```
@@ -75,7 +75,7 @@ When auto-applying an agent, inform the user:
 
 ## TIER 0: UNIVERSAL RULES (Always Active)
 
-### 🌐 Language Handling
+### ðŸŒ Language Handling
 
 When user's prompt is NOT in English:
 
@@ -83,7 +83,7 @@ When user's prompt is NOT in English:
 2. **Respond in user's language** - match their communication
 3. **Code comments/variables** remain in English
 
-### 🧹 Clean Code (Global Mandatory)
+### ðŸ§¹ Clean Code (Global Mandatory)
 
 **ALL code MUST follow `@[skills/clean-code]` rules. No exceptions.**
 
@@ -92,29 +92,29 @@ When user's prompt is NOT in English:
 - **Performance**: Measure first. Adhere to 2025 standards (Core Web Vitals).
 - **Infra/Safety**: 5-Phase Deployment. Verify secrets security.
 
-### 📁 File Dependency Awareness
+### ðŸ“ File Dependency Awareness
 
 **Before modifying ANY file:**
 
-1. Check `CODEBASE.md` → File Dependencies
+1. Check `CODEBASE.md` â†’ File Dependencies
 2. Identify dependent files
 3. Update ALL affected files together
 
-### 🗺️ System Map Read
+### ðŸ—ºï¸ System Map Read
 
-> 🔴 **MANDATORY:** Read `ARCHITECTURE.md` at session start to understand Agents, Skills, and Scripts.
+> ðŸ”´ **MANDATORY:** Read `ARCHITECTURE.md` at session start to understand Agents, Skills, and Scripts.
 
 **Path Awareness:**
 
-- Agents: `.agent/` (Project)
-- Skills: `.agent/skills/` (Project)
-- Runtime Scripts: `.agent/skills/<skill>/scripts/`
+- Agents: `.codex/` (Project)
+- Skills: `.codex/skills/` (Project)
+- Runtime Scripts: `.codex/skills/<skill>/scripts/`
 
-### 🧠 Read → Understand → Apply
+### ðŸ§  Read â†’ Understand â†’ Apply
 
 ```
-❌ WRONG: Read agent file → Start coding
-✅ CORRECT: Read → Understand WHY → Apply PRINCIPLES → Code
+âŒ WRONG: Read agent file â†’ Start coding
+âœ… CORRECT: Read â†’ Understand WHY â†’ Apply PRINCIPLES â†’ Code
 ```
 
 **Before coding, answer:**
@@ -127,7 +127,7 @@ When user's prompt is NOT in English:
 
 ## TIER 1: CODE RULES (When Writing Code)
 
-### 📱 Project Type Routing
+### ðŸ“± Project Type Routing
 
 | Project Type                           | Primary Agent         | Skills                        |
 | -------------------------------------- | --------------------- | ----------------------------- |
@@ -135,13 +135,13 @@ When user's prompt is NOT in English:
 | **WEB** (Next.js, React web)           | `frontend-specialist` | frontend-design               |
 | **BACKEND** (API, server, DB)          | `backend-specialist`  | api-patterns, database-design |
 
-> 🔴 **Mobile + frontend-specialist = WRONG.** Mobile = mobile-developer ONLY.
+> ðŸ”´ **Mobile + frontend-specialist = WRONG.** Mobile = mobile-developer ONLY.
 
-### 🛑 Socratic Gate
+### ðŸ›‘ Socratic Gate
 
 **For complex requests, STOP and ASK first:**
 
-### 🛑 GLOBAL SOCRATIC GATE (TIER 0)
+### ðŸ›‘ GLOBAL SOCRATIC GATE (TIER 0)
 
 **MANDATORY: Every user request must pass through the Socratic Gate before ANY tool use or implementation.**
 
@@ -151,7 +151,7 @@ When user's prompt is NOT in English:
 | **Code Edit / Bug Fix** | Context Check  | Confirm understanding + ask impact questions                      |
 | **Vague / Simple**      | Clarification  | Ask Purpose, Users, and Scope                                     |
 | **Full Orchestration**  | Gatekeeper     | **STOP** subagents until user confirms plan details               |
-| **Direct "Proceed"**    | Validation     | **STOP** → Even if answers are given, ask 2 "Edge Case" questions |
+| **Direct "Proceed"**    | Validation     | **STOP** â†’ Even if answers are given, ask 2 "Edge Case" questions |
 
 **Protocol:**
 
@@ -160,18 +160,18 @@ When user's prompt is NOT in English:
 3. **Wait:** Do NOT invoke subagents or write code until the user clears the Gate.
 4. **Reference:** Full protocol in `@[skills/brainstorming]`.
 
-### 🏁 Final Checklist Protocol
+### ðŸ Final Checklist Protocol
 
-**Trigger:** When the user says "son kontrolleri yap", "final checks", "çalıştır tüm testleri", or similar phrases.
+**Trigger:** When the user says "son kontrolleri yap", "final checks", "Ã§alÄ±ÅŸtÄ±r tÃ¼m testleri", or similar phrases.
 
 | Task Stage       | Command                                            | Purpose                        |
 | ---------------- | -------------------------------------------------- | ------------------------------ |
-| **Manual Audit** | `python .agent/scripts/checklist.py .`             | Priority-based project audit   |
-| **Pre-Deploy**   | `python .agent/scripts/checklist.py . --url <URL>` | Full Suite + Performance + E2E |
+| **Manual Audit** | `python .codex/scripts/checklist.py .`             | Priority-based project audit   |
+| **Pre-Deploy**   | `python .codex/scripts/checklist.py . --url <URL>` | Full Suite + Performance + E2E |
 
 **Priority Execution Order:**
 
-1. **Security** → 2. **Lint** → 3. **Schema** → 4. **Tests** → 5. **UX** → 6. **Seo** → 7. **Lighthouse/E2E**
+1. **Security** â†’ 2. **Lint** â†’ 3. **Schema** â†’ 4. **Tests** â†’ 5. **UX** â†’ 6. **Seo** â†’ 7. **Lighthouse/E2E**
 
 **Rules:**
 
@@ -195,9 +195,9 @@ When user's prompt is NOT in English:
 | `lighthouse_audit.py`      | performance-profiling | Before deploy       |
 | `playwright_runner.py`     | webapp-testing        | Before deploy       |
 
-> 🔴 **Agents & Skills can invoke ANY script** via `python .agent/skills/<skill>/scripts/<script>.py`
+> ðŸ”´ **Agents & Skills can invoke ANY script** via `python .codex/skills/<skill>/scripts/<script>.py`
 
-### 🎭 Gemini Mode Mapping
+### ðŸŽ­ Gemini Mode Mapping
 
 | Mode     | Agent             | Behavior                                     |
 | -------- | ----------------- | -------------------------------------------- |
@@ -207,12 +207,12 @@ When user's prompt is NOT in English:
 
 **Plan Mode (4-Phase):**
 
-1. ANALYSIS → Research, questions
-2. PLANNING → `{task-slug}.md`, task breakdown
-3. SOLUTIONING → Architecture, design (NO CODE!)
-4. IMPLEMENTATION → Code + tests
+1. ANALYSIS â†’ Research, questions
+2. PLANNING â†’ `{task-slug}.md`, task breakdown
+3. SOLUTIONING â†’ Architecture, design (NO CODE!)
+4. IMPLEMENTATION â†’ Code + tests
 
-> 🔴 **Edit mode:** If multi-file or structural change → Offer to create `{task-slug}.md`. For single-file fixes → Proceed directly.
+> ðŸ”´ **Edit mode:** If multi-file or structural change â†’ Offer to create `{task-slug}.md`. For single-file fixes â†’ Proceed directly.
 
 ---
 
@@ -222,21 +222,21 @@ When user's prompt is NOT in English:
 
 | Task         | Read                            |
 | ------------ | ------------------------------- |
-| Web UI/UX    | `.agent/frontend-specialist.md` |
-| Mobile UI/UX | `.agent/mobile-developer.md`    |
+| Web UI/UX    | `.codex/agents/frontend-specialist.md` |
+| Mobile UI/UX | `.codex/agents/mobile-developer.md`    |
 
 **These agents contain:**
 
 - Purple Ban (no violet/purple colors)
 - Template Ban (no standard layouts)
-- Anti-cliché rules
+- Anti-clichÃ© rules
 - Deep Design Thinking protocol
 
-> 🔴 **For design work:** Open and READ the agent file. Rules are there.
+> ðŸ”´ **For design work:** Open and READ the agent file. Rules are there.
 
 ---
 
-## 📁 QUICK REFERENCE
+## ðŸ“ QUICK REFERENCE
 
 ### Agents & Skills
 
@@ -245,9 +245,10 @@ When user's prompt is NOT in English:
 
 ### Key Scripts
 
-- **Verify**: `.agent/scripts/verify_all.py`, `.agent/scripts/checklist.py`
+- **Verify**: `.codex/scripts/verify_all.py`, `.codex/scripts/checklist.py`
 - **Scanners**: `security_scan.py`, `dependency_analyzer.py`
 - **Audits**: `ux_audit.py`, `mobile_audit.py`, `lighthouse_audit.py`, `seo_checker.py`
 - **Test**: `playwright_runner.py`, `test_runner.py`
 
 ---
+

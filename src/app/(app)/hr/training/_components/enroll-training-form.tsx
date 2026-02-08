@@ -41,9 +41,9 @@ export function EnrollTrainingForm({ authorization, initialState }: EnrollTraini
             <CardContent>
                 <form action={formAction} className="space-y-4">
                     {isSuccess ? (
-                        <Alert className="bg-green-50 dark:bg-green-950/30">
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                            <AlertDescription className="text-green-700 dark:text-green-400">
+                        <Alert className="bg-success/10">
+                            <CheckCircle2 className="h-4 w-4 text-success" />
+                            <AlertDescription className="text-success">
                                 {state.message}
                             </AlertDescription>
                         </Alert>

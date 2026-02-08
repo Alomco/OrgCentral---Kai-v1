@@ -76,7 +76,7 @@ function KpiCard({ label, value, tone }: { label: string; value: number; tone?: 
     const toneClass = tone === 'destructive'
         ? 'text-destructive'
         : tone === 'warning'
-            ? 'text-amber-500'
+            ? 'text-warning'
             : 'text-foreground';
 
     return (

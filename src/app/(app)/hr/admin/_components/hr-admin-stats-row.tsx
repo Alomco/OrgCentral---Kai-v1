@@ -21,8 +21,8 @@ interface StatCardProps {
 function StatCard({ title, value, icon, description, variant = 'default', info }: StatCardProps) {
     const variantStyles = {
         default: 'text-muted-foreground',
-        warning: 'text-amber-500',
-        success: 'text-emerald-500',
+        warning: 'text-warning',
+        success: 'text-success',
     };
 
     return (

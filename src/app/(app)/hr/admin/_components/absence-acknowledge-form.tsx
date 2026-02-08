@@ -111,7 +111,7 @@ export function AbsenceAcknowledgeForm({ absenceId }: AbsenceAcknowledgeFormProp
 
             {/* Status feedback */}
             {ackState.status === 'success' && (
-                <span className="text-xs text-emerald-600">✓ Acknowledged</span>
+                <span className="text-xs text-success">✓ Acknowledged</span>
             )}
             {ackState.status === 'error' && (
                 <span className="text-xs text-destructive">{ackState.message}</span>

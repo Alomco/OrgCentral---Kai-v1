@@ -142,7 +142,7 @@ export function ReviewForm({
                                             >
                                                 <Star
                                                     className={`h-6 w-6 transition-colors ${rating <= response.rating
-                                                        ? 'fill-amber-400 text-amber-400'
+                                                        ? 'fill-warning text-warning'
                                                         : 'text-muted-foreground/30'
                                                         }`}
                                                 />

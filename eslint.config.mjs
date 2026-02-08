@@ -43,6 +43,7 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    '.eslintcache',
   ]),
   {
     files: ["**/*.{ts,tsx}"],
@@ -271,11 +272,17 @@ const eslintConfig = defineConfig([
     "components.json", // shadcn-ui registry config
     ".next/**",
     ".tmp/**",
+    "design-system/**",
+    "docs/**",
     "out/**",
     "build/**",
+    "public/**",
     "next-env.d.ts",
+    "prisma/migrations/**",
     "src/components/ui/**", // shadcn-ui generated components
     "src/hooks/use-mobile.ts",
+    "tools/**",
+    "var/**",
     "**/*.test.*",
     "**/*.spec.*",
     "**/__tests__/**",

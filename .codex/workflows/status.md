@@ -1,4 +1,4 @@
----
+﻿---
 description: Display agent and project status. Progress tracking and status board.
 ---
 
@@ -40,41 +40,41 @@ Show current project and agent status.
 ```
 === Project Status ===
 
-📁 Project: my-ecommerce
-📂 Path: C:/projects/my-ecommerce
-🏷️ Type: nextjs-ecommerce
-📊 Status: active
+ðŸ“ Project: my-ecommerce
+ðŸ“‚ Path: C:/projects/my-ecommerce
+ðŸ·ï¸ Type: nextjs-ecommerce
+ðŸ“Š Status: active
 
-🔧 Tech Stack:
+ðŸ”§ Tech Stack:
    Framework: next.js
    Database: postgresql
    Auth: clerk
    Payment: stripe
 
-✅ Features (5):
-   • product-listing
-   • cart
-   • checkout
-   • user-auth
-   • order-history
+âœ… Features (5):
+   â€¢ product-listing
+   â€¢ cart
+   â€¢ checkout
+   â€¢ user-auth
+   â€¢ order-history
 
-⏳ Pending (2):
-   • admin-panel
-   • email-notifications
+â³ Pending (2):
+   â€¢ admin-panel
+   â€¢ email-notifications
 
-📄 Files: 73 created, 12 modified
+ðŸ“„ Files: 73 created, 12 modified
 
 === Agent Status ===
 
-✅ database-architect → Completed
-✅ backend-specialist → Completed
-🔄 frontend-specialist → Dashboard components (60%)
-⏳ test-engineer → Waiting
+âœ… database-architect â†’ Completed
+âœ… backend-specialist â†’ Completed
+ðŸ”„ frontend-specialist â†’ Dashboard components (60%)
+â³ test-engineer â†’ Waiting
 
 === Preview ===
 
-🌐 URL: http://localhost:3000
-💚 Health: OK
+ðŸŒ URL: http://localhost:3000
+ðŸ’š Health: OK
 ```
 
 ---
@@ -82,5 +82,6 @@ Show current project and agent status.
 ## Technical
 
 Status uses these scripts:
-- `python .agent/scripts/session_manager.py status`
-- `python .agent/scripts/auto_preview.py status`
+- `python .codex/scripts/session_manager.py status`
+- `python .codex/scripts/auto_preview.py status`
+

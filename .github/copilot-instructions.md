@@ -1,5 +1,5 @@
 # OrgCentral Github Copilot Instructions chat(Short)
-Always use MCP/tools thoughtfully. Keep knowledge updated with .agent and .github folders. and check .agent\ARCHITECTURE.md every time to use brainstroming, dynamic questioning, skills, agents, and tools effectively.
+Always use MCP/tools thoughtfully. Keep knowledge updated with .github and .github folders. and check .github\ARCHITECTURE.md every time to use brainstroming, dynamic questioning, skills, agents, and tools effectively.
 ## Default rules
 - Keep files <=250 LOC; split into focused modules.
 - No `console.log`; use structured logging.

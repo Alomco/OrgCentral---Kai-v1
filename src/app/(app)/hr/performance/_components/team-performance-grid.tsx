@@ -46,10 +46,10 @@ function getReviewStatusDetails(status: TeamMemberPerformance['reviewStatus']): 
 }
 
 function getRatingColor(rating: number): string {
-    if (rating >= 4) { return 'text-emerald-500'; }
-    if (rating >= 3) { return 'text-blue-500'; }
-    if (rating >= 2) { return 'text-amber-500'; }
-    return 'text-red-500';
+    if (rating >= 4) { return 'text-success'; }
+    if (rating >= 3) { return 'text-info'; }
+    if (rating >= 2) { return 'text-warning'; }
+    return 'text-destructive';
 }
 
 export function TeamPerformanceGrid({ teamMembers }: TeamPerformanceGridProps) {

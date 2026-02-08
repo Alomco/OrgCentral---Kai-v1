@@ -167,8 +167,8 @@ async function AbacSummaryPanel({ policiesPromise }: { policiesPromise: Promise<
                                     <span
                                         className={
                                             policy.effect === 'allow'
-                                                ? 'text-xs font-semibold text-emerald-500'
-                                                : 'text-xs font-semibold text-red-500'
+                                                ? 'text-xs font-semibold text-success'
+                                                : 'text-xs font-semibold text-destructive'
                                         }
                                     >
                                         {policy.effect.toUpperCase()}

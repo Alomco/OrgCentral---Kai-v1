@@ -53,35 +53,35 @@ export interface TenantTheme {
 }
 
 const PURE_WHITE: OklchValue = '1.0000 0.0000 0.00';
-const HORIZON_FOREGROUND: OklchValue = '0.3791 0.1378 265.52';
-const HORIZON_BORDER: OklchValue = '0.9288 0.0126 255.51';
-const HORIZON_PRIMARY_BRIGHT: OklchValue = '0.6231 0.1880 259.81';
-const HORIZON_ACCENT: OklchValue = '0.7686 0.1647 70.08';
-const HORIZON_ACCENT_FOREGROUND: OklchValue = '0.2077 0.0398 265.75';
+const HORIZON_FOREGROUND: OklchValue = '0.2200 0.0120 250.00';
+const HORIZON_BORDER: OklchValue = '0.9100 0.0080 245.00';
+const HORIZON_PRIMARY_BRIGHT: OklchValue = '0.5600 0.1500 245.00';
+const HORIZON_ACCENT: OklchValue = '0.7500 0.1400 85.00';
+const HORIZON_ACCENT_FOREGROUND: OklchValue = '0.2200 0.0300 250.00';
 
 const palette = {
     white: PURE_WHITE,
-    background: '0.9842 0.0034 247.86',
+    background: '0.9850 0.0020 245.00',
     foreground: HORIZON_FOREGROUND,
-    surface: '0.9965 0.0017 247.84',
-    muted: '0.9683 0.0069 247.90',
-    mutedForeground: '0.4455 0.0374 257.28',
+    surface: '0.9940 0.0010 245.00',
+    muted: '0.9650 0.0050 245.00',
+    mutedForeground: '0.5000 0.0180 250.00',
     border: HORIZON_BORDER,
-    primary: '0.4244 0.1809 265.64',
+    primary: '0.4800 0.1450 245.00',
     primaryBright: HORIZON_PRIMARY_BRIGHT,
     accent: HORIZON_ACCENT,
     accentForeground: HORIZON_ACCENT_FOREGROUND,
     destructive: '0.6368 0.2078 25.33',
     chartBlue: HORIZON_PRIMARY_BRIGHT,
-    chartTeal: '0.7971 0.1339 211.53',
-    chartGreen: '0.7227 0.1920 149.58',
+    chartTeal: '0.7200 0.1200 195.00',
+    chartGreen: '0.6800 0.1600 150.00',
     chartAmber: HORIZON_ACCENT,
-    chartViolet: '0.6056 0.2189 292.72',
-    sidebarBackground: '0.9683 0.0069 247.90',
+    chartViolet: '0.5800 0.1600 290.00',
+    sidebarBackground: '0.9650 0.0050 245.00',
     sidebarForeground: HORIZON_FOREGROUND,
-    sidebarPrimary: '0.4244 0.1809 265.64',
+    sidebarPrimary: '0.4800 0.1450 245.00',
     sidebarPrimaryForeground: PURE_WHITE,
-    sidebarAccent: '0.9619 0.0179 272.31',
+    sidebarAccent: '0.9500 0.0120 245.00',
     sidebarAccentForeground: HORIZON_FOREGROUND,
     sidebarBorder: HORIZON_BORDER,
     sidebarRing: HORIZON_PRIMARY_BRIGHT,
@@ -123,17 +123,17 @@ export const defaultThemeTokens = {
     'sidebar-ring': palette.sidebarRing,
 } as const satisfies ThemeTokenMap;
 
-const DARK_FOREGROUND: OklchValue = HORIZON_BORDER;
-const DARK_SURFACE: OklchValue = '0.2101 0.0318 264.66';
-const DARK_PRIMARY: OklchValue = '0.5461 0.2152 262.88';
-const DARK_SECONDARY: OklchValue = '0.2795 0.0368 260.03';
-const DARK_BORDER: OklchValue = '0.3717 0.0392 257.29';
+const DARK_FOREGROUND: OklchValue = '0.9200 0.0060 245.00';
+const DARK_SURFACE: OklchValue = '0.2000 0.0120 245.00';
+const DARK_PRIMARY: OklchValue = '0.5800 0.1700 245.00';
+const DARK_SECONDARY: OklchValue = '0.2600 0.0150 245.00';
+const DARK_BORDER: OklchValue = '0.3500 0.0150 245.00';
 const DARK_ACCENT: OklchValue = HORIZON_ACCENT;
 const DARK_ACCENT_FOREGROUND: OklchValue = HORIZON_ACCENT_FOREGROUND;
-const DARK_MUTED_FOREGROUND: OklchValue = '0.7107 0.0351 256.79';
+const DARK_MUTED_FOREGROUND: OklchValue = '0.6800 0.0180 245.00';
 
 export const defaultDarkThemeTokens = {
-    background: '0.1802 0.0325 266.62',
+    background: '0.1600 0.0100 245.00',
     foreground: DARK_FOREGROUND,
     card: DARK_SURFACE,
     'card-foreground': DARK_FOREGROUND,
@@ -152,11 +152,11 @@ export const defaultDarkThemeTokens = {
     border: DARK_BORDER,
     input: DARK_BORDER,
     ring: DARK_PRIMARY,
-    'chart-1': palette.chartBlue,
-    'chart-2': palette.chartTeal,
-    'chart-3': palette.chartGreen,
-    'chart-4': palette.chartAmber,
-    'chart-5': palette.chartViolet,
+    'chart-1': '0.5800 0.1600 245.00',
+    'chart-2': '0.7400 0.1200 195.00',
+    'chart-3': '0.7000 0.1700 150.00',
+    'chart-4': '0.7500 0.1400 85.00',
+    'chart-5': '0.6000 0.1800 290.00',
     sidebar: DARK_SURFACE,
     'sidebar-background': DARK_SURFACE,
     'sidebar-foreground': DARK_FOREGROUND,

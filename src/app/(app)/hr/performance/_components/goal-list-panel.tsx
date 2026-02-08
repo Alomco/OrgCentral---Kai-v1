@@ -106,9 +106,9 @@ export function GoalListPanel({ goals, onGoalClick, onAddGoal }: GoalListPanelPr
                                         <div className="flex items-start gap-3 min-w-0 flex-1">
                                             <StatusIcon
                                                 className={`h-5 w-5 mt-0.5 shrink-0 ${goal.status === 'completed'
-                                                    ? 'text-emerald-500'
+                                                    ? 'text-success'
                                                     : goal.status === 'overdue'
-                                                        ? 'text-red-500'
+                                                        ? 'text-destructive'
                                                         : 'text-muted-foreground'
                                                     }`}
                                             />

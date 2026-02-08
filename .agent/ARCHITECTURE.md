@@ -9,8 +9,10 @@
 Antigravity Kit is a modular system consisting of:
 
 - **20 Specialist Agents** - Role-based AI personas
-- **36 Skills** - Domain-specific knowledge modules
+- **39 Skills** - Domain-specific knowledge modules
 - **11 Workflows** - Slash command procedures
+
+The .github folder mirrors .agent for Copilot Chat alignment.
 
 ---
 
@@ -20,7 +22,7 @@ Antigravity Kit is a modular system consisting of:
 .agent/
 ├── ARCHITECTURE.md          # This file
 ├── agents/                  # 20 Specialist Agents
-├── skills/                  # 36 Skills
+├── skills/                  # 39 Skills
 ├── workflows/               # 11 Slash Commands
 ├── rules/                   # Global Rules
 └── scripts/                 # Master Validation Scripts
@@ -38,10 +40,10 @@ Specialist AI personas for different domains.
 | `project-planner` | Discovery, task planning | brainstorming, plan-writing, architecture |
 | `frontend-specialist` | Web UI/UX | frontend-design, react-patterns, tailwind-patterns |
 | `backend-specialist` | API, business logic | api-patterns, nodejs-best-practices, database-design |
-| `database-architect` | Schema, SQL | database-design, prisma-expert |
+| `database-architect` | Schema, SQL | database-design |
 | `mobile-developer` | iOS, Android, RN | mobile-design |
 | `game-developer` | Game logic, mechanics | game-development |
-| `devops-engineer` | CI/CD, Docker | deployment-procedures, docker-expert |
+| `devops-engineer` | CI/CD, Docker | deployment-procedures, server-management |
 | `security-auditor` | Security compliance | vulnerability-scanner, red-team-tactics |
 | `penetration-tester` | Offensive security | red-team-tactics |
 | `test-engineer` | Testing strategies | testing-patterns, tdd-workflow, webapp-testing |
@@ -57,9 +59,9 @@ Specialist AI personas for different domains.
 
 ---
 
-## 🧩 Skills (36)
+## 🧩 Skills (39)
 
-Modular knowledge domains that agents can load on-demand. based on task context.
+Modular knowledge domains that agents can load on-demand based on task context.
 
 ### Frontend & UI
 
@@ -69,14 +71,14 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 | `nextjs-best-practices` | App Router, Server Components |
 | `tailwind-patterns` | Tailwind CSS v4 utilities |
 | `frontend-design` | UI/UX patterns, design systems |
-| `ui-ux-pro-max` | 50 styles, 21 palettes, 50 fonts |
+| `motion` | Motion design, transitions, accessibility |
+| `vercel-react-best-practices` | React/Next.js performance guidance |
 
 ### Backend & API
 
 | Skill | Description |
 | ----- | ----------- |
 | `api-patterns` | REST, GraphQL, tRPC |
-| `nestjs-expert` | NestJS modules, DI, decorators |
 | `nodejs-best-practices` | Node.js async, modules |
 | `python-patterns` | Python standards, FastAPI |
 
@@ -85,19 +87,11 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 | Skill | Description |
 | ----- | ----------- |
 | `database-design` | Schema design, optimization |
-| `prisma-expert` | Prisma ORM, migrations |
-
-### TypeScript/JavaScript
-
-| Skill | Description |
-| ----- | ----------- |
-| `typescript-expert` | Type-level programming, performance |
 
 ### Cloud & Infrastructure
 
 | Skill | Description |
 | ----- | ----------- |
-| `docker-expert` | Containerization, Compose |
 | `deployment-procedures` | CI/CD, deploy workflows |
 | `server-management` | Infrastructure management |
 
@@ -110,6 +104,7 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 | `tdd-workflow` | Test-driven development |
 | `code-review-checklist` | Code review standards |
 | `lint-and-validate` | Linting, validation |
+| `leave-e2e-testing` | End-to-end feature testing workflow |
 
 ### Security
 
@@ -126,6 +121,7 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 | `architecture` | System design patterns |
 | `plan-writing` | Task planning, breakdown |
 | `brainstorming` | Socratic questioning |
+| `intelligent-routing` | Automatic skill/agent selection |
 
 ### Mobile
 
@@ -208,17 +204,9 @@ skill-name/
 └── assets/            # (Optional) Images, logos
 ```
 
-### Enhanced Skills (with scripts/references)
-
-| Skill | Files | Coverage |
-| ----- | ----- | -------- |
-| `typescript-expert` | 5 | Utility types, tsconfig, cheatsheet |
-| `ui-ux-pro-max` | 27 | 50 styles, 21 palettes, 50 fonts |
-| `app-builder` | 20 | Full-stack scaffolding |
-
 ---
 
-## � Scripts (2)
+## Scripts (2)
 
 Master validation scripts that orchestrate skill-level scripts.
 
@@ -268,7 +256,7 @@ For details, see [scripts/README.md](scripts/README.md)
 | Metric | Value |
 | ------ | ----- |
 | **Total Agents** | 20 |
-| **Total Skills** | 36 |
+| **Total Skills** | 39 |
 | **Total Workflows** | 11 |
 | **Total Scripts** | 2 (master) + 18 (skill-level) |
 | **Coverage** | ~90% web/mobile development |
@@ -282,7 +270,7 @@ For details, see [scripts/README.md](scripts/README.md)
 | Web App | `frontend-specialist` | react-patterns, nextjs-best-practices |
 | API | `backend-specialist` | api-patterns, nodejs-best-practices |
 | Mobile | `mobile-developer` | mobile-design |
-| Database | `database-architect` | database-design, prisma-expert |
+| Database | `database-architect` | database-design |
 | Security | `security-auditor` | vulnerability-scanner |
 | Testing | `test-engineer` | testing-patterns, webapp-testing |
 | Debug | `debugger` | systematic-debugging |

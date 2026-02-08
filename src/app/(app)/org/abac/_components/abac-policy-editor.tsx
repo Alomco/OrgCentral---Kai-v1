@@ -92,11 +92,11 @@ export function AbacPolicyEditor({
             />
 
             {localMessage ? (
-                <p className={localMessage.status === 'error' ? 'text-xs text-red-500' : 'text-xs text-[oklch(var(--muted-foreground))]'}>{localMessage.message}</p>
+                <p className={localMessage.status === 'error' ? 'text-xs text-destructive' : 'text-xs text-[oklch(var(--muted-foreground))]'}>{localMessage.message}</p>
             ) : null}
 
             {hasErrors ? (
-                <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-500">
+                <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
                     <p className="font-semibold">Fix the following issues before saving:</p>
                     <ul className="mt-2 list-disc space-y-1 pl-5">
                         {buildResult.errors.map((error) => (<li key={error}>{error}</li>))}
@@ -128,7 +128,7 @@ export function AbacPolicyEditor({
             </div>
 
             {state.status === 'error' ? (
-                <p className="text-xs text-red-500" role="alert">{state.message ?? 'Unable to update policies'}</p>
+                <p className="text-xs text-destructive" role="alert">{state.message ?? 'Unable to update policies'}</p>
             ) : null}
             {state.status === 'success' ? (<p className="text-xs text-[oklch(var(--muted-foreground))]">{state.message ?? 'Saved.'}</p>) : null}
         </form>

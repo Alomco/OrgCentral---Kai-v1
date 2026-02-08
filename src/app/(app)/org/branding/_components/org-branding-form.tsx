@@ -83,7 +83,7 @@ export function OrgBrandingForm({ branding, orgId }: { branding: OrgBranding | n
                 </div>
 
                 {updateState.status === 'error' ? (
-                    <p className="text-xs text-red-500" role="alert">{updateState.message ?? 'Unable to save'}</p>
+                    <p className="text-xs text-destructive" role="alert">{updateState.message ?? 'Unable to save'}</p>
                 ) : null}
             </form>
 
@@ -103,7 +103,7 @@ export function OrgBrandingForm({ branding, orgId }: { branding: OrgBranding | n
                 ) : null}
 
                 {resetState.status === 'error' ? (
-                    <p className="mt-3 text-xs text-red-500" role="alert">{resetState.message ?? 'Unable to reset'}</p>
+                    <p className="mt-3 text-xs text-destructive" role="alert">{resetState.message ?? 'Unable to reset'}</p>
                 ) : null}
             </form>
         </div>

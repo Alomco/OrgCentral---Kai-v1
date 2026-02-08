@@ -81,7 +81,7 @@ export function TeamAbsencePanel({ teamAbsences, teamSize }: TeamAbsencePanelPro
                                 <Link
                                     key={absence.id}
                                     href={`/hr/employees/${absence.employeeId}`}
-                                    className="flex min-w-0 items-center gap-2 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-1.5 text-sm transition-colors hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                                    className="flex min-w-0 items-center gap-2 rounded-full bg-warning/10 border border-warning/20 px-3 py-1.5 text-sm transition-colors hover:bg-warning/15"
                                 >
                                     <Avatar className="h-5 w-5">
                                         <AvatarFallback className="text-[10px]">

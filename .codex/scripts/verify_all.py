@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Full Verification Suite - Antigravity Kit
 ==========================================
@@ -7,19 +7,19 @@ Runs COMPLETE validation including all checks + performance + E2E.
 Use this before deployment or major releases.
 
 Usage:
-    python scripts/verify_all.py . --url <URL>
+    python .codex/scripts/verify_all.py . --url <URL>
 
 Includes ALL checks:
-    ✅ Security Scan (OWASP, secrets, dependencies)
-    ✅ Lint & Type Coverage
-    ✅ Schema Validation
-    ✅ Test Suite (unit + integration)
-    ✅ UX Audit (psychology, accessibility)
-    ✅ SEO Check
-    ✅ Lighthouse (Core Web Vitals)
-    ✅ Playwright E2E
-    ✅ Bundle Analysis (if applicable)
-    ✅ Mobile Audit (if applicable)
+    âœ… Security Scan (OWASP, secrets, dependencies)
+    âœ… Lint & Type Coverage
+    âœ… Schema Validation
+    âœ… Test Suite (unit + integration)
+    âœ… UX Audit (psychology, accessibility)
+    âœ… SEO Check
+    âœ… Lighthouse (Core Web Vitals)
+    âœ… Playwright E2E
+    âœ… Bundle Analysis (if applicable)
+    âœ… Mobile Audit (if applicable)
 """
 
 import sys
@@ -28,6 +28,13 @@ import argparse
 from pathlib import Path
 from typing import List, Dict, Optional
 from datetime import datetime
+
+# Fix console encoding for Windows terminals that default to cp1252.
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except AttributeError:
+    pass
 
 # ANSI colors
 class Colors:
@@ -46,16 +53,16 @@ def print_header(text: str):
     print(f"{Colors.BOLD}{Colors.CYAN}{'='*70}{Colors.ENDC}\n")
 
 def print_step(text: str):
-    print(f"{Colors.BOLD}{Colors.BLUE}🔄 {text}{Colors.ENDC}")
+    print(f"{Colors.BOLD}{Colors.BLUE}[RUN] {text}{Colors.ENDC}")
 
 def print_success(text: str):
-    print(f"{Colors.GREEN}✅ {text}{Colors.ENDC}")
+    print(f"{Colors.GREEN}[OK] {text}{Colors.ENDC}")
 
 def print_warning(text: str):
-    print(f"{Colors.YELLOW}⚠️  {text}{Colors.ENDC}")
+    print(f"{Colors.YELLOW}[WARN] {text}{Colors.ENDC}")
 
 def print_error(text: str):
-    print(f"{Colors.RED}❌ {text}{Colors.ENDC}")
+    print(f"{Colors.RED}[ERR] {text}{Colors.ENDC}")
 
 # Complete verification suite
 VERIFICATION_SUITE = [
@@ -63,8 +70,8 @@ VERIFICATION_SUITE = [
     {
         "category": "Security",
         "checks": [
-            ("Security Scan", ".agent/skills/vulnerability-scanner/scripts/security_scan.py", True),
-            ("Dependency Analysis", ".agent/skills/vulnerability-scanner/scripts/dependency_analyzer.py", False),
+            ("Security Scan", ".codex/skills/vulnerability-scanner/scripts/security_scan.py", True),
+            ("Dependency Analysis", ".codex/skills/vulnerability-scanner/scripts/dependency_analyzer.py", False),
         ]
     },
     
@@ -72,8 +79,8 @@ VERIFICATION_SUITE = [
     {
         "category": "Code Quality",
         "checks": [
-            ("Lint Check", ".agent/skills/lint-and-validate/scripts/lint_runner.py", True),
-            ("Type Coverage", ".agent/skills/lint-and-validate/scripts/type_coverage.py", False),
+            ("Lint Check", ".codex/skills/lint-and-validate/scripts/lint_runner.py", True),
+            ("Type Coverage", ".codex/skills/lint-and-validate/scripts/type_coverage.py", False),
         ]
     },
     
@@ -81,7 +88,7 @@ VERIFICATION_SUITE = [
     {
         "category": "Data Layer",
         "checks": [
-            ("Schema Validation", ".agent/skills/database-design/scripts/schema_validator.py", False),
+            ("Schema Validation", ".codex/skills/database-design/scripts/schema_validator.py", False),
         ]
     },
     
@@ -89,7 +96,7 @@ VERIFICATION_SUITE = [
     {
         "category": "Testing",
         "checks": [
-            ("Test Suite", ".agent/skills/testing-patterns/scripts/test_runner.py", False),
+            ("Test Suite", ".codex/skills/testing-patterns/scripts/test_runner.py", False),
         ]
     },
     
@@ -97,8 +104,8 @@ VERIFICATION_SUITE = [
     {
         "category": "UX & Accessibility",
         "checks": [
-            ("UX Audit", ".agent/skills/frontend-design/scripts/ux_audit.py", False),
-            ("Accessibility Check", ".agent/skills/frontend-design/scripts/accessibility_checker.py", False),
+            ("UX Audit", ".codex/skills/frontend-design/scripts/ux_audit.py", False),
+            ("Accessibility Check", ".codex/skills/frontend-design/scripts/accessibility_checker.py", False),
         ]
     },
     
@@ -106,8 +113,8 @@ VERIFICATION_SUITE = [
     {
         "category": "SEO & Content",
         "checks": [
-            ("SEO Check", ".agent/skills/seo-fundamentals/scripts/seo_checker.py", False),
-            ("GEO Check", ".agent/skills/geo-fundamentals/scripts/geo_checker.py", False),
+            ("SEO Check", ".codex/skills/seo-fundamentals/scripts/seo_checker.py", False),
+            ("GEO Check", ".codex/skills/geo-fundamentals/scripts/geo_checker.py", False),
         ]
     },
     
@@ -116,8 +123,8 @@ VERIFICATION_SUITE = [
         "category": "Performance",
         "requires_url": True,
         "checks": [
-            ("Lighthouse Audit", ".agent/skills/performance-profiling/scripts/lighthouse_audit.py", True),
-            ("Bundle Analysis", ".agent/skills/performance-profiling/scripts/bundle_analyzer.py", False),
+            ("Lighthouse Audit", ".codex/skills/performance-profiling/scripts/lighthouse_audit.py", True),
+            ("Bundle Analysis", ".codex/skills/performance-profiling/scripts/bundle_analyzer.py", False),
         ]
     },
     
@@ -126,7 +133,7 @@ VERIFICATION_SUITE = [
         "category": "E2E Testing",
         "requires_url": True,
         "checks": [
-            ("Playwright E2E", ".agent/skills/webapp-testing/scripts/playwright_runner.py", False),
+            ("Playwright E2E", ".codex/skills/webapp-testing/scripts/playwright_runner.py", False),
         ]
     },
     
@@ -134,7 +141,7 @@ VERIFICATION_SUITE = [
     {
         "category": "Mobile",
         "checks": [
-            ("Mobile Audit", ".agent/skills/mobile-design/scripts/mobile_audit.py", False),
+            ("Mobile Audit", ".codex/skills/mobile-design/scripts/mobile_audit.py", False),
         ]
     },
     
@@ -142,7 +149,7 @@ VERIFICATION_SUITE = [
     {
         "category": "Internationalization",
         "checks": [
-            ("i18n Check", ".agent/skills/i18n-localization/scripts/i18n_checker.py", False),
+            ("i18n Check", ".codex/skills/i18n-localization/scripts/i18n_checker.py", False),
         ]
     },
 ]
@@ -203,7 +210,7 @@ def print_final_report(results: List[dict], start_time: datetime):
     """Print comprehensive final report"""
     total_duration = (datetime.now() - start_time).total_seconds()
     
-    print_header("📊 FULL VERIFICATION REPORT")
+    print_header("FULL VERIFICATION REPORT")
     
     # Statistics
     total = len(results)
@@ -213,9 +220,9 @@ def print_final_report(results: List[dict], start_time: datetime):
     
     print(f"Total Duration: {total_duration:.1f}s")
     print(f"Total Checks: {total}")
-    print(f"{Colors.GREEN}✅ Passed: {passed}{Colors.ENDC}")
-    print(f"{Colors.RED}❌ Failed: {failed}{Colors.ENDC}")
-    print(f"{Colors.YELLOW}⏭️  Skipped: {skipped}{Colors.ENDC}")
+    print(f"{Colors.GREEN}[OK] Passed: {passed}{Colors.ENDC}")
+    print(f"{Colors.RED}[ERR] Failed: {failed}{Colors.ENDC}")
+    print(f"{Colors.YELLOW}[SKIP] Skipped: {skipped}{Colors.ENDC}")
     print()
     
     # Category breakdown
@@ -229,11 +236,11 @@ def print_final_report(results: List[dict], start_time: datetime):
         
         # Print result
         if r.get("skipped"):
-            status = f"{Colors.YELLOW}⏭️ {Colors.ENDC}"
+            status = f"{Colors.YELLOW}[SKIP]{Colors.ENDC}"
         elif r["passed"]:
-            status = f"{Colors.GREEN}✅{Colors.ENDC}"
+            status = f"{Colors.GREEN}[OK]{Colors.ENDC}"
         else:
-            status = f"{Colors.RED}❌{Colors.ENDC}"
+            status = f"{Colors.RED}[ERR]{Colors.ENDC}"
         
         duration_str = f"({r.get('duration', 0):.1f}s)" if not r.get("skipped") else ""
         print(f"  {status} {r['name']} {duration_str}")
@@ -242,10 +249,10 @@ def print_final_report(results: List[dict], start_time: datetime):
     
     # Failed checks detail
     if failed > 0:
-        print(f"{Colors.BOLD}{Colors.RED}❌ FAILED CHECKS:{Colors.ENDC}")
+        print(f"{Colors.BOLD}{Colors.RED}[ERR] FAILED CHECKS:{Colors.ENDC}")
         for r in results:
             if not r["passed"] and not r.get("skipped"):
-                print(f"\n{Colors.RED}✗ {r['name']}{Colors.ENDC}")
+                print(f"\n{Colors.RED}[X] {r['name']}{Colors.ENDC}")
                 if r.get("error"):
                     error_preview = r["error"][:200]
                     print(f"  Error: {error_preview}")
@@ -254,10 +261,10 @@ def print_final_report(results: List[dict], start_time: datetime):
     # Final verdict
     if failed > 0:
         print_error(f"VERIFICATION FAILED - {failed} check(s) need attention")
-        print(f"\n{Colors.YELLOW}💡 Tip: Fix critical (security, lint) issues first{Colors.ENDC}")
+        print(f"\n{Colors.YELLOW}Tip: Fix critical (security, lint) issues first{Colors.ENDC}")
         return False
     else:
-        print_success("✨ ALL CHECKS PASSED - Ready for deployment! ✨")
+        print_success("ALL CHECKS PASSED - Ready for deployment")
         return True
 
 def main():
@@ -266,8 +273,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python scripts/verify_all.py . --url http://localhost:3000
-  python scripts/verify_all.py . --url https://staging.example.com --no-e2e
+  python .codex/scripts/verify_all.py . --url http://localhost:3000
+  python .codex/scripts/verify_all.py . --url https://staging.example.com --no-e2e
         """
     )
     parser.add_argument("project", help="Project path to validate")
@@ -283,7 +290,7 @@ Examples:
         print_error(f"Project path does not exist: {project_path}")
         sys.exit(1)
     
-    print_header("🚀 ANTIGRAVITY KIT - FULL VERIFICATION SUITE")
+    print_header("ANTIGRAVITY KIT - FULL VERIFICATION SUITE")
     print(f"Project: {project_path}")
     print(f"URL: {args.url}")
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -304,7 +311,7 @@ Examples:
         if args.no_e2e and category == "E2E Testing":
             continue
         
-        print_header(f"📋 {category.upper()}")
+        print_header(category.upper())
         
         for name, script_path, required in suite["checks"]:
             script = project_path / script_path
@@ -325,3 +332,4 @@ Examples:
 
 if __name__ == "__main__":
     main()
+

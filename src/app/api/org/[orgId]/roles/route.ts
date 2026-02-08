@@ -3,12 +3,13 @@ import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
 import { createRoleController, listRolesController } from '@/server/api-adapters/org/roles/role-route-controllers';
 
 interface RouteParams {
-  params: { orgId: string };
+  params: Promise<{ orgId: string }>;
 }
 
 export async function GET(request: Request, context: RouteParams): Promise<NextResponse> {
   try {
-    const result = await listRolesController(request, context.params.orgId);
+    const { orgId } = await context.params;
+    const result = await listRolesController(request, orgId);
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     return buildErrorResponse(error);
@@ -17,7 +18,8 @@ export async function GET(request: Request, context: RouteParams): Promise<NextR
 
 export async function POST(request: Request, context: RouteParams): Promise<NextResponse> {
   try {
-    const result = await createRoleController(request, context.params.orgId);
+    const { orgId } = await context.params;
+    const result = await createRoleController(request, orgId);
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     return buildErrorResponse(error);

@@ -119,7 +119,7 @@ export function IdentityStep({
                                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                             )}
                             {emailCheckStatus === 'valid' && (
-                                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                <CheckCircle2 className="h-4 w-4 text-success" />
                             )}
                             {emailCheckStatus === 'invalid' && (
                                 <AlertCircle className="h-4 w-4 text-destructive" />

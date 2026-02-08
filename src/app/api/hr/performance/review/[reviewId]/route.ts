@@ -8,15 +8,16 @@ import {
 } from '@/server/api-adapters/hr/performance/review-route-controllers';
 
 interface RouteParams {
-    params: {
+    params: Promise<{
         reviewId?: string;
-    };
+    }>;
 }
 
 export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
+            const resolvedParams = await params;
         return NextResponse.json(
-            await getPerformanceReviewRouteController(request, params.reviewId ?? ''),
+            await getPerformanceReviewRouteController(request, resolvedParams.reviewId ?? ''),
             { status: 200 },
         );
     } catch (error) {
@@ -26,8 +27,9 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
 
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
+            const resolvedParams = await params;
         return NextResponse.json(
-            await updatePerformanceReviewRouteController(request, params.reviewId ?? ''),
+            await updatePerformanceReviewRouteController(request, resolvedParams.reviewId ?? ''),
             { status: 200 },
         );
     } catch (error) {
@@ -37,8 +39,9 @@ export async function PATCH(request: Request, { params }: RouteParams): Promise<
 
 export async function DELETE(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
+            const resolvedParams = await params;
         return NextResponse.json(
-            await deletePerformanceReviewRouteController(request, params.reviewId ?? ''),
+            await deletePerformanceReviewRouteController(request, resolvedParams.reviewId ?? ''),
             { status: 200 },
         );
     } catch (error) {

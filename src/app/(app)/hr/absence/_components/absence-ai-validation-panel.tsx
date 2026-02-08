@@ -18,8 +18,8 @@ export interface AbsenceAiValidationPanelProps {
 
 const STATUS_TONES: Record<string, string> = {
     PENDING: 'bg-secondary/60 text-secondary-foreground',
-    VERIFIED: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-    MISMATCH: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+    VERIFIED: 'bg-success/15 text-success',
+    MISMATCH: 'bg-warning/15 text-warning',
     ERROR: 'bg-destructive/15 text-destructive',
 };
 

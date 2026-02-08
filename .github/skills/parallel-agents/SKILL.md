@@ -4,13 +4,13 @@ description: Multi-agent orchestration patterns. Use when multiple independent t
 allowed-tools: Read, Glob, Grep
 ---
 
-# Native Parallel Agents
+# Copilot Chat Parallel Agents
 
-> Orchestration through Antigravity's built-in Agent Tool
+> Orchestration through Copilot Chat subagent tooling
 
 ## Overview
 
-This skill enables coordinating multiple specialized agents through Antigravity's native agent system. Unlike external scripts, this approach keeps all orchestration within Antigravity's control.
+This skill enables coordinating multiple specialized agents through Copilot Chat subagent tooling. Unlike external scripts, this approach keeps all orchestration within the chat workflow.
 
 ## When to Use Orchestration
 
@@ -47,9 +47,9 @@ Use the frontend-specialist to analyze React components.
 Based on those findings, have the test-engineer generate component tests.
 ```
 
-### Resume Previous Work
+### Repeatable Runs
 ```
-Resume agent [agentId] and continue with additional requirements.
+Subagents are stateless. Re-run with full context when you need another pass.
 ```
 
 ---
@@ -113,17 +113,9 @@ Agents: security-auditor → penetration-tester → synthesis
 
 ---
 
-## Antigravity Built-in Agents
+## Copilot Chat Subagents
 
-These work alongside custom agents:
-
-| Agent | Model | Purpose |
-|-------|-------|---------|
-| **Explore** | Haiku | Fast read-only codebase search |
-| **Plan** | Sonnet | Research during plan mode |
-| **General-purpose** | Sonnet | Complex multi-step modifications |
-
-Use **Explore** for quick searches, **custom agents** for domain expertise.
+Copilot Chat supports specialized subagents invoked via `runSubagent`. Always pass full context and constraints because subagents do not share state.
 
 ---
 
@@ -169,7 +161,7 @@ After all agents complete, synthesize:
 ## Key Benefits
 
 - ✅ **Single session** - All agents share context
-- ✅ **AI-controlled** - Claude orchestrates autonomously
-- ✅ **Native integration** - Works with built-in Explore, Plan agents
-- ✅ **Resume support** - Can continue previous agent work
+- ✅ **AI-controlled** - Copilot Chat orchestrates via your instructions
+- ✅ **Native integration** - Uses Copilot Chat subagents
+- ✅ **Repeatable runs** - Re-run with explicit context
 - ✅ **Context passing** - Findings flow between agents

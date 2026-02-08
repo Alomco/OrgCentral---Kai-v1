@@ -67,7 +67,7 @@ export function ProfileHero({ profile, className, onEdit, userImage }: ProfileHe
 
                     {/* Status Indicator */}
                     <div className="absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[oklch(var(--background))] shadow-sm">
-                        <div className="h-4 w-4 rounded-full bg-green-500 ring-2 ring-green-500/30 animate-pulse" />
+                        <div className="h-4 w-4 rounded-full bg-success ring-2 ring-success/30 animate-pulse" />
                     </div>
                 </div>
 

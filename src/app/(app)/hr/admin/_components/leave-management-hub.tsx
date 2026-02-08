@@ -199,8 +199,8 @@ export async function LeaveManagementHub({ authorization, statusFilter = 'submit
 function EmptyState() {
     return (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-full bg-emerald-100 p-3 dark:bg-emerald-900/30">
-                <svg className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="rounded-full bg-success/10 p-3">
+                <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
             </div>

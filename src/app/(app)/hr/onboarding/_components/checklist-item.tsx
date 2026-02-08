@@ -36,7 +36,7 @@ export function ChecklistItem({ item, onToggle, isPending, disabled }: Checklist
                     {isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     ) : item.completed ? (
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-4 w-4 text-success" />
                     ) : (
                         <Circle className="h-4 w-4 text-muted-foreground" />
                     )}
@@ -54,7 +54,7 @@ export function ChecklistItem({ item, onToggle, isPending, disabled }: Checklist
                         <p className="text-xs text-muted-foreground">{item.notes}</p>
                     )}
                     {item.completed && item.completedAt && (
-                        <p className="text-xs text-green-600 dark:text-green-400">
+                        <p className="text-xs text-success">
                             Completed {formatChecklistDate(item.completedAt)}
                         </p>
                     )}
@@ -69,7 +69,7 @@ export function ChecklistItem({ item, onToggle, isPending, disabled }: Checklist
                 {isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 ) : item.completed ? (
-                    <Check className="h-4 w-4 text-green-500" />
+                    <Check className="h-4 w-4 text-success" />
                 ) : (
                     <Circle className="h-4 w-4 text-muted-foreground" />
                 )}
@@ -87,7 +87,7 @@ export function ChecklistItem({ item, onToggle, isPending, disabled }: Checklist
                     <p className="text-xs text-muted-foreground">{item.notes}</p>
                 )}
                 {item.completed && item.completedAt && (
-                    <p className="text-xs text-green-600 dark:text-green-400">
+                    <p className="text-xs text-success">
                         Completed {formatChecklistDate(item.completedAt)}
                     </p>
                 )}

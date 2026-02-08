@@ -7,7 +7,7 @@ interface BillingRedirectResponse {
 
 const billingRedirectResponseSchema = z.object({
   success: z.literal(true),
-  url: z.string().url(),
+  url: z.url(),
 });
 
 export async function createBillingCheckout(orgId: string): Promise<BillingRedirectResponse> {

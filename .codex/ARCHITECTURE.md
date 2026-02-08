@@ -1,34 +1,34 @@
-# Antigravity Kit Architecture
+﻿# Antigravity Kit Architecture
 
 > Comprehensive AI Agent Capability Expansion Toolkit
 
 ---
 
-## 📋 Overview
+## ðŸ“‹ Overview
 
 Antigravity Kit is a modular system consisting of:
 
 - **20 Specialist Agents** - Role-based AI personas
-- **36 Skills** - Domain-specific knowledge modules
+- **48 Skills** - Domain-specific knowledge modules
 - **11 Workflows** - Slash command procedures
 
 ---
 
-## 🏗️ Directory Structure
+## ðŸ—ï¸ Directory Structure
 
 ```plaintext
-.agent/
-├── ARCHITECTURE.md          # This file
-├── agents/                  # 20 Specialist Agents
-├── skills/                  # 36 Skills
-├── workflows/               # 11 Slash Commands
-├── rules/                   # Global Rules
-└── scripts/                 # Master Validation Scripts
+.codex/
+â”œâ”€â”€ ARCHITECTURE.md          # This file
+â”œâ”€â”€ agents/                  # 20 Specialist Agents
+â”œâ”€â”€ skills/                  # 36 Skills
+â”œâ”€â”€ workflows/               # 11 Slash Commands
+â”œâ”€â”€ rules/                   # Global Rules
+â””â”€â”€ scripts/                 # Master Validation Scripts
 ```
 
 ---
 
-## 🤖 Agents (20)
+## ðŸ¤– Agents (20)
 
 Specialist AI personas for different domains.
 
@@ -38,10 +38,10 @@ Specialist AI personas for different domains.
 | `project-planner` | Discovery, task planning | brainstorming, plan-writing, architecture |
 | `frontend-specialist` | Web UI/UX | frontend-design, react-patterns, tailwind-patterns |
 | `backend-specialist` | API, business logic | api-patterns, nodejs-best-practices, database-design |
-| `database-architect` | Schema, SQL | database-design, prisma-expert |
+| `database-architect` | Schema, SQL | database-design |
 | `mobile-developer` | iOS, Android, RN | mobile-design |
 | `game-developer` | Game logic, mechanics | game-development |
-| `devops-engineer` | CI/CD, Docker | deployment-procedures, docker-expert |
+| `devops-engineer` | CI/CD, Infrastructure | deployment-procedures, server-management |
 | `security-auditor` | Security compliance | vulnerability-scanner, red-team-tactics |
 | `penetration-tester` | Offensive security | red-team-tactics |
 | `test-engineer` | Testing strategies | testing-patterns, tdd-workflow, webapp-testing |
@@ -57,7 +57,7 @@ Specialist AI personas for different domains.
 
 ---
 
-## 🧩 Skills (36)
+## ðŸ§© Skills (36)
 
 Modular knowledge domains that agents can load on-demand. based on task context.
 
@@ -76,7 +76,6 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 | Skill | Description |
 | ----- | ----------- |
 | `api-patterns` | REST, GraphQL, tRPC |
-| `nestjs-expert` | NestJS modules, DI, decorators |
 | `nodejs-best-practices` | Node.js async, modules |
 | `python-patterns` | Python standards, FastAPI |
 
@@ -85,19 +84,12 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 | Skill | Description |
 | ----- | ----------- |
 | `database-design` | Schema design, optimization |
-| `prisma-expert` | Prisma ORM, migrations |
-
-### TypeScript/JavaScript
-
-| Skill | Description |
-| ----- | ----------- |
-| `typescript-expert` | Type-level programming, performance |
+| `lint-and-validate` | Linting and type validation workflows |
 
 ### Cloud & Infrastructure
 
 | Skill | Description |
 | ----- | ----------- |
-| `docker-expert` | Containerization, Compose |
 | `deployment-procedures` | CI/CD, deploy workflows |
 | `server-management` | Infrastructure management |
 
@@ -168,7 +160,7 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 
 ---
 
-## 🔄 Workflows (11)
+## ðŸ”„ Workflows (11)
 
 Slash command procedures. Invoke with `/command`.
 
@@ -188,13 +180,13 @@ Slash command procedures. Invoke with `/command`.
 
 ---
 
-## 🎯 Skill Loading Protocol
+## ðŸŽ¯ Skill Loading Protocol
 
 ```plaintext
-User Request → Skill Description Match → Load SKILL.md
-                                            ↓
+User Request â†’ Skill Description Match â†’ Load SKILL.md
+                                            â†“
                                     Read references/
-                                            ↓
+                                            â†“
                                     Read scripts/
 ```
 
@@ -202,23 +194,23 @@ User Request → Skill Description Match → Load SKILL.md
 
 ```plaintext
 skill-name/
-├── SKILL.md           # (Required) Metadata & instructions
-├── scripts/           # (Optional) Python/Bash scripts
-├── references/        # (Optional) Templates, docs
-└── assets/            # (Optional) Images, logos
+â”œâ”€â”€ SKILL.md           # (Required) Metadata & instructions
+â”œâ”€â”€ scripts/           # (Optional) Python/Bash scripts
+â”œâ”€â”€ references/        # (Optional) Templates, docs
+â””â”€â”€ assets/            # (Optional) Images, logos
 ```
 
 ### Enhanced Skills (with scripts/references)
 
 | Skill | Files | Coverage |
 | ----- | ----- | -------- |
-| `typescript-expert` | 5 | Utility types, tsconfig, cheatsheet |
+| `lint-and-validate` | 3 | Lint and type validation orchestrators |
 | `ui-ux-pro-max` | 27 | 50 styles, 21 palettes, 50 fonts |
 | `app-builder` | 20 | Full-stack scaffolding |
 
 ---
 
-## � Scripts (2)
+## ï¿½ Scripts (2)
 
 Master validation scripts that orchestrate skill-level scripts.
 
@@ -233,10 +225,10 @@ Master validation scripts that orchestrate skill-level scripts.
 
 ```bash
 # Quick validation during development
-python .agent/scripts/checklist.py .
+python .codex/scripts/checklist.py .
 
 # Full verification before deployment
-python .agent/scripts/verify_all.py . --url http://localhost:3000
+python .codex/scripts/verify_all.py . --url http://localhost:3000
 ```
 
 ### What They Check
@@ -259,31 +251,32 @@ python .agent/scripts/verify_all.py . --url http://localhost:3000
 - Mobile Audit
 - i18n Check
 
-For details, see [scripts/README.md](scripts/README.md)
+For details, inspect `.codex/scripts/` and skill script folders directly.
 
 ---
 
-## 📊 Statistics
+## ðŸ“Š Statistics
 
 | Metric | Value |
 | ------ | ----- |
 | **Total Agents** | 20 |
-| **Total Skills** | 36 |
+| **Total Skills** | 48 |
 | **Total Workflows** | 11 |
-| **Total Scripts** | 2 (master) + 18 (skill-level) |
+| **Total Scripts** | 2 (master) + 19 (skill-level) |
 | **Coverage** | ~90% web/mobile development |
 
 ---
 
-## 🔗 Quick Reference
+## ðŸ”— Quick Reference
 
 | Need | Agent | Skills |
 | ---- | ----- | ------ |
 | Web App | `frontend-specialist` | react-patterns, nextjs-best-practices |
 | API | `backend-specialist` | api-patterns, nodejs-best-practices |
 | Mobile | `mobile-developer` | mobile-design |
-| Database | `database-architect` | database-design, prisma-expert |
+| Database | `database-architect` | database-design |
 | Security | `security-auditor` | vulnerability-scanner |
 | Testing | `test-engineer` | testing-patterns, webapp-testing |
 | Debug | `debugger` | systematic-debugging |
 | Plan | `project-planner` | brainstorming, plan-writing |
+

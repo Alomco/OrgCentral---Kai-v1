@@ -8,12 +8,13 @@ import {
 } from '@/server/api-adapters/org/branding/branding-route-controllers';
 
 interface RouteParams {
-    params: { orgId: string };
+    params: Promise<{ orgId: string }>;
 }
 
 export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const result = await getOrgBrandingController(request, params.orgId);
+        const { orgId } = await params;
+        const result = await getOrgBrandingController(request, orgId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
@@ -22,7 +23,8 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
 
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const result = await updateOrgBrandingController(request, params.orgId);
+        const { orgId } = await params;
+        const result = await updateOrgBrandingController(request, orgId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
@@ -31,7 +33,8 @@ export async function PATCH(request: Request, { params }: RouteParams): Promise<
 
 export async function DELETE(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const result = await resetOrgBrandingController(request, params.orgId);
+        const { orgId } = await params;
+        const result = await resetOrgBrandingController(request, orgId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);

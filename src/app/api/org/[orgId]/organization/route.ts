@@ -7,12 +7,13 @@ import {
 } from '@/server/api-adapters/org/organization/organization-route-controllers';
 
 interface RouteParams {
-    params: { orgId: string };
+    params: Promise<{ orgId: string }>;
 }
 
 export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        return NextResponse.json(await getOrganizationController(request, params.orgId), { status: 200 });
+        const { orgId } = await params;
+        return NextResponse.json(await getOrganizationController(request, orgId), { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
     }
@@ -20,7 +21,8 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
 
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        return NextResponse.json(await updateOrganizationProfileController(request, params.orgId), { status: 200 });
+        const { orgId } = await params;
+        return NextResponse.json(await updateOrganizationProfileController(request, orgId), { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
     }

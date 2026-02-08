@@ -5,18 +5,19 @@ import { deleteUnplannedAbsenceController } from '@/server/api-adapters/hr/absen
 import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
 
 interface RouteParams {
-    params: {
+    params: Promise<{
         absenceId: string;
-    };
+    }>;
 }
 
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        if (!params.absenceId) {
+            const resolvedParams = await params;
+        if (!resolvedParams.absenceId) {
             throw new ValidationError('Absence id is required.');
         }
 
-        const result = await updateUnplannedAbsenceController({ request, absenceId: params.absenceId });
+        const result = await updateUnplannedAbsenceController({ request, absenceId: resolvedParams.absenceId });
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
@@ -25,11 +26,12 @@ export async function PATCH(request: Request, { params }: RouteParams): Promise<
 
 export async function DELETE(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        if (!params.absenceId) {
+            const resolvedParams = await params;
+        if (!resolvedParams.absenceId) {
             throw new ValidationError('Absence id is required.');
         }
 
-        const result = await deleteUnplannedAbsenceController({ request, absenceId: params.absenceId });
+        const result = await deleteUnplannedAbsenceController({ request, absenceId: resolvedParams.absenceId });
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);

@@ -75,10 +75,10 @@ export async function TrainingRecordsPanel({
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                         {record.expiryDate ? (
-                            <span className={isExpiringSoon(record.expiryDate) ? 'text-orange-600' : ''}>
+                            <span className={isExpiringSoon(record.expiryDate) ? 'text-warning' : ''}>
                                 {formatDate(record.expiryDate)}
                                 {isExpiringSoon(record.expiryDate) ? (
-                                    <Badge variant="outline" className="ml-2 text-orange-600">
+                                    <Badge variant="outline" className="ml-2 text-warning">
                                         Soon
                                     </Badge>
                                 ) : null}

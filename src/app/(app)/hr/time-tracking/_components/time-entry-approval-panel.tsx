@@ -99,7 +99,7 @@ export function TimeEntryApprovalPanel({
                     ))
                 ) : (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
-                        <CheckCircle className="h-8 w-8 text-emerald-500 mb-2" />
+                        <CheckCircle className="h-8 w-8 text-success mb-2" />
                         <p className="text-sm font-medium">No pending entries</p>
                         <p className="text-xs text-muted-foreground">
                             Completed time entries will appear here for approval.
@@ -152,7 +152,7 @@ const TimeEntryApprovalRow = memo(function TimeEntryApprovalRow({
                     aria-label="Reject time entry"
                     title="Reject time entry"
                 >
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-4 w-4 text-destructive" />
                 </Button>
                 <Button
                     variant="outline"
@@ -163,7 +163,7 @@ const TimeEntryApprovalRow = memo(function TimeEntryApprovalRow({
                     aria-label="Approve time entry"
                     title="Approve time entry"
                 >
-                    <CheckCircle className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                 </Button>
             </div>
         </div>

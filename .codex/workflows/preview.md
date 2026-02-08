@@ -1,4 +1,4 @@
----
+﻿---
 description: Preview server start, stop, and status check. Local development server management.
 ---
 
@@ -31,11 +31,11 @@ Manage preview server: start, stop, status check.
 /preview start
 
 Response:
-🚀 Starting preview...
+ðŸš€ Starting preview...
    Port: 3000
    Type: Next.js
 
-✅ Preview ready!
+âœ… Preview ready!
    URL: http://localhost:3000
 ```
 
@@ -46,10 +46,10 @@ Response:
 Response:
 === Preview Status ===
 
-🌐 URL: http://localhost:3000
-📁 Project: C:/projects/my-app
-🏷️ Type: nextjs
-💚 Health: OK
+ðŸŒ URL: http://localhost:3000
+ðŸ“ Project: C:/projects/my-app
+ðŸ·ï¸ Type: nextjs
+ðŸ’š Health: OK
 ```
 
 ### Port Conflict
@@ -57,7 +57,7 @@ Response:
 /preview start
 
 Response:
-⚠️ Port 3000 is in use.
+âš ï¸ Port 3000 is in use.
 
 Options:
 1. Start on port 3001
@@ -74,8 +74,9 @@ Which one? (default: 1)
 Auto preview uses `auto_preview.py` script:
 
 ```bash
-python .agent/scripts/auto_preview.py start [port]
-python .agent/scripts/auto_preview.py stop
-python .agent/scripts/auto_preview.py status
+python .codex/scripts/auto_preview.py start [port]
+python .codex/scripts/auto_preview.py stop
+python .codex/scripts/auto_preview.py status
 ```
+
 

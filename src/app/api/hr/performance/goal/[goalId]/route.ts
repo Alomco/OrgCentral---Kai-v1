@@ -7,14 +7,15 @@ import {
 } from '@/server/api-adapters/hr/performance/goal-route-controllers';
 
 interface RouteParams {
-    params: {
+    params: Promise<{
         goalId?: string;
-    };
+    }>;
 }
 
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const result = await updatePerformanceGoalRouteController(request, params.goalId ?? '');
+            const resolvedParams = await params;
+        const result = await updatePerformanceGoalRouteController(request, resolvedParams.goalId ?? '');
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
@@ -23,7 +24,8 @@ export async function PATCH(request: Request, { params }: RouteParams): Promise<
 
 export async function DELETE(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const result = await deletePerformanceGoalRouteController(request, params.goalId ?? '');
+            const resolvedParams = await params;
+        const result = await deletePerformanceGoalRouteController(request, resolvedParams.goalId ?? '');
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);

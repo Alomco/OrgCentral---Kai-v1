@@ -68,14 +68,14 @@ export function ComplianceExpiryPanel({ expiringItems }: ComplianceExpiryPanelPr
             <CardContent className="space-y-4">
                 {/* Summary Stats */}
                 <div className="grid grid-cols-1 gap-4 text-center sm:grid-cols-3">
-                    <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
-                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                    <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
+                        <p className="text-2xl font-bold text-destructive">
                             {expired.length}
                         </p>
                         <p className="text-xs text-muted-foreground">Expired</p>
                     </div>
-                    <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3">
-                        <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    <div className="rounded-lg border border-warning/20 bg-warning/10 p-3">
+                        <p className="text-2xl font-bold text-warning">
                             {expiringIn7Days.length}
                         </p>
                         <p className="text-xs text-muted-foreground">7 days</p>
@@ -102,9 +102,9 @@ export function ComplianceExpiryPanel({ expiringItems }: ComplianceExpiryPanelPr
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
                                         <StatusIcon
                                             className={`h-4 w-4 shrink-0 ${status.variant === 'destructive'
-                                                ? 'text-red-500'
+                                                ? 'text-destructive'
                                                 : status.variant === 'warning'
-                                                    ? 'text-amber-500'
+                                                    ? 'text-warning'
                                                     : 'text-muted-foreground'
                                                 }`}
                                         />
@@ -131,7 +131,7 @@ export function ComplianceExpiryPanel({ expiringItems }: ComplianceExpiryPanelPr
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
-                        <CheckCircle className="h-8 w-8 text-emerald-500 mb-2" />
+                        <CheckCircle className="h-8 w-8 text-success mb-2" />
                         <p className="text-sm font-medium">No Upcoming Expirations</p>
                         <p className="text-xs text-muted-foreground">
                             All compliance items are up to date

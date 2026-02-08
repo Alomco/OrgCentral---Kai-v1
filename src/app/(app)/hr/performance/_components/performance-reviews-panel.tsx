@@ -35,9 +35,9 @@ function formatRating(rating: number | null | undefined): string {
 
 function getRatingColor(rating: number | null | undefined): string {
     if (rating === null || rating === undefined) { return ''; }
-    if (rating >= 4) { return 'text-green-600'; }
-    if (rating >= 3) { return 'text-yellow-600'; }
-    return 'text-red-600';
+    if (rating >= 4) { return 'text-success'; }
+    if (rating >= 3) { return 'text-warning'; }
+    return 'text-destructive';
 }
 
 export async function PerformanceReviewsPanel({

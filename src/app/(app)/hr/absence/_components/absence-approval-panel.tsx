@@ -154,7 +154,7 @@ export function AbsenceApprovalPanel({
                     </>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
-                        <CheckCircle className="h-8 w-8 text-emerald-500 mb-2" />
+                        <CheckCircle className="h-8 w-8 text-success mb-2" />
                         <p className="text-sm font-medium">All Caught Up!</p>
                         <p className="text-xs text-muted-foreground">
                             No pending absence requests to review

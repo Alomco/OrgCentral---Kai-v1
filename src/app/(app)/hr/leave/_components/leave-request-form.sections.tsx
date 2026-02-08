@@ -105,7 +105,7 @@ export function AttachmentsField({
             </div>
             {uploading ? <div className="text-xs text-muted-foreground">Uploading…</div> : null}
             {uploadedAttachments.length > 0 ? (
-                <div className="text-xs text-green-600">{uploadedAttachments[0].fileName} uploaded.</div>
+                <div className="text-xs text-success">{uploadedAttachments[0].fileName} uploaded.</div>
             ) : null}
             {uploadError ? <div className="text-xs text-destructive">{uploadError}</div> : null}
         </div>

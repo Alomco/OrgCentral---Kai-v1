@@ -14,15 +14,15 @@ interface HrAdminPendingItemsProps {
 function getItemIcon(type: PendingApprovalItem['type']) {
     switch (type) {
         case 'leave':
-            return <Calendar className="h-4 w-4 text-blue-500" />;
+            return <Calendar className="h-4 w-4 text-info" />;
         case 'compliance':
-            return <FileCheck className="h-4 w-4 text-amber-500" />;
+            return <FileCheck className="h-4 w-4 text-warning" />;
         case 'absence':
-            return <Calendar className="h-4 w-4 text-rose-500" />;
+            return <Calendar className="h-4 w-4 text-destructive" />;
         case 'time-entry':
-            return <Timer className="h-4 w-4 text-indigo-500" />;
+            return <Timer className="h-4 w-4 text-primary" />;
         case 'onboarding':
-            return <Clock className="h-4 w-4 text-emerald-500" />;
+            return <Clock className="h-4 w-4 text-success" />;
         default:
             return <Clock className="h-4 w-4 text-muted-foreground" />;
     }

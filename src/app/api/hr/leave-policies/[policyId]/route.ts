@@ -8,18 +8,19 @@ import {
 } from '@/server/api-adapters/hr/leave-policies/leave-policy-route-controllers';
 
 interface RouteParams {
-    params: {
+    params: Promise<{
         policyId: string;
-    };
+    }>;
 }
 
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        if (!params.policyId) {
+            const resolvedParams = await params;
+        if (!resolvedParams.policyId) {
             throw new ValidationError('Policy id is required.');
         }
 
-        const result = await updateLeavePolicyRouteController(request, params.policyId);
+        const result = await updateLeavePolicyRouteController(request, resolvedParams.policyId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
@@ -28,11 +29,12 @@ export async function PATCH(request: Request, { params }: RouteParams): Promise<
 
 export async function DELETE(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        if (!params.policyId) {
+            const resolvedParams = await params;
+        if (!resolvedParams.policyId) {
             throw new ValidationError('Policy id is required.');
         }
 
-        const result = await deleteLeavePolicyRouteController(request, params.policyId);
+        const result = await deleteLeavePolicyRouteController(request, resolvedParams.policyId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);

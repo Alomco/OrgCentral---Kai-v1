@@ -4,12 +4,13 @@ import { presignAbsenceAttachmentController } from '@/server/api-adapters/hr/abs
 import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
 
 interface RouteParams {
-    params: { absenceId: string };
+    params: Promise<{ absenceId: string }>;
 }
 
 export async function POST(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const result = await presignAbsenceAttachmentController({ request, absenceId: params.absenceId });
+            const resolvedParams = await params;
+        const result = await presignAbsenceAttachmentController({ request, absenceId: resolvedParams.absenceId });
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);

@@ -31,8 +31,8 @@ export function OnboardingWizardSuccess({
     return (
         <Card>
             <CardHeader className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                    <Send className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
+                    <Send className="h-6 w-6 text-success" />
                 </div>
                 <h2 className="text-xl font-semibold">{heading}</h2>
                 <p className="text-sm text-muted-foreground">{detail}</p>

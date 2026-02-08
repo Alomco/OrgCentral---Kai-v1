@@ -6,23 +6,7 @@ import { PrismaHRNotificationRepository } from './prisma-hr-notification-reposit
 const invalidateHrNotifications = vi.hoisted(() => vi.fn());
 const registerHrNotificationTag = vi.hoisted(() => vi.fn());
 
-vi.mock('@/server/repositories/prisma/base-prisma-repository', () => {
-    class BasePrismaRepository {
-        protected prisma: PrismaClient;
-        constructor(options: { prisma: PrismaClient }) {
-            this.prisma = options.prisma;
-        }
-        protected assertTenantRecord<T extends { orgId?: string | null }>(record: T | null, orgId: string): T {
-            if (!record || record.orgId !== orgId) {
-                throw new AuthorizationError('Cross-tenant access detected.');
-            }
-            return record;
-        }
-    }
-    return { BasePrismaRepository };
-});
-
-vi.mock('../../../../lib/cache-tags/hr-notifications', () => ({
+vi.mock('@/server/lib/cache-tags/hr-notifications', () => ({
     invalidateHrNotifications,
     registerHrNotificationTag,
 }));
@@ -77,7 +61,7 @@ beforeEach(() => {
     vi.clearAllMocks();
 });
 
-describe.skip('PrismaHRNotificationRepository', () => {
+describe('PrismaHRNotificationRepository', () => {
     it('creates a notification with enum mapping and invalidates cache', async () => {
         const { repo, model } = createRepository();
         model.create.mockResolvedValue({ ...baseRecord });
@@ -130,7 +114,8 @@ describe.skip('PrismaHRNotificationRepository', () => {
 
     it('enforces tenant scoping on markRead', async () => {
         const { repo, model } = createRepository();
-        model.update.mockResolvedValue({ ...baseRecord, orgId: 'other-org' });
+        model.updateMany.mockResolvedValue({ count: 1 });
+        model.findFirst.mockResolvedValue({ ...baseRecord, orgId: 'other-org' });
 
         await expect(repo.markRead(ORG_ID, 'notif-1')).rejects.toThrow();
     });

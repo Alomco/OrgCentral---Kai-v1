@@ -21,6 +21,7 @@ import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { EmployeeDirectoryClient } from './_components/employee-directory-client';
+import type { EmployeeSearchParams } from './schema';
 
 const EmployeeInvitationPanel = dynamic(
     () => import('./_components/employee-invitation-panel').then((module) => module.EmployeeInvitationPanel),
@@ -33,8 +34,24 @@ export const metadata: Metadata = {
     description: 'Manage your organization\'s employee records and workforce data.',
 };
 
-export default async function HrEmployeesPage() {
+interface HrEmployeesPageProps {
+    searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function HrEmployeesPage({ searchParams }: HrEmployeesPageProps) {
     const headerStore = await nextHeaders();
+    const resolvedSearchParams = (await searchParams) ?? {};
+    const initialQueryValue = resolvedSearchParams.q;
+    const initialQuery = typeof initialQueryValue === 'string'
+        ? initialQueryValue.trim()
+        : Array.isArray(initialQueryValue)
+            ? (initialQueryValue[0] ?? '').trim()
+            : '';
+    const initialSearchParams: Partial<EmployeeSearchParams> = {
+        page: 1,
+        pageSize: 20,
+        query: initialQuery.length > 0 ? initialQuery : undefined,
+    };
     await getHrSessionContextOrRedirect(
         {},
         {
@@ -84,7 +101,7 @@ export default async function HrEmployeesPage() {
 
             {/* Employee Directory */}
             <Suspense fallback={<DirectorySkeleton />}>
-                <Directory />
+                <Directory initialSearchParams={initialSearchParams} />
             </Suspense>
 
             {/* Employee Invitations */}
@@ -142,9 +159,13 @@ async function StatsRow() {
     );
 }
 
-async function Directory() {
+async function Directory({
+    initialSearchParams,
+}: {
+    initialSearchParams: Partial<EmployeeSearchParams>;
+}) {
     const [initialResult, filterOptions] = await Promise.all([
-        getEmployeeList({ page: 1, pageSize: 20 }),
+        getEmployeeList(initialSearchParams),
         getEmployeeFilterOptions(),
     ]);
 
@@ -152,6 +173,7 @@ async function Directory() {
         <EmployeeDirectoryClient
             initialResult={initialResult}
             filterOptions={filterOptions}
+            initialParams={initialSearchParams}
         />
     );
 }

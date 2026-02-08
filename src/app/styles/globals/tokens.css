@@ -26,64 +26,72 @@
   /* Modern Border Radius with Golden Ratio */
   --radius: 0.618rem; /* φ⁻¹ */
   --radius-2xl: calc(var(--radius) + 8px);
-  /* WCAG 2.2 AA Compliant Color System - Future Blue + Amber */
-  --background: 0.9842 0.0034 247.86;
-  --foreground: 0.3791 0.1378 265.52;
+  /* WCAG 2.2 AA Compliant Color System - Cerulean Blue + Gold */
+  --background: 0.9850 0.0020 245.00;
+  --foreground: 0.2200 0.0120 250.00;
 
   /* Cards with subtle gradient capability */
-  --card: 0.9965 0.0017 247.84;
-  --card-foreground: 0.3791 0.1378 265.52;
+  --card: 0.9940 0.0010 245.00;
+  --card-foreground: 0.2200 0.0120 250.00;
 
-  --popover: 0.9965 0.0017 247.84;
-  --popover-foreground: 0.3791 0.1378 265.52;
+  --popover: 0.9940 0.0010 245.00;
+  --popover-foreground: 0.2200 0.0120 250.00;
 
-  /* Primary: Future Blue */
-  --primary: 0.4244 0.1809 265.64;
+  /* Primary: Cerulean Blue */
+  --primary: 0.4800 0.1450 245.00;
   --primary-foreground: 1 0 0;
 
   /* Secondary: Cloud Surface */
-  --secondary: 0.9683 0.0069 247.90;
-  --secondary-foreground: 0.3791 0.1378 265.52;
+  --secondary: 0.9650 0.0050 245.00;
+  --secondary-foreground: 0.2200 0.0120 250.00;
 
   /* Muted: Subtle surface */
-  --muted: 0.9683 0.0069 247.90;
-  --muted-foreground: 0.4455 0.0374 257.28;
+  --muted: 0.9650 0.0050 245.00;
+  --muted-foreground: 0.5000 0.0180 250.00;
 
-  /* Accent: Amber for CTA */
-  --accent: 0.7686 0.1647 70.08;
-  --accent-foreground: 0.2077 0.0398 265.75;
+  /* Accent: Soft Gold for CTA */
+  --accent: 0.7500 0.1400 85.00;
+  --accent-foreground: 0.2200 0.0300 250.00;
 
   /* Destructive: Clear red */
   --destructive: 0.6368 0.2078 25.33;
   --destructive-foreground: 1 0 0;
 
   /* Border: crisp and visible */
-  --border: 0.9288 0.0126 255.51;
-  --input: 0.9288 0.0126 255.51;
-  --ring: 0.6231 0.1880 259.81;
+  --border: 0.9100 0.0080 245.00;
+  --input: 0.9100 0.0080 245.00;
+  --ring: 0.5600 0.1500 245.00;
 
   /* Charts: High-contrast data palette */
-  --chart-1: 0.6231 0.1880 259.81;
+  --chart-1: 0.5600 0.1500 245.00;
   /* Blue */
-  --chart-2: 0.7971 0.1339 211.53;
+  --chart-2: 0.7200 0.1200 195.00;
   /* Teal */
-  --chart-3: 0.7227 0.1920 149.58;
+  --chart-3: 0.6800 0.1600 150.00;
   /* Green */
-  --chart-4: 0.7686 0.1647 70.08;
-  /* Amber */
-  --chart-5: 0.6056 0.2189 292.72;
+  --chart-4: 0.7500 0.1400 85.00;
+  /* Gold */
+  --chart-5: 0.5800 0.1600 290.00;
   /* Violet */
 
+  /* Semantic status tokens */
+  --success: 0.6800 0.1600 150.00;
+  --success-foreground: 0.2000 0.0400 150.00;
+  --warning: 0.7800 0.1400 85.00;
+  --warning-foreground: 0.2500 0.0400 85.00;
+  --info: 0.5600 0.1400 245.00;
+  --info-foreground: 1 0 0;
+
   /* Sidebar: clear hierarchy */
-  --sidebar: 0.9683 0.0069 247.90;
+  --sidebar: 0.9650 0.0050 245.00;
   --sidebar-background: var(--sidebar);
-  --sidebar-foreground: 0.3791 0.1378 265.52;
-  --sidebar-primary: 0.4244 0.1809 265.64;
+  --sidebar-foreground: 0.2200 0.0120 250.00;
+  --sidebar-primary: 0.4800 0.1450 245.00;
   --sidebar-primary-foreground: 1 0 0;
-  --sidebar-accent: 0.9619 0.0179 272.31;
-  --sidebar-accent-foreground: 0.3791 0.1378 265.52;
-  --sidebar-border: 0.9288 0.0126 255.51;
-  --sidebar-ring: 0.6231 0.1880 259.81;
+  --sidebar-accent: 0.9500 0.0120 245.00;
+  --sidebar-accent-foreground: 0.2200 0.0120 250.00;
+  --sidebar-border: 0.9100 0.0080 245.00;
+  --sidebar-ring: 0.5600 0.1500 245.00;
 
   --app-background-gradient: linear-gradient(135deg,
     oklch(var(--background)) 0%,
@@ -153,63 +161,71 @@ select {
 }
 
 .dark {
-  /* Dark Mode: Deep navy with electric accents */
-  --background: 0.1802 0.0325 266.62;
-  --foreground: 0.9288 0.0126 255.51;
+  /* Dark Mode: Neutral dark with clean blue accents */
+  --background: 0.1600 0.0100 245.00;
+  --foreground: 0.9200 0.0060 245.00;
 
-  --card: 0.2101 0.0318 264.66;
-  --card-foreground: 0.9288 0.0126 255.51;
+  --card: 0.2000 0.0120 245.00;
+  --card-foreground: 0.9200 0.0060 245.00;
 
-  --popover: 0.2101 0.0318 264.66;
-  --popover-foreground: 0.9288 0.0126 255.51;
+  --popover: 0.2000 0.0120 245.00;
+  --popover-foreground: 0.9200 0.0060 245.00;
 
-  /* Primary: vivid blue that supports white text */
-  --primary: 0.5461 0.2152 262.88;
+  /* Primary: vivid cerulean that supports white text */
+  --primary: 0.5800 0.1700 245.00;
   --primary-foreground: 1 0 0;
 
   /* Secondary: structured dark surface */
-  --secondary: 0.2795 0.0368 260.03;
-  --secondary-foreground: 0.9288 0.0126 255.51;
+  --secondary: 0.2600 0.0150 245.00;
+  --secondary-foreground: 0.9200 0.0060 245.00;
 
   /* Muted: dark surface with readable text */
-  --muted: 0.2795 0.0368 260.03;
-  --muted-foreground: 0.7107 0.0351 256.79;
+  --muted: 0.2600 0.0150 245.00;
+  --muted-foreground: 0.6800 0.0180 245.00;
 
-  /* Accent: amber highlight */
-  --accent: 0.7686 0.1647 70.08;
-  --accent-foreground: 0.2077 0.0398 265.75;
+  /* Accent: soft gold highlight */
+  --accent: 0.7500 0.1400 85.00;
+  --accent-foreground: 0.2200 0.0300 250.00;
 
   /* Destructive: clear red */
   --destructive: 0.6368 0.2078 25.33;
   --destructive-foreground: 1 0 0;
 
   /* Border: visible on dark surfaces */
-  --border: 0.3717 0.0392 257.29;
-  --input: 0.3717 0.0392 257.29;
-  --ring: 0.5461 0.2152 262.88;
+  --border: 0.3500 0.0150 245.00;
+  --input: 0.3500 0.0150 245.00;
+  --ring: 0.5800 0.1700 245.00;
 
   /* Charts: vibrant against dark */
-  --chart-1: 0.6231 0.1880 259.81;
+  --chart-1: 0.5800 0.1600 245.00;
   /* Blue */
-  --chart-2: 0.7971 0.1339 211.53;
+  --chart-2: 0.7400 0.1200 195.00;
   /* Teal */
-  --chart-3: 0.7227 0.1920 149.58;
+  --chart-3: 0.7000 0.1700 150.00;
   /* Green */
-  --chart-4: 0.7686 0.1647 70.08;
-  /* Amber */
-  --chart-5: 0.6056 0.2189 292.72;
+  --chart-4: 0.7500 0.1400 85.00;
+  /* Gold */
+  --chart-5: 0.6000 0.1800 290.00;
   /* Violet */
 
+  /* Semantic status tokens */
+  --success: 0.7000 0.1700 150.00;
+  --success-foreground: 1 0 0;
+  --warning: 0.7800 0.1400 85.00;
+  --warning-foreground: 0.2000 0.0300 85.00;
+  --info: 0.5800 0.1500 245.00;
+  --info-foreground: 1 0 0;
+
   /* Sidebar: elevated dark surface */
-  --sidebar: 0.2101 0.0318 264.66;
+  --sidebar: 0.2000 0.0120 245.00;
   --sidebar-background: var(--sidebar);
-  --sidebar-foreground: 0.9288 0.0126 255.51;
-  --sidebar-primary: 0.5461 0.2152 262.88;
+  --sidebar-foreground: 0.9200 0.0060 245.00;
+  --sidebar-primary: 0.5800 0.1700 245.00;
   --sidebar-primary-foreground: 1 0 0;
-  --sidebar-accent: 0.2795 0.0368 260.03;
-  --sidebar-accent-foreground: 0.9288 0.0126 255.51;
-  --sidebar-border: 0.3717 0.0392 257.29;
-  --sidebar-ring: 0.5461 0.2152 262.88;
+  --sidebar-accent: 0.2600 0.0150 245.00;
+  --sidebar-accent-foreground: 0.9200 0.0060 245.00;
+  --sidebar-border: 0.3500 0.0150 245.00;
+  --sidebar-ring: 0.5800 0.1700 245.00;
 
   --app-background-gradient: linear-gradient(135deg,
     oklch(var(--background)) 0%,

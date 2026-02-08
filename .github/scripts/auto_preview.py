@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Auto Preview - Antigravity Kit
+Auto Preview - Copilot Chat Toolkit
 ==============================
 Manages (start/stop/status) the local development server for previewing the application.
 
 Usage:
-    python .agent/scripts/auto_preview.py start [port]
-    python .agent/scripts/auto_preview.py stop
-    python .agent/scripts/auto_preview.py status
+    python .github/scripts/auto_preview.py start [port]
+    python .github/scripts/auto_preview.py stop
+    python .github/scripts/auto_preview.py status
 """
 
 import os
@@ -19,7 +19,7 @@ import argparse
 import subprocess
 from pathlib import Path
 
-AGENT_DIR = Path(".agent")
+AGENT_DIR = Path(".github")
 PID_FILE = AGENT_DIR / "preview.pid"
 LOG_FILE = AGENT_DIR / "preview.log"
 
@@ -146,3 +146,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

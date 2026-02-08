@@ -133,8 +133,8 @@ function PolicySummary({ policies }: { policies: AbacPolicy[] }) {
                                 <span
                                     className={
                                         policy.effect === 'allow'
-                                            ? 'text-xs font-semibold text-emerald-400'
-                                            : 'text-xs font-semibold text-red-400'
+                                            ? 'text-xs font-semibold text-success'
+                                            : 'text-xs font-semibold text-destructive'
                                     }
                                 >
                                     {policy.effect.toUpperCase()}

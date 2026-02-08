@@ -29,6 +29,7 @@ Provide project-specific rules for Codex to preserve coding conventions, securit
 ## Tooling and verification
 - Run lint in small parts using cache when working on large error sets.
 - After completing work, run `npx tsc` and make it green, then run `pnpm lint --fix` and make it green.
+- important: never delete the lint cache
 - Check for side effects and ensure related actions, notifications, workers, and error handling are implemented.
 
 ## Security and quality

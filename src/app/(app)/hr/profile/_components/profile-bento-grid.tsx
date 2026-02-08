@@ -108,10 +108,10 @@ export function ProfileBentoGrid({ profile, className }: ProfileBentoGridProps) 
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-full items-center">
                         {[
-                            { label: 'Leave', icon: Calendar, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/20 hover:border-blue-500/50' },
-                            { label: 'Schedule', icon: Briefcase, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/15', border: 'border-purple-500/20 hover:border-purple-500/50' },
-                            { label: 'Documents', icon: Mail, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/20 hover:border-amber-500/50' },
-                            { label: 'Team', icon: Users, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/20 hover:border-emerald-500/50' },
+                            { label: 'Leave', icon: Calendar, color: 'text-chart-1', bg: 'bg-chart-1/15', border: 'border-chart-1/20 hover:border-chart-1/50' },
+                            { label: 'Schedule', icon: Briefcase, color: 'text-chart-2', bg: 'bg-chart-2/15', border: 'border-chart-2/20 hover:border-chart-2/50' },
+                            { label: 'Documents', icon: Mail, color: 'text-chart-3', bg: 'bg-chart-3/15', border: 'border-chart-3/20 hover:border-chart-3/50' },
+                            { label: 'Team', icon: Users, color: 'text-chart-4', bg: 'bg-chart-4/15', border: 'border-chart-4/20 hover:border-chart-4/50' },
                         ].map((action, index) => (
                             <Button
                                 key={index}
@@ -191,7 +191,7 @@ export function ProfileBentoGrid({ profile, className }: ProfileBentoGridProps) 
                             <span className="capitalize">{profile.employmentStatus.toLowerCase().replace('_', ' ')}</span>
                         </div>
                     </div>
-                    <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 ring-2 ring-green-500/20">
+                    <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center text-success ring-2 ring-success/20">
                         <Building className="h-6 w-6" />
                     </div>
                 </Card>

@@ -82,7 +82,7 @@ export function EmployeeQuickViewSheet({ profile }: { profile: EmployeeQuickView
         dispatchQuickEdit(formData);
     };
 
-    const quickEditMessageTone = quickEditState.status === 'success' ? 'text-emerald-600' : 'text-destructive';
+    const quickEditMessageTone = quickEditState.status === 'success' ? 'text-success' : 'text-destructive';
 
     return (
         <Sheet>
@@ -126,7 +126,7 @@ export function EmployeeQuickViewSheet({ profile }: { profile: EmployeeQuickView
                     <div className="rounded-lg border bg-card p-4">
                         <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                                     <Sparkles className="h-4 w-4" />
                                 </span>
                                 Quick edit

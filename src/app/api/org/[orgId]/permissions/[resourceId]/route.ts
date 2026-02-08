@@ -7,15 +7,16 @@ import {
 } from '@/server/api-adapters/org/permissions/permission-route-controllers';
 
 interface RouteParams {
-  params: { orgId: string; resourceId: string };
+  params: Promise<{ orgId: string; resourceId: string }>;
 }
 
 export async function GET(request: Request, context: RouteParams): Promise<NextResponse> {
   try {
+    const { orgId, resourceId } = await context.params;
     const result = await getPermissionResourceController(
       request,
-      context.params.orgId,
-      context.params.resourceId,
+      orgId,
+      resourceId,
     );
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
@@ -25,10 +26,11 @@ export async function GET(request: Request, context: RouteParams): Promise<NextR
 
 export async function PUT(request: Request, context: RouteParams): Promise<NextResponse> {
   try {
+    const { orgId, resourceId } = await context.params;
     const result = await updatePermissionResourceController(
       request,
-      context.params.orgId,
-      context.params.resourceId,
+      orgId,
+      resourceId,
     );
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
@@ -38,10 +40,11 @@ export async function PUT(request: Request, context: RouteParams): Promise<NextR
 
 export async function DELETE(request: Request, context: RouteParams): Promise<NextResponse> {
   try {
+    const { orgId, resourceId } = await context.params;
     const result = await deletePermissionResourceController(
       request,
-      context.params.orgId,
-      context.params.resourceId,
+      orgId,
+      resourceId,
     );
     return NextResponse.json(result, { status: 200 });
   } catch (error) {

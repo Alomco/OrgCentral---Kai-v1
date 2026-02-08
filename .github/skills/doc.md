@@ -1,14 +1,14 @@
-# Antigravity Skills
+# Copilot Chat Skills
 
-> **Hướng dẫn tạo và sử dụng Skills trong Antigravity Kit**
+> **Hướng dẫn tạo và sử dụng Skills trong Copilot Chat**
 
 ---
 
 ## 📋 Giới thiệu
 
-Mặc dù các mô hình cơ bản của Antigravity (như Gemini) là những mô hình đa năng mạnh mẽ, nhưng chúng không biết ngữ cảnh dự án cụ thể hoặc các tiêu chuẩn của nhóm bạn. Việc tải từng quy tắc hoặc công cụ vào cửa sổ ngữ cảnh của tác nhân sẽ dẫn đến tình trạng "phình to công cụ", chi phí cao hơn, độ trễ và sự nhầm lẫn.
+Mặc dù Copilot Chat là một mô hình đa năng mạnh mẽ, nhưng nó không biết ngữ cảnh dự án cụ thể hoặc các tiêu chuẩn của nhóm bạn. Việc tải từng quy tắc hoặc công cụ vào cửa sổ ngữ cảnh của tác nhân sẽ dẫn đến tình trạng "phình to công cụ", chi phí cao hơn, độ trễ và sự nhầm lẫn.
 
-**Antigravity Skills** giải quyết vấn đề này thông qua tính năng **Progressive Disclosure**. Kỹ năng là một gói kiến thức chuyên biệt, ở trạng thái không hoạt động cho đến khi cần. Thông tin này chỉ được tải vào ngữ cảnh của tác nhân khi yêu cầu cụ thể của bạn khớp với nội dung mô tả của kỹ năng.
+**Copilot Chat Skills** giải quyết vấn đề này thông qua tính năng **Progressive Disclosure**. Kỹ năng là một gói kiến thức chuyên biệt, ở trạng thái không hoạt động cho đến khi cần. Thông tin này chỉ được tải vào ngữ cảnh của tác nhân khi yêu cầu cụ thể của bạn khớp với nội dung mô tả của kỹ năng.
 
 ---
 
@@ -18,7 +18,7 @@ Kỹ năng là các gói dựa trên thư mục. Bạn có thể xác định c�
 
 | Phạm vi | Đường dẫn | Mô tả |
 |---------|-----------|-------|
-| **Workspace** | `<workspace-root>/.agent/skills/` | Chỉ có trong một dự án cụ thể |
+| **Workspace** | `<workspace-root>/.github/skills/` | Chỉ có trong một dự án cụ thể |
 
 ### Cấu trúc thư mục kỹ năng
 
@@ -39,7 +39,7 @@ my-skill/
 ### Bước 1: Tạo thư mục
 
 ```bash
-mkdir -p ~/.gemini/antigravity/skills/code-review
+mkdir -p .github/skills/code-review
 ```
 
 ### Bước 2: Tạo SKILL.md
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
 **Prompt**: `review the @demo_bad_code.py file`
 
-Agent sẽ tự động xác định kỹ năng `code-review`, tải thông tin và thực hiện theo hướng dẫn.
+Copilot Chat sẽ tự động xác định kỹ năng `code-review`, tải thông tin và thực hiện theo hướng dẫn.
 
 ---
 
@@ -119,12 +119,12 @@ Kỹ năng này sử dụng file tham chiếu (reference file) trong thư mục 
 ### Bước 1: Tạo thư mục
 
 ```bash
-mkdir -p .agent/skills/license-header-adder/resources
+mkdir -p .github/skills/license-header-adder/resources
 ```
 
 ### Bước 2: Tạo file template
 
-**`.agent/skills/license-header-adder/resources/HEADER.txt`**:
+**`.github/skills/license-header-adder/resources/HEADER.txt`**:
 
 ```
 /*
@@ -136,7 +136,7 @@ mkdir -p .agent/skills/license-header-adder/resources
 
 ### Bước 3: Tạo SKILL.md
 
-**`.agent/skills/license-header-adder/SKILL.md`**:
+**`.github/skills/license-header-adder/SKILL.md`**:
 
 ```markdown
 ---
@@ -161,13 +161,13 @@ This skill ensures that all new source files have the correct copyright header.
 
 **Prompt**: `Create a new Python script named data_processor.py that prints 'Hello World'.`
 
-Agent sẽ đọc template, chuyển đổi comments theo kiểu Python và tự động thêm vào đầu file.
+Copilot Chat sẽ đọc template, chuyển đổi comments theo kiểu Python và tự động thêm vào đầu file.
 
 ---
 
 ## 🎯 Kết luận
 
-Bằng cách tạo Skills, bạn đã biến mô hình AI đa năng thành một chuyên gia cho dự án của mình:
+Bằng cách tạo Skills, bạn đã biến Copilot Chat thành một chuyên gia cho dự án của mình:
 
 - ✅ Hệ thống hoá các best practices
 - ✅ Tuân theo quy tắc đánh giá code

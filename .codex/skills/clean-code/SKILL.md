@@ -1,4 +1,4 @@
----
+﻿---
 name: clean-code
 description: Pragmatic coding standards - concise, direct, no over-engineering, no unnecessary comments
 allowed-tools: Read, Write, Edit
@@ -72,7 +72,7 @@ priority: CRITICAL
 
 ## Anti-Patterns (DON'T)
 
-| ❌ Pattern | ✅ Fix |
+| âŒ Pattern | âœ… Fix |
 |-----------|-------|
 | Comment every line | Delete obvious comments |
 | Helper for one-liner | Inline the code |
@@ -85,7 +85,7 @@ priority: CRITICAL
 
 ---
 
-## 🔴 Before Editing ANY File (THINK FIRST!)
+## ðŸ”´ Before Editing ANY File (THINK FIRST!)
 
 **Before changing a file, ask yourself:**
 
@@ -99,12 +99,12 @@ priority: CRITICAL
 **Quick Check:**
 ```
 File to edit: UserService.ts
-└── Who imports this? → UserController.ts, AuthController.ts
-└── Do they need changes too? → Check function signatures
+â””â”€â”€ Who imports this? â†’ UserController.ts, AuthController.ts
+â””â”€â”€ Do they need changes too? â†’ Check function signatures
 ```
 
-> 🔴 **Rule:** Edit the file + all dependent files in the SAME task.
-> 🔴 **Never leave broken imports or missing updates.**
+> ðŸ”´ **Rule:** Edit the file + all dependent files in the SAME task.
+> ðŸ”´ **Never leave broken imports or missing updates.**
 
 ---
 
@@ -123,51 +123,51 @@ File to edit: UserService.ts
 
 ---
 
-## 🔴 Self-Check Before Completing (MANDATORY)
+## ðŸ”´ Self-Check Before Completing (MANDATORY)
 
 **Before saying "task complete", verify:**
 
 | Check | Question |
 |-------|----------|
-| ✅ **Goal met?** | Did I do exactly what user asked? |
-| ✅ **Files edited?** | Did I modify all necessary files? |
-| ✅ **Code works?** | Did I test/verify the change? |
-| ✅ **No errors?** | Lint and TypeScript pass? |
-| ✅ **Nothing forgotten?** | Any edge cases missed? |
+| âœ… **Goal met?** | Did I do exactly what user asked? |
+| âœ… **Files edited?** | Did I modify all necessary files? |
+| âœ… **Code works?** | Did I test/verify the change? |
+| âœ… **No errors?** | Lint and TypeScript pass? |
+| âœ… **Nothing forgotten?** | Any edge cases missed? |
 
-> 🔴 **Rule:** If ANY check fails, fix it before completing.
+> ðŸ”´ **Rule:** If ANY check fails, fix it before completing.
 
 ---
 
 ## Verification Scripts (MANDATORY)
 
-> 🔴 **CRITICAL:** Each agent runs ONLY their own skill's scripts after completing work.
+> ðŸ”´ **CRITICAL:** Each agent runs ONLY their own skill's scripts after completing work.
 
-### Agent → Script Mapping
+### Agent â†’ Script Mapping
 
 | Agent | Script | Command |
 |-------|--------|---------|
-| **frontend-specialist** | UX Audit | `python .agent/skills/frontend-design/scripts/ux_audit.py .` |
-| **frontend-specialist** | A11y Check | `python .agent/skills/frontend-design/scripts/accessibility_checker.py .` |
-| **backend-specialist** | API Validator | `python .agent/skills/api-patterns/scripts/api_validator.py .` |
-| **mobile-developer** | Mobile Audit | `python .agent/skills/mobile-design/scripts/mobile_audit.py .` |
-| **database-architect** | Schema Validate | `python .agent/skills/database-design/scripts/schema_validator.py .` |
-| **security-auditor** | Security Scan | `python .agent/skills/vulnerability-scanner/scripts/security_scan.py .` |
-| **seo-specialist** | SEO Check | `python .agent/skills/seo-fundamentals/scripts/seo_checker.py .` |
-| **seo-specialist** | GEO Check | `python .agent/skills/geo-fundamentals/scripts/geo_checker.py .` |
-| **performance-optimizer** | Lighthouse | `python .agent/skills/performance-profiling/scripts/lighthouse_audit.py <url>` |
-| **test-engineer** | Test Runner | `python .agent/skills/testing-patterns/scripts/test_runner.py .` |
-| **test-engineer** | Playwright | `python .agent/skills/webapp-testing/scripts/playwright_runner.py <url>` |
-| **Any agent** | Lint Check | `python .agent/skills/lint-and-validate/scripts/lint_runner.py .` |
-| **Any agent** | Type Coverage | `python .agent/skills/lint-and-validate/scripts/type_coverage.py .` |
-| **Any agent** | i18n Check | `python .agent/skills/i18n-localization/scripts/i18n_checker.py .` |
+| **frontend-specialist** | UX Audit | `python .codex/skills/frontend-design/scripts/ux_audit.py .` |
+| **frontend-specialist** | A11y Check | `python .codex/skills/frontend-design/scripts/accessibility_checker.py .` |
+| **backend-specialist** | API Validator | `python .codex/skills/api-patterns/scripts/api_validator.py .` |
+| **mobile-developer** | Mobile Audit | `python .codex/skills/mobile-design/scripts/mobile_audit.py .` |
+| **database-architect** | Schema Validate | `python .codex/skills/database-design/scripts/schema_validator.py .` |
+| **security-auditor** | Security Scan | `python .codex/skills/vulnerability-scanner/scripts/security_scan.py .` |
+| **seo-specialist** | SEO Check | `python .codex/skills/seo-fundamentals/scripts/seo_checker.py .` |
+| **seo-specialist** | GEO Check | `python .codex/skills/geo-fundamentals/scripts/geo_checker.py .` |
+| **performance-optimizer** | Lighthouse | `python .codex/skills/performance-profiling/scripts/lighthouse_audit.py <url>` |
+| **test-engineer** | Test Runner | `python .codex/skills/testing-patterns/scripts/test_runner.py .` |
+| **test-engineer** | Playwright | `python .codex/skills/webapp-testing/scripts/playwright_runner.py <url>` |
+| **Any agent** | Lint Check | `python .codex/skills/lint-and-validate/scripts/lint_runner.py .` |
+| **Any agent** | Type Coverage | `python .codex/skills/lint-and-validate/scripts/type_coverage.py .` |
+| **Any agent** | i18n Check | `python .codex/skills/i18n-localization/scripts/i18n_checker.py .` |
 
-> ❌ **WRONG:** `test-engineer` running `ux_audit.py`
-> ✅ **CORRECT:** `frontend-specialist` running `ux_audit.py`
+> âŒ **WRONG:** `test-engineer` running `ux_audit.py`
+> âœ… **CORRECT:** `frontend-specialist` running `ux_audit.py`
 
 ---
 
-### 🔴 Script Output Handling (READ → SUMMARIZE → ASK)
+### ðŸ”´ Script Output Handling (READ â†’ SUMMARIZE â†’ ASK)
 
 **When running a validation script, you MUST:**
 
@@ -178,14 +178,14 @@ File to edit: UserService.ts
 ```markdown
 ## Script Results: [script_name.py]
 
-### ❌ Errors Found (X items)
+### âŒ Errors Found (X items)
 - [File:Line] Error description 1
 - [File:Line] Error description 2
 
-### ⚠️ Warnings (Y items)
+### âš ï¸ Warnings (Y items)
 - [File:Line] Warning description
 
-### ✅ Passed (Z items)
+### âœ… Passed (Z items)
 - Check 1 passed
 - Check 2 passed
 
@@ -193,9 +193,10 @@ File to edit: UserService.ts
 ```
 
 4. **Wait for user confirmation** before fixing
-5. **After fixing** → Re-run script to confirm
+5. **After fixing** â†’ Re-run script to confirm
 
-> 🔴 **VIOLATION:** Running script and ignoring output = FAILED task.
-> 🔴 **VIOLATION:** Auto-fixing without asking = Not allowed.
-> 🔴 **Rule:** Always READ output → SUMMARIZE → ASK → then fix.
+> ðŸ”´ **VIOLATION:** Running script and ignoring output = FAILED task.
+> ðŸ”´ **VIOLATION:** Auto-fixing without asking = Not allowed.
+> ðŸ”´ **Rule:** Always READ output â†’ SUMMARIZE â†’ ASK â†’ then fix.
+
 

@@ -9,14 +9,15 @@ const paramsSchema = z.object({
 });
 
 interface RouteParams {
-    params: {
+    params: Promise<{
         token?: string;
-    };
+    }>;
 }
 
 export async function GET(_request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        const { token } = paramsSchema.parse(params);
+        const resolvedParams = await params;
+        const { token } = paramsSchema.parse(resolvedParams);
         const result = await getInvitationDetailsController({ token });
         return NextResponse.json(result, { status: 200 });
     } catch (error) {

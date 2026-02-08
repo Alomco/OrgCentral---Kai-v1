@@ -212,7 +212,7 @@ export function DocumentVaultUploadForm({ onUploaded }: DocumentVaultUploadFormP
                             {errorMessage}
                         </p>
                     ) : successMessage ? (
-                        <p className="text-xs text-emerald-600">{successMessage}</p>
+                        <p className="text-xs text-success">{successMessage}</p>
                     ) : null}
                 </CardContent>
                 <CardFooter className="border-t justify-end">

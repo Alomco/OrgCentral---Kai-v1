@@ -148,8 +148,8 @@ export function ActiveChecklistCard({
             )}
 
             {instance.status === 'COMPLETED' && instance.completedAt && (
-                <CardFooter className="border-t bg-green-50 dark:bg-green-950/20 pt-4">
-                    <div className="flex w-full items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <CardFooter className="border-t bg-success/10 pt-4">
+                    <div className="flex w-full items-center justify-center gap-2 text-sm text-success">
                         <CheckCircle2 className="h-4 w-4" />
                         Completed on {formatChecklistDate(instance.completedAt)}
                     </div>

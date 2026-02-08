@@ -18,23 +18,34 @@ import { EmployeePagination } from './employee-pagination';
 interface EmployeeDirectoryClientProps {
     initialResult: EmployeeListResult;
     filterOptions: EmployeeFilterOptions;
+    initialParams?: Partial<EmployeeSearchParams>;
 }
 
 export function EmployeeDirectoryClient({
     initialResult,
     filterOptions,
+    initialParams,
 }: EmployeeDirectoryClientProps) {
-    const [params, setParams] = useState<Partial<EmployeeSearchParams>>(() => ({
+    const initialClientParams: Partial<EmployeeSearchParams> = {
         page: initialResult.page,
         pageSize: initialResult.pageSize,
-    }));
+        query: initialParams?.query,
+        department: initialParams?.department,
+        status: initialParams?.status,
+        sortBy: initialParams?.sortBy,
+        sortOrder: initialParams?.sortOrder,
+        location: initialParams?.location,
+    };
+
+    const [params, setParams] = useState<Partial<EmployeeSearchParams>>(() => initialClientParams);
     const isInitialParams = params.page === initialResult.page
         && params.pageSize === initialResult.pageSize
-        && !params.query
-        && !params.department
-        && !params.status
-        && !params.sortBy
-        && !params.sortOrder;
+        && params.query === initialClientParams.query
+        && params.department === initialClientParams.department
+        && params.status === initialClientParams.status
+        && params.sortBy === initialClientParams.sortBy
+        && params.sortOrder === initialClientParams.sortOrder
+        && params.location === initialClientParams.location;
 
     const { data } = useQuery({
         queryKey: ['hr', 'employees', params],

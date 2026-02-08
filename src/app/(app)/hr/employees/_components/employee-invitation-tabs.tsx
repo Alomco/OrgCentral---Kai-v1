@@ -75,7 +75,7 @@ export function EmployeeInvitationTabs({
                                             }
                                         }}
                                     >
-                                        <X className="h-3 w-3 text-red-500" />
+                                        <X className="h-3 w-3 text-destructive" />
                                     </Button>
                                 </div>
                             </div>
@@ -121,7 +121,7 @@ export function EmployeeInvitationTabs({
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
-                        <Check className="h-8 w-8 text-emerald-500 mb-2" />
+                        <Check className="h-8 w-8 text-success mb-2" />
                         <p className="text-sm font-medium">All Clear</p>
                         <p className="text-xs text-muted-foreground">
                             No expired invitations

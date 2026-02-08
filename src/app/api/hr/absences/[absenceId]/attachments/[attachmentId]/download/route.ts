@@ -4,15 +4,16 @@ import { presignAbsenceAttachmentDownloadController } from '@/server/api-adapter
 import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
 
 interface RouteParams {
-    params: { absenceId: string; attachmentId: string };
+    params: Promise<{ absenceId: string; attachmentId: string }>;
 }
 
 export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
+            const resolvedParams = await params;
         const result = await presignAbsenceAttachmentDownloadController({
             request,
-            absenceId: params.absenceId,
-            attachmentId: params.attachmentId,
+            absenceId: resolvedParams.absenceId,
+            attachmentId: resolvedParams.attachmentId,
         });
         return NextResponse.redirect(result.url);
     } catch (error) {

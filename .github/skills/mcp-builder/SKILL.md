@@ -139,7 +139,7 @@ my-mcp-server/
 
 ## 8. Configuration
 
-### Claude Desktop Config
+### Copilot Desktop Config
 
 | Field | Purpose |
 |-------|---------|

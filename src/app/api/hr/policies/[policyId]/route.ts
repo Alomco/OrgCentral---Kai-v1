@@ -7,18 +7,19 @@ import {
 } from '@/server/api-adapters/hr/policies/policy-route-controllers';
 
 interface RouteParams {
-    params: {
+    params: Promise<{
         policyId: string;
-    };
+    }>;
 }
 
 export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        if (!params.policyId) {
+            const resolvedParams = await params;
+        if (!resolvedParams.policyId) {
             throw new ValidationError('Policy id is required.');
         }
 
-        const result = await getHrPolicyRouteController(request, params.policyId);
+        const result = await getHrPolicyRouteController(request, resolvedParams.policyId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);
@@ -27,11 +28,12 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
 
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-        if (!params.policyId) {
+            const resolvedParams = await params;
+        if (!resolvedParams.policyId) {
             throw new ValidationError('Policy id is required.');
         }
 
-        const result = await updateHrPolicyRouteController(request, params.policyId);
+        const result = await updateHrPolicyRouteController(request, resolvedParams.policyId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
         return buildErrorResponse(error);

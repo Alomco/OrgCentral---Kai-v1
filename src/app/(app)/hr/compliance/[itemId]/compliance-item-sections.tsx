@@ -162,7 +162,7 @@ export function ComplianceItemActivityCard({
                     </div>
                     {completedAt ? (
                         <div className="flex gap-3">
-                            <div className="h-2 w-2 rounded-full bg-emerald-500 mt-2" />
+                            <div className="h-2 w-2 rounded-full bg-success mt-2" />
                             <div>
                                 <p className="text-sm">Completion submitted</p>
                                 <p className="text-xs text-muted-foreground">

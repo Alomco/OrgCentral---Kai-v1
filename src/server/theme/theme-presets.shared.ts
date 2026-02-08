@@ -40,19 +40,19 @@ export type AccentTokens = readonly [
 ];
 
 export const WHITE = '1.0000 0.0000 0.00' as ColorTokenValue;
-export const HSL_CHART_CYAN = '0.5863 0.1366 241.18' as ColorTokenValue;
-export const HSL_CHART_YELLOW = '0.8611 0.1734 91.96' as ColorTokenValue;
-export const HSL_CHART_ORANGE = '0.7194 0.1662 58.52' as ColorTokenValue;
+export const HSL_CHART_CYAN = '0.5600 0.1200 230.00' as ColorTokenValue;
+export const HSL_CHART_YELLOW = '0.8200 0.1500 90.00' as ColorTokenValue;
+export const HSL_CHART_ORANGE = '0.7200 0.1400 60.00' as ColorTokenValue;
 
-export const NEON_FOREGROUND = '0.1115 0.0531 273.63' as ColorTokenValue;
-export const ROYAL_FOREGROUND = '0.1307 0.0526 306.57' as ColorTokenValue;
-export const GALAXY_FOREGROUND = '0.1278 0.0424 266.02' as ColorTokenValue;
-export const TANGERINE_FOREGROUND = '0.1743 0.0305 78.88' as ColorTokenValue;
-export const INK = '0.12 0.02 255' as ColorTokenValue;
-export const LIGHT_MUTED_FOREGROUND = '0.5 0.02 255' as ColorTokenValue;
-export const DARK_MUTED_FOREGROUND = '0.7 0.02 255' as ColorTokenValue;
-export const LIGHT_BORDER = '0.6 0.01 255' as ColorTokenValue;
-export const DARK_BORDER = '0.52 0.01 255' as ColorTokenValue;
+export const NEON_FOREGROUND = '0.1200 0.0400 280.00' as ColorTokenValue;
+export const ROYAL_FOREGROUND = '0.1300 0.0400 310.00' as ColorTokenValue;
+export const GALAXY_FOREGROUND = '0.1300 0.0300 270.00' as ColorTokenValue;
+export const TANGERINE_FOREGROUND = '0.1700 0.0250 75.00' as ColorTokenValue;
+export const INK = '0.1800 0.0080 250.00' as ColorTokenValue;
+export const LIGHT_MUTED_FOREGROUND = '0.5000 0.0100 250.00' as ColorTokenValue;
+export const DARK_MUTED_FOREGROUND = '0.6800 0.0100 250.00' as ColorTokenValue;
+export const LIGHT_BORDER = '0.8500 0.0060 250.00' as ColorTokenValue;
+export const DARK_BORDER = '0.3800 0.0060 250.00' as ColorTokenValue;
 
 export function surface(...values: SurfaceTokens): SurfaceTokens {
     return values;

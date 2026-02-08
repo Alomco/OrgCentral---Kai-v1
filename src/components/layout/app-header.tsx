@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 
 import type { AuthSession } from '@/server/lib/auth';
+import { hasPermission } from '@/lib/security/permission-check';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -33,15 +35,30 @@ export function AppHeader({
     unreadCount
 }: AppHeaderProps) {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const router = useRouter();
 
     const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        const searchTerm = formData.get('search');
-        if (searchTerm) {
-            // TODO: Implement search functionality
-            setIsSearchOpen(false);
+        const rawSearchTerm = formData.get('search');
+        if (typeof rawSearchTerm !== 'string') {
+            return;
         }
+
+        const searchTerm = rawSearchTerm.trim();
+        if (searchTerm.length === 0) {
+            return;
+        }
+
+        const query = new URLSearchParams({ q: searchTerm });
+        const destination = hasPermission(authorization.permissions, 'organization', 'update')
+            ? '/org/members'
+            : hasPermission(authorization.permissions, 'employeeProfile', 'list')
+                ? '/hr/employees'
+                : '/dashboard';
+
+        router.push(`${destination}?${query.toString()}`);
+        setIsSearchOpen(false);
     };
 
     return (

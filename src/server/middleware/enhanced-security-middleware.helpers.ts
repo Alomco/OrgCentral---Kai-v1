@@ -1,23 +1,69 @@
 import type { NextApiRequest } from 'next';
+import type { IncomingHttpHeaders } from 'node:http';
 import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
+import type { AuthSession } from '@/server/lib/auth';
+import { auth } from '@/server/lib/auth';
 import { getSecurityEventService } from '@/server/services/security/security-event-service.provider';
 
 /**
  * Utility function to extract organization ID from session/request
  */
-export function extractOrgIdFromSession(req: NextApiRequest): string | undefined {
-  // This would typically extract from JWT, session cookie, or other auth mechanism
-  // Implementation depends on your authentication system
-  return req.headers.authorization?.split(' ')[1]; // Example: Bearer token
+export async function extractOrgIdFromSession(req: NextApiRequest): Promise<string | undefined> {
+  const session = await getAuthSession(req);
+  if (!session?.session) {
+    return undefined;
+  }
+
+  const sessionInfo = session.session as { activeOrganizationId?: string; organizationId?: string };
+  return sessionInfo.activeOrganizationId ?? sessionInfo.organizationId;
 }
 
 /**
  * Utility function to extract user ID from session/request
  */
-export function extractUserIdFromSession(req: NextApiRequest): string | undefined {
-  // This would typically extract from JWT, session cookie, or other auth mechanism
-  // Implementation depends on your authentication system
-  return req.headers.authorization?.split(' ')[1]; // Example: Bearer token
+export async function extractUserIdFromSession(req: NextApiRequest): Promise<string | undefined> {
+  const session = await getAuthSession(req);
+  if (!session?.session) {
+    return undefined;
+  }
+
+  const user = session.user as { id?: string } | undefined;
+  if (user?.id) {
+    return user.id;
+  }
+
+  const sessionUser = (session.session as { user?: { id?: string } }).user;
+  return sessionUser?.id;
+}
+
+function getAuthSession(req: NextApiRequest): Promise<AuthSession | null> {
+  const headers = normalizeRequestHeaders(req.headers);
+  return auth.api.getSession({ headers });
+}
+
+function normalizeRequestHeaders(headers: IncomingHttpHeaders): Headers {
+  const entries: [string, string][] = [];
+
+  for (const [key, value] of Object.entries(headers)) {
+    if (!value) {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === 'string' && item.length > 0) {
+          entries.push([key, item]);
+        }
+      }
+      continue;
+    }
+
+    if (typeof value === 'string') {
+      entries.push([key, value]);
+    }
+  }
+
+  return new Headers(entries);
 }
 
 /**

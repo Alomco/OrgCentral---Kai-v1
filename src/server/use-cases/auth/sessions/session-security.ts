@@ -54,9 +54,20 @@ export function enforceOrgSessionSecurity(
     }
 
     if (settings.security.mfaRequired) {
-        const mfaVerified = resolveMfaVerification(sessionInfo, envelope.user);
+        const mfaEnabled = resolveMfaEnabled(sessionInfo, envelope.user);
+        if (!mfaEnabled) {
+            throw new AuthorizationError('Multi-factor authentication setup is required for this organization.', {
+                reason: 'mfa_setup_required',
+                policy: 'mfa',
+            });
+        }
+
+        const mfaVerified = resolveMfaVerification(sessionInfo);
         if (!mfaVerified) {
-            throw new AuthorizationError('Multi-factor authentication is required for this organization.');
+            throw new AuthorizationError('Multi-factor authentication is required for this organization.', {
+                reason: 'mfa_required',
+                policy: 'mfa',
+            });
         }
     }
 
@@ -85,15 +96,21 @@ function resolveDate(value: DateInput): Date | undefined {
     return Number.isNaN(dateValue.getTime()) ? undefined : dateValue;
 }
 
-function resolveMfaVerification(
-    sessionInfo?: SessionSnapshot,
-    userInfo?: SessionUserSnapshot,
-): boolean {
+function resolveMfaVerification(sessionInfo?: SessionSnapshot): boolean {
     const direct = sessionInfo?.twoFactorVerified ?? sessionInfo?.mfaVerified;
     if (typeof direct === 'boolean') {
         return direct;
     }
 
+    // Better Auth may omit an explicit verification flag on active sessions.
+    // In that case, the session itself is already established post-challenge.
+    return true;
+}
+
+function resolveMfaEnabled(
+    sessionInfo?: SessionSnapshot,
+    userInfo?: SessionUserSnapshot,
+): boolean {
     const enabled =
         sessionInfo?.twoFactorEnabled ??
         sessionInfo?.mfaEnabled ??

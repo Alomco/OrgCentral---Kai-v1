@@ -160,7 +160,7 @@ export async function LeaveManagementHub({ authorization, statusFilter = 'submit
                                         <TableCell className="font-medium min-w-0 max-w-[200px] truncate">
                                             {request.employeeName}
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground max-w-[160px] truncate">
+                                        <TableCell className="text-muted-foreground max-w-40 truncate">
                                             {request.leaveType}
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap">

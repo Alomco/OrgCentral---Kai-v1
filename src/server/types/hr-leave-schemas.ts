@@ -3,9 +3,10 @@ import { LEAVE_STATUSES } from '@/server/types/leave-types';
 
 type LeaveStatusLiteral = (typeof LEAVE_STATUSES)[number];
 const leaveStatusValues = [...LEAVE_STATUSES] as [LeaveStatusLiteral, ...LeaveStatusLiteral[]];
+const employeeIdentifierSchema = z.string().trim().min(1).max(64);
 
 export const leaveRequestFiltersSchema = z.object({
-    employeeId: z.uuid().optional(),
+    employeeId: employeeIdentifierSchema.optional(),
     status: z.enum(leaveStatusValues).optional(),
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional(),
@@ -13,7 +14,7 @@ export const leaveRequestFiltersSchema = z.object({
 
 export const submitLeaveRequestSchema = z.object({
     id: z.uuid().optional(),
-    employeeId: z.uuid(),
+    employeeId: employeeIdentifierSchema,
     userId: z.uuid().optional(),
     employeeName: z.string().trim().min(1).max(120),
     leaveType: z.string().trim().min(2).max(64),
@@ -44,13 +45,13 @@ export const cancelLeaveRequestSchema = z.object({
 });
 
 export const leaveBalanceQuerySchema = z.object({
-    employeeId: z.uuid(),
+    employeeId: employeeIdentifierSchema.optional(),
     year: z.coerce.number().int().min(2000).max(2100).optional(),
 });
 
 export const leaveBalancePayloadSchema = z.object({
     id: z.uuid().optional(),
-    employeeId: z.uuid(),
+    employeeId: employeeIdentifierSchema,
     leaveType: z.string().trim().min(2).max(64),
     year: z.coerce.number().int().min(2000).max(2100),
     totalEntitlement: z.number().nonnegative(),
@@ -60,7 +61,7 @@ export const leaveBalancePayloadSchema = z.object({
 });
 
 export const ensureLeaveBalancesSchema = z.object({
-    employeeId: z.uuid(),
+    employeeId: employeeIdentifierSchema,
     year: z.coerce.number().int().min(2000).max(2100),
     leaveTypes: z.array(z.string().trim().min(2).max(64)).min(1),
 });

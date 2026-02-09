@@ -27,12 +27,13 @@ export async function getLeaveBalanceController(
         auditSource: 'api:hr:leave:balance:get',
         action: 'read',
         resourceType: 'hr.leave.balance',
-        resourceAttributes: { employeeId: query.employeeId, year: query.year ?? null },
+        resourceAttributes: { employeeId: query.employeeId ?? null, year: query.year ?? null },
     });
 
+    const employeeId = resolveEmployeeId(query.employeeId, authorization);
     const result = await service.getLeaveBalance({
         authorization,
-        employeeId: query.employeeId,
+        employeeId,
         year: query.year,
     });
 
@@ -49,4 +50,14 @@ function parseQuery(request: Request): LeaveBalanceQueryPayload {
         year: url.searchParams.get('year') ?? undefined,
     };
     return leaveBalanceQuerySchema.parse(raw);
+}
+
+function resolveEmployeeId(
+    employeeId: string | undefined,
+    authorization: Awaited<ReturnType<typeof getSessionContext>>['authorization'],
+): string {
+    if (employeeId && employeeId.trim().length > 0) {
+        return employeeId.trim();
+    }
+    return authorization.userId;
 }

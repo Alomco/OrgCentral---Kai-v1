@@ -150,14 +150,14 @@ When user's prompt is NOT in English:
 | **New Feature / Build** | Deep Discovery | ASK minimum 3 strategic questions                                 |
 | **Code Edit / Bug Fix** | Context Check  | Confirm understanding + ask impact questions                      |
 | **Vague / Simple**      | Clarification  | Ask Purpose, Users, and Scope                                     |
-| **Full Orchestration**  | Gatekeeper     | **STOP** subagents until user confirms plan details               |
+| **Full Orchestration**  | Gatekeeper     | **STOP** subagents until user confirms plan details, unless the user explicitly requests multi-agent analysis |
 | **Direct "Proceed"**    | Validation     | **STOP** -> Even if answers are given, ask 2 "Edge Case" questions |
 
 **Protocol:**
 
 1. **Never Assume:** If even 1% is unclear, ASK.
 2. **Handle Spec-heavy Requests:** When user gives a list (Answers 1, 2, 3...), do NOT skip the gate. Instead, ask about **Trade-offs** or **Edge Cases** (e.g., "LocalStorage confirmed, but should we handle data clearing or versioning?") before starting.
-3. **Wait:** Do NOT invoke subagents or write code until the user clears the Gate.
+3. **Wait:** Do NOT invoke subagents or write code until the user clears the Gate, unless they explicitly request multi-agent analysis.
 4. **Reference:** Full protocol in `@[skills/brainstorming]`.
 
 ### [DONE] Final Checklist Protocol

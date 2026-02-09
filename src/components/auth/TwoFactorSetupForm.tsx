@@ -11,9 +11,13 @@ import { TwoFactorManagementPanel } from '@/components/auth/TwoFactorManagementP
 import { TwoFactorPasswordSetupPanel } from '@/components/auth/TwoFactorPasswordSetupPanel';
 import { useTwoFactorSetupState } from '@/components/auth/use-two-factor-setup';
 
-export function TwoFactorSetupForm() {
+interface TwoFactorSetupFormProps {
+    isMfaEnabled: boolean;
+    returnPath?: string | null;
+}
+
+export function TwoFactorSetupForm({ isMfaEnabled, returnPath }: TwoFactorSetupFormProps) {
     const {
-        isMfaEnabled,
         requiresPasswordSetup,
         password,
         setPassword,
@@ -41,6 +45,10 @@ export function TwoFactorSetupForm() {
         handleDisabled,
     } = useTwoFactorSetupState();
 
+    const fallbackReturnPath = '/hr/profile';
+    const resolvedReturnPath = returnPath ?? fallbackReturnPath;
+    const returnLabel = returnPath ? 'Continue' : 'Back to profile';
+
     if (isMfaEnabled && !setupData && !isVerified) {
         return (
             <div className="space-y-4">
@@ -53,7 +61,7 @@ export function TwoFactorSetupForm() {
                     </AlertDescription>
                 </Alert>
                 <Button asChild variant="outline">
-                    <Link href="/hr/profile">Back to profile</Link>
+                    <Link href={resolvedReturnPath}>{returnLabel}</Link>
                 </Button>
             </div>
         );
@@ -145,7 +153,7 @@ export function TwoFactorSetupForm() {
             ) : null}
 
             <Button asChild variant="outline" className="w-full">
-                <Link href="/hr/profile">Back to profile</Link>
+                <Link href={resolvedReturnPath}>{returnLabel}</Link>
             </Button>
         </div>
     );

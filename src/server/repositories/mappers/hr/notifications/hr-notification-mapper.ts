@@ -5,38 +5,39 @@ import type {
   HRNotificationTypeCode,
 } from '@/server/types/hr/notifications';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
-import type { HRNotificationType, NotificationPriority, PrismaInputJsonValue } from '@/server/types/prisma';
+import type { PrismaInputJsonValue } from '@/server/types/prisma';
+import { HRNotificationType, type NotificationPriority } from '@/server/types/prisma';
 
 const typeToPrisma: Record<HRNotificationTypeCode, HRNotificationType> = {
-  'leave-approval': 'leave-approval',
-  'leave-rejection': 'leave-rejection',
-  'document-expiry': 'document-expiry',
-  'policy-update': 'policy-update',
-  'performance-review': 'performance-review',
-  'time-entry': 'time-entry',
-  'training-assigned': 'training-assigned',
-  'training-due': 'training-due',
-  'training-completed': 'training-completed',
-  'training-overdue': 'training-overdue',
-  'system-announcement': 'system-announcement',
-  'compliance-reminder': 'compliance-reminder',
-  other: 'other',
+  'leave-approval': HRNotificationType.LEAVE_APPROVAL,
+  'leave-rejection': HRNotificationType.LEAVE_REJECTION,
+  'document-expiry': HRNotificationType.DOCUMENT_EXPIRY,
+  'policy-update': HRNotificationType.POLICY_UPDATE,
+  'performance-review': HRNotificationType.PERFORMANCE_REVIEW,
+  'time-entry': HRNotificationType.TIME_ENTRY,
+  'training-assigned': HRNotificationType.TRAINING_ASSIGNED,
+  'training-due': HRNotificationType.TRAINING_DUE,
+  'training-completed': HRNotificationType.TRAINING_COMPLETED,
+  'training-overdue': HRNotificationType.TRAINING_OVERDUE,
+  'system-announcement': HRNotificationType.SYSTEM_ANNOUNCEMENT,
+  'compliance-reminder': HRNotificationType.COMPLIANCE_REMINDER,
+  other: HRNotificationType.OTHER,
 };
 
 const typeFromPrisma: Record<HRNotificationType, HRNotificationTypeCode> = {
-  'leave-approval': 'leave-approval',
-  'leave-rejection': 'leave-rejection',
-  'document-expiry': 'document-expiry',
-  'policy-update': 'policy-update',
-  'performance-review': 'performance-review',
-  'time-entry': 'time-entry',
-  'training-assigned': 'training-assigned',
-  'training-due': 'training-due',
-  'training-completed': 'training-completed',
-  'training-overdue': 'training-overdue',
-  'system-announcement': 'system-announcement',
-  'compliance-reminder': 'compliance-reminder',
-  other: 'other',
+  [HRNotificationType.LEAVE_APPROVAL]: 'leave-approval',
+  [HRNotificationType.LEAVE_REJECTION]: 'leave-rejection',
+  [HRNotificationType.DOCUMENT_EXPIRY]: 'document-expiry',
+  [HRNotificationType.POLICY_UPDATE]: 'policy-update',
+  [HRNotificationType.PERFORMANCE_REVIEW]: 'performance-review',
+  [HRNotificationType.TIME_ENTRY]: 'time-entry',
+  [HRNotificationType.TRAINING_ASSIGNED]: 'training-assigned',
+  [HRNotificationType.TRAINING_DUE]: 'training-due',
+  [HRNotificationType.TRAINING_COMPLETED]: 'training-completed',
+  [HRNotificationType.TRAINING_OVERDUE]: 'training-overdue',
+  [HRNotificationType.SYSTEM_ANNOUNCEMENT]: 'system-announcement',
+  [HRNotificationType.COMPLIANCE_REMINDER]: 'compliance-reminder',
+  [HRNotificationType.OTHER]: 'other',
 };
 
 const priorityToPrisma: Record<HRNotificationPriorityCode, NotificationPriority> = {

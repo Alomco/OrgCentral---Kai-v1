@@ -34,27 +34,27 @@ export function ComplianceItemDetailsCard({
                 <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                     <div>
                         <p className="text-muted-foreground">Category</p>
-                        <p className="font-medium break-words">{categoryLabel}</p>
+                        <p className="font-medium wrap-break-word">{categoryLabel}</p>
                     </div>
                     <div>
                         <p className="text-muted-foreground">Status</p>
-                        <p className="font-medium break-words">{statusLabel}</p>
+                        <p className="font-medium wrap-break-word">{statusLabel}</p>
                     </div>
                     <div>
                         <p className="text-muted-foreground">Type</p>
-                        <p className="font-medium break-words">{itemType}</p>
+                        <p className="font-medium wrap-break-word">{itemType}</p>
                     </div>
                     <div>
                         <p className="text-muted-foreground">Due Date</p>
-                        <p className="font-medium break-words">{formatDate(dueDate)}</p>
+                        <p className="font-medium wrap-break-word">{formatDate(dueDate)}</p>
                     </div>
                     <div>
                         <p className="text-muted-foreground">Created</p>
-                        <p className="font-medium break-words">{formatDate(createdAt)}</p>
+                        <p className="font-medium wrap-break-word">{formatDate(createdAt)}</p>
                     </div>
                     <div>
                         <p className="text-muted-foreground">Completed</p>
-                        <p className="font-medium break-words">{formatDate(completedAt)}</p>
+                        <p className="font-medium wrap-break-word">{formatDate(completedAt)}</p>
                     </div>
                 </div>
             </CardContent>

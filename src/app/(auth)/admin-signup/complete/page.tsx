@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { AdminBootstrapComplete } from '@/components/auth/AdminBootstrapComplete';
+import { isBootstrapEnabled } from '@/server/use-cases/auth/admin-bootstrap.helpers';
 
 export const metadata: Metadata = {
     title: 'Completing admin bootstrap - OrgCentral',
@@ -8,6 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function AdminSignupCompletePage() {
+    if (!isBootstrapEnabled()) {
+        notFound();
+    }
+
     return (
         <AuthLayout
             title="Completing setup"
@@ -17,4 +23,3 @@ export default function AdminSignupCompletePage() {
         </AuthLayout>
     );
 }
-

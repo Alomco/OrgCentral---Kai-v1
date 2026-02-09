@@ -14,6 +14,11 @@ This Copilot Chat toolkit is a modular system consisting of:
 
 This .github folder is the source of truth for Copilot Chat alignment.
 
+## Must-follow Principles
+
+
+Start here: [.github/copilot-chat-guide.md](.github/copilot-chat-guide.md)
+
 ---
 
 ## 🏗️ Directory Structure
@@ -21,7 +26,10 @@ This .github folder is the source of truth for Copilot Chat alignment.
 ```plaintext
 .github/
 ├── ARCHITECTURE.md          # This file
+├── copilot-instructions.md  # Always-on instructions
 ├── agents/                  # 20 Specialist Agents
+├── instructions/             # Optional .instructions.md files
+├── prompts/                  # Prompt files (slash commands)
 ├── skills/                  # 39 Skills
 ├── workflows/               # 11 Slash Commands
 ├── rules/                   # Global Rules

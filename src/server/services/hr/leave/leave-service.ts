@@ -155,16 +155,22 @@ export class LeaveService extends AbstractHrService {
 
     async getLeaveBalance(input: GetLeaveBalanceInput): Promise<GetLeaveBalanceResult> {
         const authorization = this.coerceAuthorization(input.authorization);
+        const profile = await ensureEmployeeByEmployeeNumber(
+            this.dependencies.profileRepository,
+            authorization.orgId,
+            input.employeeId,
+        );
+        const normalizedInput: GetLeaveBalanceInput = { ...input, authorization, employeeId: profile.userId };
         await this.ensureOrgAccess(authorization, {
             action: HR_ACTION.READ,
             resourceType: HR_RESOURCE.HR_LEAVE_BALANCE,
-            resourceAttributes: { employeeId: input.employeeId, year: input.year },
+            resourceAttributes: { employeeId: input.employeeId, targetUserId: profile.userId, year: input.year },
         });
         return this.runOperation(
             'hr.leave.balance.get',
             authorization,
-            { employeeId: input.employeeId, year: input.year },
-            () => getLeaveBalance(this.dependencies, input),
+            { employeeId: input.employeeId, targetUserId: profile.userId, year: input.year },
+            () => getLeaveBalance(this.dependencies, normalizedInput),
         );
     }
 

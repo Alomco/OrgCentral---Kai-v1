@@ -9,6 +9,7 @@ const LEAVE_NAV_ITEMS = [
     { href: '/hr/leave', label: 'Overview' },
     { href: '/hr/leave/requests', label: 'Requests' },
     { href: '/hr/leave/balances', label: 'Balances' },
+    { href: '/hr/leave/policies', label: 'Policies' },
 ] as const;
 
 function isActive(pathname: string | null, href: string): boolean {

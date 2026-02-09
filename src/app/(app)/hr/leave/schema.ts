@@ -50,6 +50,41 @@ export const leaveRequestFormValuesSchema = z.object({
         .trim()
         .max(2000, { message: 'Reason must be 2000 characters or less.' })
         .optional(),
+}).superRefine((values, context) => {
+    const endDate = values.endDate ?? values.startDate;
+    const today = getTodayDateInputValue();
+
+    if (values.startDate < today) {
+        context.addIssue({
+            code: 'custom',
+            path: ['startDate'],
+            message: 'Start date cannot be in the past.',
+        });
+    }
+
+    if (endDate < values.startDate) {
+        context.addIssue({
+            code: 'custom',
+            path: ['endDate'],
+            message: 'End date must be on or after the start date.',
+        });
+    }
+
+    if (values.isHalfDay && values.endDate && values.endDate !== values.startDate) {
+        context.addIssue({
+            code: 'custom',
+            path: ['endDate'],
+            message: 'Half-day requests must use a single date.',
+        });
+    }
 });
+
+function getTodayDateInputValue(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year.toString()}-${month}-${day}`;
+}
 
 export type LeaveRequestFormValues = z.infer<typeof leaveRequestFormValuesSchema>;

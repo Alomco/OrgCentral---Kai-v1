@@ -63,7 +63,7 @@ export default async function HrLeaveBalancesPage({ searchParams }: PageProps) {
     }).catch(() => null);
 
     const profile = profileResult?.profile ?? null;
-    const employeeId = profile?.userId ?? null;
+    const employeeId = profile?.employeeNumber ?? null;
 
     const resolvedSearchParams = await searchParams;
     const currentYear = new Date().getFullYear();

@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 
-import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { DevelopmentSecurityWidget } from "@/components/dev/DevelopmentSecurityWidget";
-import { DevelopmentToolbar, DevelopmentToolbarProvider } from "@/components/dev/toolbar";
-import { TenantThemeRegistry } from "@/components/theme/tenant-theme-registry";
-import { ThemeProvider } from "@/components/theme/theme-provider";
-import { UiStyleProvider } from "@/components/theme/ui-style-provider";
-import { Providers } from "./providers";
+import { RootProviders } from "./_components/root-providers";
 import motionStyles from "@/styles/motion/view-transitions.module.css";
 import "./globals.css";
 
@@ -40,23 +35,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased ${motionStyles.motionRoot}`}
         suppressHydrationWarning
       >
-        <NuqsAdapter>
-          <Providers>
-            <ThemeProvider>
-              <UiStyleProvider>
-                <DevelopmentToolbarProvider>
-                  {process.env.NODE_ENV === "development" ? (
-                    <>
-                      <DevelopmentSecurityWidget />
-                      <DevelopmentToolbar />
-                    </>
-                  ) : null}
-                  <TenantThemeRegistry orgId={null}>{children}</TenantThemeRegistry>
-                </DevelopmentToolbarProvider>
-              </UiStyleProvider>
-            </ThemeProvider>
-          </Providers>
-        </NuqsAdapter>
+        <Suspense fallback={null}>
+          <RootProviders>{children}</RootProviders>
+        </Suspense>
       </body>
     </html>
   );

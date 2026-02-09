@@ -45,7 +45,7 @@ export function BillingSettingsForm({
     });
 
     return (
-        <form action={formAction} className="space-y-4 rounded-2xl border border-border bg-card/60 p-6 shadow-sm">
+        <form action={formAction} className="space-y-5 rounded-2xl border border-border bg-card/60 p-5 shadow-sm">
             <div>
                 <p className="text-sm font-semibold text-foreground">Billing preferences</p>
                 <p className="text-xs text-muted-foreground">
@@ -111,7 +111,7 @@ export function BillingSettingsForm({
                 <p className="text-sm font-semibold text-foreground">Billing address</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <label className="flex flex-col gap-2">
-                        <span className="text-xs font-medium uppercase tracking-wide text-foreground">Line 1</span>
+                        <span className="text-sm font-medium text-foreground">Line 1</span>
                         <input
                             type="text"
                             name="billing-address-line1"
@@ -120,7 +120,7 @@ export function BillingSettingsForm({
                         />
                     </label>
                     <label className="flex flex-col gap-2">
-                        <span className="text-xs font-medium uppercase tracking-wide text-foreground">Line 2</span>
+                        <span className="text-sm font-medium text-foreground">Line 2</span>
                         <input
                             type="text"
                             name="billing-address-line2"
@@ -129,7 +129,7 @@ export function BillingSettingsForm({
                         />
                     </label>
                     <label className="flex flex-col gap-2">
-                        <span className="text-xs font-medium uppercase tracking-wide text-foreground">City</span>
+                        <span className="text-sm font-medium text-foreground">City</span>
                         <input
                             type="text"
                             name="billing-address-city"
@@ -138,7 +138,7 @@ export function BillingSettingsForm({
                         />
                     </label>
                     <label className="flex flex-col gap-2">
-                        <span className="text-xs font-medium uppercase tracking-wide text-foreground">Postcode</span>
+                        <span className="text-sm font-medium text-foreground">Postcode</span>
                         <input
                             type="text"
                             name="billing-address-postcode"
@@ -147,7 +147,7 @@ export function BillingSettingsForm({
                         />
                     </label>
                     <label className="flex flex-col gap-2 sm:col-span-2">
-                        <span className="text-xs font-medium uppercase tracking-wide text-foreground">Country</span>
+                        <span className="text-sm font-medium text-foreground">Country</span>
                         <input
                             type="text"
                             name="billing-address-country"
@@ -157,13 +157,15 @@ export function BillingSettingsForm({
                     </label>
                 </div>
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="inline-flex h-2 w-2 rounded-full bg-primary" />
-                <span>{state.status === 'success' ? state.message ?? 'Saved' : 'Changes apply immediately'}</span>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground" role="status" aria-live="polite">
+                    <span className="inline-flex h-2 w-2 rounded-full bg-primary" />
+                    <span>{state.status === 'success' ? state.message ?? 'Saved' : 'Changes apply immediately'}</span>
+                </div>
+                <Button type="submit" size="sm" className="px-4">
+                    Save
+                </Button>
             </div>
-            <Button type="submit" size="sm" className="px-4">
-                Save
-            </Button>
             {state.status === 'error' ? (
                 <p className="text-xs text-destructive" role="alert">
                     {state.message ?? 'Unable to save'}

@@ -18,6 +18,7 @@ export async function BillingPaymentMethodsPanel({
             Manage cards or direct debit mandates for this organization.
           </p>
         </div>
+        <p className="text-xs text-muted-foreground">Payments secured by Stripe.</p>
       </div>
       <BillingPaymentMethodsClient
         orgId={authorization.orgId}

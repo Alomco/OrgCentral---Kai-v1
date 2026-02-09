@@ -62,9 +62,9 @@ export function AbacPolicyEditor({
         <form action={formAction} className="space-y-6 rounded-2xl bg-[oklch(var(--card)/0.6)] p-6 backdrop-blur" aria-busy={pending}>
             <input type="hidden" name="policiesText" value={serializedPolicies} />
             <div className="space-y-2">
-                <p className="text-sm font-semibold text-[oklch(var(--foreground))]">Policy builder</p>
-                <p className="text-xs text-[oklch(var(--muted-foreground))]">Build ABAC policies with guided inputs. Changes apply immediately after saving.</p>
-                <p className="text-xs text-[oklch(var(--muted-foreground))]">Keep an allow policy for admins or you may lock out updates. Owners always bypass ABAC checks.</p>
+                <p className="text-sm font-semibold text-foreground">Policy builder</p>
+                <p className="text-xs text-muted-foreground">Build ABAC policies with guided inputs. Changes apply immediately after saving.</p>
+                <p className="text-xs text-muted-foreground">Keep an allow policy for admins or you may lock out updates. Owners always bypass ABAC checks.</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -73,7 +73,7 @@ export function AbacPolicyEditor({
                 <Button type="button" variant="secondary" size="sm" onClick={restoreDefaults} disabled={pending}>Restore defaults</Button>
                 <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} disabled={pending}>Import template</Button>
                 <Button type="button" variant="secondary" size="sm" onClick={exportPolicies} disabled={pending || hasErrors}>Export template</Button>
-                <span className="text-xs text-[oklch(var(--muted-foreground))]">{buildResult.policies.length} policies ({allowCount} allow, {denyCount} deny)</span>
+                <span className="text-xs text-muted-foreground">{buildResult.policies.length} policies ({allowCount} allow, {denyCount} deny)</span>
             </div>
 
             <input
@@ -92,7 +92,7 @@ export function AbacPolicyEditor({
             />
 
             {localMessage ? (
-                <p className={localMessage.status === 'error' ? 'text-xs text-destructive' : 'text-xs text-[oklch(var(--muted-foreground))]'}>{localMessage.message}</p>
+                <p className={localMessage.status === 'error' ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>{localMessage.message}</p>
             ) : null}
 
             {hasErrors ? (
@@ -106,7 +106,7 @@ export function AbacPolicyEditor({
 
             <div className="space-y-5">
                 {drafts.length === 0 ? (
-                    <p className="text-sm text-[oklch(var(--muted-foreground))]">No policies defined yet.</p>
+                    <p className="text-sm text-muted-foreground">No policies defined yet.</p>
                 ) : (
                     drafts.map((draft, index) => (
                         <PolicyCard
@@ -130,7 +130,7 @@ export function AbacPolicyEditor({
             {state.status === 'error' ? (
                 <p className="text-xs text-destructive" role="alert">{state.message ?? 'Unable to update policies'}</p>
             ) : null}
-            {state.status === 'success' ? (<p className="text-xs text-[oklch(var(--muted-foreground))]">{state.message ?? 'Saved.'}</p>) : null}
+            {state.status === 'success' ? (<p className="text-xs text-muted-foreground">{state.message ?? 'Saved.'}</p>) : null}
         </form>
     );
 }

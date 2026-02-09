@@ -44,7 +44,7 @@ export default async function OrgSettingsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-2">
                         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Settings</p>
-                        <h1 className="text-2xl font-semibold text-foreground">Organization settings</h1>
+                        <h1 className="text-3xl font-semibold text-foreground">Organization settings</h1>
                         <p className="text-sm text-muted-foreground">
                             Manage security, notifications, and billing preferences for this organization.
                         </p>
@@ -58,11 +58,36 @@ export default async function OrgSettingsPage() {
                     </div>
                 </div>
             </header>
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-                <div className="space-y-6">
+            <div className="space-y-8">
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-base font-semibold uppercase tracking-wide text-foreground">Billing</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Monitor subscription health, payment methods, and billing preferences in one place.
+                        </p>
+                    </div>
+                    <div className="grid gap-4 lg:grid-cols-2">
+                        <Suspense fallback={<SettingsSkeleton />}>
+                            <BillingOverviewPanel authorization={authorization} />
+                        </Suspense>
+                        <Suspense fallback={<SettingsSkeleton />}>
+                            <BillingPaymentMethodsPanel authorization={authorization} />
+                        </Suspense>
+                    </div>
+                    <div className="grid gap-4 lg:grid-cols-2">
+                        <Suspense fallback={<SettingsSkeleton />}>
+                            <BillingHistoryPanel authorization={authorization} />
+                        </Suspense>
+                        <Suspense fallback={<SettingsSkeleton />}>
+                            <BillingSettingsPanel authorization={authorization} />
+                        </Suspense>
+                    </div>
+                </section>
+
+                <div className="grid gap-6 lg:grid-cols-2">
                     <section className="space-y-3">
                         <div>
-                            <h2 className="text-lg font-semibold text-foreground">Access & invites</h2>
+                            <h2 className="text-base font-semibold uppercase tracking-wide text-foreground">Access & invites</h2>
                             <p className="text-sm text-muted-foreground">
                                 Control how people can join your organization.
                             </p>
@@ -73,7 +98,7 @@ export default async function OrgSettingsPage() {
                     </section>
                     <section className="space-y-3">
                         <div>
-                            <h2 className="text-lg font-semibold text-foreground">Security</h2>
+                            <h2 className="text-base font-semibold uppercase tracking-wide text-foreground">Security</h2>
                             <p className="text-sm text-muted-foreground">
                                 Set defaults for MFA and session controls.
                             </p>
@@ -82,9 +107,9 @@ export default async function OrgSettingsPage() {
                             <SecuritySettingsPanel authorization={authorization} />
                         </Suspense>
                     </section>
-                    <section className="space-y-3">
+                    <section className="space-y-3 lg:col-span-2">
                         <div>
-                            <h2 className="text-lg font-semibold text-foreground">Notifications</h2>
+                            <h2 className="text-base font-semibold uppercase tracking-wide text-foreground">Notifications</h2>
                             <p className="text-sm text-muted-foreground">
                                 Configure admin digests and critical alerts.
                             </p>
@@ -94,26 +119,6 @@ export default async function OrgSettingsPage() {
                         </Suspense>
                     </section>
                 </div>
-                <section className="space-y-4">
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">Billing</h2>
-                        <p className="text-sm text-muted-foreground">
-                            Manage billing contacts and renewal preferences.
-                        </p>
-                    </div>
-                    <Suspense fallback={<SettingsSkeleton />}>
-                        <BillingOverviewPanel authorization={authorization} />
-                    </Suspense>
-                    <Suspense fallback={<SettingsSkeleton />}>
-                        <BillingPaymentMethodsPanel authorization={authorization} />
-                    </Suspense>
-                    <Suspense fallback={<SettingsSkeleton />}>
-                        <BillingHistoryPanel authorization={authorization} />
-                    </Suspense>
-                    <Suspense fallback={<SettingsSkeleton />}>
-                        <BillingSettingsPanel authorization={authorization} />
-                    </Suspense>
-                </section>
             </div>
         </div>
     );
@@ -156,5 +161,5 @@ async function BillingSettingsPanel({
 }
 
 function SettingsSkeleton() {
-    return <div className="h-28 w-full animate-pulse rounded-2xl border border-border bg-muted/40" />;
+    return <div className="h-28 w-full rounded-2xl border border-border bg-muted/40 motion-safe:animate-pulse" />;
 }

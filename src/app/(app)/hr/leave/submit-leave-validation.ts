@@ -44,9 +44,33 @@ export function validateForm(previous: LeaveRequestFormState, formData: FormData
 export function parseDates(parsedData: LeaveRequestFormValues): ParsedDatesResult {
     try {
         const startDate = parseIsoDateInput(parsedData.startDate);
+        const today = getTodayDateInputValue();
+        if (parsedData.startDate < today) {
+            return {
+                kind: 'error',
+                state: {
+                    status: 'error',
+                    message: FIELD_CHECK_MESSAGE,
+                    fieldErrors: { startDate: 'Start date cannot be in the past.' },
+                    values: parsedData,
+                },
+            };
+        }
+
         if (parsedData.endDate) {
             try {
                 const endDate = parseIsoDateInput(parsedData.endDate);
+                if (parsedData.endDate < parsedData.startDate) {
+                    return {
+                        kind: 'error',
+                        state: {
+                            status: 'error',
+                            message: FIELD_CHECK_MESSAGE,
+                            fieldErrors: { endDate: 'End date must be on or after the start date.' },
+                            values: parsedData,
+                        },
+                    };
+                }
                 return { kind: 'ok', dates: { startDate, endDate } };
             } catch (error) {
                 return {
@@ -69,4 +93,12 @@ export function parseDates(parsedData: LeaveRequestFormValues): ParsedDatesResul
             },
         };
     }
+}
+
+function getTodayDateInputValue(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year.toString()}-${month}-${day}`;
 }

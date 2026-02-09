@@ -1,6 +1,7 @@
 'use server';
 
 import { randomUUID } from 'node:crypto';
+import { revalidatePath } from 'next/cache';
 
 import { requireSessionUser } from '@/server/api-adapters/http/session-helpers';
 import { getLeaveService } from '@/server/services/hr/leave/leave-service.provider';
@@ -55,7 +56,7 @@ export async function persistRequest(params: {
     try {
         await leaveService.submitLeaveRequest({ authorization: session.authorization, request });
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unable to submit leave request.';
+        const message = toErrorMessage(error);
         appLogger.error('hr.leave.submit.failed', {
             orgId: session.authorization.orgId,
             requestId,
@@ -83,6 +84,10 @@ export async function persistRequest(params: {
         ...(balanceWarning ? [balanceWarning] : []),
     ];
 
+    revalidatePath('/hr/leave');
+    revalidatePath('/hr/leave/requests');
+    revalidatePath('/hr/leave/balances');
+
     return {
         status: 'success',
         message: notes.length > 0
@@ -94,4 +99,31 @@ export async function persistRequest(params: {
             reason: '',
         },
     };
+}
+
+function toErrorMessage(error: unknown): string {
+    if (error instanceof Error && error.message.trim().length > 0) {
+        return error.message;
+    }
+    if (error && typeof error === 'object') {
+        const record = error as Record<string, unknown>;
+        if (typeof record.message === 'string' && record.message.trim().length > 0) {
+            return record.message;
+        }
+        if (record.error && typeof record.error === 'object') {
+            const nested = record.error as Record<string, unknown>;
+            if (typeof nested.message === 'string' && nested.message.trim().length > 0) {
+                return nested.message;
+            }
+        }
+        try {
+            const serialized = JSON.stringify(record);
+            if (serialized && serialized !== '{}' && serialized !== '[]') {
+                return `Unknown error: ${serialized}`;
+            }
+        } catch {
+            // Ignore serialization failures and fall through.
+        }
+    }
+    return 'Unable to submit leave request.';
 }

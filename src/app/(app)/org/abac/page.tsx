@@ -34,9 +34,9 @@ export default async function OrgAbacPoliciesPage() {
     return (
         <div className="space-y-6 p-6">
             <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-[oklch(var(--muted-foreground))]">Access</p>
-                <h1 className="text-2xl font-semibold text-[oklch(var(--foreground))]">ABAC policies</h1>
-                <p className="text-sm text-[oklch(var(--muted-foreground))]">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Access</p>
+                <h1 className="text-2xl font-semibold text-foreground">ABAC policies</h1>
+                <p className="text-sm text-muted-foreground">
                     Manage attribute-based access policies for this organization.
                 </p>
             </div>
@@ -115,14 +115,14 @@ function PolicySummary({ policies }: { policies: AbacPolicy[] }) {
     return (
         <div className="space-y-4 rounded-2xl bg-[oklch(var(--card)/0.6)] p-6 backdrop-blur">
             <div>
-                <p className="text-sm font-semibold text-[oklch(var(--foreground))]">Current policies</p>
-                <p className="text-xs text-[oklch(var(--muted-foreground))]">
+                <p className="text-sm font-semibold text-foreground">Current policies</p>
+                <p className="text-xs text-muted-foreground">
                     Ordered by priority (highest first). {policies.length} total ({allowCount} allow, {denyCount} deny).
                 </p>
             </div>
 
             {policies.length === 0 ? (
-                <p className="text-sm text-[oklch(var(--muted-foreground))]">
+                <p className="text-sm text-muted-foreground">
                     No ABAC policies configured yet.
                 </p>
             ) : (
@@ -139,14 +139,14 @@ function PolicySummary({ policies }: { policies: AbacPolicy[] }) {
                                 >
                                     {policy.effect.toUpperCase()}
                                 </span>
-                                <span className="text-xs font-semibold text-[oklch(var(--foreground))] break-all">
+                                <span className="text-xs font-semibold text-foreground break-all">
                                     {policy.id}
                                 </span>
                             </div>
-                            <p className="mt-1 text-xs text-[oklch(var(--muted-foreground))]">
+                            <p className="mt-1 text-xs text-muted-foreground">
                                 {policy.description ?? 'No description'}
                             </p>
-                            <div className="mt-2 grid gap-1 text-[11px] text-[oklch(var(--muted-foreground))]">
+                            <div className="mt-2 grid gap-1 text-[11px] text-muted-foreground">
                                 <span>Priority: {policy.priority ?? 'default'}</span>
                                 <span>Actions: {policy.actions.join(', ')}</span>
                                 <span>Resources: {policy.resources.join(', ')}</span>
@@ -160,11 +160,11 @@ function PolicySummary({ policies }: { policies: AbacPolicy[] }) {
 }
 
 function PolicyEditorSkeleton() {
-    return <div className="h-80 w-full animate-pulse rounded-2xl bg-[oklch(var(--muted))] motion-reduce:animate-none" />;
+    return <div className="h-80 w-full animate-pulse rounded-2xl bg-muted motion-reduce:animate-none" />;
 }
 
 function PolicySummarySkeleton() {
-    return <div className="h-48 w-full animate-pulse rounded-2xl bg-[oklch(var(--muted))] motion-reduce:animate-none" />;
+    return <div className="h-48 w-full animate-pulse rounded-2xl bg-muted motion-reduce:animate-none" />;
 }
 
 

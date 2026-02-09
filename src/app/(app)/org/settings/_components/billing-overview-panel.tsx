@@ -43,17 +43,17 @@ export async function BillingOverviewPanel({
         <Badge variant={statusTone}>{formatStatus(subscription.status)}</Badge>
       </div>
       <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-background/80 p-3">
+        <div className="rounded-xl border border-border bg-background/80 p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Next billing</p>
           <p className="mt-1 text-base font-semibold text-foreground">{periodEnd}</p>
         </div>
-        <div className="rounded-xl border border-border bg-background/80 p-3">
+        <div className="rounded-xl border border-border bg-background/80 p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Active users</p>
           <p className="mt-1 text-base font-semibold text-foreground">
             {subscription.seatCount}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-background/80 p-3">
+        <div className="rounded-xl border border-border bg-background/80 p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Est. charge</p>
           <p className="mt-1 text-base font-semibold text-foreground">
             {estimatedCharge}

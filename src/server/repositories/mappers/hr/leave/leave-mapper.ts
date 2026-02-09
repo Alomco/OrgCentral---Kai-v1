@@ -77,6 +77,9 @@ export type LeaveRequestMetadata = PrismaJsonObject & {
     isHalfDay?: boolean;
     managerComments?: string | null;
     departmentId?: string | null;
+    cancelledBy?: string;
+    cancelledAt?: string;
+    cancellationReason?: string;
 };
 
 export type LeaveBalanceMetadata = PrismaJsonObject & {
@@ -124,6 +127,12 @@ export function mapPrismaLeaveRequestToDomain(
 ): LeaveRequest {
     const metadata = cloneLeaveRequestMetadata(record.metadata);
     const totalHours = toNumber(record.hours);
+    const mappedStatus = STATUS_TO_DOMAIN[record.status];
+    const decisionActor = record.approverUserId ?? undefined;
+    const decisionAt = record.decidedAt?.toISOString();
+    const cancelledBy = typeof metadata.cancelledBy === 'string' ? metadata.cancelledBy : undefined;
+    const cancelledAt = typeof metadata.cancelledAt === 'string' ? metadata.cancelledAt : undefined;
+    const cancellationReason = typeof metadata.cancellationReason === 'string' ? metadata.cancellationReason : undefined;
 
     return {
         id: record.id,
@@ -144,18 +153,18 @@ export function mapPrismaLeaveRequestToDomain(
         coveringEmployeeId: metadata.coveringEmployee ?? undefined,
         coveringEmployeeName: metadata.coveringEmployee ?? undefined,
         departmentId: metadata.departmentId ?? null,
-        status: STATUS_TO_DOMAIN[record.status],
+        status: mappedStatus,
         createdAt: record.createdAt.toISOString(),
         createdBy: record.userId,
         submittedAt: record.submittedAt?.toISOString(),
-        approvedBy: record.approverUserId ?? undefined,
-        approvedAt: record.decidedAt?.toISOString(),
-        rejectedBy: record.approverUserId ?? undefined,
-        rejectedAt: record.decidedAt?.toISOString(),
-        rejectionReason: record.reason ?? undefined,
-        cancelledBy: undefined,
-        cancelledAt: undefined,
-        cancellationReason: undefined,
+        approvedBy: mappedStatus === 'approved' ? decisionActor : undefined,
+        approvedAt: mappedStatus === 'approved' ? decisionAt : undefined,
+        rejectedBy: mappedStatus === 'rejected' ? decisionActor : undefined,
+        rejectedAt: mappedStatus === 'rejected' ? decisionAt : undefined,
+        rejectionReason: mappedStatus === 'rejected' ? (record.reason ?? undefined) : undefined,
+        cancelledBy: mappedStatus === 'cancelled' ? cancelledBy : undefined,
+        cancelledAt: mappedStatus === 'cancelled' ? cancelledAt : undefined,
+        cancellationReason: mappedStatus === 'cancelled' ? cancellationReason : undefined,
         managerComments: metadata.managerComments ?? undefined,
         attachmentCount: record._count?.attachments ?? 0,
     };

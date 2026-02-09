@@ -25,9 +25,9 @@ export async function shouldUseOnboardingFlow(
     if (!invitation) {
         return false;
     }
-    return hasOnboardingData(invitation);
+    return shouldUseOnboardingFlowForInvitation(invitation);
 }
 
-function hasOnboardingData(invitation: InvitationRecord): boolean {
+export function shouldUseOnboardingFlowForInvitation(invitation: InvitationRecord): boolean {
     return hasOnboardingFingerprint(toInvitationJson(invitation.onboardingData));
 }

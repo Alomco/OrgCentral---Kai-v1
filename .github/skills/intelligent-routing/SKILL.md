@@ -1,7 +1,6 @@
 ---
 name: intelligent-routing
 description: Automatic agent selection and intelligent task routing. Analyzes user requests and automatically selects the best specialist agent(s) without requiring explicit user mentions.
-version: 1.0.0
 ---
 
 # Intelligent Agent Routing
@@ -57,11 +56,18 @@ graph TD
 
 Before responding to ANY request:
 
+**Explicit multi-agent override:** If the user explicitly requests multi-agent analysis or uses `/orchestrate`, bypass the default complexity routing and go straight to orchestrator or multi-agent analysis when scope is clear.
+
 ```javascript
 // Pseudo-code for decision tree
 function analyzeRequest(userMessage) {
     // 1. Classify request type
     const requestType = classifyRequest(userMessage);
+
+    // 1.5 Explicit multi-agent override
+    if (requestsMultiAgent(userMessage)) {
+        return "orchestrator";
+    }
 
     // 2. Detect domains
     const domains = detectDomains(userMessage);
@@ -181,12 +187,16 @@ I will create the component with the following characteristics:
 
 ### Rule 4: Override Capability
 
-**User can still explicitly mention agents:**
+**User can still explicitly mention agents or request multi-agent analysis:**
 
 ```text
 User: "Use @backend-specialist to review this"
 → Override auto-selection
 → Use explicitly mentioned agent
+
+User: "Run deep multi-perspective analysis"
+→ Override auto-selection
+→ Use orchestrator / multi-agent analysis
 ```
 
 ## Edge Cases
@@ -231,12 +241,12 @@ User: "Add mobile support to the web app"
 
 - **Auto-routing does NOT bypass Socratic Gate**
 - If task is unclear, still ask questions first
-- Then route to appropriate agent
+- If the user explicitly requests multi-agent analysis and scope is clear, proceed directly to orchestration
 
-### With GEMINI.md Rules
+### With copilot-chat.md Rules
 
-- **Priority**: GEMINI.md rules > intelligent-routing
-- If GEMINI.md specifies explicit routing, follow it
+- **Priority**: copilot-chat.md rules > intelligent-routing
+- If copilot-chat.md specifies explicit routing, follow it
 - Intelligent routing is the DEFAULT when no explicit rule exists
 
 ## Testing the System
@@ -305,7 +315,7 @@ still mention agents explicitly with `@agent-name` if you prefer.
 
 ### Enable Debug Mode (for development)
 
-Add to GEMINI.md temporarily:
+Add to copilot-chat.md temporarily:
 
 ```markdown
 ## DEBUG: Intelligent Routing
@@ -332,4 +342,5 @@ Show selection reasoning:
 
 ---
 
-**Next Steps**: Integrate this skill into GEMINI.md TIER 0 rules.
+**Next Steps**: Integrate this skill into copilot-chat.md TIER 0 rules.
+

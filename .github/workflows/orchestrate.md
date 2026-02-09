@@ -45,6 +45,10 @@ $ARGUMENTS
 | **edit** | Complex/multi-file | ⚠️ Ask: "This task requires planning. Switch to plan mode?" |
 | **ask** | Any | ⚠️ Ask: "Ready to orchestrate. Switch to edit or plan mode?" |
 
+**Explicit multi-agent analysis fast-path:** If the user explicitly requests deep or multi-perspective analysis and scope is clear, proceed with analysis-only agents in the current mode.
+
+**Subagents are for very small, read-and-analyze tasks as well as small edits; allow delegation of simple edits and decision making.**
+
 ---
 
 ## 🔴 STRICT 2-PHASE ORCHESTRATION
@@ -57,6 +61,8 @@ $ARGUMENTS
 | 2 | (optional) `explorer-agent` | Codebase discovery if needed |
 
 > 🔴 **NO OTHER AGENTS during planning!** Only project-planner and explorer-agent.
+> 
+> Exception: If the user explicitly requests multi-agent analysis and no code changes are needed, you may run analysis-only agents without a plan file.
 
 ### ⏸️ CHECKPOINT: User Approval
 
@@ -71,6 +77,8 @@ Onaylıyor musunuz? (Y/N)
 ```
 
 > 🔴 **DO NOT proceed to Phase 2 without explicit user approval!**
+> 
+> Explicit multi-agent analysis requests count as approval for analysis-only work.
 
 ### PHASE 2: IMPLEMENTATION (Parallel agents after approval)
 

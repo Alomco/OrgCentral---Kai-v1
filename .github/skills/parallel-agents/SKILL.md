@@ -1,10 +1,6 @@
 ---
 name: parallel-agents
 description: Multi-agent orchestration patterns. Use when multiple independent tasks can run with different domain expertise or when comprehensive analysis requires multiple perspectives.
-allowed-tools:
-  - Read
-  - Glob
-  - Grep
 ---
 
 # Copilot Chat Parallel Agents
@@ -13,7 +9,7 @@ allowed-tools:
 
 ## Overview
 
-This skill enables coordinating multiple specialized agents through Copilot Chat subagent tooling. Unlike external scripts, this approach keeps all orchestration within the chat workflow.
+This skill enables coordinating multiple specialized agents through Copilot Chat subagent tooling. Unlike external scripts, this approach keeps all orchestration within the chat workflow. Always remember to run the multi agent planning first.
 
 ## When to Use Orchestration
 
@@ -53,6 +49,7 @@ Based on those findings, have the test-engineer generate component tests.
 ### Repeatable Runs
 ```
 Subagents are stateless. Re-run with full context when you need another pass.
+Subagents are for very small, read-and-analyze tasks as well as small edits; allow delegation of simple edits and decision making.
 ```
 
 ---
@@ -119,6 +116,7 @@ Agents: security-auditor → penetration-tester → synthesis
 ## Copilot Chat Subagents
 
 Copilot Chat supports specialized subagents invoked via `runSubagent`. Always pass full context and constraints because subagents do not share state.
+Subagents are for very small, read-and-analyze tasks as well as small edits; allow delegation of simple edits and decision making.
 
 ---
 

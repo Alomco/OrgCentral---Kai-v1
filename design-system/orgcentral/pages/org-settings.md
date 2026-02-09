@@ -1,7 +1,7 @@
 # Org Settings Page Overrides
 
 > **PROJECT:** OrgCentral
-> **Generated:** 2026-02-05 23:17:33
+> **Generated:** 2026-02-09 07:52:43
 > **Page Type:** Dashboard / Data View
 
 > ⚠️ **IMPORTANT:** Rules in this file **override** the Master file (`design-system/MASTER.md`).
@@ -15,7 +15,6 @@
 
 - **Max Width:** 1200px (standard)
 - **Layout:** Full-width sections, centered content
-- **Sections:** 1. Hero (Video/Mission), 2. Solutions by Industry, 3. Solutions by Role, 4. Client Logos, 5. Contact Sales
 
 ### Spacing Overrides
 
@@ -27,11 +26,11 @@
 
 ### Color Overrides
 
-- **Strategy:** Corporate: Navy/Grey. High integrity. Conservative accents.
+- No overrides — use Master colors
 
 ### Component Overrides
 
-- Avoid: Ignore accessibility motion settings
+- No overrides — use Master component specs
 
 ---
 
@@ -43,6 +42,4 @@
 
 ## Recommendations
 
-- Effects: Badge hover effects, metric pulse animations, certificate carousel, smooth stat reveal
-- Animation: Check prefers-reduced-motion media query
-- CTA Placement: Contact Sales (Primary) + Login (Secondary)
+- Effects: Improved shadows (softer than flat, clearer than neumorphism), modern (200-300ms), focus visible, WCAG AA/AAA

@@ -10,6 +10,7 @@ import { validateWizardStep, type OnboardingWizardValues } from './wizard.schema
 import { buildInitialWizardState, mergeWizardValues, type OnboardingWizardState } from './wizard.state';
 import type { InviteRoleOption, WizardSubmitResult } from './wizard.types';
 import type { LeaveType } from './assignments-step';
+import { deriveInitialWizardConfig } from './onboarding-wizard.initial';
 
 export interface UseOnboardingWizardParams {
     initialValues?: Partial<OnboardingWizardValues>;
@@ -42,17 +43,12 @@ export function useOnboardingWizard({
     leaveTypes,
     onSubmit,
 }: UseOnboardingWizardParams): UseOnboardingWizardResult {
-    const initialRole = (
-        initialValues?.role && initialValues.role.length > 0
-            ? initialValues.role
-            : undefined
-    ) ?? (
-            defaultRole && defaultRole.length > 0
-                ? defaultRole
-                : undefined
-        ) ?? roleOptions.find((role) => role.name.length > 0)?.name ?? 'member';
-    const desiredOnboarding = initialValues?.useOnboarding ?? initialRole === 'member';
-    const initialUseOnboarding = canManageOnboarding && desiredOnboarding;
+    const { initialRole, initialUseOnboarding } = deriveInitialWizardConfig({
+        initialValues,
+        roleOptions,
+        defaultRole,
+        canManageOnboarding,
+    });
     const [state, setState] = useState<OnboardingWizardState>(() =>
         buildInitialWizardState({
             ...initialValues,

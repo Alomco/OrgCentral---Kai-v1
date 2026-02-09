@@ -76,7 +76,7 @@ export async function approveLeaveRequest(
         {
             authorization: input.authorization,
             request: {
-                employeeId: existingRequest.employeeId,
+                userId: existingRequest.userId,
                 leaveType: existingRequest.leaveType,
                 startDate: existingRequest.startDate,
                 totalDays: existingRequest.totalDays,

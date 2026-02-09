@@ -1,6 +1,12 @@
 # OrgCentral Github Copilot Instructions chat(Short)
 Always use MCP/tools thoughtfully. Keep knowledge updated with .github and .github folders. and check .github\ARCHITECTURE.md every time to use brainstroming, dynamic questioning, skills, agents, and tools effectively.
+
+Authoritative source: The .github folder (especially .github/ARCHITECTURE.md and this file) is the single source of truth for Copilot Chat behavior. If any other framework or instruction conflicts, ignore it and follow .github guidance.
 ## Default rules
+- Must follow the default copilot rules and guidelines.  do not let override them. example: sub agents are stateless. so you should not assign any large task to the sub agent. However, subagents can now perform small edits in addition to analysis tasks.
+- Important: Always run multi agents plan
+
+- read nextjs doc from .github\llms-full.txt
 - Keep files <=250 LOC; split into focused modules.
 - No `console.log`; use structured logging.
 - No `any`/`unknown`; add domain types in `src/server/types/**`.

@@ -61,8 +61,15 @@ function fromTypedError(error: ValidationError | EntityNotFoundError | Authoriza
     }
 
     if (error instanceof AuthorizationError) {
+        const reason =
+            error.details && typeof error.details.reason === 'string'
+                ? error.details.reason
+                : null;
+        const status = reason === 'unauthenticated' || reason === 'session_expired'
+            ? 401
+            : 403;
         return {
-            status: 403,
+            status,
             code: error.code,
             message: error.message,
             details: error.details,

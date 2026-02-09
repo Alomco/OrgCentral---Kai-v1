@@ -2,8 +2,10 @@
 
 ## Purpose
 Provide project-specific rules for Codex to preserve coding conventions, security posture, and strict linting.
-- always check .codex\ARCHITECTURE.md and update your skills and use the agents/tools effectively.
+- always check .github\ARCHITECTURE.md first and update your skills and use the agents/tools effectively.
 ## Non-negotiables
+- sub agents are stateless. so you should not assign any large task to the sub agent.
+
 - Keep files <= 250 LOC; split early and keep modules focused.
 - Maintain the strict ESLint configuration; do not disable rules without explicit approval.
 - Single source of truth: centralize shared logic, types, constants, and config.

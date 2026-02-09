@@ -24,7 +24,10 @@ function resolveEmail(session: AuthSession | null): string | undefined {
 export function requireSessionUser(session: AuthSession | null): SessionUserContext {
     const userId = resolveUserId(session);
     if (!userId) {
-        throw new AuthorizationError('Authenticated session is required for this operation.');
+        throw new AuthorizationError(
+            'Authenticated session is required for this operation.',
+            { reason: 'unauthenticated' },
+        );
     }
 
     const email = resolveEmail(session);

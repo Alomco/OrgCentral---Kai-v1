@@ -40,8 +40,8 @@ export function ProfileHero({ profile, className, onEdit, userImage }: ProfileHe
             {/* Cinematic Background Layer */}
             <div className="absolute inset-0 z-0">
                 <MeshGradientPattern />
-                <CyberGridPattern className="text-[oklch(var(--primary))] opacity-20" />
-                <div className="absolute inset-0 bg-linear-to-b from-transparent via-[oklch(var(--card)/0.6)] to-[oklch(var(--card))]" />
+                <CyberGridPattern className="text-primary opacity-20" />
+                <div className="absolute inset-0 bg-linear-to-b from-transparent via-[oklch(var(--card)/0.6)] to-card" />
             </div>
 
             {/* Content Layer */}
@@ -49,7 +49,7 @@ export function ProfileHero({ profile, className, onEdit, userImage }: ProfileHe
 
                 {/* Avatar Group */}
                 <div className="group relative">
-                    <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-[oklch(var(--background))] shadow-xl ring-2 ring-[oklch(var(--primary)/0.3)] transition-all duration-500 hover:scale-105 hover:ring-[oklch(var(--primary)/0.8)]">
+                    <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-background shadow-xl ring-2 ring-[oklch(var(--primary)/0.3)] transition-all duration-500 hover:scale-105 hover:ring-[oklch(var(--primary)/0.8)]">
                         <Avatar className="h-full w-full">
                             <AvatarImage src={profile.photoUrl ?? userImage ?? undefined} alt={fullName} className="object-cover" />
                             <AvatarFallback className="bg-linear-to-br from-[oklch(var(--primary)/0.2)] to-[oklch(var(--accent)/0.2)] text-3xl font-bold text-gradient-theme">
@@ -66,7 +66,7 @@ export function ProfileHero({ profile, className, onEdit, userImage }: ProfileHe
                     </div>
 
                     {/* Status Indicator */}
-                    <div className="absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[oklch(var(--background))] shadow-sm">
+                    <div className="absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-background shadow-sm">
                         <div className="h-4 w-4 rounded-full bg-success ring-2 ring-success/30 animate-pulse" />
                     </div>
                 </div>
@@ -81,7 +81,7 @@ export function ProfileHero({ profile, className, onEdit, userImage }: ProfileHe
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
                             >
-                                <span className="bg-linear-to-r from-[oklch(var(--foreground))] via-[oklch(var(--foreground)/0.8)] to-[oklch(var(--foreground)/0.5)] bg-clip-text text-transparent">
+                                <span className="bg-linear-to-r from-foreground via-[oklch(var(--foreground)/0.8)] to-[oklch(var(--foreground)/0.5)] bg-clip-text text-transparent">
                                     {fullName}
                                 </span>
                             </motion.h1>
@@ -146,7 +146,7 @@ export function ProfileHero({ profile, className, onEdit, userImage }: ProfileHe
                     <Button
                         variant="outline"
                         size="lg"
-                        className="glass-cta gap-2 border-[oklch(var(--primary)/0.2)] bg-[oklch(var(--primary)/0.05)] text-[oklch(var(--primary))] hover:bg-[oklch(var(--primary)/0.1)] hover:border-[oklch(var(--primary)/0.4)]"
+                        className="glass-cta gap-2 border-[oklch(var(--primary)/0.2)] bg-[oklch(var(--primary)/0.05)] text-primary hover:bg-[oklch(var(--primary)/0.1)] hover:border-[oklch(var(--primary)/0.4)]"
                         onClick={onEdit}
                     >
                         <Edit className="h-4 w-4" />

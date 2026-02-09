@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { auth } from '@/server/lib/auth';
 import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
-import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
+import { AuthorizationError } from '@/server/errors';
 
 const CREDENTIAL_PROVIDER_ID = 'credential';
 
@@ -13,10 +13,13 @@ const requestSchema = z.object({
 
 export async function POST(request: Request): Promise<Response> {
     try {
-        await getSessionContext({}, {
-            headers: request.headers,
-            auditSource: 'api:auth:set-password',
-        });
+        const session = await auth.api.getSession({ headers: request.headers });
+        if (!session?.session) {
+            throw new AuthorizationError(
+                'Unauthenticated request - session not found.',
+                { reason: 'unauthenticated' },
+            );
+        }
 
         const payload = requestSchema.safeParse(await request.json());
         if (!payload.success) {

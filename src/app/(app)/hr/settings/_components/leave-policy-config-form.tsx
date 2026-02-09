@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useEffect, useEffectEvent, useRef } from 'react';
+import Link from 'next/link';
+import { useActionState, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
@@ -37,46 +38,77 @@ function formatPolicyType(value: string): string {
 export function LeavePolicyConfigForm(props: {
     policies: LeavePolicy[];
     policyTypes: readonly string[];
+    showPageLink?: boolean;
 }) {
     const queryClient = useQueryClient();
     const [createState, createAction, createPending] = useActionState(
         createLeavePolicyAction,
         initialCreateState,
     );
+    const [highlightPolicyId, setHighlightPolicyId] = useState<string | null>(null);
     const { data: policies = props.policies } = useQuery({
         queryKey: LEAVE_POLICIES_QUERY_KEY,
         queryFn: fetchLeavePolicies,
         initialData: props.policies,
     });
     const formReference = useRef<HTMLFormElement | null>(null);
-    const handleSuccess = useEffectEvent(() => {
+    const handleSuccess = useEffectEvent((createdPolicyId?: string) => {
         void queryClient.invalidateQueries({ queryKey: LEAVE_POLICIES_QUERY_KEY }).catch(() => null);
         formReference.current?.reset();
+        setHighlightPolicyId(createdPolicyId ?? null);
     });
 
     useEffect(() => {
         if (!createPending && createState.status === 'success') {
-            handleSuccess();
+            handleSuccess(createState.createdPolicyId);
         }
-    }, [createPending, createState.status]);
+    }, [createPending, createState.createdPolicyId, createState.status]);
+
+    useEffect(() => {
+        if (!highlightPolicyId) {
+            return;
+        }
+
+        const target = document.getElementById(`leave-policy-${highlightPolicyId}`);
+        if (!target) {
+            return;
+        }
+
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const timeout = window.setTimeout(() => {
+            setHighlightPolicyId(null);
+        }, 6000);
+
+        return () => window.clearTimeout(timeout);
+    }, [highlightPolicyId, policies]);
 
     const nameError = createState.fieldErrors?.name;
     const typeError = createState.fieldErrors?.type;
     const accrualError = createState.fieldErrors?.accrualAmount;
 
-    const createMessage =
-        createState.status === 'error'
-            ? createState.message
-            : createState.status === 'success'
-                ? createState.message
-                : null;
+    const createMessage = createState.status === 'error' ? createState.message : null;
+    const successMessage = createState.status === 'success' ? createState.message : null;
 
     return (
         <div className="space-y-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Leave policies</CardTitle>
-                    <CardDescription>Define accrual amounts and approval rules.</CardDescription>
+                    <CardDescription>
+                        Define accrual amounts and approval rules.
+                        {props.showPageLink === false ? null : (
+                            <>
+                                {' '}
+                                <Link
+                                    className="text-xs font-medium text-primary hover:underline"
+                                    href="/hr/leave/policies"
+                                >
+                                    Open the Leave Policies page
+                                </Link>
+                            </>
+                        )}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form
@@ -176,6 +208,15 @@ export function LeavePolicyConfigForm(props: {
                                 </p>
                             ) : null}
                         </div>
+                        {successMessage ? (
+                            <div
+                                role="status"
+                                aria-live="polite"
+                                className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground"
+                            >
+                                <span className="font-medium">Success.</span> {successMessage} The policy is highlighted below.
+                            </div>
+                        ) : null}
                     </form>
                 </CardContent>
             </Card>
@@ -191,7 +232,12 @@ export function LeavePolicyConfigForm(props: {
                     ) : (
                         <div className="space-y-3">
                             {policies.map((policy) => (
-                                <LeavePolicyRow key={policy.id} policy={policy} policyTypes={props.policyTypes} />
+                                <LeavePolicyRow
+                                    key={policy.id}
+                                    policy={policy}
+                                    policyTypes={props.policyTypes}
+                                    isHighlighted={policy.id === highlightPolicyId}
+                                />
                             ))}
                         </div>
                     )}

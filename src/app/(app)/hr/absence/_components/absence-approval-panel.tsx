@@ -110,7 +110,7 @@ export function AbsenceApprovalPanel({
                                             <p className="font-medium text-sm truncate">
                                                 {request.employeeName}
                                             </p>
-                                            <Badge variant="outline" className="max-w-[10rem] truncate text-xs">
+                                            <Badge variant="outline" className="max-w-40 truncate text-xs">
                                                 {request.type}
                                             </Badge>
                                         </div>
@@ -123,7 +123,7 @@ export function AbsenceApprovalPanel({
                                             </p>
                                         ) : null}
                                         {request.reason ? (
-                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
+                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 wrap-break-word">
                                                 {request.reason}
                                             </p>
                                         ) : null}

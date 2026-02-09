@@ -35,6 +35,7 @@ export async function handleSubmitLeaveRequest(previous: LeaveRequestFormState, 
         submissionContext.context.policy,
         submissionContext.context.parsedData,
         submissionContext.context.session,
+        submissionContext.context.employeeNumber,
     );
     if (balanceCheck.kind === 'error') {
         return balanceCheck.state;

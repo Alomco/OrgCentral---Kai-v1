@@ -24,7 +24,7 @@ export function MfaPanel({ isMfaEnabled }: MfaPanelProps) {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <TwoFactorSetupForm />
+                <TwoFactorSetupForm isMfaEnabled={isMfaEnabled} />
             </CardContent>
         </Card>
     );

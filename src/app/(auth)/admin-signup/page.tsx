@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { AdminBootstrapForm } from '@/components/auth/AdminBootstrapForm';
+import { isBootstrapEnabled } from '@/server/use-cases/auth/admin-bootstrap.helpers';
 
 export const metadata: Metadata = {
     title: 'Admin bootstrap - OrgCentral',
@@ -8,6 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function AdminSignupPage() {
+    if (!isBootstrapEnabled()) {
+        notFound();
+    }
+
     return (
         <AuthLayout
             title="Admin bootstrap"
@@ -17,4 +23,3 @@ export default function AdminSignupPage() {
         </AuthLayout>
     );
 }
-

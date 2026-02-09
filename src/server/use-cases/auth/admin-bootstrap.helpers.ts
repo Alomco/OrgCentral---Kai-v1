@@ -36,7 +36,11 @@ export function resolvePlatformConfig(): PlatformBootstrapConfig {
 }
 
 export function isBootstrapEnabled(): boolean {
-    return process.env.ENABLE_ADMIN_BOOTSTRAP === 'true';
+    if (process.env.ENABLE_ADMIN_BOOTSTRAP !== 'true') {
+        return false;
+    }
+
+    return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 }
 
 export function requireBootstrapSecret(): string {

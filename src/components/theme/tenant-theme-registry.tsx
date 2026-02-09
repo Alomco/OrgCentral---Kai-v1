@@ -8,11 +8,13 @@ export type TenantThemeRegistryProps =
     | {
         orgId: string;
         cacheContext: TenantThemeCacheContext;
+        nonce?: string;
         children?: ReactNode;
     }
     | {
         orgId?: null;
         cacheContext?: TenantThemeCacheContext;
+        nonce?: string;
         children?: ReactNode;
     };
 
@@ -43,6 +45,7 @@ function buildCssVariables(tokens: ThemeTokenMap, keys: readonly ThemeTokenKey[]
 export async function TenantThemeRegistry({
     orgId,
     cacheContext,
+    nonce,
     children,
 }: TenantThemeRegistryProps) {
     const resolvedOrgId = orgId ?? 'default';
@@ -61,12 +64,14 @@ export async function TenantThemeRegistry({
         <>
             <style
                 suppressHydrationWarning
+                nonce={nonce}
                 dangerouslySetInnerHTML={{
                     __html: `:root { ${cssVariables} } .dark { ${darkCssVariables} }`,
                 }}
             />
             <script
                 suppressHydrationWarning
+                nonce={nonce}
                 // Expose the resolved org scope to client code (e.g., local preview overrides).
                 dangerouslySetInnerHTML={{
                     __html: `(() => { try { const root = document.documentElement; const nextOrgId = ${JSON.stringify(

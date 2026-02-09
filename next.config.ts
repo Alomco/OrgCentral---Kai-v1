@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     turbopackFileSystemCacheForDev: true,
     viewTransition: true,
     ...(isDevelopment ? { serverComponentsHmrCache: false } : {}),
+    mcpServer: true,
   },
   reactCompiler: true,
   // Suppress verbose Turbopack output
@@ -54,22 +55,6 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'geolocation=(), microphone=(), camera=()',
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://js.stripe.com",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
-              "font-src 'self'",
-              "connect-src 'self' https://*.supabase.co https://api.stripe.com",
-              "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "frame-ancestors 'none'"
-            ].join('; '),
           },
         ],
       },

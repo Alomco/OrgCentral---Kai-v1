@@ -27,6 +27,7 @@ const focusRingClass = 'focus-visible:ring-2 focus-visible:ring-offset-2 focus-v
 export function LeaveRequestForm({ initialState, policySummary, balances }: LeaveRequestFormProps) {
     const {
         state,
+        fieldErrors,
         action,
         pending,
         leaveTypeErrorId,
@@ -50,7 +51,7 @@ export function LeaveRequestForm({ initialState, policySummary, balances }: Leav
         setReason,
         calculatedDays,
         showPreview,
-        setShowPreview,
+        handlePreviewOpenChange,
         requestId,
         uploading,
         uploadError,
@@ -128,7 +129,7 @@ export function LeaveRequestForm({ initialState, policySummary, balances }: Leav
                                             ? 'No leave types found for this org; contact an administrator.'
                                             : 'Matches your available leave types above.'}
                                 </div>
-                                <FieldError id={leaveTypeErrorId} message={state.fieldErrors?.leaveType} />
+                                <FieldError id={leaveTypeErrorId} message={fieldErrors?.leaveType} />
                             </div>
 
                             <div className="space-y-2">
@@ -144,7 +145,7 @@ export function LeaveRequestForm({ initialState, policySummary, balances }: Leav
                                     aria-describedby={reasonErrorId}
                                     className={focusRingClass}
                                 />
-                                <FieldError id={reasonErrorId} message={state.fieldErrors?.reason} />
+                                <FieldError id={reasonErrorId} message={fieldErrors?.reason} />
                             </div>
                         </div>
 
@@ -161,8 +162,8 @@ export function LeaveRequestForm({ initialState, policySummary, balances }: Leav
                             halfDayLockedToSingleDate={halfDayLockedToSingleDate}
                             startDateErrorId={startDateErrorId}
                             endDateErrorId={endDateErrorId}
-                            startDateError={state.fieldErrors?.startDate}
-                            endDateError={state.fieldErrors?.endDate}
+                            startDateError={fieldErrors?.startDate}
+                            endDateError={fieldErrors?.endDate}
                             pending={pending}
                             focusRingClass={focusRingClass}
                         />
@@ -187,7 +188,7 @@ export function LeaveRequestForm({ initialState, policySummary, balances }: Leav
                                 <div id="totalDays-help" className="text-xs text-muted-foreground">
                                     Auto-calculated from dates (weekends counted). Bank holidays are checked during approval.
                                 </div>
-                                <FieldError id={totalDaysErrorId} message={state.fieldErrors?.totalDays} />
+                                <FieldError id={totalDaysErrorId} message={fieldErrors?.totalDays} />
                             </div>
 
                             <AttachmentsField
@@ -203,7 +204,7 @@ export function LeaveRequestForm({ initialState, policySummary, balances }: Leav
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <LeaveRequestPreviewDialog
                                 open={showPreview}
-                                onOpenChange={setShowPreview}
+                                onOpenChange={handlePreviewOpenChange}
                                 pending={pending}
                                 onConfirm={handleConfirmSubmit}
                                 focusRingClass={focusRingClass}
@@ -218,7 +219,7 @@ export function LeaveRequestForm({ initialState, policySummary, balances }: Leav
                                 balanceText={balanceText}
                                 policySummary={policySummary}
                             />
-                            <div className="flex items-start gap-2 text-xs text-muted-foreground sm:max-w-[28rem]">
+                            <div className="flex items-start gap-2 text-xs text-muted-foreground sm:max-w-md">
                                 <AlertCircle className="h-3.5 w-3.5" />
                                 <span>Approvers see your note; manager signs first, HR follows. No sensitive data is cached.</span>
                             </div>

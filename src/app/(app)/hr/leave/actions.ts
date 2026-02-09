@@ -121,7 +121,6 @@ async function runLeaveMutation(params: {
 
         const service = getLeaveService();
         await mutate(service, authorization);
-        revalidatePath('/hr/leave');
         return { status: 'success', message: successMessage };
     } catch (error) {
         appLogger.error(logEvent, {
@@ -129,5 +128,9 @@ async function runLeaveMutation(params: {
             error: error instanceof Error ? error.message : String(error),
         });
         return { status: 'error', message: errorMessage };
+    } finally {
+        revalidatePath('/hr/leave');
+        revalidatePath('/hr/leave/requests');
+        revalidatePath('/hr/leave/balances');
     }
 }

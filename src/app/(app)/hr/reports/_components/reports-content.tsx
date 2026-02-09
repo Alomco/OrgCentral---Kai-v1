@@ -15,6 +15,7 @@ import { HrSection } from '../../_components/hr-design-system/section';
 import { HrStatCard } from '../../_components/hr-design-system/stat-card';
 import { StatusBreakdownCard } from './status-breakdown-card';
 import { formatCount, type ReportsMetrics } from '../reports-utils';
+import { getReportsDerivedMetrics } from './reports-derived-metrics';
 import type { EmployeeDirectoryStats } from '@/server/use-cases/hr/people/get-employee-directory-stats';
 import type { LeaveRequest } from '@/server/types/leave-types';
 import type { UnplannedAbsence, TimeEntry } from '@/server/types/hr-ops-types';
@@ -33,22 +34,7 @@ export function ReportsContent({
     timeEntries,
     metrics,
 }: ReportsContentProps) {
-    const trainingTotal = metrics.trainingCompleted + metrics.trainingInProgress;
-    const trainingCompletionRate = trainingTotal > 0
-        ? Math.round((metrics.trainingCompleted / trainingTotal) * 100)
-        : 0;
-    const complianceCoverageRate = metrics.complianceTotal > 0
-        ? Math.round((metrics.complianceComplete / metrics.complianceTotal) * 100)
-        : 0;
-    const complianceCompletedDelta = metrics.complianceCompletedPrev30 > 0
-        ? Math.round(((metrics.complianceCompletedLast30 - metrics.complianceCompletedPrev30) / metrics.complianceCompletedPrev30) * 100)
-        : null;
-    const complianceDeltaLabel = complianceCompletedDelta === null
-        ? 'N/A'
-        : `${complianceCompletedDelta >= 0 ? '+' : ''}${String(complianceCompletedDelta)}%`;
-    const absenceRate = employeeStats.active > 0
-        ? Math.round((metrics.absencesOpen / employeeStats.active) * 100)
-        : 0;
+    const derived = getReportsDerivedMetrics(metrics, employeeStats);
 
     return (
         <>
@@ -215,25 +201,25 @@ export function ReportsContent({
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <HrStatCard
                         label="Training completion rate"
-                        value={`${String(trainingCompletionRate)}%`}
+                        value={`${String(derived.trainingCompletionRate)}%`}
                         icon={<GraduationCap className="h-5 w-5" />}
                         accentColor="success"
                     />
                     <HrStatCard
                         label="Compliance coverage"
-                        value={`${String(complianceCoverageRate)}%`}
+                        value={`${String(derived.complianceCoverageRate)}%`}
                         icon={<ClipboardCheck className="h-5 w-5" />}
                         accentColor="accent"
                     />
                     <HrStatCard
                         label="Compliance completion trend"
-                        value={complianceDeltaLabel}
+                        value={derived.complianceDeltaLabel}
                         icon={<BarChart3 className="h-5 w-5" />}
-                        accentColor={complianceCompletedDelta !== null && complianceCompletedDelta < 0 ? 'warning' : 'success'}
+                        accentColor={derived.complianceCompletedDelta !== null && derived.complianceCompletedDelta < 0 ? 'warning' : 'success'}
                     />
                     <HrStatCard
                         label="Open absence rate"
-                        value={`${String(absenceRate)}%`}
+                        value={`${String(derived.absenceRate)}%`}
                         icon={<CalendarClock className="h-5 w-5" />}
                         accentColor="warning"
                     />

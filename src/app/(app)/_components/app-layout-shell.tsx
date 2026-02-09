@@ -16,6 +16,7 @@ export async function AppLayoutShell({ children }: { children: ReactNode }) {
     noStore();
 
     const headerStore = await headers();
+    const nonce = headerStore.get('x-nonce') ?? undefined;
 
     const { session, authorization } = await getSessionContextOrRedirect(
         {},
@@ -58,6 +59,7 @@ export async function AppLayoutShell({ children }: { children: ReactNode }) {
                 classification: authorization.dataClassification,
                 residency: authorization.dataResidency,
             }}
+            nonce={nonce}
         >
             <SkipLink targetId="app-main-content" />
             <AppLayoutClientShell

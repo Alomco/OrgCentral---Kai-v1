@@ -112,9 +112,13 @@ export async function enforceBalance(
     policy: PolicyContext,
     parsedData: LeaveRequestFormValues,
     session: SessionContext,
+    employeeNumber: string,
 ): Promise<BalanceCheck> {
     const leaveService = getLeaveService();
-    const balances = await leaveService.getLeaveBalance({ authorization: session.authorization, employeeId: session.authorization.userId });
+    const balances = await leaveService.getLeaveBalance({
+        authorization: session.authorization,
+        employeeId: employeeNumber,
+    });
     const matchingBalance = balances.balances.find((balance) => balance.leaveType === parsedData.leaveType);
 
     if (matchingBalance && parsedData.totalDays > matchingBalance.available && !policy.overrides.allowNegativeBalance) {

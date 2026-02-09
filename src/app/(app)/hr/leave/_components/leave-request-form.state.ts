@@ -10,6 +10,7 @@ import type { LeaveBalance } from '@/server/types/leave-types';
 
 export interface UseLeaveRequestFormReturn {
     state: LeaveRequestFormState;
+    fieldErrors: LeaveRequestFormState['fieldErrors'];
     action: (formData: FormData) => void;
     pending: boolean;
     leaveTypeErrorId?: string;
@@ -35,6 +36,7 @@ export interface UseLeaveRequestFormReturn {
     calculatedDays: number;
     showPreview: boolean;
     setShowPreview: (open: boolean) => void;
+    handlePreviewOpenChange: (open: boolean) => void;
     requestId: string;
     uploading: boolean;
     uploadError: string | null;
@@ -49,17 +51,9 @@ export interface UseLeaveRequestFormReturn {
 
 export function useLeaveRequestForm(initialState: LeaveRequestFormState, balances?: LeaveBalance[]): UseLeaveRequestFormReturn {
     const [state, action, pending] = useActionState(submitLeaveRequestAction, initialState);
-
-    const leaveTypeErrorId = state.fieldErrors?.leaveType ? 'leaveType-error' : undefined;
-    const totalDaysErrorId = state.fieldErrors?.totalDays ? 'totalDays-error' : undefined;
-    const startDateErrorId = state.fieldErrors?.startDate ? 'startDate-error' : undefined;
-    const endDateErrorId = state.fieldErrors?.endDate ? 'endDate-error' : undefined;
-    const reasonErrorId = state.fieldErrors?.reason ? 'reason-error' : undefined;
-
     const feedbackReference = useRef<HTMLDivElement | null>(null);
     const formReference = useRef<HTMLFormElement | null>(null);
     const previousStatus = useRef(state.status);
-
     const [confirmedSubmit, setConfirmedSubmit] = useState(false);
     const initialValues = initialState.values;
     const [isHalfDay, setIsHalfDay] = useState<boolean>(initialValues.isHalfDay ?? false);
@@ -68,9 +62,9 @@ export function useLeaveRequestForm(initialState: LeaveRequestFormState, balance
     const [endDate, setEndDate] = useState<string>(initialValues.endDate ?? initialValues.startDate);
     const [reason, setReason] = useState<string>(initialValues.reason ?? '');
     const [showPreview, setShowPreview] = useState(false);
+    const [showClientErrors, setShowClientErrors] = useState(false);
     const [requestId] = useState<string>(() => crypto.randomUUID());
     const { uploading, uploadError, uploadedAttachments, attachmentsValue, handleEvidenceChange } = useLeaveAttachment(requestId);
-
     const leaveTypeOptions = useMemo(() => balances?.map((balance) => balance.leaveType) ?? [], [balances]);
     const selectedBalance = useMemo(() => balances?.find((balance) => balance.leaveType === leaveType) ?? null, [balances, leaveType]);
 
@@ -82,45 +76,103 @@ export function useLeaveRequestForm(initialState: LeaveRequestFormState, balance
         previousStatus.current = state.status;
     }, [pending, state.status]);
 
-    const normalizedEndDate = useMemo(() => {
-        if (!endDate) { return startDate; }
-        if (startDate && endDate < startDate) { return startDate; }
-        return endDate;
-    }, [startDate, endDate]);
-
+    const halfDayLockedToSingleDate = isHalfDay && Boolean(startDate);
+    const effectiveEndDate = halfDayLockedToSingleDate ? startDate : (endDate || startDate);
     const calculatedDays = useMemo(
-        () => computeTotalDays(startDate, normalizedEndDate, isHalfDay),
-        [startDate, normalizedEndDate, isHalfDay],
+        () => computeTotalDays(startDate, effectiveEndDate, isHalfDay),
+        [startDate, effectiveEndDate, isHalfDay],
     );
 
     const handleStartDateChange = (value: string) => {
         setStartDate(value);
-        setEndDate((current) => {
-            if (!current) { return value; }
-            return current < value ? value : current;
-        });
+        if (!endDate) {
+            setEndDate(value);
+        }
     };
 
     const handleEndDateChange = (value: string) => {
-        if (startDate && value && value < startDate) {
-            setEndDate(startDate);
-            return;
-        }
         setEndDate(value);
     };
+    const clientFieldErrors = useMemo<NonNullable<LeaveRequestFormState['fieldErrors']>>(() => {
+        const errors: NonNullable<LeaveRequestFormState['fieldErrors']> = {};
+        if (!leaveType.trim()) {
+            errors.leaveType = 'Select a leave type.';
+        }
+
+        const today = getTodayDateInputValue();
+
+        if (startDate && startDate < today) {
+            errors.startDate = 'Start date cannot be in the past.';
+        }
+        if (startDate && effectiveEndDate && effectiveEndDate < startDate) {
+            errors.endDate = 'End date must be on or after the start date.';
+        }
+        if (calculatedDays <= 0) {
+            errors.totalDays = 'Total days must be greater than 0.';
+        }
+        return errors;
+    }, [leaveType, startDate, effectiveEndDate, calculatedDays]);
+
+    const stateFieldErrors = useMemo(() => {
+        if (!state.fieldErrors || state.status === 'idle') {
+            return undefined;
+        }
+        const stateValues = state.values;
+        const matchesLocal =
+            stateValues.leaveType === leaveType
+            && stateValues.startDate === startDate
+            && (stateValues.endDate ?? '') === (endDate || '')
+            && Boolean(stateValues.isHalfDay) === isHalfDay
+            && (stateValues.reason ?? '') === reason
+            && stateValues.totalDays === calculatedDays;
+
+        return matchesLocal ? state.fieldErrors : undefined;
+    }, [state.fieldErrors, state.status, state.values, leaveType, startDate, endDate, isHalfDay, reason, calculatedDays]);
+
+    const fieldErrors = useMemo(() => {
+        if (!showClientErrors) {
+            return stateFieldErrors;
+        }
+        return {
+            ...(stateFieldErrors ?? {}),
+            ...clientFieldErrors,
+        };
+    }, [stateFieldErrors, clientFieldErrors, showClientErrors]);
+    const leaveTypeErrorId = fieldErrors?.leaveType ? 'leaveType-error' : undefined;
+    const totalDaysErrorId = fieldErrors?.totalDays ? 'totalDays-error' : undefined;
+    const startDateErrorId = fieldErrors?.startDate ? 'startDate-error' : undefined;
+    const endDateErrorId = fieldErrors?.endDate ? 'endDate-error' : undefined;
+    const reasonErrorId = fieldErrors?.reason ? 'reason-error' : undefined;
+    const hasClientErrors = Object.keys(clientFieldErrors).length > 0;
 
     function handleConfirmSubmit() {
+        if (hasClientErrors) {
+            setShowClientErrors(true);
+            return;
+        }
         setConfirmedSubmit(true);
         setShowPreview(false);
         formReference.current?.requestSubmit();
         setConfirmedSubmit(false);
     }
 
-    const halfDayLockedToSingleDate = isHalfDay && Boolean(startDate);
+    function handlePreviewOpenChange(open: boolean) {
+        if (!open) {
+            setShowPreview(false);
+            return;
+        }
+        setShowClientErrors(true);
+        if (hasClientErrors) {
+            return;
+        }
+        setShowPreview(true);
+    }
+
     const balanceText = balanceForType(balances, leaveType);
 
     return {
         state,
+        fieldErrors,
         action,
         pending,
         leaveTypeErrorId,
@@ -139,13 +191,14 @@ export function useLeaveRequestForm(initialState: LeaveRequestFormState, balance
         selectedBalance,
         startDate,
         setStartDate,
-        endDate: normalizedEndDate,
+        endDate,
         setEndDate: handleEndDateChange,
         reason,
         setReason,
         calculatedDays,
         showPreview,
         setShowPreview,
+        handlePreviewOpenChange,
         requestId,
         uploading,
         uploadError,
@@ -174,14 +227,23 @@ function parseDateOnly(value: string | undefined) {
     return new Date(Date.UTC(year, month - 1, day));
 }
 
+function getTodayDateInputValue(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year.toString()}-${month}-${day}`;
+}
+
 function computeTotalDays(start: string, end: string, isHalfDay: boolean): number {
     const startDate = parseDateOnly(start);
     if (!startDate) { return 0; }
     const fallbackEnd = end || start;
     const endDate = parseDateOnly(fallbackEnd) ?? startDate;
-    const normalizedEnd = endDate < startDate ? startDate : endDate;
-    const diffDays = Math.floor((normalizedEnd.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    if (endDate < startDate) { return 0; }
+    const diffDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     const fullDays = Math.max(diffDays, 1);
     const total = isHalfDay ? Math.max(0.5, fullDays - 0.5) : fullDays;
     return Number(total.toFixed(1));
 }
+

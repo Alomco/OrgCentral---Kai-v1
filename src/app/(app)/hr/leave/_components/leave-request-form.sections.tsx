@@ -159,15 +159,15 @@ export function LeaveRequestPreviewDialog({
                 <div className="space-y-3 text-sm">
                     <div className="grid grid-cols-1 gap-2 text-muted-foreground sm:grid-cols-2">
                         <span className="font-medium text-foreground">Type</span>
-                        <span className="break-words">{values.leaveType || '—'}</span>
+                        <span className="wrap-break-word">{values.leaveType || '—'}</span>
                         <span className="font-medium text-foreground">Dates</span>
-                        <span className="break-words">{values.startDate || '—'} → {values.endDate || values.startDate || '—'}</span>
+                        <span className="wrap-break-word">{values.startDate || '—'} → {values.endDate || values.startDate || '—'}</span>
                         <span className="font-medium text-foreground">Days</span>
-                        <span className="break-words">{values.calculatedDays}</span>
+                        <span className="wrap-break-word">{values.calculatedDays}</span>
                         <span className="font-medium text-foreground">Half day</span>
-                        <span className="break-words">{values.isHalfDay ? 'Yes (start date)' : 'No'}</span>
+                        <span className="wrap-break-word">{values.isHalfDay ? 'Yes (start date)' : 'No'}</span>
                         <span className="font-medium text-foreground sm:col-span-2">Reason</span>
-                        <span className="break-words sm:col-span-2">{values.reason || '—'}</span>
+                        <span className="wrap-break-word sm:col-span-2">{values.reason || '—'}</span>
                     </div>
                     {balanceText ? <div className="text-sm">Balance check: {balanceText}</div> : null}
                     {policySummary ? (

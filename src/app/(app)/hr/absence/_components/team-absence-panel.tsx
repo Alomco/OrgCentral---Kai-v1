@@ -88,10 +88,10 @@ export function TeamAbsencePanel({ teamAbsences, teamSize }: TeamAbsencePanelPro
                                             {getInitials(absence.employeeName)}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <span className="font-medium max-w-[8rem] truncate">
+                                    <span className="font-medium max-w-32 truncate">
                                         {absence.employeeName}
                                     </span>
-                                    <Badge variant="outline" className="max-w-[7rem] truncate text-xs">
+                                    <Badge variant="outline" className="max-w-28 truncate text-xs">
                                         {absence.type}
                                     </Badge>
                                 </Link>

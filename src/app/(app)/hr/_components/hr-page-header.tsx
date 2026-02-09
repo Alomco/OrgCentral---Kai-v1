@@ -34,7 +34,7 @@ export function HrPageHeader({
                 {icon ? (
                     <div className={cn(
                         'flex items-center justify-center rounded-xl p-2.5',
-                        'bg-linear-to-br from-[oklch(var(--primary))] to-[oklch(var(--accent))]',
+                        'bg-linear-to-br from-primary to-accent',
                         'text-white shadow-lg shadow-[oklch(var(--primary)/0.3)]',
                         'transition-transform duration-200 hover:scale-105',
                     )}>
@@ -48,9 +48,9 @@ export function HrPageHeader({
                         // Gradient text - uses bright colors that stay visible in dark mode
                         // Goes: primary → light primary → accent → light accent for full visibility
                         'bg-linear-to-r',
-                        'from-[oklch(var(--primary))]',
-                        'via-[oklch(var(--accent))]',
-                        'to-[oklch(var(--primary))]',
+                        'from-primary',
+                        'via-accent',
+                        'to-primary',
                         'bg-clip-text text-transparent',
                         'bg-size-[200%_100%]',
                         motionStyles.sharedTitle,

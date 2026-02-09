@@ -44,8 +44,8 @@ export function withEnhancedSecurityMiddleware(
   return async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       // Extract orgId and userId from request (this could come from headers, session, or JWT)
-      const orgId = (req.headers['x-org-id'] as string | undefined) ?? extractOrgIdFromSession(req);
-      const userId = (req.headers['x-user-id'] as string | undefined) ?? extractUserIdFromSession(req);
+      const orgId = (req.headers['x-org-id'] as string | undefined) ?? await extractOrgIdFromSession(req);
+      const userId = (req.headers['x-user-id'] as string | undefined) ?? await extractUserIdFromSession(req);
       const requestUrl = req.url ?? 'unknown';
       const userAgent = req.headers['user-agent'] ?? '';
 
@@ -110,8 +110,8 @@ export function withEnhancedSecurityMiddleware(
       });
 
       // Log security event for the failure
-      const orgId = (req.headers['x-org-id'] as string | undefined) ?? extractOrgIdFromSession(req);
-      const userId = (req.headers['x-user-id'] as string | undefined) ?? extractUserIdFromSession(req);
+      const orgId = (req.headers['x-org-id'] as string | undefined) ?? await extractOrgIdFromSession(req);
+      const userId = (req.headers['x-user-id'] as string | undefined) ?? await extractUserIdFromSession(req);
 
       if (orgId && userId) {
         const metadata = {

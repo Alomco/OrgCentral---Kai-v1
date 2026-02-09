@@ -39,6 +39,7 @@ export interface LeavePolicyCreateState {
     message?: string;
     fieldErrors?: Partial<Record<keyof LeavePolicyCreateValues, string>>;
     values: LeavePolicyCreateValues;
+    createdPolicyId?: string;
 }
 
 export interface LeavePolicyInlineState {

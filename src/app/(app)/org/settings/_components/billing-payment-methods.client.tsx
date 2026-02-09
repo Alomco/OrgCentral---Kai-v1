@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from 'react';
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,12 @@ import {
   removePaymentMethod,
   setDefaultPaymentMethod,
 } from './billing-payment-methods.api';
+import {
+  PaymentMethodSetupForm,
+  buildStripeOptions,
+  formatPaymentMethodMeta,
+  formatPaymentMethodTitle,
+} from './billing-payment-methods-setup.client';
 
 interface BillingPaymentMethodsClientProps {
   orgId: string;
@@ -44,6 +50,7 @@ export function BillingPaymentMethodsClient({
     [publishableKey],
   );
   const [completedClientSecret, setCompletedClientSecret] = useState<string | null>(null);
+  const setupFormReference = useRef<HTMLFormElement | null>(null);
   const setupIntent = useMutation({
     mutationFn: () => createSetupIntent(orgId),
   });
@@ -73,6 +80,12 @@ export function BillingPaymentMethodsClient({
     });
   };
 
+  useEffect(() => {
+    if (showSetupForm) {
+      setupFormReference.current?.focus();
+    }
+  }, [showSetupForm]);
+
   return (
     <div className="mt-4 space-y-4">
       {methods.length ? (
@@ -80,7 +93,7 @@ export function BillingPaymentMethodsClient({
           {methods.map((method) => (
             <div
               key={method.stripePaymentMethodId}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background p-4"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background/80 p-4 transition hover:bg-background"
             >
               <div className="flex items-center gap-3">
                 <div>
@@ -130,32 +143,35 @@ export function BillingPaymentMethodsClient({
         <p className="text-sm text-muted-foreground">Billing not configured.</p>
       )}
 
-      {feedback ? <p className="text-xs text-muted-foreground">{feedback}</p> : null}
+      {feedback ? (
+        <p className="text-xs text-destructive" role="alert">
+          {feedback}
+        </p>
+      ) : null}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          type="button"
-          size="sm"
-          disabled={!canManage || !isBillingConfigured || setupIntent.isPending || !publishableKey}
-          onClick={handleCreateSetupIntent}
-        >
-          {setupIntent.isPending ? <Spinner className="mr-2" /> : null}
-          Add payment method
-        </Button>
-        {!publishableKey ? (
-          <span className="text-xs text-muted-foreground">Stripe publishable key missing.</span>
-        ) : null}
-        {!isBillingConfigured ? (
-          <span className="text-xs text-muted-foreground">Billing not configured.</span>
-        ) : null}
-        {!canManage ? (
-          <span className="text-xs text-muted-foreground">Subscribe to enable payment methods.</span>
-        ) : null}
+      <div className="rounded-xl border border-border bg-background/70 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            size="sm"
+            disabled={!canManage || !isBillingConfigured || setupIntent.isPending || !publishableKey}
+            onClick={handleCreateSetupIntent}
+          >
+            {setupIntent.isPending ? <Spinner className="mr-2" /> : null}
+            Add payment method
+          </Button>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" role="status" aria-live="polite">
+            {!publishableKey ? <span>Stripe publishable key missing.</span> : null}
+            {!isBillingConfigured ? <span>Billing not configured.</span> : null}
+            {!canManage ? <span>Subscribe to enable payment methods.</span> : null}
+          </div>
+        </div>
       </div>
 
       {showSetupForm && clientSecret ? (
         <Elements stripe={stripePromise} options={buildStripeOptions(clientSecret)}>
           <PaymentMethodSetupForm
+            formRef={setupFormReference}
             onComplete={async () => {
               setCompletedClientSecret(clientSecret);
               await queryClient.invalidateQueries({ queryKey: billingKeys.paymentMethods(orgId) });
@@ -164,86 +180,11 @@ export function BillingPaymentMethodsClient({
         </Elements>
       ) : null}
       {clientSecret && completedClientSecret === clientSecret ? (
-        <p className="text-xs text-muted-foreground">Payment method added. Refreshing details...</p>
+        <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
+          Payment method added. Refreshing details...
+        </p>
       ) : null}
     </div>
   );
 }
 
-function PaymentMethodSetupForm({ onComplete }: { onComplete: () => Promise<void> }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [status, setStatus] = useState<'idle' | 'saving'>('idle');
-  const [message, setMessage] = useState<string | null>(null);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!stripe || !elements) {
-      return;
-    }
-    setStatus('saving');
-    setMessage(null);
-
-    const result = await stripe.confirmSetup({
-      elements,
-      redirect: 'if_required',
-    });
-
-    if (result.error) {
-      setMessage(result.error.message ?? 'Payment method setup failed.');
-      setStatus('idle');
-      return;
-    }
-
-    setStatus('idle');
-    await onComplete();
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-border bg-background p-4">
-      <PaymentElement options={{ layout: 'tabs' }} />
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" size="sm" disabled={status === 'saving' || !stripe || !elements}>
-          Save payment method
-        </Button>
-        {message ? <span className="text-xs text-destructive">{message}</span> : null}
-      </div>
-    </form>
-  );
-}
-
-function buildStripeOptions(clientSecret: string): StripeElementsOptions {
-  return {
-    clientSecret,
-    appearance: { theme: 'stripe' },
-  };
-}
-
-function formatPaymentMethodTitle(method: PaymentMethodData): string {
-  switch (method.type) {
-    case 'CARD':
-      return `${method.brand ?? 'Card'} **** ${method.last4}`;
-    case 'BACS_DEBIT':
-      return `BACS **** ${method.last4}`;
-    case 'SEPA_DEBIT':
-      return `SEPA **** ${method.last4}`;
-    default:
-      return `Payment **** ${method.last4}`;
-  }
-}
-
-function formatPaymentMethodMeta(method: PaymentMethodData): string {
-  switch (method.type) {
-    case 'CARD':
-      if (method.expiryMonth && method.expiryYear) {
-        return `Expires ${String(method.expiryMonth).padStart(2, '0')}/${String(method.expiryYear).slice(-2)}`;
-      }
-      return 'Card payment method';
-    case 'BACS_DEBIT':
-      return method.bankName ? `Bank: ${method.bankName}` : 'UK Direct Debit';
-    case 'SEPA_DEBIT':
-      return 'SEPA Direct Debit';
-    default:
-      return 'Saved payment method';
-  }
-}

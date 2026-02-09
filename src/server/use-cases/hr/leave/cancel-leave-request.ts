@@ -62,7 +62,7 @@ export async function cancelLeaveRequest(
     const cancellationContext: LeaveBalanceAdjustmentContext = {
         authorization: input.authorization,
         request: {
-            employeeId: existingRequest.employeeId,
+            userId: existingRequest.userId,
             leaveType: existingRequest.leaveType,
             startDate: existingRequest.startDate,
             totalDays: existingRequest.totalDays,

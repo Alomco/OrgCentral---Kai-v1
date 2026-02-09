@@ -19,6 +19,7 @@ import { AdminShell } from '../_components/admin-shell';
 
 async function AdminLayoutContent({ children }: { children: ReactNode }) {
     const headerStore = await headers();
+    const nonce = headerStore.get('x-nonce') ?? undefined;
     const { session, authorization } = await getSessionContextOrRedirect(
         {},
         {
@@ -55,6 +56,7 @@ async function AdminLayoutContent({ children }: { children: ReactNode }) {
                 classification: authorization.dataClassification,
                 residency: authorization.dataResidency,
             }}
+            nonce={nonce}
         >
             <SkipLink targetId="admin-main-content" />
             <AdminShell

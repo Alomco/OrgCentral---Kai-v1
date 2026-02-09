@@ -28,6 +28,7 @@ export default function DevelopmentLayout({ children }: { children: ReactNode })
 
 async function DevelopmentLayoutShell({ children }: { children: ReactNode }) {
     const headerStore = await headers();
+    const nonce = headerStore.get('x-nonce') ?? undefined;
     const { session, authorization } = await getSessionContextOrRedirect(
         {},
         {
@@ -65,6 +66,7 @@ async function DevelopmentLayoutShell({ children }: { children: ReactNode }) {
                 classification: authorization.dataClassification,
                 residency: authorization.dataResidency,
             }}
+            nonce={nonce}
         >
             <SkipLink targetId="dev-main-content" />
             <div className="relative min-h-screen overflow-hidden bg-background text-foreground">

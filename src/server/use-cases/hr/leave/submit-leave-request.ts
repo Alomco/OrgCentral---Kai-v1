@@ -63,7 +63,7 @@ export async function submitLeaveRequestWithPolicy(
         {
             authorization,
             request: {
-                employeeId: request.employeeId,
+                userId: request.userId,
                 leaveType: request.leaveType,
                 startDate: request.startDate,
                 totalDays: request.totalDays,

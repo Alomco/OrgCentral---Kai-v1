@@ -62,7 +62,11 @@ export function BillingSubscriptionActions({ orgId, status }: BillingSubscriptio
                     </Button>
                 ) : null}
             </div>
-            {message ? <p className="text-xs text-destructive">{message}</p> : null}
+            {message ? (
+                <p className="text-xs text-destructive" role="alert">
+                    {message}
+                </p>
+            ) : null}
         </div>
     );
 }

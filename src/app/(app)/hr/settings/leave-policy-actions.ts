@@ -33,6 +33,7 @@ import {
 } from './leave-policy-form-utils';
 
 const HR_SETTINGS_PATH = '/hr/settings';
+const LEAVE_POLICIES_PATH = '/hr/leave/policies';
 const NOT_AUTHORIZED_TO_MANAGE_LEAVE_POLICIES_MESSAGE = 'Not authorized to manage leave policies.';
 
 const leavePolicyRepository = new PrismaLeavePolicyRepository();
@@ -80,7 +81,7 @@ export async function createLeavePolicyAction(
     }
 
     try {
-        await createLeavePolicy(
+        const created = await createLeavePolicy(
             { leavePolicyRepository },
             {
                 authorization: session.authorization,
@@ -94,11 +95,13 @@ export async function createLeavePolicyAction(
         );
 
         revalidatePath(HR_SETTINGS_PATH);
+        revalidatePath(LEAVE_POLICIES_PATH);
 
         return {
             status: 'success',
-            message: 'Leave policy created.',
+            message: `Leave policy "${parsed.data.name}" created.`,
             values: defaultCreateValues,
+            createdPolicyId: created.policy.id,
         };
     } catch (error) {
         return {
@@ -179,6 +182,7 @@ export async function updateLeavePolicyAction(
         );
 
         revalidatePath(HR_SETTINGS_PATH);
+        revalidatePath(LEAVE_POLICIES_PATH);
 
         return {
             status: 'success',
@@ -224,6 +228,7 @@ export async function deleteLeavePolicyAction(
         );
 
         revalidatePath(HR_SETTINGS_PATH);
+        revalidatePath(LEAVE_POLICIES_PATH);
 
         return {
             status: 'success',

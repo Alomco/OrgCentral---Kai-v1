@@ -7,6 +7,7 @@ import { LeavePolicyConfigForm } from './leave-policy-config-form';
 
 export async function LeavePolicyConfigPanel(props: {
     authorization: RepositoryAuthorizationContext;
+    showPageLink?: boolean;
 }) {
     const payload = listLeavePoliciesInputSchema.parse({ orgId: props.authorization.orgId });
     const result = await listLeavePolicies(
@@ -14,5 +15,11 @@ export async function LeavePolicyConfigPanel(props: {
         { authorization: props.authorization, payload },
     );
 
-    return <LeavePolicyConfigForm policies={result.policies} policyTypes={LEAVE_POLICY_TYPES} />;
+    return (
+        <LeavePolicyConfigForm
+            policies={result.policies}
+            policyTypes={LEAVE_POLICY_TYPES}
+            showPageLink={props.showPageLink}
+        />
+    );
 }

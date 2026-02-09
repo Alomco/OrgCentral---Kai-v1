@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { AuthorizationError } from '@/server/errors';
 import { RepositoryAuthorizationError } from '@/server/repositories/security/repository-errors';
 import { getSessionContext, type GetSessionDependencies, type GetSessionInput, type GetSessionResult } from '@/server/use-cases/auth/sessions/get-session';
+import { normalizeHeaders, resolveRequestPathFromHeaders } from '@/server/use-cases/auth/sessions/request-path';
 
 const DEFAULT_FALLBACK_NEXT_PATH = '/dashboard';
 
@@ -13,8 +14,12 @@ export interface SessionRedirectOptions {
     loginPath?: string;
     /** Where users with no org membership should be redirected. Default: /not-invited */
     notInvitedPath?: string;
+    /** Where users needing MFA verification should be redirected. Default: /two-factor */
+    mfaPath?: string;
     /** Where authenticated but unauthorized users should be redirected. Default: /access-denied */
     accessDeniedPath?: string;
+    /** Where users needing profile setup should be redirected. Default: /hr/profile */
+    profilePath?: string;
 }
 
 export async function getSessionContextOrRedirect(
@@ -32,12 +37,14 @@ export async function getSessionContextOrRedirect(
 
         const nextPath =
             resolveSafeNextPath(options.nextPath) ??
-            resolveSafeNextPath(resolveNextPathFromHeaders(normalizeHeaders(input.headers))) ??
+            resolveSafeNextPath(resolveRequestPathFromHeaders(normalizeHeaders(input.headers))) ??
             DEFAULT_FALLBACK_NEXT_PATH;
 
         const loginPath = options.loginPath ?? '/login';
         const notInvitedPath = options.notInvitedPath ?? '/not-invited';
         const accessDeniedPath = options.accessDeniedPath ?? '/access-denied';
+        const mfaPath = options.mfaPath ?? '/two-factor';
+        const profilePath = options.profilePath ?? '/hr/profile';
         const postLoginPath = `/api/auth/post-login?next=${encodeURIComponent(nextPath)}`;
 
         if (decision === 'missing-org') {
@@ -56,11 +63,35 @@ export async function getSessionContextOrRedirect(
             redirect(target);
         }
 
+        if (decision === 'mfa-setup-required') {
+            redirect(withNext(`${mfaPath}/setup`, nextPath));
+        }
+
+        if (decision === 'mfa-required') {
+            redirect(withNext(mfaPath, nextPath));
+        }
+
+        if (decision === 'password-setup-required') {
+            redirect(withNext(`${mfaPath}/setup`, nextPath));
+        }
+
+        if (decision === 'profile-setup-required') {
+            redirect(withNext(profilePath, nextPath));
+        }
+
         redirect(accessDeniedPath);
     }
 }
 
-type SessionErrorDecision = 'unauthenticated' | 'not-invited' | 'forbidden' | 'missing-org';
+type SessionErrorDecision =
+    | 'unauthenticated'
+    | 'not-invited'
+    | 'forbidden'
+    | 'missing-org'
+    | 'mfa-required'
+    | 'mfa-setup-required'
+    | 'password-setup-required'
+    | 'profile-setup-required';
 
 function classifySessionError(error: unknown): SessionErrorDecision | null {
     if (isNotInvitedError(error)) {
@@ -72,10 +103,54 @@ function classifySessionError(error: unknown): SessionErrorDecision | null {
     if (isUnauthenticatedError(error)) {
         return 'unauthenticated';
     }
+    if (isMfaSetupRequiredError(error)) {
+        return 'mfa-setup-required';
+    }
+    if (isMfaRequiredError(error)) {
+        return 'mfa-required';
+    }
+    if (isPasswordSetupRequiredError(error)) {
+        return 'password-setup-required';
+    }
+    if (isProfileSetupRequiredError(error)) {
+        return 'profile-setup-required';
+    }
     if (error instanceof AuthorizationError || error instanceof RepositoryAuthorizationError) {
         return 'forbidden';
     }
     return null;
+}
+
+function isMfaRequiredError(error: unknown): boolean {
+    if (error instanceof AuthorizationError && error.details?.reason === 'mfa_required') {
+        return true;
+    }
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    return message.includes('multi-factor authentication is required');
+}
+
+function isMfaSetupRequiredError(error: unknown): boolean {
+    if (error instanceof AuthorizationError && error.details?.reason === 'mfa_setup_required') {
+        return true;
+    }
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    return message.includes('multi-factor authentication setup is required');
+}
+
+function isPasswordSetupRequiredError(error: unknown): boolean {
+    if (error instanceof AuthorizationError && error.details?.reason === 'password_setup_required') {
+        return true;
+    }
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    return message.includes('password setup is required');
+}
+
+function isProfileSetupRequiredError(error: unknown): boolean {
+    if (error instanceof AuthorizationError && error.details?.reason === 'profile_setup_required') {
+        return true;
+    }
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    return message.includes('complete your profile');
 }
 
 function isNotInvitedError(error: unknown): boolean {
@@ -99,8 +174,13 @@ function isUnauthenticatedError(error: unknown): boolean {
         return false;
     }
 
-    if (error instanceof AuthorizationError && error.details?.reason === 'session_expired') {
-        return true;
+    if (error instanceof AuthorizationError) {
+        if (error.details?.reason === 'session_expired') {
+            return true;
+        }
+        if (error.details?.reason === 'unauthenticated') {
+            return true;
+        }
     }
 
     const message = error instanceof Error ? error.message.toLowerCase() : '';
@@ -148,54 +228,4 @@ function resolveSafeNextPath(candidate: string | null | undefined): string | nul
         return null;
     }
     return trimmed;
-}
-
-function resolveNextPathFromHeaders(headers: Headers): string | null {
-    const candidateHeaders = [
-        'next-url',
-        'x-next-url',
-        'x-invoke-path',
-        'x-matched-path',
-        'x-original-url',
-        'x-rewrite-url',
-    ];
-
-    for (const header of candidateHeaders) {
-        const value = headers.get(header);
-        if (!value) {
-            continue;
-        }
-
-        const normalized = normalizeNextPathHeader(value);
-        if (normalized) {
-            return normalized;
-        }
-    }
-
-    return null;
-}
-
-function normalizeNextPathHeader(raw: string): string | null {
-    const trimmed = raw.trim();
-    if (!trimmed) {
-        return null;
-    }
-
-    if (trimmed.startsWith('/')) {
-        return trimmed;
-    }
-
-    try {
-        const url = new URL(trimmed);
-        return `${url.pathname}${url.search}`;
-    } catch {
-        return null;
-    }
-}
-
-function normalizeHeaders(input: Headers | HeadersInit): Headers {
-    if (input instanceof Headers) {
-        return input;
-    }
-    return new Headers(input);
 }

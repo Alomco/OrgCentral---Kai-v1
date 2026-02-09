@@ -2,9 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { authClient, useSession } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth-client';
 import type { PasswordSetupStatus } from '@/components/auth/TwoFactorPasswordSetupPanel';
-import { normalizeOtp, resolveMfaEnabled, type PasswordStatusResponse, type StatusMessage, OTP_LENGTH } from '@/components/auth/two-factor-setup.utils';
+import {
+    isPasswordStatusResponse,
+    normalizeOtp,
+    resolveMessage,
+    type StatusMessage,
+    OTP_LENGTH,
+} from '@/components/auth/two-factor-setup.utils';
 
 interface TwoFactorSetupData {
     totpURI: string;
@@ -12,9 +18,7 @@ interface TwoFactorSetupData {
 }
 
 export function useTwoFactorSetupState() {
-    const { data: session } = useSession();
-    const isMfaEnabled = resolveMfaEnabled(session);
-
+    const passwordStatusError = 'Unable to check account providers.';
     const [password, setPassword] = useState('');
     const [setupData, setSetupData] = useState<TwoFactorSetupData | null>(null);
     const [code, setCode] = useState('');
@@ -45,21 +49,27 @@ export function useTwoFactorSetupState() {
                     method: 'GET',
                     signal: abortController.signal,
                 });
-                const data = await response.json() as PasswordStatusResponse;
+                const data: unknown = await response.json().catch(() => null);
                 if (!isMounted) {
                     return;
                 }
                 if (!response.ok) {
                     setPasswordStatus({
                         tone: 'error',
-                        message: data.message ?? 'Unable to check account providers.',
+                        message: resolveMessage(data) ?? passwordStatusError,
                     });
                     setHasPassword(true);
                     setProviders([]);
                     return;
                 }
+                if (!isPasswordStatusResponse(data)) {
+                    setPasswordStatus({ tone: 'error', message: passwordStatusError });
+                    setHasPassword(true);
+                    setProviders([]);
+                    return;
+                }
                 setHasPassword(data.hasPassword);
-                setProviders(Array.isArray(data.providers) ? data.providers : []);
+                setProviders(data.providers);
             } catch (error: unknown) {
                 if (error instanceof DOMException && error.name === 'AbortError') {
                     return;
@@ -67,7 +77,7 @@ export function useTwoFactorSetupState() {
                 if (!isMounted) {
                     return;
                 }
-                setPasswordStatus({ tone: 'error', message: 'Unable to check account providers.' });
+                setPasswordStatus({ tone: 'error', message: passwordStatusError });
                 setHasPassword(true);
                 setProviders([]);
             } finally {
@@ -143,10 +153,11 @@ export function useTwoFactorSetupState() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ newPassword: newPassword.trim() }),
             });
-            const data = await response.json() as { message?: string };
+            const data: unknown = await response.json().catch(() => null);
+            const message = resolveMessage(data);
 
             if (!response.ok) {
-                setPasswordStatus({ tone: 'error', message: data.message ?? 'Unable to set password.' });
+                setPasswordStatus({ tone: 'error', message: message ?? 'Unable to set password.' });
                 return;
             }
 
@@ -209,7 +220,6 @@ export function useTwoFactorSetupState() {
     }, []);
 
     return {
-        isMfaEnabled,
         requiresPasswordSetup,
         password,
         setPassword,

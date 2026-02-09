@@ -137,7 +137,13 @@ try {
 // Provider
 // ============================================================================
 
-export function UiStyleProvider({ children }: { children: ReactNode }) {
+export function UiStyleProvider({
+    children,
+    nonce,
+}: {
+    children: ReactNode;
+    nonce?: string;
+}) {
     const [serverStyle, setServerStyle] = useState<UiStyleKey>(() => readServerStyle());
     const overrideStyle = useUiStyleStore((state) => state.overrideStyle);
     const setOverrideStyle = useUiStyleStore((state) => state.setOverrideStyle);
@@ -222,6 +228,7 @@ export function UiStyleProvider({ children }: { children: ReactNode }) {
             {/* Blocking script runs BEFORE React hydration */}
             <script
                 suppressHydrationWarning
+                nonce={nonce}
                 dangerouslySetInnerHTML={{ __html: blockingScript }}
             />
             {children}

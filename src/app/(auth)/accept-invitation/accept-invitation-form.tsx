@@ -32,6 +32,7 @@ export function AcceptInvitationForm({
 
     const roleList = roles?.filter((role) => role.trim().length > 0) ?? [];
     const showSuccess = state.status === 'success';
+    const nextPath = showSuccess ? state.nextPath : null;
 
     return (
         <form action={action} className="space-y-4">
@@ -69,7 +70,9 @@ export function AcceptInvitationForm({
                     <p className="text-xs opacity-80">
                         {state.alreadyMember
                             ? 'You already have access to this workspace.'
-                            : 'Your access is ready. Continue to your workspace.'}
+                            : state.requiresSetup
+                                ? 'Complete account setup to finish onboarding.'
+                                : 'Your access is ready. Continue to your workspace.'}
                     </p>
                 </div>
             ) : null}
@@ -82,9 +85,9 @@ export function AcceptInvitationForm({
                 >
                     {pending ? 'Accepting...' : showSuccess ? 'Accepted' : 'Accept invitation'}
                 </Button>
-                {showSuccess ? (
+                {showSuccess && nextPath ? (
                     <Button asChild variant="outline" className="w-full">
-                        <Link href="/api/auth/post-login">Continue to workspace</Link>
+                        <Link href={nextPath}>Continue to workspace</Link>
                     </Button>
                 ) : null}
             </div>

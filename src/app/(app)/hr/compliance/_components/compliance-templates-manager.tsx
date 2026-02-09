@@ -13,7 +13,6 @@ import { Spinner } from '@/components/ui/spinner';
 import type { ComplianceTemplate } from '@/server/types/compliance-types';
 import { FieldError } from '../../_components/field-error';
 import { createComplianceTemplateAction } from '../actions/compliance-templates';
-import type { ComplianceTemplateCreateState } from '../compliance-template-form-utils';
 import { ComplianceTemplateItemsBuilder } from './compliance-template-items-builder';
 import { ComplianceTemplateQuickSteps } from './compliance-template-quick-steps';
 import { ComplianceTemplateRow } from './compliance-template-row';
@@ -21,16 +20,8 @@ import { ComplianceTemplateGuideCard } from './compliance-template-guide-card';
 import { ComplianceTemplateEmptyState } from './compliance-template-empty-state';
 import { ComplianceTemplateListHeader } from './compliance-template-list-header';
 import { listTemplatesQuery, templatesKey } from '../compliance-templates.api';
-
-const initialCreateState: ComplianceTemplateCreateState = {
-    status: 'idle',
-    values: {
-        name: '',
-        categoryKey: '',
-        version: '',
-        itemsJson: '',
-    },
-};
+import { initialCreateState } from './compliance-templates-manager.state';
+import { buildTemplatesSummary } from './compliance-templates-manager.utils';
 
 export function ComplianceTemplatesManager(props: { templates: ComplianceTemplate[] }) {
     const queryClient = useQueryClient();
@@ -68,25 +59,7 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
 
     const message = state.status === 'error' ? state.message : state.status === 'success' ? state.message : null;
 
-    const summary = useMemo(() => {
-        const categories = new Set<string>();
-        for (const template of templates) {
-            if (template.categoryKey) {
-                categories.add(template.categoryKey);
-            }
-        }
-
-        const categoryKeys = Array.from(categories);
-        const preview = categoryKeys.slice(0, 6);
-        const overflowCount = Math.max(0, categoryKeys.length - preview.length);
-
-        return {
-            count: templates.length,
-            categories: preview,
-            categoryCount: categoryKeys.length,
-            overflowCount,
-        };
-    }, [templates]);
+    const summary = useMemo(() => buildTemplatesSummary(templates), [templates]);
 
     const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
         const next = new URLSearchParams(searchParams.toString());

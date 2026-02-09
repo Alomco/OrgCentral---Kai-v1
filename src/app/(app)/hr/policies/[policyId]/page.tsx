@@ -105,7 +105,7 @@ async function PolicyPageContent({ policyId }: { policyId: string }) {
                         <Badge variant="outline">v{policy.version}</Badge>
                         <Badge variant="outline">{policy.status}</Badge>
                     </div>
-                    <h1 className="text-2xl font-semibold break-words">{policy.title}</h1>
+                    <h1 className="text-2xl font-semibold wrap-break-word">{policy.title}</h1>
                     <div className="text-sm text-muted-foreground">
                         Effective {formatHumanDate(policy.effectiveDate)}
                         {policy.expiryDate ? ` · Expires ${formatHumanDate(policy.expiryDate)}` : ''}

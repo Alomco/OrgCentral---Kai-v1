@@ -32,44 +32,44 @@ export function OrgBrandingForm({ branding, orgId }: { branding: OrgBranding | n
         <div className="space-y-4">
             <form action={updateAction} className="space-y-4 rounded-2xl bg-[oklch(var(--card)/0.6)] p-6 backdrop-blur" aria-busy={updatePending}>
                 <div>
-                    <p className="text-sm font-semibold text-[oklch(var(--foreground))]">Branding settings</p>
-                    <p className="text-xs text-[oklch(var(--muted-foreground))]">Updates apply to this organization.</p>
+                    <p className="text-sm font-semibold text-foreground">Branding settings</p>
+                    <p className="text-xs text-muted-foreground">Updates apply to this organization.</p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                     <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Company name</span>
+                        <span className="text-xs font-medium text-muted-foreground">Company name</span>
                         <Input name="companyName" defaultValue={branding?.companyName ?? ''} placeholder="Org name" />
                     </label>
 
                     <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Logo URL</span>
+                        <span className="text-xs font-medium text-muted-foreground">Logo URL</span>
                         <Input name="logoUrl" defaultValue={branding?.logoUrl ?? ''} placeholder="https://..." />
                     </label>
 
                     <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Favicon URL</span>
+                        <span className="text-xs font-medium text-muted-foreground">Favicon URL</span>
                         <Input name="faviconUrl" defaultValue={branding?.faviconUrl ?? ''} placeholder="https://..." />
                     </label>
 
                     <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Primary color</span>
+                        <span className="text-xs font-medium text-muted-foreground">Primary color</span>
                         <Input name="primaryColor" defaultValue={branding?.primaryColor ?? ''} placeholder="#1E40AF" />
                     </label>
 
                     <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Secondary color</span>
+                        <span className="text-xs font-medium text-muted-foreground">Secondary color</span>
                         <Input name="secondaryColor" defaultValue={branding?.secondaryColor ?? ''} placeholder="#F1F5F9" />
                     </label>
 
                     <label className="grid gap-1">
-                        <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Accent color</span>
+                        <span className="text-xs font-medium text-muted-foreground">Accent color</span>
                         <Input name="accentColor" defaultValue={branding?.accentColor ?? ''} placeholder="#F59E0B" />
                     </label>
                 </div>
 
                 <label className="grid gap-1">
-                    <span className="text-xs font-medium text-[oklch(var(--muted-foreground))]">Custom CSS</span>
+                    <span className="text-xs font-medium text-muted-foreground">Custom CSS</span>
                     <Textarea name="customCss" defaultValue={branding?.customCss ?? ''} rows={8} placeholder="/* Optional */" />
                 </label>
 
@@ -78,7 +78,7 @@ export function OrgBrandingForm({ branding, orgId }: { branding: OrgBranding | n
                         Save
                     </Button>
                     {updateState.status === 'success' ? (
-                        <p className="text-xs text-[oklch(var(--muted-foreground))]">{updateState.message ?? 'Saved'}</p>
+                        <p className="text-xs text-muted-foreground">{updateState.message ?? 'Saved'}</p>
                     ) : null}
                 </div>
 
@@ -90,8 +90,8 @@ export function OrgBrandingForm({ branding, orgId }: { branding: OrgBranding | n
             <form action={resetAction} className="rounded-2xl bg-[oklch(var(--card)/0.6)] p-6 backdrop-blur" aria-busy={resetPending}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p className="text-sm font-semibold text-[oklch(var(--foreground))]">Reset branding</p>
-                        <p className="text-xs text-[oklch(var(--muted-foreground))]">Clears all organization overrides.</p>
+                        <p className="text-sm font-semibold text-foreground">Reset branding</p>
+                        <p className="text-xs text-muted-foreground">Clears all organization overrides.</p>
                     </div>
                     <Button type="submit" variant="outline" size="sm" disabled={resetPending}>
                         Reset
@@ -99,7 +99,7 @@ export function OrgBrandingForm({ branding, orgId }: { branding: OrgBranding | n
                 </div>
 
                 {resetState.status === 'success' ? (
-                    <p className="mt-3 text-xs text-[oklch(var(--muted-foreground))]">{resetState.message ?? 'Reset'}</p>
+                    <p className="mt-3 text-xs text-muted-foreground">{resetState.message ?? 'Reset'}</p>
                 ) : null}
 
                 {resetState.status === 'error' ? (

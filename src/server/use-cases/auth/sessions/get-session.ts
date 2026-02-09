@@ -6,10 +6,12 @@ import type { SessionAccessRequest } from '@/server/security/authorization';
 import { requireSessionAuthorization } from '@/server/security/authorization';
 import { auth, type AuthSession } from '@/server/lib/auth';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
-import { normalizeHeaders, buildMetadata as buildJsonMetadata } from '@/server/use-cases/shared';
+import { buildMetadata as buildJsonMetadata } from '@/server/use-cases/shared';
 import { loadOrgSettings } from '@/server/services/org/settings/org-settings-store';
 import { getSecurityEventService } from '@/server/services/auth/security-event-service';
 import { enforceOrgSessionSecurity } from './session-security';
+import { enforceWorkspaceSetupState } from './workspace-setup-state';
+import { normalizeHeaders, resolveRequestPathFromHeaders } from './request-path';
 
 export type SessionRepositoryContract = Pick<
     IUserSessionRepository,
@@ -24,6 +26,7 @@ export interface GetSessionInput extends SessionAccessRequest {
     headers: Headers | HeadersInit;
     disableCookieCache?: boolean;
     disableRefresh?: boolean;
+    requestPath?: string;
     /** Optional network metadata for audit trail persistence */
     ipAddress?: string;
     userAgent?: string;
@@ -48,13 +51,26 @@ export async function getSessionContext(
     });
 
     if (!session?.session) {
-        throw new AuthorizationError('Unauthenticated request – session not found.');
+        throw new AuthorizationError(
+            'Unauthenticated request - session not found.',
+            { reason: 'unauthenticated' },
+        );
     }
 
     const authorization = await requireSessionAuthorization(session, extractAccessRequest(input));
+    const requestPath = input.requestPath ?? resolveRequestPathFromHeaders(headers);
     const orgSettings = await loadOrgSettings(authorization.orgId);
     try {
         enforceOrgSessionSecurity(session, orgSettings, input.ipAddress);
+        await enforceWorkspaceSetupState({
+            subject: {
+                authUserId: session.user.id,
+                orgId: authorization.orgId,
+                userId: authorization.userId,
+                roleKey: authorization.roleKey,
+            },
+            requestPath,
+        });
     } catch (error) {
         await revokeExpiredSession(
             deps.userSessionRepository,

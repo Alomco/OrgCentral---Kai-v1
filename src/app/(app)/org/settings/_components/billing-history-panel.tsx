@@ -20,9 +20,19 @@ export async function BillingHistoryPanel({
       </div>
       <div className="mt-4 space-y-2">
         {invoices.length ? (
-          invoices.map((invoice) => (
-            <InvoiceRow key={invoice.id} invoice={invoice} />
-          ))
+          <>
+            <div className="hidden text-xs uppercase tracking-wide text-muted-foreground sm:grid sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:gap-3 sm:px-4">
+              <span>Period</span>
+              <span>Amount</span>
+              <span>Status</span>
+              <span>Invoice</span>
+            </div>
+            <div className="space-y-2">
+              {invoices.map((invoice) => (
+                <InvoiceRow key={invoice.id} invoice={invoice} />
+              ))}
+            </div>
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">
             No invoices yet. Your first charge will appear here.
@@ -40,27 +50,27 @@ function InvoiceRow({ invoice }: { invoice: BillingInvoiceData }) {
   const invoiceLink = invoice.invoicePdf ?? invoice.invoiceUrl;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background/80 p-3 text-sm">
+    <div className="grid gap-2 rounded-xl border border-border bg-background/80 p-4 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center sm:gap-3">
       <div>
         <p className="font-semibold text-foreground">{period}</p>
         <p className="text-xs text-muted-foreground">
           {formatDate(invoice.periodStart)} - {formatDate(invoice.periodEnd)}
         </p>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-semibold text-foreground">{amount}</span>
-        <Badge variant={statusTone}>{formatStatus(invoice.status)}</Badge>
-        {invoiceLink ? (
-          <a
-            href={invoiceLink}
-            className="text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Invoice
-          </a>
-        ) : null}
-      </div>
+      <span className="text-sm font-semibold text-foreground">{amount}</span>
+      <Badge variant={statusTone}>{formatStatus(invoice.status)}</Badge>
+      {invoiceLink ? (
+        <a
+          href={invoiceLink}
+          className="text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Invoice
+        </a>
+      ) : (
+        <span className="text-xs text-muted-foreground">--</span>
+      )}
     </div>
   );
 }

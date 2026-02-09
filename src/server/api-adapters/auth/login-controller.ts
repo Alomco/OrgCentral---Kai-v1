@@ -64,7 +64,11 @@ export async function executeLoginWithCookies(
         ipAddress,
     });
 
-    const rateLimit = checkLoginRateLimit(key, 15 * 60 * 1000, securityConfig.maxLoginAttempts);
+    const rateLimit = await checkLoginRateLimit(
+        key,
+        15 * 60 * 1000,
+        securityConfig.maxLoginAttempts,
+    );
     if (!rateLimit.allowed) {
         return {
             result: {

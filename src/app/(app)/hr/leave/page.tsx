@@ -73,7 +73,8 @@ export default async function HrLeavePage() {
     }).catch(() => null);
 
     const profile = profileResult?.profile ?? null;
-    const employeeId = profile?.userId ?? null;
+    const actorUserId = profile?.userId ?? null;
+    const employeeNumber = profile?.employeeNumber ?? null;
 
     const managerProfileResult = profile?.managerUserId
         ? await peopleService.getEmployeeProfileByUser({
@@ -82,7 +83,7 @@ export default async function HrLeavePage() {
         }).catch(() => null)
         : null;
 
-    if (!employeeId) {
+    if (!actorUserId || !employeeNumber) {
         return (
             <div className="space-y-6">
                 <Breadcrumb>
@@ -101,7 +102,7 @@ export default async function HrLeavePage() {
 
                 <HrPageHeader
                     title="Leave management"
-                    description="We couldn't find an employee profile for your account."
+                    description="We couldn't find a complete employee profile for your account."
                     icon={<CalendarDays className="h-5 w-5" />}
                 />
 
@@ -124,7 +125,7 @@ export default async function HrLeavePage() {
     const leaveService = getLeaveService();
     const balancesResult = await leaveService.getLeaveBalance({
         authorization,
-        employeeId: employeeId,
+        employeeId: employeeNumber,
         year: new Date().getFullYear(),
     }).catch(() => ({ balances: [] }));
 
@@ -202,14 +203,14 @@ export default async function HrLeavePage() {
                 />
 
                 <Suspense fallback={<LeaveRequestsSkeleton />}>
-                    <LeaveRequestsPanel authorization={authorization} employeeId={employeeId} approverChain={approverChain} />
+                    <LeaveRequestsPanel authorization={authorization} employeeId={actorUserId} approverChain={approverChain} />
                 </Suspense>
             </div>
 
             <TeamCalendarPeek absences={absencesResult.absences} />
 
             <Suspense fallback={<LeaveRequestsSkeleton />}>
-                <LeaveTrendsCard authorization={authorization} employeeId={employeeId} />
+                <LeaveTrendsCard authorization={authorization} employeeId={actorUserId} />
             </Suspense>
         </div>
     );

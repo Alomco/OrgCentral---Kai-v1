@@ -12,12 +12,19 @@ trigger: always_on
 
 > **MANDATORY:** You MUST read the appropriate agent file and its skills BEFORE performing any implementation. This is the highest priority rule.
 
+### 0. Tool & Multi-Agent Usage (Mandatory)
+
+- Use multi-agent only for clearly parallelizable work, or when the user explicitly requests multi-agent analysis and scope is clear; subagents are stateless, so keep delegated tasks small and scoped.
+- Subagents are for very small.
+- If a purpose-built tool exists (read/search/list/edit), use it instead of terminal commands.
+- Batch file reads/searches and use multi_tool_use.parallel whenever possible; only go sequential when a dependency forces it.
+
 ### 1. Modular Skill Loading Protocol
 
 Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Read specific sections.
 
 - **Selective Reading:** DO NOT read ALL files in a skill folder. Read `SKILL.md` first, then only read sections matching the user's request.
-- **Rule Priority:** P0 (workspace rules: GEMINI.md) > P1 (Agent .md) > P2 (SKILL.md). All rules are binding.
+- **Rule Priority:** P0 (workspace rules: copilot-chat.md) > P1 (Agent .md) > P2 (SKILL.md). All rules are binding.
 
 ### 2. Enforcement Protocol
 
@@ -155,14 +162,14 @@ When user's prompt is NOT in English:
 | **New Feature / Build** | Deep Discovery | ASK minimum 3 strategic questions                                 |
 | **Code Edit / Bug Fix** | Context Check  | Confirm understanding + ask impact questions                      |
 | **Vague / Simple**      | Clarification  | Ask Purpose, Users, and Scope                                     |
-| **Full Orchestration**  | Gatekeeper     | **STOP** subagents until user confirms plan details               |
+| **Full Orchestration**  | Gatekeeper     | **STOP** subagents until user confirms plan details, unless the user explicitly requests multi-agent analysis |
 | **Direct "Proceed"**    | Validation     | **STOP** → Even if answers are given, ask 2 "Edge Case" questions |
 
 **Protocol:**
 
 1. **Never Assume:** If even 1% is unclear, ASK.
 2. **Handle Spec-heavy Requests:** When user gives a list (Answers 1, 2, 3...), do NOT skip the gate. Instead, ask about **Trade-offs** or **Edge Cases** (e.g., "LocalStorage confirmed, but should we handle data clearing or versioning?") before starting.
-3. **Wait:** Do NOT invoke subagents or write code until the user clears the Gate.
+
 4. **Reference:** Full protocol in `@[skills/brainstorming]`.
 
 ### 🏁 Final Checklist Protocol
@@ -256,3 +263,4 @@ When user's prompt is NOT in English:
 - **Test**: `playwright_runner.py`, `test_runner.py`
 
 ---
+

@@ -3,9 +3,8 @@
 import { useCallback, useMemo, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 
-import type { LoginActionInput } from "@/features/auth/login/login-contracts";
+import type { LoginActionInput, LoginActionResult } from "@/features/auth/login/login-contracts";
 import type { LoginFieldErrors } from "./login-form-errors";
-import { authClient } from "@/lib/auth-client";
 
 export type ResidencyZoneOption = "UK_ONLY" | "UK_AND_EEA" | "GLOBAL_RESTRICTED";
 export type ClassificationLevelOption = "PUBLIC" | "OFFICIAL" | "OFFICIAL_SENSITIVE";
@@ -115,19 +114,31 @@ export function useLoginForm(options?: UseLoginFormOptions): UseLoginFormResult 
                 const nextPath = resolveNextPathFromLocation();
                 const callbackURL = `/api/auth/post-login?next=${encodeURIComponent(nextPath)}&org=${encodeURIComponent(payload.orgSlug)}`;
 
-                const { data, error } = await authClient.signIn.email({
-                    email: payload.email,
-                    password: payload.password,
-                    rememberMe: payload.rememberMe,
-                    callbackURL,
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify(payload),
                 });
 
-                if (error) {
-                    setSubmitMessage(typeof error.message === "string" ? error.message : "Unable to sign in.");
+                const result = (await response.json().catch(() => null)) as LoginActionResult | null;
+                if (!result || typeof result !== "object" || !("ok" in result)) {
+                    setSubmitMessage("Unable to sign in.");
                     return;
                 }
 
-                const redirectUrl = typeof data.url === "string" && data.url.length > 0 ? data.url : callbackURL;
+                if (!result.ok) {
+                    if (result.fieldErrors) {
+                        setErrors(result.fieldErrors);
+                    }
+                    setSubmitMessage(result.message);
+                    return;
+                }
+
+                const redirectUrl =
+                    typeof result.redirectUrl === "string" && result.redirectUrl.includes("next=")
+                        ? result.redirectUrl
+                        : callbackURL;
 
                 setSubmitMessage("Login successful. Redirecting you now…");
                 window.location.assign(redirectUrl);

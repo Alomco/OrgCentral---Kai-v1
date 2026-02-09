@@ -47,18 +47,21 @@ export function createAuth(baseURL: string, deps: AuthConfigDependencies = {}) {
         },
         emailAndPassword: {
             enabled: true,
+            disableSignUp: true,
         },
         socialProviders: {
             google: {
                 clientId: process.env.GOOGLE_CLIENT_ID ?? '',
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
                 enabled: Boolean(process.env.GOOGLE_CLIENT_ID),
+                disableSignUp: true,
             },
             microsoft: {
                 clientId: process.env.MICROSOFT_CLIENT_ID ?? '',
                 clientSecret: process.env.MICROSOFT_CLIENT_SECRET ?? '',
                 tenantId: process.env.MICROSOFT_TENANT_ID ?? 'common',
                 enabled: Boolean(process.env.MICROSOFT_CLIENT_ID),
+                disableSignUp: true,
             },
         },
         plugins: [

@@ -8,6 +8,7 @@ export type BreakGlassScope = (typeof BREAK_GLASS_SCOPES)[number];
 
 export interface BreakGlassApproval {
     id: string;
+    version: number;
     orgId: string;
     dataResidency: DataResidencyZone;
     dataClassification: DataClassificationLevel;

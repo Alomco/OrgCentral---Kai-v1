@@ -8,6 +8,7 @@ import { ValidationError } from '@/server/errors';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
 import { requireTenantInScope } from '@/server/use-cases/platform/admin/tenants/tenant-scope-guards';
 import { checkAdminRateLimit, buildAdminRateLimitKey } from '@/server/lib/security/admin-rate-limit';
+import { enforceImpersonationSecurity } from './impersonation-guards';
 
 export interface StopImpersonationInput {
     authorization: RepositoryAuthorizationContext;
@@ -40,6 +41,8 @@ export async function stopImpersonationSession(
     if (!rate.allowed) {
         throw new ValidationError('Rate limit exceeded for impersonation sessions.');
     }
+
+    await enforceImpersonationSecurity(input.authorization);
     const session = await deps.impersonationRepository.getSession(input.authorization, request.sessionId);
 
     if (!session) {
@@ -52,11 +55,41 @@ export async function stopImpersonationSession(
         'Target tenant not found or not within allowed scope for impersonation.',
     );
 
-    const now = new Date().toISOString();
+    const now = new Date();
+
+    if (session.status === 'ACTIVE' && new Date(session.expiresAt) <= now) {
+        const expired: ImpersonationSession = {
+            ...session,
+            status: 'EXPIRED',
+            revokedAt: session.revokedAt ?? null,
+        };
+
+        await deps.impersonationRepository.updateSession(input.authorization, expired);
+
+        await recordAuditEvent({
+            orgId: input.authorization.orgId,
+            userId: input.authorization.userId,
+            eventType: 'AUTH',
+            action: 'impersonation.expired',
+            resource: 'platformImpersonationSession',
+            resourceId: expired.id,
+            payload: {
+                targetUserId: expired.targetUserId,
+                targetOrgId: expired.targetOrgId,
+            },
+            residencyZone: input.authorization.dataResidency,
+            classification: input.authorization.dataClassification,
+            auditSource: input.authorization.auditSource,
+            auditBatchId: input.authorization.auditBatchId,
+        });
+
+        return expired;
+    }
+
     const updated: ImpersonationSession = {
         ...session,
         status: 'REVOKED',
-        revokedAt: now,
+        revokedAt: now.toISOString(),
     };
 
     await deps.impersonationRepository.updateSession(input.authorization, updated);
@@ -68,7 +101,11 @@ export async function stopImpersonationSession(
         action: 'impersonation.stopped',
         resource: 'platformImpersonationSession',
         resourceId: updated.id,
-        payload: { reason: request.reason ?? null },
+        payload: {
+            reason: request.reason ?? null,
+            targetUserId: updated.targetUserId,
+            targetOrgId: updated.targetOrgId,
+        },
         residencyZone: input.authorization.dataResidency,
         classification: input.authorization.dataClassification,
         auditSource: input.authorization.auditSource,

@@ -52,14 +52,17 @@ export async function requireBreakGlassApproval(
     }
 
     if (input.consume) {
-        const consumed = {
-            ...approval,
-            status: 'CONSUMED' as const,
-            consumedAt: now.toISOString(),
-            consumedBy: input.authorization.userId,
-        };
+        const consumed = await repository.consumeApproval(
+            input.authorization,
+            approval.id,
+            input.authorization.userId,
+            now.toISOString(),
+            approval.version,
+        );
 
-        await repository.updateApproval(input.authorization, consumed);
+        if (!consumed) {
+            throw new ValidationError('Break-glass approval was already consumed or updated.');
+        }
 
         await recordAuditEvent({
             orgId: input.authorization.orgId,

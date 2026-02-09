@@ -27,7 +27,7 @@ export function ModernAdminNavigation(props: AdminNavigationProps) {
 
     return (
         <header
-            className="sticky top-0 z-(--z-sticky) h-16 border-b border-border/40 bg-background/80 backdrop-blur-md shadow-sm"
+            className="sticky top-0 z-[100] h-16 border-b border-border/40 bg-background/80 backdrop-blur-md shadow-sm"
             role="banner"
         >
             <div className="flex h-full items-center justify-between px-4 sm:px-6">

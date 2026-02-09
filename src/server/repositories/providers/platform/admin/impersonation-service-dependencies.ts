@@ -6,11 +6,14 @@ import { PrismaImpersonationRepository } from '@/server/repositories/prisma/plat
 import { PrismaBreakGlassRepository } from '@/server/repositories/prisma/platform/admin/prisma-break-glass-repository';
 import type { IPlatformTenantRepository } from '@/server/repositories/contracts/platform/admin/platform-tenant-repository-contract';
 import { PrismaPlatformTenantRepository } from '@/server/repositories/prisma/platform/admin/prisma-platform-tenant-repository';
+import type { IAuthSessionRepository } from '@/server/repositories/contracts/auth/sessions/auth-session-repository-contract';
+import { PrismaAuthSessionRepository } from '@/server/repositories/prisma/auth/sessions';
 
 export interface ImpersonationRepositoryDependencies {
     impersonationRepository: IImpersonationRepository;
     breakGlassRepository: IBreakGlassRepository;
     tenantRepository: IPlatformTenantRepository;
+    authSessionRepository: IAuthSessionRepository;
 }
 
 export type ImpersonationRepositoryOverrides = Partial<ImpersonationRepositoryDependencies>;
@@ -37,5 +40,7 @@ export function buildImpersonationServiceDependencies(
             options?.overrides?.breakGlassRepository ?? new PrismaBreakGlassRepository(repoOptions),
         tenantRepository:
             options?.overrides?.tenantRepository ?? new PrismaPlatformTenantRepository(repoOptions),
+        authSessionRepository:
+            options?.overrides?.authSessionRepository ?? new PrismaAuthSessionRepository(repoOptions),
     };
 }

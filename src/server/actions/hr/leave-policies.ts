@@ -28,6 +28,7 @@ import {
     PrismaLeavePolicyRepository,
     PrismaLeaveRequestRepository,
 } from '@/server/repositories/prisma/hr/leave';
+import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
 
 const SETTINGS_PATH = '/hr/settings';
 const LEAVE_POLICY_RESOURCE_TYPE = 'hr.leave.policies';
@@ -36,6 +37,7 @@ const AUDIT_PREFIX = 'action:hr:leave-policies:';
 const leavePolicyRepository = new PrismaLeavePolicyRepository();
 const leaveBalanceRepository = new PrismaLeaveBalanceRepository();
 const leaveRequestRepository = new PrismaLeaveRequestRepository();
+const organizationRepository = new PrismaOrganizationRepository();
 
 export async function listLeavePoliciesAction(): Promise<ActionState<LeavePolicy[]>> {
     return toActionState(() =>
@@ -103,7 +105,7 @@ export async function updateLeavePolicyAction(
                 const patch = updateLeavePolicyPatchSchema.parse(data);
 
                 const result = await updateLeavePolicy(
-                    { leavePolicyRepository },
+                    { leavePolicyRepository, organizationRepository },
                     {
                         authorization,
                         orgId: authorization.orgId,

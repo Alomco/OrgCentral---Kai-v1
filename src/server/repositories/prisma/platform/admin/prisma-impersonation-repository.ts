@@ -41,6 +41,12 @@ export class PrismaImpersonationRepository extends BasePrismaRepository implemen
         return request;
     }
 
+    async deleteRequest(context: RepositoryAuthorizationContext, requestId: string): Promise<void> {
+        const requests = await this.listRequests(context);
+        const next = requests.filter((item) => item.id !== requestId);
+        await savePlatformSettingJson({ prisma: this.prisma }, IMPERSONATION_REQUESTS_KEY, next);
+    }
+
     async listSessions(context: RepositoryAuthorizationContext): Promise<ImpersonationSession[]> {
         const sessions = await loadPlatformSettingJson(
             { prisma: this.prisma },

@@ -10,6 +10,7 @@ import {
     PrismaLeavePolicyRepository,
     PrismaLeaveRequestRepository,
 } from '@/server/repositories/prisma/hr/leave';
+import { PrismaOrganizationRepository } from '@/server/repositories/prisma/org/organization';
 import { createLeavePolicy } from '@/server/use-cases/hr/leave-policies/create-leave-policy';
 import {
     updateLeavePolicy,
@@ -39,6 +40,7 @@ const NOT_AUTHORIZED_TO_MANAGE_LEAVE_POLICIES_MESSAGE = 'Not authorized to manag
 const leavePolicyRepository = new PrismaLeavePolicyRepository();
 const leaveBalanceRepository = new PrismaLeaveBalanceRepository();
 const leaveRequestRepository = new PrismaLeaveRequestRepository();
+const organizationRepository = new PrismaOrganizationRepository();
 
 function coerceLeavePolicyType(
     value: string,
@@ -172,7 +174,7 @@ export async function updateLeavePolicyAction(
         });
 
         await updateLeavePolicy(
-            { leavePolicyRepository },
+            { leavePolicyRepository, organizationRepository },
             {
                 authorization: session.authorization,
                 orgId: session.authorization.orgId,

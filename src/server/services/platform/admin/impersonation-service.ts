@@ -4,6 +4,7 @@ import type { ImpersonationRequest, ImpersonationSession } from '@/server/types/
 import type { IImpersonationRepository } from '@/server/repositories/contracts/platform/admin/impersonation-repository-contract';
 import type { IBreakGlassRepository } from '@/server/repositories/contracts/platform/admin/break-glass-repository-contract';
 import type { IPlatformTenantRepository } from '@/server/repositories/contracts/platform/admin/platform-tenant-repository-contract';
+import type { IAuthSessionRepository } from '@/server/repositories/contracts/auth/sessions/auth-session-repository-contract';
 import {
     buildImpersonationServiceDependencies,
     type ImpersonationServiceDependencyOptions,
@@ -12,12 +13,14 @@ import { listImpersonationRequests, listImpersonationSessions } from '@/server/u
 import { requestImpersonation } from '@/server/use-cases/platform/admin/impersonation/request-impersonation';
 import { approveImpersonationRequest } from '@/server/use-cases/platform/admin/impersonation/approve-impersonation';
 import { stopImpersonationSession } from '@/server/use-cases/platform/admin/impersonation/stop-impersonation';
-import type { ImpersonationRequestInput, ImpersonationApproveInput, ImpersonationStopInput } from '@/server/validators/platform/admin/impersonation-validators';
+import { startImpersonationSession } from '@/server/use-cases/platform/admin/impersonation/start-impersonation';
+import type { ImpersonationRequestInput, ImpersonationApproveInput, ImpersonationStopInput, ImpersonationStartInput } from '@/server/validators/platform/admin/impersonation-validators';
 
 export interface ImpersonationServiceDependencies {
     impersonationRepository: IImpersonationRepository;
     breakGlassRepository: IBreakGlassRepository;
     tenantRepository: IPlatformTenantRepository;
+    authSessionRepository: IAuthSessionRepository;
 }
 
 export interface ImpersonationServiceContract {
@@ -35,6 +38,11 @@ export interface ImpersonationServiceContract {
         authorization: RepositoryAuthorizationContext,
         request: ImpersonationStopInput,
     ): Promise<ImpersonationSession>;
+    startImpersonation(
+        authorization: RepositoryAuthorizationContext,
+        headers: Headers | HeadersInit,
+        request: ImpersonationStartInput,
+    ): Promise<{ session: ImpersonationSession; authHeaders: Headers }>;
 }
 
 export class ImpersonationService extends AbstractBaseService implements ImpersonationServiceContract {
@@ -93,6 +101,19 @@ export class ImpersonationService extends AbstractBaseService implements Imperso
             authorization,
             undefined,
             () => stopImpersonationSession(this.deps, { authorization, request }),
+        );
+    }
+
+    async startImpersonation(
+        authorization: RepositoryAuthorizationContext,
+        headers: Headers | HeadersInit,
+        request: ImpersonationStartInput,
+    ): Promise<{ session: ImpersonationSession; authHeaders: Headers }> {
+        return this.runOperation(
+            'platform.admin.impersonation.start',
+            authorization,
+            undefined,
+            () => startImpersonationSession(this.deps, { authorization, headers, request }),
         );
     }
 
@@ -185,4 +206,14 @@ export async function stopImpersonationService(
     options?: ImpersonationServiceDependencyOptions,
 ): Promise<ImpersonationSession> {
     return getImpersonationService(overrides, options).stopImpersonation(authorization, request);
+}
+
+export async function startImpersonationService(
+    authorization: RepositoryAuthorizationContext,
+    headers: Headers | HeadersInit,
+    request: ImpersonationStartInput,
+    overrides?: Partial<ImpersonationServiceDependencies>,
+    options?: ImpersonationServiceDependencyOptions,
+): Promise<{ session: ImpersonationSession; authHeaders: Headers }> {
+    return getImpersonationService(overrides, options).startImpersonation(authorization, headers, request);
 }

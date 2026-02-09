@@ -9,6 +9,7 @@ import { ValidationError } from '@/server/errors';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
 import { requireTenantInScope } from '@/server/use-cases/platform/admin/tenants/tenant-scope-guards';
 import { checkAdminRateLimit, buildAdminRateLimitKey } from '@/server/lib/security/admin-rate-limit';
+import { enforceImpersonationSecurity, requireTargetUserMembership } from './impersonation-guards';
 
 export interface ApproveImpersonationInput {
     authorization: RepositoryAuthorizationContext;
@@ -41,17 +42,20 @@ export async function approveImpersonationRequest(
     if (!rate.allowed) {
         throw new ValidationError('Rate limit exceeded for impersonation approvals.');
     }
+
+    await enforceImpersonationSecurity(input.authorization);
     const existing = await deps.impersonationRepository.getRequest(input.authorization, request.requestId);
 
     if (!existing) {
         throw new ValidationError('Impersonation request not found.');
     }
-    await requireTenantInScope(
+    const tenant = await requireTenantInScope(
         deps.tenantRepository,
         input.authorization,
         existing.targetOrgId,
         'Target tenant not found or not within allowed scope for impersonation.',
     );
+    await requireTargetUserMembership(existing.targetOrgId, existing.targetUserId);
     if (existing.status !== 'PENDING') {
         throw new ValidationError('Impersonation request is not pending.');
     }
@@ -77,8 +81,8 @@ export async function approveImpersonationRequest(
     const session: ImpersonationSession = {
         id: randomUUID(),
         orgId: input.authorization.orgId,
-        dataResidency: input.authorization.dataResidency,
-        dataClassification: input.authorization.dataClassification,
+        dataResidency: tenant.dataResidency,
+        dataClassification: tenant.dataClassification,
         auditSource: input.authorization.auditSource,
         requestId: updatedRequest.id,
         startedBy: input.authorization.userId,
@@ -91,7 +95,19 @@ export async function approveImpersonationRequest(
         revokedAt: null,
     };
 
-    await deps.impersonationRepository.createSession(input.authorization, session);
+    try {
+        await deps.impersonationRepository.createSession(input.authorization, session);
+    } catch (error) {
+        const rollback: ImpersonationRequest = {
+            ...updatedRequest,
+            status: 'PENDING',
+            approvedBy: null,
+            approvedAt: null,
+            updatedAt: new Date().toISOString(),
+        };
+        await deps.impersonationRepository.updateRequest(input.authorization, rollback);
+        throw error;
+    }
 
     await recordAuditEvent({
         orgId: input.authorization.orgId,
@@ -100,7 +116,11 @@ export async function approveImpersonationRequest(
         action: 'impersonation.approved',
         resource: 'platformImpersonationSession',
         resourceId: session.id,
-        payload: { requestId: updatedRequest.id, targetUserId: session.targetUserId },
+        payload: {
+            requestId: updatedRequest.id,
+            targetUserId: session.targetUserId,
+            targetOrgId: session.targetOrgId,
+        },
         residencyZone: input.authorization.dataResidency,
         classification: input.authorization.dataClassification,
         auditSource: input.authorization.auditSource,

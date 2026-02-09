@@ -3,6 +3,8 @@ import type { IOrganizationRepository } from '@/server/repositories/contracts/or
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { LeaveRoundingRule, OrganizationData } from '@/server/types/leave-types';
 import type { LeaveYearStartDate } from '@/server/types/org/organization-settings';
+import { invalidateLeaveCacheScopes } from '@/server/use-cases/hr/leave/shared/cache-helpers';
+import { buildSettingsWithEntitlementSync } from '@/server/use-cases/hr/leave/shared/entitlement-sync';
 
 export interface LeaveSettingsUpdate {
     leaveEntitlements?: Record<string, number>;
@@ -55,6 +57,41 @@ export async function updateLeaveSettings(
         leaveYearStartDate: next.leaveYearStartDate,
         leaveRoundingRule: next.leaveRoundingRule,
     });
+
+    const shouldSyncEntitlements =
+        input.updates.leaveEntitlements !== undefined ||
+        input.updates.primaryLeaveType !== undefined;
+
+    if (shouldSyncEntitlements) {
+        const leaveTypes = new Set<string>();
+        if (input.updates.leaveEntitlements) {
+            Object.keys(input.updates.leaveEntitlements).forEach((key) => leaveTypes.add(key));
+        }
+        if (input.updates.primaryLeaveType) {
+            leaveTypes.add(input.updates.primaryLeaveType);
+        }
+
+        if (leaveTypes.size > 0) {
+            const settings = await deps.organizationRepository.getOrganizationSettings(input.orgId);
+            const markerTimestamp = new Date().toISOString();
+            const nextSettings = buildSettingsWithEntitlementSync(
+                settings,
+                {
+                    effectiveFrom: markerTimestamp,
+                    leaveTypes: Array.from(leaveTypes),
+                    updatedAt: markerTimestamp,
+                },
+                {
+                    entitlements: next.leaveEntitlements,
+                    primaryLeaveType: next.primaryLeaveType,
+                },
+            );
+
+            await deps.organizationRepository.updateOrganizationSettings(input.orgId, nextSettings);
+        }
+
+        await invalidateLeaveCacheScopes(input.authorization, 'balances');
+    }
 
     const updated = await deps.organizationRepository.getOrganization(input.orgId);
     if (!updated) {

@@ -65,6 +65,8 @@ const breakGlassRepository: IBreakGlassRepository = {
     getApproval: vi.fn(),
     createApproval: vi.fn(),
     updateApproval: vi.fn(),
+    updateApprovalIfVersion: vi.fn(),
+    consumeApproval: vi.fn(),
 };
 
 const tenantRepository: IPlatformTenantRepository = {

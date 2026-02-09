@@ -26,4 +26,18 @@ export interface IBreakGlassRepository {
         context: RepositoryAuthorizationContext,
         approval: BreakGlassApproval,
     ): Promise<BreakGlassApproval>;
+
+    updateApprovalIfVersion(
+        context: RepositoryAuthorizationContext,
+        approval: BreakGlassApproval,
+        expectedVersion: number,
+    ): Promise<BreakGlassApproval | null>;
+
+    consumeApproval(
+        context: RepositoryAuthorizationContext,
+        approvalId: string,
+        consumedBy: string,
+        consumedAt: string,
+        expectedVersion: number,
+    ): Promise<BreakGlassApproval | null>;
 }

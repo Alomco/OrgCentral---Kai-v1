@@ -23,6 +23,7 @@ export interface ILeaveBalanceRepository {
     tenant: TenantScope,
     balanceId: string,
     updates: Partial<{
+      totalEntitlement: number;
       used: number;
       pending: number;
       available: number;

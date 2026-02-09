@@ -3,9 +3,12 @@ import { LEAVE_POLICY_TYPES } from '@/server/types/leave-types';
 import type { LeavePolicy } from '@/server/types/leave-types';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { ILeavePolicyRepository } from '@/server/repositories/contracts/hr/leave/leave-policy-repository-contract';
+import type { IOrganizationRepository } from '@/server/repositories/contracts/org/organization/organization-repository-contract';
 import { assertPrivilegedOrgPolicyActor } from '@/server/security/authorization/hr-policies';
 import { AuthorizationError, EntityNotFoundError, ValidationError } from '@/server/errors';
 import { invalidateLeaveCacheScopes } from '@/server/use-cases/hr/leave/shared/cache-helpers';
+import { buildSettingsWithEntitlementSync } from '@/server/use-cases/hr/leave/shared/entitlement-sync';
+import { normalizeLeaveType } from '@/server/use-cases/hr/leave/acc/sync-leave-accruals.entitlements';
 
 const leavePolicyTypeValues = [...LEAVE_POLICY_TYPES] as [
     (typeof LEAVE_POLICY_TYPES)[number],
@@ -33,6 +36,7 @@ export type UpdateLeavePolicyPatch = z.infer<typeof updateLeavePolicyPatchSchema
 
 export interface UpdateLeavePolicyDependencies {
     leavePolicyRepository: ILeavePolicyRepository;
+    organizationRepository: IOrganizationRepository;
 }
 
 export interface UpdateLeavePolicyRequest {
@@ -47,6 +51,47 @@ export interface UpdateLeavePolicyResult {
 }
 
 type LeavePolicyUpdateShape = Partial<Omit<LeavePolicy, 'id' | 'orgId' | 'createdAt'>>;
+
+async function syncOrgLeaveDefaults(
+    organizationRepository: IOrganizationRepository,
+    authorization: RepositoryAuthorizationContext,
+    policy: LeavePolicy,
+): Promise<void> {
+    const organization = await organizationRepository.getOrganization(authorization.orgId);
+    if (!organization) {
+        throw new EntityNotFoundError('Organization', { orgId: authorization.orgId });
+    }
+
+    const normalizedLeaveType = normalizeLeaveType(policy.policyType);
+    const entitlementValue = typeof policy.accrualAmount === 'number' ? policy.accrualAmount : 0;
+    const nextEntitlements: Record<string, number> = {
+        ...organization.leaveEntitlements,
+        [normalizedLeaveType]: entitlementValue,
+    };
+
+    await organizationRepository.updateLeaveSettings(authorization.orgId, {
+        leaveEntitlements: nextEntitlements,
+        primaryLeaveType: normalizedLeaveType,
+        leaveYearStartDate: organization.leaveYearStartDate,
+        leaveRoundingRule: organization.leaveRoundingRule,
+    });
+
+    const settings = await organizationRepository.getOrganizationSettings(authorization.orgId);
+    const nextSettings = buildSettingsWithEntitlementSync(
+        settings,
+        {
+            effectiveFrom: policy.activeFrom,
+            leaveTypes: [normalizedLeaveType],
+            updatedAt: new Date().toISOString(),
+        },
+        {
+            entitlements: nextEntitlements,
+            primaryLeaveType: normalizedLeaveType,
+        },
+    );
+
+    await organizationRepository.updateOrganizationSettings(authorization.orgId, nextSettings);
+}
 
 function buildLeavePolicyUpdates(patch: UpdateLeavePolicyPatch): LeavePolicyUpdateShape {
     const updates: LeavePolicyUpdateShape = {};
@@ -161,6 +206,18 @@ export async function updateLeavePolicy(
             orgId: request.authorization.orgId,
             policyId: request.policyId,
         });
+    }
+
+    const shouldSyncDefaults = updated.isDefault && (
+        request.patch.isDefault === true ||
+        request.patch.accrualAmount !== undefined ||
+        request.patch.activeFrom !== undefined ||
+        request.patch.type !== undefined
+    );
+
+    if (shouldSyncDefaults) {
+        await syncOrgLeaveDefaults(deps.organizationRepository, request.authorization, updated);
+        await invalidateLeaveCacheScopes(request.authorization, 'balances');
     }
 
     return { policy: updated };

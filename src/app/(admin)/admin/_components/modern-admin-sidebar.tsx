@@ -72,7 +72,7 @@ export function ModernAdminSidebar({ organizationLabel, roleKey, permissions }: 
             {/* Sidebar */}
             <aside
                 className={cn(
-                    'fixed left-0 top-14 z-(--z-sticky) h-[calc(100vh-3.5rem)] w-64 border-r border-border/30 bg-background/70 backdrop-blur-sm',
+                    'fixed left-0 top-14 z-[90] h-[calc(100vh-3.5rem)] w-64 border-r border-border/30 bg-background/70 backdrop-blur-sm',
                     'transform transition-all duration-300 ease-in-out',
                     sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full md:translate-x-0 md:opacity-100',
                     'shadow-lg'
@@ -147,6 +147,7 @@ export function ModernAdminSidebar({ organizationLabel, roleKey, permissions }: 
                                     icon={item.icon}
                                     active={isActive(pathname, item.href)}
                                     onClick={() => setSidebarOpen(false)}
+                                    ariaLabel={item.ariaLabel}
                                 />
                             ))}
                         </div>

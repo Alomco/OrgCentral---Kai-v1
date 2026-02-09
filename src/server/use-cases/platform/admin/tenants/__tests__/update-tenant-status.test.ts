@@ -60,6 +60,7 @@ const tenantRepository: IPlatformTenantRepository = {
 
 const mockApproval: BreakGlassApproval = {
     id: '22222222-2222-4222-8222-222222222230',
+    version: 1,
     orgId: authorization.orgId,
     dataResidency: 'UK_ONLY',
     dataClassification: 'OFFICIAL',
@@ -84,6 +85,14 @@ const breakGlassRepository: IBreakGlassRepository = {
     getApproval: vi.fn().mockResolvedValue(null),
     createApproval: vi.fn().mockResolvedValue(mockApproval),
     updateApproval: vi.fn().mockResolvedValue(mockApproval),
+    updateApprovalIfVersion: vi.fn().mockResolvedValue(mockApproval),
+    consumeApproval: vi.fn().mockResolvedValue({
+        ...mockApproval,
+        status: 'CONSUMED',
+        consumedAt: new Date().toISOString(),
+        consumedBy: authorization.userId,
+        version: 2,
+    }),
 };
 
 describe('updatePlatformTenantStatus', () => {

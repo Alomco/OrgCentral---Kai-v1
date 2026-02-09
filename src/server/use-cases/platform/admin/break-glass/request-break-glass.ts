@@ -9,6 +9,7 @@ import { recordAuditEvent } from '@/server/logging/audit-logger';
 import { requireTenantInScope } from '@/server/use-cases/platform/admin/tenants/tenant-scope-guards';
 import { checkAdminRateLimit, buildAdminRateLimitKey } from '@/server/lib/security/admin-rate-limit';
 import { ValidationError } from '@/server/errors';
+import { enforceImpersonationSecurity } from '@/server/use-cases/platform/admin/impersonation/impersonation-guards';
 
 export interface RequestBreakGlassInput {
     authorization: RepositoryAuthorizationContext;
@@ -45,6 +46,10 @@ export async function requestBreakGlassApproval(
         throw new ValidationError('Rate limit exceeded for break-glass requests.');
     }
 
+    if (request.scope === 'impersonation') {
+        await enforceImpersonationSecurity(input.authorization);
+    }
+
     if (request.targetOrgId !== input.authorization.orgId) {
         await requireTenantInScope(
             deps.tenantRepository,
@@ -59,6 +64,7 @@ export async function requestBreakGlassApproval(
 
     const approval: BreakGlassApproval = {
         id: randomUUID(),
+        version: 1,
         orgId: input.authorization.orgId,
         dataResidency: input.authorization.dataResidency,
         dataClassification: input.authorization.dataClassification,

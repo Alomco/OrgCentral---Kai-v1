@@ -53,4 +53,51 @@ export class PrismaBreakGlassRepository extends BasePrismaRepository implements 
         await savePlatformSettingJson({ prisma: this.prisma }, BREAK_GLASS_KEY, next);
         return approval;
     }
+
+    async updateApprovalIfVersion(
+        context: RepositoryAuthorizationContext,
+        approval: BreakGlassApproval,
+        expectedVersion: number,
+    ): Promise<BreakGlassApproval | null> {
+        const approvals = await this.listApprovals(context);
+        const current = approvals.find((item) => item.id === approval.id);
+        if (current?.version !== expectedVersion) {
+            return null;
+        }
+
+        const updated: BreakGlassApproval = {
+            ...approval,
+            version: expectedVersion + 1,
+        };
+
+        const next = approvals.map((item) => (item.id === approval.id ? updated : item));
+        await savePlatformSettingJson({ prisma: this.prisma }, BREAK_GLASS_KEY, next);
+        return updated;
+    }
+
+    async consumeApproval(
+        context: RepositoryAuthorizationContext,
+        approvalId: string,
+        consumedBy: string,
+        consumedAt: string,
+        expectedVersion: number,
+    ): Promise<BreakGlassApproval | null> {
+        const approvals = await this.listApprovals(context);
+        const approval = approvals.find((item) => item.id === approvalId);
+        if (approval?.status !== 'APPROVED' || approval.version !== expectedVersion) {
+            return null;
+        }
+
+        const consumed: BreakGlassApproval = {
+            ...approval,
+            status: 'CONSUMED',
+            consumedAt,
+            consumedBy,
+            version: expectedVersion + 1,
+        };
+
+        const next = approvals.map((item) => (item.id === approvalId ? consumed : item));
+        await savePlatformSettingJson({ prisma: this.prisma }, BREAK_GLASS_KEY, next);
+        return consumed;
+    }
 }

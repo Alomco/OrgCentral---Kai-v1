@@ -34,7 +34,7 @@ const ADMIN_NAV_ITEMS: AdminNavItem[] = [
         icon: LayoutDashboard,
         audience: 'admin',
         description: 'Platform overview & insights',
-        ariaLabel: 'Admin Dashboard',
+        ariaLabel: 'Global Admin Dashboard',
     },
     {
         href: '/admin/enterprise',

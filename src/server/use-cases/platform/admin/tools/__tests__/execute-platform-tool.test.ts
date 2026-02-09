@@ -60,6 +60,7 @@ const toolsRepository: IPlatformToolsRepository = {
 
 const mockApproval: BreakGlassApproval = {
     id: '00000000-0000-0000-0000-000000000055',
+    version: 1,
     orgId: '00000000-0000-0000-0000-000000000001',
     dataResidency: 'UK_ONLY',
     dataClassification: 'OFFICIAL',
@@ -84,6 +85,14 @@ const breakGlassRepository: IBreakGlassRepository = {
     getApproval: vi.fn().mockResolvedValue(null),
     createApproval: vi.fn().mockResolvedValue(mockApproval),
     updateApproval: vi.fn().mockResolvedValue(mockApproval),
+    updateApprovalIfVersion: vi.fn().mockResolvedValue(mockApproval),
+    consumeApproval: vi.fn().mockResolvedValue({
+        ...mockApproval,
+        status: 'CONSUMED',
+        consumedAt: new Date().toISOString(),
+        consumedBy: authorization.userId,
+        version: 2,
+    }),
 };
 
 const mockTenant: PlatformTenantDetail = {

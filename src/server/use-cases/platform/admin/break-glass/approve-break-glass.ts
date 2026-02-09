@@ -60,12 +60,21 @@ export async function approveBreakGlassApproval(
 
     const updated: BreakGlassApproval = {
         ...approval,
+        version: approval.version + 1,
         status: 'APPROVED',
         approvedBy: input.authorization.userId,
         approvedAt: now.toISOString(),
     };
 
-    await deps.breakGlassRepository.updateApproval(input.authorization, updated);
+    const committed = await deps.breakGlassRepository.updateApprovalIfVersion(
+        input.authorization,
+        updated,
+        approval.version,
+    );
+
+    if (!committed) {
+        throw new ValidationError('Break-glass approval was updated by another operation.');
+    }
 
     await recordAuditEvent({
         orgId: input.authorization.orgId,
@@ -73,12 +82,12 @@ export async function approveBreakGlassApproval(
         eventType: 'AUTH',
         action: 'break_glass.approved',
         resource: 'breakGlassApproval',
-        resourceId: updated.id,
+        resourceId: committed.id,
         payload: {
-            scope: updated.scope,
-            targetOrgId: updated.targetOrgId,
-            action: updated.action,
-            resourceId: updated.resourceId,
+            scope: committed.scope,
+            targetOrgId: committed.targetOrgId,
+            action: committed.action,
+            resourceId: committed.resourceId,
         },
         residencyZone: input.authorization.dataResidency,
         classification: input.authorization.dataClassification,
@@ -86,5 +95,5 @@ export async function approveBreakGlassApproval(
         auditBatchId: input.authorization.auditBatchId,
     });
 
-    return { approval: updated };
+    return { approval: committed };
 }

@@ -37,7 +37,7 @@ export function AdminSidebar({ organizationLabel, roleKey, permissions }: AdminS
     return (
         <aside
             className={cn(
-                'fixed left-0 top-14 z-(--z-sticky) h-[calc(100vh-3.5rem)] w-56 border-r border-border/30 bg-background/70 backdrop-blur-sm'
+                'fixed left-0 top-14 z-[90] h-[calc(100vh-3.5rem)] w-56 border-r border-border/30 bg-background/70 backdrop-blur-sm'
             )}
             aria-label="Admin sidebar"
         >
@@ -85,6 +85,7 @@ export function AdminSidebar({ organizationLabel, roleKey, permissions }: AdminS
                                 description={item.description}
                                 icon={item.icon}
                                 active={isActive(pathname, item.href)}
+                                ariaLabel={item.ariaLabel}
                             />
                         ))}
                     </div>
@@ -125,6 +126,7 @@ function NavLink({
     description,
     active = false,
     compact = false,
+    ariaLabel,
 }: {
     href: string;
     label: string;
@@ -132,6 +134,7 @@ function NavLink({
     description?: string;
     active?: boolean;
     compact?: boolean;
+    ariaLabel?: string;
 }) {
     return (
         <Link
@@ -144,6 +147,7 @@ function NavLink({
                 active && 'bg-primary/10 text-foreground shadow-[0_0_0_1px_oklch(var(--primary)/0.2)] before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-primary/60',
                 compact && 'py-1.5'
             )}
+            aria-label={ariaLabel ?? label}
         >
             <span
                 aria-hidden="true"

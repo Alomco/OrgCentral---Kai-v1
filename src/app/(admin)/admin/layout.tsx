@@ -88,7 +88,7 @@ async function AdminLayoutContent({ children }: { children: ReactNode }) {
                       Future refactors can move individual pages to use local PageContainers.
                     */}
                     <div
-                        className="ml-64 min-h-[calc(100vh-3.5rem)] px-6 py-6 transition-all duration-300 md:ml-64"
+                        className="ml-0 min-h-[calc(100vh-3.5rem)] px-6 py-6 transition-all duration-300 md:ml-56 lg:ml-64"
                         id="admin-main-content"
                         tabIndex={-1}
                     >

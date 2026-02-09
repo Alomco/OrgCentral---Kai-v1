@@ -21,6 +21,7 @@ export const breakGlassListQuerySchema = z.object({
 
 export const breakGlassApprovalSchema = z.object({
     id: z.uuid(),
+    version: z.number().int().min(1).default(1),
     orgId: z.uuid(),
     dataResidency: z.enum(['UK_ONLY', 'UK_AND_EEA', 'GLOBAL_RESTRICTED']),
     dataClassification: z.enum(['OFFICIAL', 'OFFICIAL_SENSITIVE', 'SECRET', 'TOP_SECRET']),

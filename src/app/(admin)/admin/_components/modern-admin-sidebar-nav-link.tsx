@@ -11,6 +11,7 @@ export interface AdminSidebarNavLinkProps {
     active?: boolean;
     compact?: boolean;
     onClick?: () => void;
+    ariaLabel?: string;
 }
 
 export function AdminSidebarNavLink({
@@ -21,6 +22,7 @@ export function AdminSidebarNavLink({
     active = false,
     compact = false,
     onClick,
+    ariaLabel,
 }: AdminSidebarNavLinkProps) {
     return (
         <Link
@@ -36,6 +38,7 @@ export function AdminSidebarNavLink({
                 'bg-linear-to-r from-primary/10 to-accent/10 text-foreground shadow-[0_0_0_1px_oklch(var(--primary)/0.2)] before:absolute before:left-0 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-linear-to-b before:from-primary before:to-accent',
                 compact && 'py-1.5',
             )}
+            aria-label={ariaLabel ?? label}
             prefetch={false}
         >
             <span

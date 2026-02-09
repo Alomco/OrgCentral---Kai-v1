@@ -45,7 +45,7 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
     async updateLeaveBalance(
         tenant: TenantScope,
         balanceId: string,
-        updates: Partial<{ used: number; pending: number; available: number; updatedAt: Date }>,
+        updates: Partial<{ totalEntitlement: number; used: number; pending: number; available: number; updatedAt: Date }>,
     ): Promise<void> {
         const { orgId } = tenant;
         const existing = await this.prisma.leaveBalance.findUnique({ where: { id: balanceId } });
@@ -61,6 +61,9 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
         if (updates.pending !== undefined) {
             metadata.pending = updates.pending;
         }
+        if (updates.totalEntitlement !== undefined) {
+            metadata.totalEntitlement = updates.totalEntitlement;
+        }
         if (updates.available !== undefined) {
             metadata.available = updates.available;
         }
@@ -68,6 +71,9 @@ export class PrismaLeaveBalanceRepository extends BasePrismaRepository implement
         await this.prisma.leaveBalance.update({
             where: { id: balanceId },
             data: {
+                accruedHours: updates.totalEntitlement !== undefined
+                    ? new Prisma.Decimal(updates.totalEntitlement)
+                    : undefined,
                 usedHours: updates.used !== undefined ? new Prisma.Decimal(updates.used) : undefined,
                 carriedHours: updates.pending !== undefined ? new Prisma.Decimal(updates.pending) : undefined,
                 metadata,

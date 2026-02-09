@@ -6,6 +6,7 @@ export interface IImpersonationRepository {
     getRequest(context: RepositoryAuthorizationContext, requestId: string): Promise<ImpersonationRequest | null>;
     createRequest(context: RepositoryAuthorizationContext, request: ImpersonationRequest): Promise<ImpersonationRequest>;
     updateRequest(context: RepositoryAuthorizationContext, request: ImpersonationRequest): Promise<ImpersonationRequest>;
+    deleteRequest(context: RepositoryAuthorizationContext, requestId: string): Promise<void>;
 
     listSessions(context: RepositoryAuthorizationContext): Promise<ImpersonationSession[]>;
     getSession(context: RepositoryAuthorizationContext, sessionId: string): Promise<ImpersonationSession | null>;

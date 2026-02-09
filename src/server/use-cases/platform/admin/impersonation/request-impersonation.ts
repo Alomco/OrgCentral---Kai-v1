@@ -8,7 +8,7 @@ import { enforcePermission } from '@/server/repositories/security';
 import { parseImpersonationRequest, type ImpersonationRequestInput } from '@/server/validators/platform/admin/impersonation-validators';
 import { requireBreakGlassApproval } from '@/server/use-cases/platform/admin/break-glass/require-break-glass';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
-import { enforceImpersonationSecurity } from './impersonation-guards';
+import { enforceImpersonationSecurity, requireTargetUserMembership } from './impersonation-guards';
 import { requireTenantInScope } from '@/server/use-cases/platform/admin/tenants/tenant-scope-guards';
 import { checkAdminRateLimit, buildAdminRateLimitKey } from '@/server/lib/security/admin-rate-limit';
 import { ValidationError } from '@/server/errors';
@@ -48,29 +48,21 @@ export async function requestImpersonation(
     }
 
     await enforceImpersonationSecurity(input.authorization);
-    await requireTenantInScope(
+    const tenant = await requireTenantInScope(
         deps.tenantRepository,
         input.authorization,
         request.targetOrgId,
         'Target tenant not found or not within allowed scope for impersonation.',
     );
-    await requireBreakGlassApproval(deps.breakGlassRepository, {
-        authorization: input.authorization,
-        approvalId: request.breakGlassApprovalId,
-        scope: 'impersonation',
-        targetOrgId: request.targetOrgId,
-        action: breakGlassAction,
-        resourceId: request.targetUserId,
-    });
-
+    await requireTargetUserMembership(request.targetOrgId, request.targetUserId);
     const now = new Date();
     const expiresAt = new Date(now.getTime() + request.expiresInMinutes * 60 * 1000);
 
     const impersonationRequest: ImpersonationRequest = {
         id: randomUUID(),
         orgId: input.authorization.orgId,
-        dataResidency: input.authorization.dataResidency,
-        dataClassification: input.authorization.dataClassification,
+        dataResidency: tenant.dataResidency,
+        dataClassification: tenant.dataClassification,
         auditSource: input.authorization.auditSource,
         requestedBy: input.authorization.userId,
         targetUserId: request.targetUserId,
@@ -84,17 +76,29 @@ export async function requestImpersonation(
         updatedAt: now.toISOString(),
     };
 
-    const created = await deps.impersonationRepository.createRequest(input.authorization, impersonationRequest);
+    let created: ImpersonationRequest | null = null;
+    try {
+        created = await deps.impersonationRepository.createRequest(input.authorization, impersonationRequest);
 
-    await requireBreakGlassApproval(deps.breakGlassRepository, {
-        authorization: input.authorization,
-        approvalId: request.breakGlassApprovalId,
-        scope: 'impersonation',
-        targetOrgId: request.targetOrgId,
-        action: breakGlassAction,
-        resourceId: request.targetUserId,
-        consume: true,
-    });
+        await requireBreakGlassApproval(deps.breakGlassRepository, {
+            authorization: input.authorization,
+            approvalId: request.breakGlassApprovalId,
+            scope: 'impersonation',
+            targetOrgId: request.targetOrgId,
+            action: breakGlassAction,
+            resourceId: request.targetUserId,
+            consume: true,
+        });
+    } catch (error) {
+        if (created) {
+            try {
+                await deps.impersonationRepository.deleteRequest(input.authorization, created.id);
+            } catch {
+                throw new ValidationError('Break-glass approval failed after request creation. Please retry.');
+            }
+        }
+        throw error;
+    }
 
     await recordAuditEvent({
         orgId: input.authorization.orgId,

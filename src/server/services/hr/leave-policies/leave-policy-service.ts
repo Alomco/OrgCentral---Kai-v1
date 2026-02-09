@@ -76,7 +76,10 @@ export class LeavePolicyService extends AbstractHrService {
 
         return this.executeInServiceContext(context, 'hr.leave-policies.update', async () => {
             const result = await updateLeavePolicyUseCase(
-                { leavePolicyRepository: this.dependencies.leavePolicyRepository },
+                {
+                    leavePolicyRepository: this.dependencies.leavePolicyRepository,
+                    organizationRepository: this.dependencies.organizationRepository,
+                },
                 {
                     authorization,
                     orgId: input.orgId,

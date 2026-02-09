@@ -5,12 +5,14 @@ import {
     requestImpersonationService,
     approveImpersonationService,
     stopImpersonationService,
+    startImpersonationService,
 } from '@/server/services/platform/admin/impersonation-service';
 import type { ImpersonationRequest, ImpersonationSession } from '@/server/types/platform/impersonation';
 import {
     parseImpersonationRequest,
     parseImpersonationApprove,
     parseImpersonationStop,
+    parseImpersonationStart,
 } from '@/server/validators/platform/admin/impersonation-validators';
 
 interface ImpersonationRequestListResponse {
@@ -31,6 +33,12 @@ interface ImpersonationRequestResponse {
 interface ImpersonationSessionResponse {
     success: true;
     data: ImpersonationSession;
+}
+
+interface ImpersonationSessionStartResponse {
+    success: true;
+    data: ImpersonationSession;
+    authHeaders: Headers;
 }
 
 export async function listImpersonationRequestsController(request: Request): Promise<ImpersonationRequestListResponse> {
@@ -94,4 +102,17 @@ export async function stopImpersonationController(request: Request): Promise<Imp
     const payload = parseImpersonationStop(await request.json());
     const data = await stopImpersonationService(authorization, payload);
     return { success: true, data };
+}
+
+export async function startImpersonationController(request: Request): Promise<ImpersonationSessionStartResponse> {
+    const authorization = await authorizePlatformRequest(request, {
+        requiredPermissions: { platformImpersonation: ['start'] },
+        auditSource: 'api:platform:impersonation:sessions:start',
+        action: 'start',
+        resourceType: 'platformImpersonationSession',
+    });
+
+    const payload = parseImpersonationStart(await request.json());
+    const { session, authHeaders } = await startImpersonationService(authorization, request.headers, payload);
+    return { success: true, data: session, authHeaders };
 }

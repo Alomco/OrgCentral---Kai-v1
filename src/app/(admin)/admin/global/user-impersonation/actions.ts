@@ -19,6 +19,7 @@ import { ValidationError } from '@/server/errors';
 export interface ImpersonationActionState {
     status: 'idle' | 'success' | 'error';
     message?: string;
+    code?: 'MFA_REQUIRED';
 }
 
 export interface ImpersonationBreakGlassState {
@@ -104,12 +105,19 @@ export async function requestImpersonationAction(
             classification: authorization.dataClassification,
             residency: authorization.dataResidency,
         });
+        await invalidateCache({
+            orgId: authorization.orgId,
+            scope: CACHE_SCOPE_PLATFORM_BREAK_GLASS,
+            classification: authorization.dataClassification,
+            residency: authorization.dataResidency,
+        });
 
         revalidatePath(IMPERSONATION_PATH);
         return { status: 'success', message: 'Impersonation request submitted.' };
     } catch (error) {
         const message = error instanceof ValidationError ? error.message : 'Unable to request impersonation.';
-        return { status: 'error', message };
+        const code = isMfaRequiredMessage(message) ? 'MFA_REQUIRED' : undefined;
+        return { status: 'error', message, code };
     }
 }
 
@@ -164,9 +172,10 @@ export async function stopImpersonationAction(
     );
 
     try {
+        const reasonValue = readFormString(formData, 'reason');
         await stopImpersonationService(authorization, {
             sessionId: readFormString(formData, 'sessionId'),
-            reason: readFormString(formData, 'reason'),
+            ...(reasonValue ? { reason: reasonValue } : {}),
         });
 
         await invalidateCache({
@@ -191,6 +200,13 @@ function readFormString(formData: FormData, key: string): string {
 
 function readFormNumber(formData: FormData, key: string, fallback: number): number {
     const raw = readFormString(formData, key);
+    if (raw.length === 0) {
+        return fallback;
+    }
     const parsed = Number(raw);
     return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function isMfaRequiredMessage(message: string): boolean {
+    return message.toLowerCase().includes('mfa verification is required');
 }

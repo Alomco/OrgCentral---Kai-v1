@@ -34,6 +34,7 @@ export async function KpiGrid({ authorization, employeeId }: KpiGridProps) {
         employeeId
             ? getLeaveBalance({
                 leaveBalanceRepository: new (await import('@/server/repositories/prisma/hr/leave/prisma-leave-balance-repository')).PrismaLeaveBalanceRepository(),
+                organizationRepository: new (await import('@/server/repositories/prisma/org/organization/prisma-organization-repository')).PrismaOrganizationRepository(),
             }, {
                 authorization,
                 employeeId,

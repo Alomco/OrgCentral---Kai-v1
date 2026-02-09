@@ -71,11 +71,20 @@ function buildLoginLink(): string {
     return query.length > 0 ? `${LOGIN_PATH}?${query}` : LOGIN_PATH;
 }
 
-export function TwoFactorForm() {
+export function TwoFactorForm({
+    variant = "page",
+    disableRedirect = false,
+    onVerified,
+}: {
+    variant?: "page" | "modal";
+    disableRedirect?: boolean;
+    onVerified?: () => void;
+}) {
     const [code, setCode] = useState("");
     const [trustDevice, setTrustDevice] = useState(true);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const isModal = variant === "modal";
 
     const normalizedCode = useMemo(() => code.replace(/\s+/g, ""), [code]);
     const isCodeComplete = normalizedCode.length === OTP_LENGTH;
@@ -102,20 +111,44 @@ export function TwoFactorForm() {
                 return;
             }
 
+            if (disableRedirect) {
+                setStatusMessage("Verification successful.");
+                if (onVerified) {
+                    onVerified();
+                }
+                return;
+            }
+
             setStatusMessage("Verification successful. Redirecting...");
+
+            if (onVerified) {
+                onVerified();
+            }
             window.location.assign(buildPostLoginRedirect());
         } catch {
             setStatusMessage("We could not verify that code. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
-    }, [isCodeComplete, normalizedCode, trustDevice]);
+    }, [disableRedirect, isCodeComplete, normalizedCode, onVerified, trustDevice]);
 
     return (
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60">
+            <div
+                className={
+                    isModal
+                        ? "rounded-xl border border-border/70 bg-card/80 p-4"
+                        : "rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60"
+                }
+            >
                 <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-200">
+                    <span
+                        className={
+                            isModal
+                                ? "flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
+                                : "flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-200"
+                        }
+                    >
                         <ShieldCheck className="h-5 w-5" />
                     </span>
                     <div className="space-y-1">
@@ -154,7 +187,11 @@ export function TwoFactorForm() {
                         <span className="text-[13px]">Trust this device for 30 days</span>
                     </label>
                     <Link
-                        className="text-[13px] font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
+                        className={
+                            isModal
+                                ? "text-[13px] font-semibold text-primary transition-colors hover:text-primary/80"
+                                : "text-[13px] font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
+                        }
                         href={buildLoginLink()}
                     >
                         Use another account
@@ -164,7 +201,11 @@ export function TwoFactorForm() {
 
             <Button
                 type="submit"
-                className="group relative w-full overflow-hidden rounded-xl bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 py-5 text-base font-semibold text-white shadow-lg shadow-indigo-500/40 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:hover:scale-100 md:py-5.5"
+                className={
+                    isModal
+                        ? "group relative w-full overflow-hidden rounded-lg bg-primary py-4 text-base font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 disabled:opacity-50"
+                        : "group relative w-full overflow-hidden rounded-xl bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 py-5 text-base font-semibold text-white shadow-lg shadow-indigo-500/40 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:hover:scale-100 md:py-5.5"
+                }
                 disabled={!isCodeComplete || isSubmitting}
             >
                 <span className="relative z-10 flex items-center justify-center gap-2">
@@ -180,7 +221,9 @@ export function TwoFactorForm() {
                         </>
                     )}
                 </span>
-                <div className="absolute inset-0 z-0 bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 opacity-0 blur transition-opacity duration-300 group-hover:opacity-100" />
+                {isModal ? null : (
+                    <div className="absolute inset-0 z-0 bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 opacity-0 blur transition-opacity duration-300 group-hover:opacity-100" />
+                )}
             </Button>
 
             {statusMessage ? (

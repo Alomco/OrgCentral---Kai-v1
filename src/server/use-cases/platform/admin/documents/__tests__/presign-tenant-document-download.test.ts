@@ -81,6 +81,7 @@ const mockDocument: DocumentVaultRecord = {
 
 const mockApproval: BreakGlassApproval = {
     id: '00000000-0000-0000-0000-000000000120',
+    version: 1,
     orgId: authorization.orgId,
     dataResidency: 'UK_ONLY',
     dataClassification: 'OFFICIAL',
@@ -113,11 +114,14 @@ const breakGlassRepository: IBreakGlassRepository = {
     listApprovals: vi.fn(),
     getApproval: vi.fn().mockResolvedValue(mockApproval),
     createApproval: vi.fn(),
-    updateApproval: vi.fn().mockResolvedValue({
+    updateApproval: vi.fn(),
+    updateApprovalIfVersion: vi.fn(),
+    consumeApproval: vi.fn().mockResolvedValue({
         ...mockApproval,
         status: 'CONSUMED',
         consumedAt: new Date().toISOString(),
         consumedBy: authorization.userId,
+        version: 2,
     }),
 };
 
@@ -142,13 +146,12 @@ describe('presignTenantDocumentDownload', () => {
 
         expect(result.downloadUrl).toBe(mockDocument.blobPointer);
         expect(result.fileName).toBe(mockDocument.fileName);
-        expect(breakGlassRepository.updateApproval).toHaveBeenCalledWith(
+        expect(breakGlassRepository.consumeApproval).toHaveBeenCalledWith(
             authorization,
-            expect.objectContaining({
-                id: mockApproval.id,
-                status: 'CONSUMED',
-                consumedBy: authorization.userId,
-            }),
+            mockApproval.id,
+            authorization.userId,
+            expect.any(String),
+            mockApproval.version,
         );
     });
 });

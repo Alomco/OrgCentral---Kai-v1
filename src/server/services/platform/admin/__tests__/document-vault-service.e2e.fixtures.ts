@@ -114,6 +114,45 @@ export class InMemoryBreakGlassRepository implements IBreakGlassRepository {
         this.approvals.set(approval.id, approval);
         return approval;
     }
+
+    async updateApprovalIfVersion(
+        _: RepositoryAuthorizationContext,
+        approval: BreakGlassApproval,
+        expectedVersion: number,
+    ): Promise<BreakGlassApproval | null> {
+        const current = this.approvals.get(approval.id);
+        if (!current || current.version !== expectedVersion) {
+            return null;
+        }
+        const updated: BreakGlassApproval = {
+            ...approval,
+            version: expectedVersion + 1,
+        };
+        this.approvals.set(approval.id, updated);
+        return updated;
+    }
+
+    async consumeApproval(
+        _: RepositoryAuthorizationContext,
+        approvalId: string,
+        consumedBy: string,
+        consumedAt: string,
+        expectedVersion: number,
+    ): Promise<BreakGlassApproval | null> {
+        const approval = this.approvals.get(approvalId);
+        if (!approval || approval.status !== 'APPROVED' || approval.version !== expectedVersion) {
+            return null;
+        }
+        const consumed: BreakGlassApproval = {
+            ...approval,
+            status: 'CONSUMED',
+            consumedAt,
+            consumedBy,
+            version: expectedVersion + 1,
+        };
+        this.approvals.set(approvalId, consumed);
+        return consumed;
+    }
 }
 
 export class InMemoryTenantRepository implements IPlatformTenantRepository {

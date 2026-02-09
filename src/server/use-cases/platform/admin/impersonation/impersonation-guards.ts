@@ -1,5 +1,7 @@
 import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
+import { MembershipStatus } from '@/server/types/prisma';
 import { loadOrgSettings } from '@/server/services/org/settings/org-settings-store';
+import { getGuardMembershipRepository } from '@/server/security/guards/membership-repository';
 import { ValidationError } from '@/server/errors';
 
 export async function enforceImpersonationSecurity(
@@ -27,5 +29,18 @@ export async function enforceImpersonationSecurity(
     const isAllowed = allowlist.some((entry) => entry.trim() === ipAddress.trim());
     if (!isAllowed) {
         throw new ValidationError('IP address is not allowlisted for impersonation.');
+    }
+}
+
+export async function requireTargetUserMembership(
+    targetOrgId: string,
+    targetUserId: string,
+): Promise<void> {
+    const membership = await getGuardMembershipRepository().findMembership(targetOrgId, targetUserId);
+    if (!membership) {
+        throw new ValidationError('Target user is not a member of the selected tenant.');
+    }
+    if (membership.status !== MembershipStatus.ACTIVE) {
+        throw new ValidationError('Target user is not an active member of the selected tenant.');
     }
 }

@@ -18,6 +18,11 @@ export const impersonationStopSchema = z.object({
     reason: z.string().min(4).max(200).optional(),
 });
 
+export const impersonationStartSchema = z.object({
+    sessionId: z.uuid(),
+    sessionToken: z.string().min(16),
+});
+
 export const impersonationRequestRecordSchema = z.object({
     id: z.uuid(),
     orgId: z.uuid(),
@@ -56,6 +61,7 @@ export const impersonationSessionRecordSchema = z.object({
 export type ImpersonationRequestInput = z.infer<typeof impersonationRequestSchema>;
 export type ImpersonationApproveInput = z.infer<typeof impersonationApproveSchema>;
 export type ImpersonationStopInput = z.infer<typeof impersonationStopSchema>;
+export type ImpersonationStartInput = z.infer<typeof impersonationStartSchema>;
 
 export function parseImpersonationRequest(input: unknown) {
     return impersonationRequestSchema.parse(input);
@@ -67,6 +73,10 @@ export function parseImpersonationApprove(input: unknown) {
 
 export function parseImpersonationStop(input: unknown) {
     return impersonationStopSchema.parse(input);
+}
+
+export function parseImpersonationStart(input: unknown) {
+    return impersonationStartSchema.parse(input);
 }
 
 export function parseImpersonationRequestRecord(input: unknown): ImpersonationRequest {

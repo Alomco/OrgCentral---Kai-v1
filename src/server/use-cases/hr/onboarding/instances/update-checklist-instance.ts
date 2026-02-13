@@ -2,6 +2,9 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { IChecklistInstanceRepository } from '@/server/repositories/contracts/hr/onboarding/checklist-instance-repository-contract';
 import type { ChecklistInstance, ChecklistInstanceItemsUpdate } from '@/server/types/onboarding-types';
 import { parseChecklistInstanceUpdatePayload } from '@/server/validators/hr/onboarding/checklist-instance-validators';
+import { ZodError } from 'zod';
+import { ValidationError } from '@/server/errors';
+import { assertOnboardingChecklistUpdater } from '@/server/security/authorization/hr-guards/onboarding';
 
 
 export interface UpdateChecklistInstanceInput {
@@ -22,12 +25,22 @@ export async function updateChecklistInstance(
     deps: UpdateChecklistInstanceDependencies,
     input: UpdateChecklistInstanceInput,
 ): Promise<UpdateChecklistInstanceResult> {
+    await assertOnboardingChecklistUpdater({
+        authorization: input.authorization,
+        resourceAttributes: { instanceId: input.instanceId },
+    });
 
-    // Authorization: Ideally, the user updating must be the employee OR an HR admin.
-    // For now we will rely on repository-level checks or simple check here.
-    // assertChecklistTemplateManager(input.authorization); 
-
-    const updatePayload: ChecklistInstanceItemsUpdate = parseChecklistInstanceUpdatePayload(input.updates);
+    let updatePayload: ChecklistInstanceItemsUpdate;
+    try {
+        updatePayload = parseChecklistInstanceUpdatePayload(input.updates);
+    } catch (error) {
+        if (error instanceof ZodError) {
+            throw new ValidationError('Invalid checklist instance update payload.', {
+                issues: error.issues,
+            });
+        }
+        throw error;
+    }
 
     const instance = await deps.checklistInstanceRepository.updateItems(
         input.authorization.orgId,

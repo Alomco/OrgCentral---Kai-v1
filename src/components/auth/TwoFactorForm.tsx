@@ -78,7 +78,7 @@ export function TwoFactorForm({
 }: {
     variant?: "page" | "modal";
     disableRedirect?: boolean;
-    onVerified?: () => void;
+    onVerified?: () => void | Promise<void>;
 }) {
     const [code, setCode] = useState("");
     const [trustDevice, setTrustDevice] = useState(true);
@@ -114,7 +114,7 @@ export function TwoFactorForm({
             if (disableRedirect) {
                 setStatusMessage("Verification successful.");
                 if (onVerified) {
-                    onVerified();
+                    await onVerified();
                 }
                 return;
             }
@@ -122,7 +122,7 @@ export function TwoFactorForm({
             setStatusMessage("Verification successful. Redirecting...");
 
             if (onVerified) {
-                onVerified();
+                await onVerified();
             }
             window.location.assign(buildPostLoginRedirect());
         } catch {

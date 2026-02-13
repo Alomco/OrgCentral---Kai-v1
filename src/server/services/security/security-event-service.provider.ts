@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { EnhancedSecurityEvent } from '@/server/types/enhanced-security-types';
 import type { ISecurityEventRepository } from '@/server/repositories/contracts/security/enhanced-security-repository-contracts';
+import { createEnhancedSecurityEventRepository } from '@/server/repositories/providers/security/enhanced-security-event-repository-provider';
 import type { SecurityEventServiceDependencies } from './security-event-service';
 import { SecurityEventService } from './security-event-service';
 
@@ -49,8 +50,18 @@ class InMemorySecurityEventRepository implements ISecurityEventRepository {
         );
     }
 
-    countEventsByOrg(context: RepositoryAuthorizationContext): Promise<number> {
-        return Promise.resolve(this.events.filter((event) => event.orgId === context.orgId).length);
+    countEventsByOrg(
+        context: RepositoryAuthorizationContext,
+        filters?: { startDate?: Date; endDate?: Date; severity?: string; eventType?: string },
+    ): Promise<number> {
+        const filtered = this.events
+            .filter((event) => event.orgId === context.orgId)
+            .filter((event) => (filters?.severity ? event.severity === filters.severity : true))
+            .filter((event) => (filters?.eventType ? event.eventType === filters.eventType : true))
+            .filter((event) => (filters?.startDate ? event.createdAt >= filters.startDate : true))
+            .filter((event) => (filters?.endDate ? event.createdAt <= filters.endDate : true));
+
+        return Promise.resolve(filtered.length);
     }
 }
 
@@ -59,6 +70,7 @@ const defaultDependencies: SecurityEventServiceDependencies = {
 };
 
 let sharedService: SecurityEventService | null = null;
+let sharedEnhancedService: SecurityEventService | null = null;
 
 export function getSecurityEventService(
     overrides?: Partial<SecurityEventServiceDependencies>,
@@ -78,6 +90,26 @@ export function getSecurityEventService(
     }
 
     return sharedService;
+}
+
+export function getEnhancedSecurityEventService(
+    overrides?: Partial<SecurityEventServiceDependencies>,
+): SecurityEventService {
+    if (!sharedEnhancedService || overrides) {
+        const dependencies: SecurityEventServiceDependencies = {
+            securityEventRepository: createEnhancedSecurityEventRepository(),
+            ...(overrides ?? {}),
+        };
+
+        if (!overrides) {
+            sharedEnhancedService = new SecurityEventService(dependencies);
+            return sharedEnhancedService;
+        }
+
+        return new SecurityEventService(dependencies);
+    }
+
+    return sharedEnhancedService;
 }
 
 export type SecurityEventServiceContract = Pick<SecurityEventService, 'logSecurityEvent' | 'getSecurityEvent' | 'getSecurityEventsByOrg' | 'countSecurityEventsByOrg'>;

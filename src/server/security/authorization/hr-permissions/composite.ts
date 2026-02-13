@@ -43,7 +43,6 @@ export const HR_ANY_PERMISSION_PROFILE = {
      */
     TIME_TRACKING_MANAGEMENT: [
         HR_PERMISSION_PROFILE.TIME_ENTRY_MANAGE,
-        { organization: ['update'] },
     ] as readonly OrgPermissionMap[],
 
     /**
@@ -109,7 +108,6 @@ export const HR_ANY_PERMISSION_PROFILE = {
     TIME_ENTRY_APPROVAL: [
         HR_PERMISSION_PROFILE.TIME_ENTRY_APPROVE,
         HR_PERMISSION_PROFILE.TIME_ENTRY_MANAGE,
-        { organization: ['update'] },
     ] as readonly OrgPermissionMap[],
 
     /**

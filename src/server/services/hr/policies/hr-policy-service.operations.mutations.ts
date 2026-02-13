@@ -12,7 +12,8 @@ import { emitPolicyAcknowledgedNotification, emitPolicyUpdateNotifications } fro
 import { acknowledgeHrPolicy } from '../../../use-cases/hr/policies/acknowledge-hr-policy';
 import { createHrPolicy } from '../../../use-cases/hr/policies/create-hr-policy';
 import { updateHrPolicy } from '../../../use-cases/hr/policies/update-hr-policy';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { HR_ACTION, HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions';
+import { HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 import type { HrPolicyServiceRuntime } from './hr-policy-service.operations.types';
 
 export async function handleCreatePolicy(
@@ -114,7 +115,7 @@ export async function handleAcknowledgePolicy(
     const authorization = runtime.coerceAuthorization(input.authorization);
     await runtime.ensureOrgAccess(authorization, {
         action: HR_ACTION.ACKNOWLEDGE,
-        resourceType: HR_RESOURCE.HR_POLICY,
+        resourceType: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
         resourceAttributes: { policyId: input.policyId, userId: input.userId, version: input.version },
     });
 

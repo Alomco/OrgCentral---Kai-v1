@@ -1,7 +1,7 @@
 import { AuthorizationError, ValidationError } from '@/server/errors';
 import type { ITimeEntryRepository } from '@/server/repositories/contracts/hr/time-tracking/time-entry-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import { canManageOrgTimeEntries } from '@/server/security/authorization';
+import { canViewOrgTimeEntries } from '@/server/security/authorization';
 import type { TimeEntry } from '@/server/types/hr-ops-types';
 import type { TimeEntryFilters } from '@/server/types/hr-time-tracking-schemas';
 import { registerTimeEntryCache } from './cache-helpers';
@@ -30,7 +30,9 @@ export async function listTimeEntries(
     const normalizedFilters = normalizeFilters(input.filters);
     const scopedFilters = scopeFilters(input.authorization, normalizedFilters);
 
-    registerTimeEntryCache(input.authorization);
+    if (input.authorization.dataClassification === 'OFFICIAL') {
+        registerTimeEntryCache(input.authorization);
+    }
 
     const entries = await deps.timeEntryRepository.listTimeEntries(
         input.authorization.orgId,
@@ -77,14 +79,14 @@ function scopeFilters(
 ): RepositoryTimeEntryFilters {
     const requestedUserId = filters.userId;
 
-    if (!requestedUserId && !canManageOrgTimeEntries(authorization)) {
+    if (!requestedUserId && !canViewOrgTimeEntries(authorization)) {
         return { ...filters, userId: authorization.userId };
     }
 
     if (
         requestedUserId &&
         requestedUserId !== authorization.userId &&
-        !canManageOrgTimeEntries(authorization)
+        !canViewOrgTimeEntries(authorization)
     ) {
         throw new AuthorizationError('You cannot view time entries for other members.');
     }
@@ -96,7 +98,7 @@ function enforceTenantVisibility(
     authorization: RepositoryAuthorizationContext,
     entries: TimeEntry[],
 ): TimeEntry[] {
-    if (canManageOrgTimeEntries(authorization)) {
+    if (canViewOrgTimeEntries(authorization)) {
         return entries;
     }
 

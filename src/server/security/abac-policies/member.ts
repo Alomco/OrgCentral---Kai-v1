@@ -28,6 +28,7 @@ const MEMBER_READ_RESOURCES = [
     'hr.training.record',
     'hr.notification',
     'hr.policy',
+    'hr.policy.acknowledgment',
     'hr.onboarding.checklist',
 ];
 

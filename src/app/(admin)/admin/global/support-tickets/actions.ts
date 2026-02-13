@@ -6,7 +6,7 @@ import { getSessionContextOrRedirect } from '@/server/ui/auth/session-redirect';
 import { createSupportTicketService, updateSupportTicketService } from '@/server/services/platform/admin/support-ticket-service';
 import { invalidateCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_PLATFORM_SUPPORT } from '@/server/repositories/cache-scopes';
-import { ValidationError } from '@/server/errors';
+import { ConflictError, ValidationError } from '@/server/errors';
 import { parseSupportTicketCreate, parseSupportTicketUpdate } from '@/server/validators/platform/admin/support-ticket-validators';
 
 export interface SupportTicketActionState {
@@ -80,6 +80,7 @@ export async function updateSupportTicketAction(
         const statusValue = readFormString(formData, 'status');
         const payload = parseSupportTicketUpdate({
             ticketId: readFormString(formData, 'ticketId'),
+            expectedVersion: readFormInt(formData, 'expectedVersion'),
             ...(statusValue ? { status: statusValue } : {}),
             ...(assignedToValue ? { assignedTo: assignedToValue } : {}),
         });
@@ -96,7 +97,12 @@ export async function updateSupportTicketAction(
         revalidatePath('/admin/global/support-tickets');
         return { status: 'success', message: 'Support ticket updated.' };
     } catch (error) {
-        const message = error instanceof ValidationError ? error.message : 'Unable to update ticket.';
+        const message =
+            error instanceof ConflictError
+                ? 'Ticket changed by another admin. Refresh and retry.'
+                : error instanceof ValidationError
+                    ? error.message
+                    : 'Unable to update ticket.';
         return { status: 'error', message };
     }
 }
@@ -104,6 +110,12 @@ export async function updateSupportTicketAction(
 function readFormString(formData: FormData, key: string): string {
     const value = formData.get(key);
     return typeof value === 'string' ? value.trim() : '';
+}
+
+function readFormInt(formData: FormData, key: string): number {
+    const value = readFormString(formData, key);
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function parseCommaList(value: string): string[] {

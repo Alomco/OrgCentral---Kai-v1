@@ -19,7 +19,7 @@ $ARGUMENTS
 ## Operating Rules
 
 1. Treat this as orchestration, not single-pass implementation.
-2. Use at least 3 specialist lenses for complex work.
+2. Use only the specialist lenses required by scope (typically 2-4 for complex work).
 3. Keep findings evidence-based with file references.
 4. Prioritize by severity: Critical, High, Medium, Low.
 5. End with a unified execution plan and verification checklist.
@@ -34,7 +34,7 @@ $ARGUMENTS
 - `Testing`: missing coverage, regression risk, deterministic checks.
 - `Performance`: hot paths, unnecessary fetches/renders, heavy operations.
 
-Pick only the lenses needed by the task, but never fewer than 3 for large/critical requests.
+Pick only the lenses needed by the task and avoid unnecessary orchestration overhead.
 
 ## Orchestration Protocol
 

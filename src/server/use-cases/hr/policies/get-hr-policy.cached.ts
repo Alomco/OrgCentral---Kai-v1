@@ -7,7 +7,10 @@ import { CACHE_SCOPE_HR_POLICIES } from '@/server/repositories/cache-scopes';
 import type { IHRPolicyRepository } from '@/server/repositories/contracts/hr/policies/hr-policy-repository-contract';
 import { buildHrPolicyServiceDependencies } from '@/server/repositories/providers/hr/hr-policy-service-dependencies';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { HRPolicy } from '@/server/types/hr-ops-types';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 import { getHrPolicy } from './get-hr-policy';
 
@@ -25,6 +28,12 @@ function resolvePolicyRepository(): IHRPolicyRepository {
 }
 
 export async function getHrPolicyForUi(input: GetHrPolicyForUiInput): Promise<GetHrPolicyForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.POLICY,
+        resourceId: input.policyId,
+    });
     async function getPolicyCached(cachedInput: GetHrPolicyForUiInput): Promise<GetHrPolicyForUiResult> {
         'use cache';
         cacheLife(CACHE_LIFE_SHORT);

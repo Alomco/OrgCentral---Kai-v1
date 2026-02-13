@@ -35,6 +35,10 @@ export const HR_RESOURCE_TYPE = {
     ONBOARDING_INVITE: 'hr.onboarding.invite',
     ONBOARDING_CHECKLIST: 'hr.onboarding.checklist',
     ONBOARDING_TASK: 'hr.onboarding.task',
+    ONBOARDING_FEEDBACK: 'hr.onboarding.feedback',
+    ONBOARDING_EMAIL_SEQUENCE_TEMPLATE: 'hr.onboarding.email-sequence.template',
+    ONBOARDING_WORKFLOW_TEMPLATE: 'hr.onboarding.workflow.template',
+    ONBOARDING_METRIC_DEFINITION: 'hr.onboarding.metric.definition',
     CHECKLIST_TEMPLATE: 'hr.checklist.template',
 
     // Offboarding

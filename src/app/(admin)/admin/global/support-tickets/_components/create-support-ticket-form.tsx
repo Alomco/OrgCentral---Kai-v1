@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoButton } from '@/components/ui/info-button';
+import { SUPPORT_TICKET_SEVERITIES } from '@/server/types/platform/support-tickets';
 
 import { createSupportTicketAction, type SupportTicketActionState } from '../actions';
 
@@ -59,7 +60,19 @@ export function CreateSupportTicketForm() {
                             ]}
                         />
                     </div>
-                    <Input id="severity" name="severity" defaultValue="LOW" disabled={pending} />
+                    <select
+                        id="severity"
+                        name="severity"
+                        defaultValue="LOW"
+                        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                        disabled={pending}
+                    >
+                        {SUPPORT_TICKET_SEVERITIES.map((severity) => (
+                            <option key={severity} value={severity}>
+                                {severity}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
             <div className="space-y-2">

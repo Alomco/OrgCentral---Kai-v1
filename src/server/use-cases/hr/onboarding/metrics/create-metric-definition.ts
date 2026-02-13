@@ -2,6 +2,7 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { IOnboardingMetricDefinitionRepository } from '@/server/repositories/contracts/hr/onboarding/onboarding-metric-repository-contract';
 import type { OnboardingMetricDefinitionRecord } from '@/server/types/hr/onboarding-metrics';
 import { assertOnboardingConfigManager } from '../config/onboarding-config-access';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
 
 export interface CreateMetricDefinitionInput {
     authorization: RepositoryAuthorizationContext;
@@ -24,7 +25,11 @@ export async function createMetricDefinition(
     deps: CreateMetricDefinitionDependencies,
     input: CreateMetricDefinitionInput,
 ): Promise<CreateMetricDefinitionResult> {
-    assertOnboardingConfigManager(input.authorization);
+    await assertOnboardingConfigManager({
+        authorization: input.authorization,
+        action: HR_ACTION.CREATE,
+        resourceAttributes: { key: input.key },
+    });
 
     const definition = await deps.definitionRepository.createDefinition({
         orgId: input.authorization.orgId,

@@ -6,6 +6,9 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { IComplianceReminderSettingsRepository } from '@/server/repositories/contracts/hr/compliance/compliance-reminder-settings-repository-contract';
 import { createComplianceReminderSettingsRepository } from '@/server/repositories/providers/hr/compliance-reminder-settings-repository-provider';
 import { getComplianceReminderSettings } from './get-compliance-reminder-settings';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetComplianceReminderSettingsForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -20,6 +23,11 @@ function resolveComplianceReminderSettingsRepository(): IComplianceReminderSetti
 export async function getComplianceReminderSettingsForUi(
     input: GetComplianceReminderSettingsForUiInput,
 ): Promise<GetComplianceReminderSettingsForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.REMINDER,
+    });
     async function getCached(
         cachedInput: GetComplianceReminderSettingsForUiInput,
     ): Promise<GetComplianceReminderSettingsForUiResult> {

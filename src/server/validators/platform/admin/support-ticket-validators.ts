@@ -17,14 +17,15 @@ export const supportTicketCreateSchema = z.object({
 
 export const supportTicketUpdateSchema = z.object({
     ticketId: z.uuid(),
+    expectedVersion: z.number().int().positive(),
     status: z.enum(SUPPORT_TICKET_STATUSES).optional(),
     assignedTo: z.uuid().nullable().optional(),
-    slaBreached: z.boolean().optional(),
     tags: z.array(z.string().min(2).max(40)).optional(),
 });
 
 export const supportTicketSchema = z.object({
     id: z.uuid(),
+    version: z.number().int().positive(),
     orgId: z.uuid(),
     dataResidency: z.enum(['UK_ONLY', 'UK_AND_EEA', 'GLOBAL_RESTRICTED']),
     dataClassification: z.enum(['OFFICIAL', 'OFFICIAL_SENSITIVE', 'SECRET', 'TOP_SECRET']),

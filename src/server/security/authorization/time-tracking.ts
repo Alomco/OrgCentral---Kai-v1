@@ -1,15 +1,24 @@
 import { AuthorizationError, ValidationError } from '@/server/errors';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import type { OrgPermissionMap } from '@/server/security/access-control';
+import { HR_ANY_PERMISSION_PROFILE } from '@/server/security/authorization/hr-permissions/composite';
 import { satisfiesAnyPermissionProfile } from './permission-utils';
 
-const TIME_TRACKING_MANAGEMENT_ANY_PERMISSIONS: readonly OrgPermissionMap[] = [
-    { organization: ['update'] },
-    { audit: ['write'] },
-];
-
 export function canManageOrgTimeEntries(context: RepositoryAuthorizationContext): boolean {
-    return satisfiesAnyPermissionProfile(context.permissions, TIME_TRACKING_MANAGEMENT_ANY_PERMISSIONS);
+    return satisfiesAnyPermissionProfile(
+        context.permissions,
+        HR_ANY_PERMISSION_PROFILE.TIME_TRACKING_MANAGEMENT,
+    );
+}
+
+export function canApproveOrgTimeEntries(context: RepositoryAuthorizationContext): boolean {
+    return satisfiesAnyPermissionProfile(
+        context.permissions,
+        HR_ANY_PERMISSION_PROFILE.TIME_ENTRY_APPROVAL,
+    );
+}
+
+export function canViewOrgTimeEntries(context: RepositoryAuthorizationContext): boolean {
+    return canManageOrgTimeEntries(context) || canApproveOrgTimeEntries(context);
 }
 
 export function assertTimeEntryActorOrPrivileged(
@@ -29,6 +38,14 @@ export function assertPrivilegedOrgTimeEntryActor(context: RepositoryAuthorizati
     }
 
     throw new AuthorizationError('You do not have permission to manage organization time entries.');
+}
+
+export function assertPrivilegedOrgTimeEntryApprover(context: RepositoryAuthorizationContext): void {
+    if (canApproveOrgTimeEntries(context)) {
+        return;
+    }
+
+    throw new AuthorizationError('You do not have permission to approve organization time entries.');
 }
 
 export function assertValidTimeWindow(clockIn: Date, clockOut?: Date | null): void {

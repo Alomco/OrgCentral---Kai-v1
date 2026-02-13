@@ -4,7 +4,9 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { EmployeeProfile } from '@/server/types/hr-types';
 import { PrismaChecklistInstanceRepository } from '@/server/repositories/prisma/hr/onboarding';
 import { getActiveChecklistForEmployee } from '@/server/use-cases/hr/onboarding/checklists';
+import { listEmployeeProfilesForUi } from '@/server/use-cases/hr/people/list-employee-profiles.cached';
 import { getComplianceStatusService } from '@/server/services/hr/compliance/compliance-status.service.provider';
+import type { EmployeeLookupOption } from '@/app/(app)/hr/_components/employee-lookup.types';
 
 import { ActiveChecklistCard } from '@/app/(app)/hr/onboarding/_components/active-checklist-card';
 import { toggleChecklistItemAction, completeChecklistAction } from '@/app/(app)/hr/onboarding/actions';
@@ -31,15 +33,32 @@ export async function EmployeeOverviewTab({ authorization, profile }: EmployeeOv
     const checklistRepository = new PrismaChecklistInstanceRepository();
     const profileFormState = buildInitialEmployeeProfileFormState(profile);
 
-    const [complianceStatus, checklistResult] = await Promise.all([
+    const [complianceStatus, checklistResult, allProfilesResult] = await Promise.all([
         complianceService.getStatusForUser(authorization, profile.userId).catch(() => null),
         getActiveChecklistForEmployee(
             { checklistInstanceRepository: checklistRepository },
             { authorization, employeeId: profile.id },
         ),
+        listEmployeeProfilesForUi({ authorization }).catch(() => ({ profiles: [] })),
     ]);
 
     const checklist = checklistResult.instance;
+    const managerOptions = allProfilesResult.profiles
+        .filter((candidate) => candidate.userId !== profile.userId)
+        .map<EmployeeLookupOption>((candidate) => {
+            const displayName = candidate.displayName?.trim().length
+                ? candidate.displayName
+                : `${candidate.firstName ?? ''} ${candidate.lastName ?? ''}`.trim()
+                    || (candidate.email ?? candidate.employeeNumber);
+
+            return {
+                id: candidate.userId,
+                displayName,
+                employeeNumber: candidate.employeeNumber,
+                email: candidate.email ?? null,
+            };
+        })
+        .sort((left, right) => left.displayName.localeCompare(right.displayName));
 
     return (
         <div className="space-y-6">
@@ -127,7 +146,7 @@ export async function EmployeeOverviewTab({ authorization, profile }: EmployeeOv
                 )}
             </div>
 
-            <EmployeeProfileEditCard initialState={profileFormState} />
+            <EmployeeProfileEditCard initialState={profileFormState} managerOptions={managerOptions} />
         </div>
     );
 }

@@ -4,263 +4,91 @@ trigger: always_on
 
 # Workspace Rules - Copilot Chat
 
-> This file defines how the AI behaves in this workspace.
+These rules define default behavior for VS Code Copilot Chat in this workspace.
 
----
+## Priority
 
-## CRITICAL: AGENT & SKILL PROTOCOL (START HERE)
+1. User request
+2. Workspace rules (`.github/rules/copilot-chat.md`)
+3. Agent file (`.github/agents/*.agent.md`)
+4. Skill file (`.github/skills/*/SKILL.md`)
 
-> **MANDATORY:** You MUST read the appropriate agent file and its skills BEFORE performing any implementation. This is the highest priority rule.
+## Start-Up
 
-### 0. Tool & Multi-Agent Usage (Mandatory)
+Before implementation:
 
-- Use multi-agent only for clearly parallelizable work, or when the user explicitly requests multi-agent analysis and scope is clear; subagents are stateless, so keep delegated tasks small and scoped.
-- Subagents are for very small.
-- If a purpose-built tool exists (read/search/list/edit), use it instead of terminal commands.
-- Batch file reads/searches and use multi_tool_use.parallel whenever possible; only go sequential when a dependency forces it.
+1. Read `.github/ARCHITECTURE.md`.
+2. Read `.github/copilot-instructions.md`.
+3. Select the closest specialist agent for the task domain.
+4. Load only relevant skill sections.
 
-### 1. Modular Skill Loading Protocol
+## Request Routing
 
-Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Read specific sections.
+- `Question/explain`: answer directly.
+- `Small single-file edit`: execute directly.
+- `Complex multi-file change`: create or update a plan, then execute.
+- `Multi-domain or explicit orchestration`: use `orchestrator` with bounded subagent tasks.
 
-- **Selective Reading:** DO NOT read ALL files in a skill folder. Read `SKILL.md` first, then only read sections matching the user's request.
-- **Rule Priority:** P0 (workspace rules: copilot-chat.md) > P1 (Agent .md) > P2 (SKILL.md). All rules are binding.
+## Subagent Policy
 
-### 2. Enforcement Protocol
+- Subagents are stateless.
+- Delegate only narrow tasks with full context.
+- Use multi-agent only when it adds clear value.
+- No fixed minimum number of subagents is required.
 
-1. **When agent is activated:**
-    - ✅ Activate: Read Rules → Check Frontmatter → Load SKILL.md → Apply All.
-2. **Forbidden:** Never skip reading agent rules or skill instructions. "Read → Understand → Apply" is mandatory.
+## Windows Execution Rules
 
----
+- Default shell is PowerShell.
+- Quote paths with spaces.
+- Prefer `rg` for text and file search.
+- Prefer workspace-relative paths in docs.
 
-## 📥 REQUEST CLASSIFIER (STEP 1)
+## Code Rules
 
-**Before ANY action, classify the request:**
+- Keep files focused and generally below 250 LOC.
+- Keep strict TypeScript; avoid `any` and `unknown` leakage.
+- Keep ESLint strict; do not disable rules without approval.
+- Centralize shared types/constants/config.
+- Validate all boundary inputs (Zod for API/forms/actions).
 
-| Request Type     | Trigger Keywords                           | Active Tiers                   | Result                      |
-| ---------------- | ------------------------------------------ | ------------------------------ | --------------------------- |
-| **QUESTION**     | "what is", "how does", "explain"           | TIER 0 only                    | Text Response               |
-| **SURVEY/INTEL** | "analyze", "list files", "overview"        | TIER 0 + Explorer              | Session Intel (No File)     |
-| **SIMPLE CODE**  | "fix", "add", "change" (single file)       | TIER 0 + TIER 1 (lite)         | Inline Edit                 |
-| **COMPLEX CODE** | "build", "create", "implement", "refactor" | TIER 0 + TIER 1 (full) + Agent | **{task-slug}.md Required** |
-| **DESIGN/UI**    | "design", "UI", "page", "dashboard"        | TIER 0 + TIER 1 + Agent        | **{task-slug}.md Required** |
-| **SLASH CMD**    | /create, /orchestrate, /debug              | Command-specific flow          | Variable                    |
+## Security Rules
 
----
+- Enforce tenant scoping (`orgId`, residency, classification).
+- Apply least privilege and secure defaults.
+- Do not log secrets or sensitive personal data.
+- Keep adapters thin; delegate business logic to controllers/services.
 
-## 🤖 INTELLIGENT AGENT ROUTING (STEP 2 - AUTO)
+## Next.js Rules
 
-**ALWAYS ACTIVE: Before responding to ANY request, automatically analyze and select the best agent(s).**
+- Server Components first.
+- Keep client islands minimal.
+- Prefer React Query for server-state synchronization and invalidation.
+- Use Zustand only for local client persistence.
+- Avoid `router.refresh()` in client mutation flows.
 
-> 🔴 **MANDATORY:** You MUST follow the protocol defined in `@[skills/intelligent-routing]`.
+## Workflow Rules
 
-### Auto-Selection Protocol
+- If requirements are unclear, ask concise clarification questions first.
+- If scope is clear, proceed without unnecessary ceremony.
+- Keep changes minimal, reversible, and well-typed.
 
-1. **Analyze (Silent)**: Detect domains (Frontend, Backend, Security, etc.) from user request.
-2. **Select Agent(s)**: Choose the most appropriate specialist(s).
-3. **Inform User**: Concisely state which expertise is being applied.
-4. **Apply**: Generate response using the selected agent's persona and rules.
+## Validation Rules
 
-### Response Format (MANDATORY)
+After code changes, run at minimum:
 
-When auto-applying an agent, inform the user:
-
-```markdown
-🤖 **Applying knowledge of `@[agent-name]`...**
-
-[Continue with specialized response]
+```bash
+npx tsc --noEmit
+pnpm lint --fix
 ```
 
-**Rules:**
+Use extended validation when relevant:
 
-1. **Silent Analysis**: No verbose meta-commentary ("I am analyzing...").
-2. **Respect Overrides**: If user mentions `@agent`, use it.
-3. **Complex Tasks**: For multi-domain requests, use `orchestrator` and ask Socratic questions first.
-
----
-
-## TIER 0: UNIVERSAL RULES (Always Active)
-
-### Next.js Runtime Guardrail
-
-- **Never use** `next/dynamic` with `{ ssr: false }` in Server Components. If client-only behavior is needed, move the dynamic import into a Client Component or import the Client Component directly from the Server Component.
-- **Only export async functions** from files that start with `'use server'`. Do not re-export bindings in those files.
-
-### 🌐 Language Handling
-
-When user's prompt is NOT in English:
-
-1. **Internally translate** for better comprehension
-2. **Respond in user's language** - match their communication
-3. **Code comments/variables** remain in English
-
-### 🧹 Clean Code (Global Mandatory)
-
-**ALL code MUST follow `@[skills/clean-code]` rules. No exceptions.**
-
-- **Code**: Concise, direct, no over-engineering. Self-documenting.
-- **Testing**: Mandatory. Pyramid (Unit > Int > E2E) + AAA Pattern.
-- **Performance**: Measure first. Adhere to 2025 standards (Core Web Vitals).
-- **Infra/Safety**: 5-Phase Deployment. Verify secrets security.
-
-### 📁 File Dependency Awareness
-
-**Before modifying ANY file:**
-
-1. Check `CODEBASE.md` → File Dependencies
-2. Identify dependent files
-3. Update ALL affected files together
-
-### 🗺️ System Map Read
-
-> 🔴 **MANDATORY:** Read `ARCHITECTURE.md` at session start to understand Agents, Skills, and Scripts.
-
-**Path Awareness:**
-
-- Agents: `.github/agents/`
-- Skills: `.github/skills/`
-- Runtime Scripts: `.github/skills/<skill>/scripts/`
-
-### 🧠 Read → Understand → Apply
-
-```
-❌ WRONG: Read agent file → Start coding
-✅ CORRECT: Read → Understand WHY → Apply PRINCIPLES → Code
+```bash
+python .github/scripts/checklist.py .
+python .github/scripts/verify_all.py . --url http://localhost:3000
 ```
 
-**Before coding, answer:**
+## File References
 
-1. What is the GOAL of this agent/skill?
-2. What PRINCIPLES must I apply?
-3. How does this DIFFER from generic output?
-
----
-
-## TIER 1: CODE RULES (When Writing Code)
-
-### 📱 Project Type Routing
-
-| Project Type                           | Primary Agent         | Skills                        |
-| -------------------------------------- | --------------------- | ----------------------------- |
-| **MOBILE** (iOS, Android, RN, Flutter) | `mobile-developer`    | mobile-design                 |
-| **WEB** (Next.js, React web)           | `frontend-specialist` | frontend-design               |
-| **BACKEND** (API, server, DB)          | `backend-specialist`  | api-patterns, database-design |
-
-> 🔴 **Mobile + frontend-specialist = WRONG.** Mobile = mobile-developer ONLY.
-
-### 🛑 Socratic Gate
-
-**For complex requests, STOP and ASK first:**
-
-### 🛑 GLOBAL SOCRATIC GATE (TIER 0)
-
-**MANDATORY: Every user request must pass through the Socratic Gate before ANY tool use or implementation.**
-
-| Request Type            | Strategy       | Required Action                                                   |
-| ----------------------- | -------------- | ----------------------------------------------------------------- |
-| **New Feature / Build** | Deep Discovery | ASK minimum 3 strategic questions                                 |
-| **Code Edit / Bug Fix** | Context Check  | Confirm understanding + ask impact questions                      |
-| **Vague / Simple**      | Clarification  | Ask Purpose, Users, and Scope                                     |
-| **Full Orchestration**  | Gatekeeper     | **STOP** subagents until user confirms plan details, unless the user explicitly requests multi-agent analysis |
-| **Direct "Proceed"**    | Validation     | **STOP** → Even if answers are given, ask 2 "Edge Case" questions |
-
-**Protocol:**
-
-1. **Never Assume:** If even 1% is unclear, ASK.
-2. **Handle Spec-heavy Requests:** When user gives a list (Answers 1, 2, 3...), do NOT skip the gate. Instead, ask about **Trade-offs** or **Edge Cases** (e.g., "LocalStorage confirmed, but should we handle data clearing or versioning?") before starting.
-
-4. **Reference:** Full protocol in `@[skills/brainstorming]`.
-
-### 🏁 Final Checklist Protocol
-
-**Trigger:** When the user says "son kontrolleri yap", "final checks", "çalıştır tüm testleri", or similar phrases.
-
-| Task Stage       | Command                                            | Purpose                        |
-| ---------------- | -------------------------------------------------- | ------------------------------ |
-| **Manual Audit** | `python .github/scripts/checklist.py .`             | Priority-based project audit   |
-| **Pre-Deploy**   | `python .github/scripts/checklist.py . --url <URL>` | Full Suite + Performance + E2E |
-
-**Priority Execution Order:**
-
-1. **Security** → 2. **Lint** → 3. **Schema** → 4. **Tests** → 5. **UX** → 6. **Seo** → 7. **Lighthouse/E2E**
-
-**Rules:**
-
-- **Completion:** A task is NOT finished until `checklist.py` returns success.
-- **Reporting:** If it fails, fix the **Critical** blockers first (Security/Lint).
-
-**Available Scripts (12 total):**
-
-| Script                     | Skill                 | When to Use         |
-| -------------------------- | --------------------- | ------------------- |
-| `security_scan.py`         | vulnerability-scanner | Always on deploy    |
-| `dependency_analyzer.py`   | vulnerability-scanner | Weekly / Deploy     |
-| `lint_runner.py`           | lint-and-validate     | Every code change   |
-| `test_runner.py`           | testing-patterns      | After logic change  |
-| `schema_validator.py`      | database-design       | After DB change     |
-| `ux_audit.py`              | frontend-design       | After UI change     |
-| `accessibility_checker.py` | frontend-design       | After UI change     |
-| `seo_checker.py`           | seo-fundamentals      | After page change   |
-| `bundle_analyzer.py`       | performance-profiling | Before deploy       |
-| `mobile_audit.py`          | mobile-design         | After mobile change |
-| `lighthouse_audit.py`      | performance-profiling | Before deploy       |
-| `playwright_runner.py`     | webapp-testing        | Before deploy       |
-
-> 🔴 **Agents & Skills can invoke ANY script** via `python .github/skills/<skill>/scripts/<script>.py`
-
-### 🎭 Copilot Chat Mode Mapping
-
-| Mode     | Agent             | Behavior                                     |
-| -------- | ----------------- | -------------------------------------------- |
-| **plan** | `project-planner` | 4-phase methodology. NO CODE before Phase 4. |
-| **ask**  | -                 | Focus on understanding. Ask questions.       |
-| **edit** | `orchestrator`    | Execute. Check `{task-slug}.md` first.       |
-
-**Plan Mode (4-Phase):**
-
-1. ANALYSIS → Research, questions
-2. PLANNING → `{task-slug}.md`, task breakdown
-3. SOLUTIONING → Architecture, design (NO CODE!)
-4. IMPLEMENTATION → Code + tests
-
-> 🔴 **Edit mode:** If multi-file or structural change → Offer to create `{task-slug}.md`. For single-file fixes → Proceed directly.
-
----
-
-## TIER 2: DESIGN RULES (Reference)
-
-> **Design rules are in the specialist agents, NOT here.**
-
-| Task         | Read                            |
-| ------------ | ------------------------------- |
-| Web UI/UX    | `.github/agents/frontend-specialist.md` |
-| Mobile UI/UX | `.github/agents/mobile-developer.md`    |
-
-**These agents contain:**
-
-- Purple Ban (no violet/purple colors)
-- Template Ban (no standard layouts)
-- Anti-cliché rules
-- Deep Design Thinking protocol
-
-> 🔴 **For design work:** Open and READ the agent file. Rules are there.
-
----
-
-## 📁 QUICK REFERENCE
-
-### Agents & Skills
-
-- **Masters**: `orchestrator`, `project-planner`, `security-auditor` (Cyber/Audit), `backend-specialist` (API/DB), `frontend-specialist` (UI/UX), `mobile-developer`, `debugger`, `game-developer`
-- **Key Skills**: `clean-code`, `brainstorming`, `app-builder`, `frontend-design`, `mobile-design`, `plan-writing`, `behavioral-modes`
-
-### Key Scripts
-
-- **Verify**: `.github/scripts/verify_all.py`, `.github/scripts/checklist.py`
-- **Scanners**: `security_scan.py`, `dependency_analyzer.py`
-- **Audits**: `ux_audit.py`, `mobile_audit.py`, `lighthouse_audit.py`, `seo_checker.py`
-- **Test**: `playwright_runner.py`, `test_runner.py`
-
----
-
+- Web UI/UX agent: `.github/agents/frontend-specialist.agent.md`
+- Mobile UI/UX agent: `.github/agents/mobile-developer.agent.md`

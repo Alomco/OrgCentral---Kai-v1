@@ -10,6 +10,9 @@ import type { OnboardingWorkflowTemplateRecord, WorkflowTemplateType } from '@/s
 import { CACHE_SCOPE_ONBOARDING_WORKFLOW_TEMPLATES } from '@/server/repositories/cache-scopes';
 import { buildOnboardingWorkflowDependencies } from '@/server/repositories/providers/hr/onboarding-workflow-repository-dependencies';
 import { listWorkflowTemplates } from './list-workflow-templates';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetWorkflowTemplatesForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -46,6 +49,15 @@ async function loadWorkflowTemplates(
 export async function getWorkflowTemplatesForUi(
     input: GetWorkflowTemplatesForUiInput,
 ): Promise<GetWorkflowTemplatesForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.ONBOARDING_WORKFLOW_TEMPLATE,
+        payload: {
+            templateType: input.templateType ?? null,
+            isActive: input.isActive ?? null,
+        },
+    });
     async function getWorkflowTemplatesCached(
         cachedInput: GetWorkflowTemplatesForUiInput,
     ): Promise<GetWorkflowTemplatesForUiResult> {

@@ -10,6 +10,9 @@ import type { EmailSequenceTemplateRecord, EmailSequenceTrigger } from '@/server
 import { CACHE_SCOPE_ONBOARDING_EMAIL_SEQUENCES } from '@/server/repositories/cache-scopes';
 import { buildEmailSequenceDependencies } from '@/server/repositories/providers/hr/onboarding-email-sequence-repository-dependencies';
 import { listEmailSequenceTemplates } from './list-email-sequence-templates';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetEmailSequenceTemplatesForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -43,6 +46,15 @@ async function loadTemplates(
 export async function getEmailSequenceTemplatesForUi(
     input: GetEmailSequenceTemplatesForUiInput,
 ): Promise<GetEmailSequenceTemplatesForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.ONBOARDING_EMAIL_SEQUENCE_TEMPLATE,
+        payload: {
+            trigger: input.trigger ?? null,
+            isActive: input.isActive ?? null,
+        },
+    });
     async function getTemplatesCached(
         cachedInput: GetEmailSequenceTemplatesForUiInput,
     ): Promise<GetEmailSequenceTemplatesForUiResult> {

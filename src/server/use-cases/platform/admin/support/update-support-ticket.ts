@@ -1,13 +1,20 @@
 import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 import type { ISupportTicketRepository } from '@/server/repositories/contracts/platform/admin/support-ticket-repository-contract';
 import type { IPlatformTenantRepository } from '@/server/repositories/contracts/platform/admin/platform-tenant-repository-contract';
+import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 import type { SupportTicket } from '@/server/types/platform/support-tickets';
 import { enforcePermission } from '@/server/repositories/security';
 import { parseSupportTicketUpdate, type SupportTicketUpdateInput } from '@/server/validators/platform/admin/support-ticket-validators';
-import { ValidationError } from '@/server/errors';
+import { ConflictError, ValidationError } from '@/server/errors';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
 import { requireTenantInScope } from '@/server/use-cases/platform/admin/tenants/tenant-scope-guards';
 import { checkAdminRateLimit, buildAdminRateLimitKey } from '@/server/lib/security/admin-rate-limit';
+import { assertSupportTicketStatusTransition } from '@/server/use-cases/platform/admin/support/support-ticket-workflow';
+import { applySupportTicketSla, evaluateSupportTicketSla } from '@/server/use-cases/platform/admin/support/support-ticket-sla';
+import {
+    sendSupportTicketSlaBreachNotifications,
+    sendSupportTicketUpdateNotifications,
+} from '@/server/use-cases/platform/admin/support/support-ticket-notifications';
 
 export interface UpdateSupportTicketInput {
     authorization: RepositoryAuthorizationContext;
@@ -17,6 +24,7 @@ export interface UpdateSupportTicketInput {
 export interface UpdateSupportTicketDependencies {
     supportTicketRepository: ISupportTicketRepository;
     tenantRepository: IPlatformTenantRepository;
+    notificationDispatchService?: NotificationDispatchContract;
 }
 
 export async function updateSupportTicket(
@@ -51,18 +59,31 @@ export async function updateSupportTicket(
         'Tenant not found or not within allowed scope for support tickets.',
     );
 
-    const now = new Date().toISOString();
+    const nextStatus = request.status ?? existing.status;
+    assertSupportTicketStatusTransition(existing.status, nextStatus);
 
-    const updated: SupportTicket = {
+    const now = new Date().toISOString();
+    const changedFields = collectChangedFields(existing, request);
+
+    const draft: SupportTicket = {
         ...existing,
-        status: request.status ?? existing.status,
+        status: nextStatus,
         assignedTo: request.assignedTo ?? existing.assignedTo ?? null,
-        slaBreached: request.slaBreached ?? existing.slaBreached,
         tags: request.tags ?? existing.tags,
         updatedAt: now,
     };
 
-    const saved = await deps.supportTicketRepository.updateTicket(input.authorization, updated);
+    const slaEvaluation = evaluateSupportTicketSla(draft);
+    const updated = applySupportTicketSla(draft, slaEvaluation, now);
+
+    const saved = await deps.supportTicketRepository.updateTicket(
+        input.authorization,
+        updated,
+        request.expectedVersion,
+    );
+    if (!saved) {
+        throw new ConflictError('Support ticket was updated by another operation. Refresh and retry.');
+    }
 
     await recordAuditEvent({
         orgId: input.authorization.orgId,
@@ -78,5 +99,39 @@ export async function updateSupportTicket(
         auditBatchId: input.authorization.auditBatchId,
     });
 
+    await sendSupportTicketUpdateNotifications(
+        {
+            dispatcher: deps.notificationDispatchService,
+            authorization: input.authorization,
+            ticket: saved,
+        },
+        changedFields,
+    );
+
+    if (slaEvaluation.newlyBreached) {
+        await sendSupportTicketSlaBreachNotifications({
+            dispatcher: deps.notificationDispatchService,
+            authorization: input.authorization,
+            ticket: saved,
+        });
+    }
+
     return saved;
+}
+
+function collectChangedFields(
+    existing: SupportTicket,
+    request: SupportTicketUpdateInput,
+): string[] {
+    const changed: string[] = [];
+    if (request.status && request.status !== existing.status) {
+        changed.push('status');
+    }
+    if (request.assignedTo !== undefined && request.assignedTo !== existing.assignedTo) {
+        changed.push('assignedTo');
+    }
+    if (request.tags && JSON.stringify(request.tags) !== JSON.stringify(existing.tags)) {
+        changed.push('tags');
+    }
+    return changed;
 }

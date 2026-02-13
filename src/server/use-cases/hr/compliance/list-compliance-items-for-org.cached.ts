@@ -4,8 +4,11 @@ import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { buildComplianceRepositoryDependencies } from '@/server/repositories/providers/hr/compliance-repository-dependencies';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { ComplianceLogItem } from '@/server/types/compliance-types';
 import { listComplianceItemsForOrg } from './list-compliance-items-for-org';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface ListComplianceItemsForOrgForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -24,6 +27,14 @@ function resolveDependencies() {
 export async function listComplianceItemsForOrgForUi(
     input: ListComplianceItemsForOrgForUiInput,
 ): Promise<ListComplianceItemsForOrgForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
+        payload: {
+            take: input.take ?? null,
+        },
+    });
     async function listItemsCached(
         cachedInput: ListComplianceItemsForOrgForUiInput,
     ): Promise<ListComplianceItemsForOrgForUiResult> {

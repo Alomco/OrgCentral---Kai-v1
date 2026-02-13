@@ -4,10 +4,12 @@ import type { ISupportTicketRepository } from '@/server/repositories/contracts/p
 import { PrismaSupportTicketRepository } from '@/server/repositories/prisma/platform/admin/prisma-support-ticket-repository';
 import type { IPlatformTenantRepository } from '@/server/repositories/contracts/platform/admin/platform-tenant-repository-contract';
 import { PrismaPlatformTenantRepository } from '@/server/repositories/prisma/platform/admin/prisma-platform-tenant-repository';
+import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 
 export interface SupportTicketRepositoryDependencies {
     supportTicketRepository: ISupportTicketRepository;
     tenantRepository: IPlatformTenantRepository;
+    notificationDispatchService?: NotificationDispatchContract;
 }
 
 export type SupportTicketRepositoryOverrides = Partial<SupportTicketRepositoryDependencies>;
@@ -32,5 +34,7 @@ export function buildSupportTicketServiceDependencies(
             options?.overrides?.supportTicketRepository ?? new PrismaSupportTicketRepository(repoOptions),
         tenantRepository:
             options?.overrides?.tenantRepository ?? new PrismaPlatformTenantRepository(repoOptions),
+        notificationDispatchService:
+            options?.overrides?.notificationDispatchService,
     };
 }

@@ -19,7 +19,11 @@
     "db:deploy": "pnpm db:compose && prisma migrate deploy",
     "telemetry:init": "tsx src/server/telemetry/otel-config.ts",
     "lint:hr-loc": "tsx scripts/check-hr-loc.ts",
-    "a11y:scan": "tsx scripts/a11y-scan-simple.ts"
+    "a11y:scan": "tsx scripts/a11y-scan-simple.ts",
+    "test:security:rbac-abac-regression": "vitest run src/server/security/__tests__/guards-core-role-resolution.test.ts src/server/use-cases/hr/people/__tests__/update-employee-profile.test.ts src/server/use-cases/org/roles/__tests__/role-permission-validator.test.ts src/server/use-cases/org/abac/__tests__/abac-policy-selector-validator.test.ts src/server/use-cases/org/roles/__tests__/role-use-cases.integration.test.ts src/server/use-cases/org/abac/__tests__/set-abac-policies.integration.test.ts",
+    "seed:test-accounts": "tsx scripts/seed-test-accounts.ts",
+    "test-accounts:list": "tsx scripts/list-test-accounts.ts",
+    "test-accounts:verify": "tsx scripts/verify-test-accounts.ts"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.29.1",

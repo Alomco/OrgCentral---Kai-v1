@@ -94,8 +94,32 @@ export const DEFAULT_PERMISSION_RESOURCE_SEEDS: readonly PermissionResourceSeed[
     },
     {
         resource: 'hr.onboarding.checklist',
-        actions: ['read', 'update', 'complete'],
+        actions: ['read', 'list', 'update', 'complete'],
         description: 'Onboarding checklist instances.',
+        legacyKeys: ['hrOnboarding'],
+    },
+    {
+        resource: 'hr.onboarding.feedback',
+        actions: ['read', 'list'],
+        description: 'Onboarding feedback records.',
+        legacyKeys: ['hrOnboarding'],
+    },
+    {
+        resource: 'hr.onboarding.email-sequence.template',
+        actions: ['read', 'list', 'create', 'update'],
+        description: 'Onboarding email sequence templates.',
+        legacyKeys: ['hrOnboarding'],
+    },
+    {
+        resource: 'hr.onboarding.workflow.template',
+        actions: ['read', 'list', 'create', 'update'],
+        description: 'Onboarding workflow templates.',
+        legacyKeys: ['hrOnboarding'],
+    },
+    {
+        resource: 'hr.onboarding.metric.definition',
+        actions: ['read', 'list', 'create', 'update'],
+        description: 'Onboarding metric definitions.',
         legacyKeys: ['hrOnboarding'],
     },
     {
@@ -142,7 +166,7 @@ export const DEFAULT_PERMISSION_RESOURCE_SEEDS: readonly PermissionResourceSeed[
     },
     {
         resource: 'hr.policy.acknowledgment',
-        actions: ['acknowledge'],
+        actions: ['read', 'list', 'acknowledge'],
         description: 'Policy acknowledgment tracking.',
         legacyKeys: ['hrPolicy'],
     },

@@ -5,6 +5,9 @@ import type { IAbsenceSettingsRepository } from '@/server/repositories/contracts
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import { createAbsenceSettingsRepository } from '@/server/repositories/providers/hr/absence-settings-repository-provider';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 import { getAbsenceSettings } from './get-absence-settings';
 
@@ -23,6 +26,11 @@ function resolveAbsenceSettingsRepository(): IAbsenceSettingsRepository {
 export async function getAbsenceSettingsForUi(
     input: GetAbsenceSettingsForUiInput,
 ): Promise<GetAbsenceSettingsForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.ABSENCE_SETTINGS,
+    });
     async function getSettingsCached(
         cachedInput: GetAbsenceSettingsForUiInput,
     ): Promise<GetAbsenceSettingsForUiResult> {

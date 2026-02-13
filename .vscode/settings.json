@@ -1,6 +1,18 @@
 {
   "typescript.tsserver.maxNodeModuleJsDepth": 0,
   "postman.settings.dotenv-detection-notification-visibility": false,
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "chat.useAgentSkills": true,
+  "chat.agentSkillsLocations": {
+    ".github/skills": true
+  },
+  "chat.useAgentsMdFile": true,
+  "chat.agentFilesLocations": {
+    ".github/agents": true
+  },
+  "chat.promptFilesLocations": {
+    ".github/prompts": true
+  },
   "css.customData": [
     ".vscode/tailwindcss.custom-data.json"
   ]

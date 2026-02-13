@@ -9,6 +9,9 @@ import type { OnboardingFeedbackRecord } from '@/server/types/hr/onboarding-feed
 import { CACHE_SCOPE_ONBOARDING_FEEDBACK } from '@/server/repositories/cache-scopes';
 import { buildOnboardingFeedbackDependencies } from '@/server/repositories/providers/hr/onboarding-feedback-repository-dependencies';
 import { listOnboardingFeedback } from './list-feedback';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetOnboardingFeedbackForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -40,6 +43,14 @@ async function loadFeedback(
 export async function getOnboardingFeedbackForUi(
     input: GetOnboardingFeedbackForUiInput,
 ): Promise<GetOnboardingFeedbackForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.ONBOARDING_FEEDBACK,
+        payload: {
+            employeeId: input.employeeId ?? null,
+        },
+    });
     async function getFeedbackCached(
         cachedInput: GetOnboardingFeedbackForUiInput,
     ): Promise<GetOnboardingFeedbackForUiResult> {

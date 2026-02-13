@@ -1,4 +1,5 @@
 import type { IRoleRepository } from '@/server/repositories/contracts/org/roles/role-repository-contract';
+import type { IPermissionResourceRepository } from '@/server/repositories/contracts/org/permissions/permission-resource-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { AbstractOrgService } from '@/server/services/org/abstract-org-service';
 import type { Role } from '@/server/types/hr-types';
@@ -35,6 +36,7 @@ const ROLE_ADMIN_PERMISSIONS: Record<string, string[]> = { organization: ['updat
 
 export interface RoleServiceDependencies {
   roleRepository: IRoleRepository;
+  permissionResourceRepository: IPermissionResourceRepository;
   notificationComposer?: NotificationComposerContract;
   roleQueue?: RoleQueueContract;
 }
@@ -77,9 +79,14 @@ export class RoleService extends AbstractOrgService {
       resourceAttributes: { roleName: input.name },
     });
     const context = this.buildContext(input.authorization, { metadata: { roleName: input.name } });
-
     const role = await this.executeInServiceContext(context, 'roles.create', () =>
-      createRoleUseCase({ roleRepository: this.dependencies.roleRepository }, input),
+      createRoleUseCase(
+        {
+          roleRepository: this.dependencies.roleRepository,
+          permissionResourceRepository: this.dependencies.permissionResourceRepository,
+        },
+        input,
+      ),
     );
 
     await this.invalidatePermissionCaches(input.authorization);
@@ -102,7 +109,13 @@ export class RoleService extends AbstractOrgService {
     const context = this.buildContext(input.authorization, { metadata: { roleId: input.roleId } });
 
     const role = await this.executeInServiceContext(context, 'roles.update', () =>
-      updateRoleUseCase({ roleRepository: this.dependencies.roleRepository }, input),
+      updateRoleUseCase(
+        {
+          roleRepository: this.dependencies.roleRepository,
+          permissionResourceRepository: this.dependencies.permissionResourceRepository,
+        },
+        input,
+      ),
     );
 
     await this.invalidatePermissionCaches(input.authorization);

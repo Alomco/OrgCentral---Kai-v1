@@ -37,6 +37,11 @@ export function ReportAbsenceTimeFields({
     onStartTimeChange,
     onEndTimeChange,
 }: ReportAbsenceTimeFieldsProps) {
+    const startDateErrorId = `${formId}-startDate-error`;
+    const endDateErrorId = `${formId}-endDate-error`;
+    const startTimeErrorId = `${formId}-startTime-error`;
+    const endTimeErrorId = `${formId}-endTime-error`;
+
     return (
         <>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -48,8 +53,10 @@ export function ReportAbsenceTimeFields({
                         type="date"
                         value={startDate}
                         onChange={(event) => onStartDateChange(event.target.value)}
+                        aria-invalid={Boolean(fieldErrors?.startDate)}
+                        aria-describedby={fieldErrors?.startDate ? startDateErrorId : undefined}
                     />
-                    <FieldError message={fieldErrors?.startDate} />
+                    <FieldError id={startDateErrorId} message={fieldErrors?.startDate} />
                 </div>
 
                 {durationType === 'HOURS' ? (
@@ -63,8 +70,10 @@ export function ReportAbsenceTimeFields({
                             type="date"
                             value={endDate}
                             onChange={(event) => onEndDateChange(event.target.value)}
+                            aria-invalid={Boolean(fieldErrors?.endDate)}
+                            aria-describedby={fieldErrors?.endDate ? endDateErrorId : undefined}
                         />
-                        <FieldError message={fieldErrors?.endDate} />
+                        <FieldError id={endDateErrorId} message={fieldErrors?.endDate} />
                     </div>
                 )}
             </div>
@@ -79,8 +88,10 @@ export function ReportAbsenceTimeFields({
                             type="time"
                             value={startTime}
                             onChange={(event) => onStartTimeChange(event.target.value)}
+                            aria-invalid={Boolean(fieldErrors?.startTime)}
+                            aria-describedby={fieldErrors?.startTime ? startTimeErrorId : undefined}
                         />
-                        <FieldError message={fieldErrors?.startTime} />
+                        <FieldError id={startTimeErrorId} message={fieldErrors?.startTime} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor={`${formId}-end-time`}>End Time</Label>
@@ -90,8 +101,10 @@ export function ReportAbsenceTimeFields({
                             type="time"
                             value={endTime}
                             onChange={(event) => onEndTimeChange(event.target.value)}
+                            aria-invalid={Boolean(fieldErrors?.endTime)}
+                            aria-describedby={fieldErrors?.endTime ? endTimeErrorId : undefined}
                         />
-                        <FieldError message={fieldErrors?.endTime} />
+                        <FieldError id={endTimeErrorId} message={fieldErrors?.endTime} />
                     </div>
                     <div className="sm:col-span-2 text-sm text-muted-foreground">
                         {computedHours !== null

@@ -6,19 +6,22 @@ import type { Role } from '@/server/types/hr-types';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ROLES } from '@/server/repositories/cache-scopes';
 import { isOrgRoleKey } from '@/server/security/access-control';
+import type { IPermissionResourceRepository } from '@/server/repositories/contracts/org/permissions/permission-resource-repository-contract';
+import { validateRolePermissionsAgainstRegistry } from './role-permission-validator';
 
 export interface UpdateRoleInput {
   authorization: RepositoryAuthorizationContext;
   roleId: string;
   name?: string;
   description?: string | null;
-  permissions?: Role['permissions'];
+  permissions?: Record<string, string[]> | null;
   scope?: RoleScope;
   inheritsRoleIds?: string[];
 }
 
 export interface UpdateRoleDependencies {
   roleRepository: IRoleRepository;
+  permissionResourceRepository?: Pick<IPermissionResourceRepository, 'listResources'>;
 }
 
 export async function updateRole(
@@ -45,7 +48,12 @@ export async function updateRole(
   }
 
   if (input.permissions !== undefined) {
-    updates.permissions = input.permissions;
+    const permissionsInput = input.permissions ?? {};
+    updates.permissions = await validateRolePermissionsAgainstRegistry(
+      input.authorization.orgId,
+      permissionsInput,
+      deps.permissionResourceRepository,
+    );
   }
 
   if (input.inheritsRoleIds !== undefined) {

@@ -1,4 +1,5 @@
 import type { PrismaJsonValue } from '@/server/types/prisma';
+import type { TimeEntryMetadataPatch } from '@/server/types/hr-time-tracking-schemas';
 
 export type TimeEntryDecisionStatus = 'APPROVED' | 'REJECTED';
 
@@ -10,9 +11,13 @@ export interface TimeEntryDecisionLog {
     comments?: string | null;
 }
 
-export type TimeEntryMetadata = Record<string, unknown> & {
+export type TimeEntryMetadata = {
+    billable?: boolean | null;
+    projectCode?: string | null;
+    overtimeReason?: string | null;
+    overtimeHours?: number | null;
     decisionHistory?: TimeEntryDecisionLog[];
-};
+} & Record<string, unknown>;
 
 export function roundToTwoDecimals(value: number): number {
     return Math.round(value * 100) / 100;
@@ -47,17 +52,47 @@ export function mutateTimeEntryMetadata(
     return metadata as PrismaJsonValue;
 }
 
-export function mergeMetadata(target: TimeEntryMetadata, extra: unknown): void {
-    if (!extra || typeof extra !== 'object' || Array.isArray(extra)) {
+export function mergeMetadata(
+    target: TimeEntryMetadata,
+    extra: TimeEntryMetadataPatch | null | undefined,
+): void {
+    if (!extra) {
         return;
     }
-    Object.assign(target, extra as Record<string, unknown>);
+
+    if (
+        Object.prototype.hasOwnProperty.call(extra, 'billable')
+        && extra.billable !== undefined
+    ) {
+        target.billable = extra.billable;
+    }
+
+    if (
+        Object.prototype.hasOwnProperty.call(extra, 'projectCode')
+        && extra.projectCode !== undefined
+    ) {
+        target.projectCode = extra.projectCode;
+    }
+
+    if (
+        Object.prototype.hasOwnProperty.call(extra, 'overtimeReason')
+        && extra.overtimeReason !== undefined
+    ) {
+        target.overtimeReason = extra.overtimeReason;
+    }
+
+    if (
+        Object.prototype.hasOwnProperty.call(extra, 'overtimeHours')
+        && extra.overtimeHours !== undefined
+    ) {
+        target.overtimeHours = extra.overtimeHours;
+    }
 }
 
 export function appendDecision(
     value: PrismaJsonValue | null | undefined,
     decision: TimeEntryDecisionLog,
-    extra?: unknown,
+    extra?: TimeEntryMetadataPatch | null,
 ): PrismaJsonValue {
     return mutateTimeEntryMetadata(value, (metadata) => {
         mergeMetadata(metadata, extra);
@@ -68,4 +103,3 @@ export function appendDecision(
         metadata.decisionHistory = history;
     });
 }
-

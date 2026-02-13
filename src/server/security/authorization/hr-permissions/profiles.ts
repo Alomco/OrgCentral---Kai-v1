@@ -70,7 +70,15 @@ export const HR_PERMISSION_PROFILE = {
     ONBOARDING_SEND: { [r.ONBOARDING_INVITE]: [a.SEND] } satisfies OrgPermissionMap,
     ONBOARDING_COMPLETE: { [r.ONBOARDING_TASK]: [a.COMPLETE] } satisfies OrgPermissionMap,
     ONBOARDING_MANAGE: { [r.ONBOARDING_TASK]: [a.READ, a.LIST, a.CREATE, a.UPDATE, a.DELETE, a.COMPLETE], [r.ONBOARDING_INVITE]: [a.SEND] } satisfies OrgPermissionMap,
+    ONBOARDING_CHECKLIST_READ: { [r.ONBOARDING_CHECKLIST]: [a.READ] } satisfies OrgPermissionMap,
+    ONBOARDING_CHECKLIST_LIST: { [r.ONBOARDING_CHECKLIST]: [a.LIST] } satisfies OrgPermissionMap,
+    ONBOARDING_CHECKLIST_UPDATE: { [r.ONBOARDING_CHECKLIST]: [a.UPDATE] } satisfies OrgPermissionMap,
+    ONBOARDING_CHECKLIST_COMPLETE: { [r.ONBOARDING_CHECKLIST]: [a.COMPLETE] } satisfies OrgPermissionMap,
     CHECKLIST_TEMPLATE_READ: { [r.CHECKLIST_TEMPLATE]: [a.READ] } satisfies OrgPermissionMap,
+    CHECKLIST_TEMPLATE_LIST: { [r.CHECKLIST_TEMPLATE]: [a.LIST] } satisfies OrgPermissionMap,
+    CHECKLIST_TEMPLATE_CREATE: { [r.CHECKLIST_TEMPLATE]: [a.CREATE] } satisfies OrgPermissionMap,
+    CHECKLIST_TEMPLATE_UPDATE: { [r.CHECKLIST_TEMPLATE]: [a.UPDATE] } satisfies OrgPermissionMap,
+    CHECKLIST_TEMPLATE_DELETE: { [r.CHECKLIST_TEMPLATE]: [a.DELETE] } satisfies OrgPermissionMap,
     CHECKLIST_TEMPLATE_MANAGE: { [r.CHECKLIST_TEMPLATE]: [a.READ, a.LIST, a.CREATE, a.UPDATE, a.DELETE] } satisfies OrgPermissionMap,
 
     // Offboarding permissions
@@ -109,6 +117,8 @@ export const HR_PERMISSION_PROFILE = {
     POLICY_CREATE: { [r.POLICY]: [a.CREATE] } satisfies OrgPermissionMap,
     POLICY_UPDATE: { [r.POLICY]: [a.UPDATE] } satisfies OrgPermissionMap,
     POLICY_ACKNOWLEDGE: { [r.POLICY_ACKNOWLEDGMENT]: [a.ACKNOWLEDGE] } satisfies OrgPermissionMap,
+    POLICY_ACKNOWLEDGMENT_READ: { [r.POLICY_ACKNOWLEDGMENT]: [a.READ] } satisfies OrgPermissionMap,
+    POLICY_ACKNOWLEDGMENT_LIST: { [r.POLICY_ACKNOWLEDGMENT]: [a.LIST] } satisfies OrgPermissionMap,
     POLICY_PUBLISH: { [r.POLICY]: [a.PUBLISH] } satisfies OrgPermissionMap,
     POLICY_MANAGE: { [r.POLICY]: [a.READ, a.LIST, a.CREATE, a.UPDATE, a.DELETE, a.PUBLISH, a.UNPUBLISH] } satisfies OrgPermissionMap,
 
@@ -129,6 +139,10 @@ export const HR_PERMISSION_PROFILE = {
     TIME_ENTRY_DELETE: { [r.TIME_ENTRY]: [a.DELETE] } satisfies OrgPermissionMap,
     TIME_ENTRY_APPROVE: { [r.TIME_ENTRY]: [a.APPROVE] } satisfies OrgPermissionMap,
     TIME_ENTRY_MANAGE: { [r.TIME_ENTRY]: [a.READ, a.LIST, a.CREATE, a.UPDATE, a.DELETE, a.APPROVE] } satisfies OrgPermissionMap,
+    TIMESHEET_READ: { [r.TIMESHEET]: [a.READ] } satisfies OrgPermissionMap,
+    TIMESHEET_LIST: { [r.TIMESHEET]: [a.LIST] } satisfies OrgPermissionMap,
+    TIMESHEET_APPROVE: { [r.TIMESHEET]: [a.APPROVE] } satisfies OrgPermissionMap,
+    TIMESHEET_MANAGE: { [r.TIMESHEET]: [a.READ, a.LIST, a.APPROVE] } satisfies OrgPermissionMap,
 
     // Training permissions
     TRAINING_READ: { [r.TRAINING_RECORD]: [a.READ] } satisfies OrgPermissionMap,

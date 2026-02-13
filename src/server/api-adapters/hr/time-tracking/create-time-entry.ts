@@ -5,12 +5,16 @@ import {
     type CreateTimeEntryPayload,
 } from '@/server/types/hr-time-tracking-schemas';
 import {
+    enforceTimeTrackingMutationRateLimit,
+} from '@/server/lib/security/time-tracking-rate-limit';
+import {
     defaultTimeTrackingControllerDependencies,
     resolveTimeTrackingControllerDependencies,
     TIME_ENTRY_RESOURCE,
     type TimeTrackingControllerDependencies,
 } from './common';
 import { HR_ACTION } from '@/server/security/authorization/hr-resource-registry';
+import { HR_PERMISSION_PROFILE } from '@/server/security/authorization/hr-permissions/profiles';
 
 export interface CreateTimeEntryControllerInput {
     headers: Headers | HeadersInit;
@@ -27,11 +31,17 @@ export async function createTimeEntryController(
 
     const { authorization } = await getSessionContext(resolved.session, {
         headers: controllerInput.headers,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_CREATE,
         auditSource: controllerInput.auditSource,
         action: HR_ACTION.CREATE,
         resourceType: TIME_ENTRY_RESOURCE,
         resourceAttributes: buildResourceAttributes(payload),
+    });
+
+    await enforceTimeTrackingMutationRateLimit({
+        authorization,
+        headers: controllerInput.headers,
+        action: 'create',
     });
 
     return resolved.service.createTimeEntry({ authorization, payload });

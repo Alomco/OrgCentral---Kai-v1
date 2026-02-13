@@ -7,6 +7,9 @@ import { CACHE_SCOPE_ONBOARDING_INVITATIONS } from '@/server/repositories/cache-
 import type { IOnboardingInvitationRepository, OnboardingInvitation, OnboardingInvitationStatus } from '@/server/repositories/contracts/hr/onboarding/invitation-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { getOnboardingInvitationRepository } from '@/server/services/hr/onboarding/onboarding-controller-dependencies';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 import { listOnboardingInvitations } from './list-onboarding-invitations';
 
@@ -27,6 +30,15 @@ function resolveInvitationRepository(): IOnboardingInvitationRepository {
 export async function getOnboardingInvitationsForUi(
     input: GetOnboardingInvitationsForUiInput,
 ): Promise<GetOnboardingInvitationsForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.ONBOARDING_INVITE,
+        payload: {
+            status: input.status ?? null,
+            limit: input.limit ?? null,
+        },
+    });
     async function getInvitationsCached(
         cachedInput: GetOnboardingInvitationsForUiInput,
     ): Promise<GetOnboardingInvitationsForUiResult> {

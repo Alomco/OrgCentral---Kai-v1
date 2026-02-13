@@ -3,6 +3,7 @@ import type { IEmailSequenceTemplateRepository } from '@/server/repositories/con
 import type { EmailSequenceTemplateRecord, EmailSequenceTrigger } from '@/server/types/hr/onboarding-email-sequences';
 import type { JsonValue } from '@/server/types/json';
 import { assertOnboardingConfigManager } from '../config/onboarding-config-access';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
 
 export interface CreateEmailSequenceTemplateInput {
     authorization: RepositoryAuthorizationContext;
@@ -25,7 +26,11 @@ export async function createEmailSequenceTemplate(
     deps: CreateEmailSequenceTemplateDependencies,
     input: CreateEmailSequenceTemplateInput,
 ): Promise<CreateEmailSequenceTemplateResult> {
-    assertOnboardingConfigManager(input.authorization);
+    await assertOnboardingConfigManager({
+        authorization: input.authorization,
+        action: HR_ACTION.CREATE,
+        resourceAttributes: { templateName: input.name, trigger: input.trigger },
+    });
 
     const template = await deps.templateRepository.createTemplate({
         orgId: input.authorization.orgId,

@@ -7,10 +7,10 @@ import type { PolicyAcknowledgment } from '@/server/types/hr-ops-types';
 
 import {
     defaultHrPolicyControllerDependencies,
-    HR_POLICY_RESOURCE_POLICY,
     resolveHrPolicyControllerDependencies,
     type HrPolicyControllerDependencies,
 } from './common';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions';
 
 import { isRecord } from './utils';
 
@@ -44,10 +44,10 @@ export async function acknowledgeHrPolicyController(
 
     const { authorization, session } = await getSessionContext(resolved.session, {
         headers: controllerInput.headers,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.POLICY_ACKNOWLEDGE,
         auditSource: controllerInput.auditSource,
-        action: 'update',
-        resourceType: HR_POLICY_RESOURCE_POLICY,
+        action: HR_ACTION.ACKNOWLEDGE,
+        resourceType: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
         resourceAttributes: { policyId },
     });
 

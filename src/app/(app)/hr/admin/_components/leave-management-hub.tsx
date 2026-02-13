@@ -1,16 +1,13 @@
-/**
- * Leave Management Hub - Pending Requests Table (Server Component)
- * Single Responsibility: Display pending leave requests for admin review
- */
-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { EmployeeLookupOption } from '@/app/(app)/hr/_components/employee-lookup.types';
 
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { PrismaLeaveRequestRepository } from '@/server/repositories/prisma/hr/leave/prisma-leave-request-repository';
+import { listEmployeeProfilesForUi } from '@/server/use-cases/hr/people/list-employee-profiles.cached';
 import { getLeaveRequests } from '@/server/use-cases/hr/leave/get-leave-requests';
 
 import { formatHumanDate, leaveRequestStatusBadgeVariant } from '../../_components';
@@ -68,6 +65,39 @@ export async function LeaveManagementHub({ authorization, statusFilter = 'submit
             return true;
         })
         .slice(0, 200);
+
+    const directoryOptions = await listEmployeeProfilesForUi({ authorization })
+        .then(({ profiles }) => profiles.map<EmployeeLookupOption>((profile) => {
+            const displayName = profile.displayName?.trim().length
+                ? profile.displayName
+                : `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim() || (profile.email ?? profile.employeeNumber);
+
+            return {
+                id: profile.employeeNumber,
+                displayName,
+                employeeNumber: profile.employeeNumber,
+                email: profile.email ?? null,
+            };
+        }))
+        .catch(() => []);
+
+    const requestOptions = filteredRequests.map<EmployeeLookupOption>((request) => ({
+        id: request.employeeId,
+        displayName: request.employeeName,
+        employeeNumber: request.employeeId,
+        email: null,
+    }));
+
+    const optionsById = new Map<string, EmployeeLookupOption>();
+    for (const option of [...directoryOptions, ...requestOptions]) {
+        if (!option.id || optionsById.has(option.id)) {
+            continue;
+        }
+        optionsById.set(option.id, option);
+    }
+    const employeeOptions = Array.from(optionsById.values()).sort((left, right) =>
+        left.displayName.localeCompare(right.displayName),
+    );
 
     const exportableRequests = filteredRequests.map((request) => ({
         employeeName: request.employeeName,
@@ -131,7 +161,11 @@ export async function LeaveManagementHub({ authorization, statusFilter = 'submit
                             </div>
                             <p className="text-[11px] text-muted-foreground">Filter by start date.</p>
                         </div>
-                        <LeaveManagementActions requests={exportableRequests} delegateFor={resolvedDelegate} />
+                        <LeaveManagementActions
+                            requests={exportableRequests}
+                            delegateFor={resolvedDelegate}
+                            employeeOptions={employeeOptions}
+                        />
                     </form>
                     {resolvedDelegate ? (
                         <div className="text-xs text-muted-foreground">Acting on behalf of {resolvedDelegate}. Filters are saved in the URL for sharing.</div>

@@ -4,7 +4,10 @@ import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { getHrNotificationService } from '@/server/use-cases/hr/notifications/notification-composition';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { HRNotificationDTO, HRNotificationListFilters } from '@/server/types/hr/notifications';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetHrNotificationsForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -20,6 +23,14 @@ export interface GetHrNotificationsForUiResult {
 export async function getHrNotificationsForUi(
     input: GetHrNotificationsForUiInput,
 ): Promise<GetHrNotificationsForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.NOTIFICATION,
+        payload: {
+            userId: input.userId ?? null,
+        },
+    });
     async function getNotificationsCached(
         cachedInput: GetHrNotificationsForUiInput,
     ): Promise<GetHrNotificationsForUiResult> {

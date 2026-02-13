@@ -8,7 +8,11 @@ import type { IHRPolicyRepository } from '@/server/repositories/contracts/hr/pol
 import type { IPolicyAcknowledgmentRepository } from '@/server/repositories/contracts/hr/policies/policy-acknowledgment-repository-contract';
 import { buildHrPolicyServiceDependencies } from '@/server/repositories/providers/hr/hr-policy-service-dependencies';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { PolicyAcknowledgment } from '@/server/types/hr-ops-types';
+import { AuthorizationError } from '@/server/errors';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 import { listPolicyAcknowledgments } from './list-policy-acknowledgments';
 
@@ -67,25 +71,110 @@ export async function listPolicyAcknowledgmentsForUi(
         return { acknowledgments };
     }
 
+    const cacheScopes = [CACHE_SCOPE_HR_POLICIES, CACHE_SCOPE_HR_POLICY_ACKNOWLEDGMENTS];
+    const cacheMetadata = {
+        eligible: input.authorization.dataClassification === 'OFFICIAL',
+        mode: 'cache' as const,
+        life: CACHE_LIFE_SHORT,
+        scopes: cacheScopes,
+        classification: input.authorization.dataClassification,
+        residency: input.authorization.dataResidency,
+    };
+
     // Compliance rule: sensitive data is never cached.
     if (input.authorization.dataClassification !== 'OFFICIAL') {
         noStore();
-        const acknowledgments = await listPolicyAcknowledgments(
-            {
-                policyRepository: resolvePolicyRepository(),
-                acknowledgmentRepository: resolveAcknowledgmentRepository(),
-            },
-            {
+        try {
+            const acknowledgments = await listPolicyAcknowledgments(
+                {
+                    policyRepository: resolvePolicyRepository(),
+                    acknowledgmentRepository: resolveAcknowledgmentRepository(),
+                },
+                {
+                    authorization: input.authorization,
+                    policyId: input.policyId,
+                    version: input.version,
+                },
+            );
+
+            await recordHrCachedReadAudit({
                 authorization: input.authorization,
-                policyId: input.policyId,
-                version: input.version,
-            },
-        );
-        return { acknowledgments };
+                action: HR_ACTION.LIST,
+                resource: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
+                outcome: 'ALLOW',
+                cache: {
+                    ...cacheMetadata,
+                    eligible: false,
+                    mode: 'no-store',
+                    life: undefined,
+                },
+                payload: {
+                    policyId: input.policyId,
+                    version: input.version ?? null,
+                    acknowledgmentCount: acknowledgments.length,
+                },
+            });
+
+            return { acknowledgments };
+        } catch (error) {
+            if (error instanceof AuthorizationError) {
+                await recordHrCachedReadAudit({
+                    authorization: input.authorization,
+                    action: HR_ACTION.LIST,
+                    resource: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
+                    outcome: 'DENY',
+                    cache: {
+                        ...cacheMetadata,
+                        eligible: false,
+                        mode: 'no-store',
+                        life: undefined,
+                    },
+                    payload: {
+                        policyId: input.policyId,
+                        version: input.version ?? null,
+                        reason: 'AUTHORIZATION_ERROR',
+                    },
+                });
+            }
+            throw error;
+        }
     }
 
-    return listAcknowledgmentsCached({
-        ...input,
-        authorization: toCacheSafeAuthorizationContext(input.authorization),
-    });
+    try {
+        const result = await listAcknowledgmentsCached({
+            ...input,
+            authorization: toCacheSafeAuthorizationContext(input.authorization),
+        });
+
+        await recordHrCachedReadAudit({
+            authorization: input.authorization,
+            action: HR_ACTION.LIST,
+            resource: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
+            outcome: 'ALLOW',
+            cache: cacheMetadata,
+            payload: {
+                policyId: input.policyId,
+                version: input.version ?? null,
+                acknowledgmentCount: result.acknowledgments.length,
+            },
+        });
+
+        return result;
+    } catch (error) {
+        if (error instanceof AuthorizationError) {
+            await recordHrCachedReadAudit({
+                authorization: input.authorization,
+                action: HR_ACTION.LIST,
+                resource: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
+                outcome: 'DENY',
+                cache: cacheMetadata,
+                payload: {
+                    policyId: input.policyId,
+                    version: input.version ?? null,
+                    reason: 'AUTHORIZATION_ERROR',
+                },
+            });
+        }
+        throw error;
+    }
 }

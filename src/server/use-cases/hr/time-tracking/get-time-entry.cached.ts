@@ -5,6 +5,9 @@ import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { TimeEntry } from '@/server/types/hr-ops-types';
 import { getTimeTrackingService } from '@/server/services/hr/time-tracking/time-tracking-service.provider';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetTimeEntryForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -18,6 +21,12 @@ export interface GetTimeEntryForUiResult {
 export async function getTimeEntryForUi(
     input: GetTimeEntryForUiInput,
 ): Promise<GetTimeEntryForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.TIME_ENTRY,
+        resourceId: input.entryId,
+    });
     async function getTimeEntryCached(
         cachedInput: GetTimeEntryForUiInput,
     ): Promise<GetTimeEntryForUiResult> {

@@ -4,14 +4,14 @@ import {
     createSupportTicketController,
     updateSupportTicketController,
 } from '@/server/api-adapters/platform/admin/support-tickets-controller';
-import { DefaultErrorMapper } from '@/server/api-adapters/error-mappers/default-error-mapper';
+import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
 
 export async function GET(request: Request) {
     try {
         const result = await listSupportTicketsController(request);
         return NextResponse.json(result);
     } catch (error) {
-        return DefaultErrorMapper.mapErrorToResponse(error);
+        return buildErrorResponse(error);
     }
 }
 
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         const result = await createSupportTicketController(request);
         return NextResponse.json(result, { status: 201 });
     } catch (error) {
-        return DefaultErrorMapper.mapErrorToResponse(error);
+        return buildErrorResponse(error);
     }
 }
 
@@ -29,6 +29,6 @@ export async function PATCH(request: Request) {
         const result = await updateSupportTicketController(request);
         return NextResponse.json(result);
     } catch (error) {
-        return DefaultErrorMapper.mapErrorToResponse(error);
+        return buildErrorResponse(error);
     }
 }

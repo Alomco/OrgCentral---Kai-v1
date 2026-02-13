@@ -1,4 +1,4 @@
-﻿# Antigravity Kit Architecture
+# Antigravity Kit Architecture
 
 > Comprehensive AI Agent Capability Expansion Toolkit
 
@@ -25,6 +25,22 @@ Antigravity Kit is a modular system consisting of:
 |-- rules/                   # Global Rules
 `-- scripts/                 # Master Validation Scripts
 ```
+
+---
+
+## Test Agent Accounts
+
+Use these files for seeded test-agent personas and credentials:
+
+- `.codex/test-accounts/catalog.local.json` (machine-readable, local-only)
+- `.codex/test-accounts/README.local.md` (human-readable, local-only)
+- `docs/runbooks/test-agent-accounts.md` (usage and verification runbook)
+
+Commands:
+
+- `pnpm seed:test-accounts`
+- `pnpm test-accounts:list`
+- `pnpm test-accounts:verify`
 
 ---
 

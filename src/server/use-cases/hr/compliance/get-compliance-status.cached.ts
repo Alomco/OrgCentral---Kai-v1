@@ -4,7 +4,10 @@ import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { getComplianceStatusService } from '@/server/services/hr/compliance/compliance-status.service.provider';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { ComplianceStatusSnapshot } from '@/server/repositories/contracts/hr/compliance/compliance-status-repository-contract';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetComplianceStatusForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -18,6 +21,12 @@ export interface GetComplianceStatusForUiResult {
 export async function getComplianceStatusForUi(
     input: GetComplianceStatusForUiInput,
 ): Promise<GetComplianceStatusForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
+        resourceId: input.userId,
+    });
     async function getStatusCached(
         cachedInput: GetComplianceStatusForUiInput,
     ): Promise<GetComplianceStatusForUiResult> {

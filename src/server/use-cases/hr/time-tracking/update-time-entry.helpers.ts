@@ -3,7 +3,10 @@ import { toNumber } from '@/server/domain/absences/conversions';
 import type { ITimeEntryRepository } from '@/server/repositories/contracts/hr/time-tracking/time-entry-repository-contract';
 import { assertValidTimeWindow } from '@/server/security/authorization';
 import type { TimeEntry } from '@/server/types/hr-ops-types';
-import type { UpdateTimeEntryPayload } from '@/server/types/hr-time-tracking-schemas';
+import type {
+    TimeEntryMetadataPatch,
+    UpdateTimeEntryPayload,
+} from '@/server/types/hr-time-tracking-schemas';
 import { normalizeString } from '@/server/use-cases/shared';
 import { calculateTotalHours, mergeMetadata, mutateTimeEntryMetadata } from './utils';
 
@@ -88,6 +91,7 @@ export function buildTimeEntryUpdates(
     context: TimeEntryUpdateContext,
 ): TimeEntryUpdateShape {
     const updates: TimeEntryUpdateShape = {};
+    const metadataUpdates = buildMetadataUpdates(payload);
 
     if (payload.clockIn && payload.clockIn.getTime() !== current.clockIn.getTime()) {
         updates.clockIn = payload.clockIn;
@@ -126,10 +130,33 @@ export function buildTimeEntryUpdates(
         }
     }
 
-    if (payload.metadata) {
+    if (payload.metadata || Object.keys(metadataUpdates).length > 0) {
         updates.metadata = mutateTimeEntryMetadata(current.metadata, (metadata) => {
-            mergeMetadata(metadata, payload.metadata);
+            if (Object.keys(metadataUpdates).length > 0) {
+                mergeMetadata(metadata, metadataUpdates);
+            }
+            if (payload.metadata) {
+                mergeMetadata(metadata, payload.metadata);
+            }
         });
+    }
+
+    return updates;
+}
+
+function buildMetadataUpdates(payload: UpdateTimeEntryPayload): TimeEntryMetadataPatch {
+    const updates: TimeEntryMetadataPatch = {};
+
+    if (payload.billable !== undefined) {
+        updates.billable = payload.billable;
+    }
+
+    if (payload.projectCode !== undefined) {
+        updates.projectCode = normalizeString(payload.projectCode ?? undefined) ?? null;
+    }
+
+    if (payload.overtimeReason !== undefined) {
+        updates.overtimeReason = normalizeString(payload.overtimeReason ?? undefined) ?? null;
     }
 
     return updates;

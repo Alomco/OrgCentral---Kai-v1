@@ -8,6 +8,7 @@ import { listChecklistTemplates } from '@/server/use-cases/hr/onboarding/templat
 import { updateChecklistTemplate } from '@/server/use-cases/hr/onboarding/templates/update-checklist-template';
 import { ValidationError } from '@/server/errors';
 import { getChecklistTemplateRepository } from '@/server/services/hr/onboarding/onboarding-controller-dependencies';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions';
 import type {
     ChecklistTemplate,
     ChecklistTemplateCreatePayload,
@@ -40,15 +41,41 @@ const checklistTemplateRepository = getChecklistTemplateRepository();
 async function authorizeTemplateRequest(
     request: Request,
     auditSource: string,
-    action: 'create' | 'read' | 'update' | 'delete',
+    action: 'create' | 'list' | 'update' | 'delete',
     resourceAttributes?: Record<string, unknown>,
 ) {
+    const requiredPermissions = (() => {
+        switch (action) {
+            case 'list':
+                return HR_PERMISSION_PROFILE.CHECKLIST_TEMPLATE_LIST;
+            case 'create':
+                return HR_PERMISSION_PROFILE.CHECKLIST_TEMPLATE_CREATE;
+            case 'update':
+                return HR_PERMISSION_PROFILE.CHECKLIST_TEMPLATE_UPDATE;
+            case 'delete':
+                return HR_PERMISSION_PROFILE.CHECKLIST_TEMPLATE_DELETE;
+        }
+    })();
+
+    const actionValue = (() => {
+        switch (action) {
+            case 'list':
+                return HR_ACTION.LIST;
+            case 'create':
+                return HR_ACTION.CREATE;
+            case 'update':
+                return HR_ACTION.UPDATE;
+            case 'delete':
+                return HR_ACTION.DELETE;
+        }
+    })();
+
     const { authorization } = await getSessionContext({}, {
         headers: request.headers,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions,
         auditSource,
-        action,
-        resourceType: 'checklistTemplate',
+        action: actionValue,
+        resourceType: HR_RESOURCE_TYPE.CHECKLIST_TEMPLATE,
         resourceAttributes,
     });
 
@@ -106,7 +133,7 @@ export async function listChecklistTemplatesController(request: Request): Promis
     const url = new URL(request.url);
     const filters = parseTemplateFilters(url);
 
-    const authorization = await authorizeTemplateRequest(request, 'api:hr:onboarding:templates:list', 'read', {
+    const authorization = await authorizeTemplateRequest(request, 'api:hr:onboarding:templates:list', 'list', {
         typeFilter: filters.type ?? null,
     });
 

@@ -20,15 +20,28 @@ import { CreateTimeEntryForm } from './_components/create-time-entry-form';
 import { buildInitialTimeEntryFormState } from './form-state';
 import { TimeEntryApprovalPanel } from './_components/time-entry-approval-panel';
 import { buildPendingTimeEntries } from './pending-entries';
+import { buildTeamTimeEntries } from './team-entries';
+import { TeamTimeEntriesPanel } from './_components/team-time-entries-panel';
 
 export default async function HrTimeTrackingPage() {
     const headerStore = await nextHeaders();
-    const managerAuthorizationPromise = getOptionalHrAuthorization(
+    const approvalAuthorizationPromise = getOptionalHrAuthorization(
         {},
         {
             headers: headerStore,
-            requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_LIST,
-            auditSource: 'ui:hr:time-tracking:manager',
+            requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_APPROVE,
+            auditSource: 'ui:hr:time-tracking:approval',
+            action: HR_ACTION.APPROVE,
+            resourceType: HR_RESOURCE_TYPE.TIME_ENTRY,
+            resourceAttributes: { view: 'team' },
+        },
+    );
+    const teamAuthorizationPromise = getOptionalHrAuthorization(
+        {},
+        {
+            headers: headerStore,
+            requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_MANAGE,
+            auditSource: 'ui:hr:time-tracking:team',
             action: HR_ACTION.LIST,
             resourceType: HR_RESOURCE_TYPE.TIME_ENTRY,
             resourceAttributes: { view: 'team' },
@@ -44,11 +57,17 @@ export default async function HrTimeTrackingPage() {
             resourceType: HR_RESOURCE_TYPE.TIME_ENTRY,
         },
     );
-    const managerAuthorization = await managerAuthorizationPromise;
+    const [approvalAuthorization, teamAuthorization] = await Promise.all([
+        approvalAuthorizationPromise,
+        teamAuthorizationPromise,
+    ]);
 
     const initialFormState = buildInitialTimeEntryFormState();
-    const pendingEntries = managerAuthorization
-        ? await buildPendingTimeEntries(managerAuthorization)
+    const pendingEntries = approvalAuthorization
+        ? await buildPendingTimeEntries(approvalAuthorization)
+        : [];
+    const teamEntries = teamAuthorization
+        ? await buildTeamTimeEntries(teamAuthorization)
         : [];
 
     return (
@@ -86,7 +105,11 @@ export default async function HrTimeTrackingPage() {
                 </Suspense>
             </div>
 
-            {managerAuthorization ? (
+            {teamAuthorization ? (
+                <TeamTimeEntriesPanel entries={teamEntries} />
+            ) : null}
+
+            {approvalAuthorization ? (
                 <TimeEntryApprovalPanel entries={pendingEntries} />
             ) : null}
         </div>

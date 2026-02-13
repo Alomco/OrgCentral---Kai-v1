@@ -64,8 +64,10 @@ export function EnrollTrainingForm({ authorization, initialState }: EnrollTraini
                                 name="courseName"
                                 placeholder="e.g. Data Protection Training"
                                 defaultValue={state.values.courseName}
+                                aria-invalid={Boolean(state.fieldErrors?.courseName)}
+                                aria-describedby={state.fieldErrors?.courseName ? `${formId}-course-error` : undefined}
                             />
-                            <FieldError message={state.fieldErrors?.courseName} />
+                            <FieldError id={`${formId}-course-error`} message={state.fieldErrors?.courseName} />
                         </div>
 
                         <div className="space-y-2">
@@ -75,8 +77,10 @@ export function EnrollTrainingForm({ authorization, initialState }: EnrollTraini
                                 name="provider"
                                 placeholder="e.g. Internal, Coursera"
                                 defaultValue={state.values.provider}
+                                aria-invalid={Boolean(state.fieldErrors?.provider)}
+                                aria-describedby={state.fieldErrors?.provider ? `${formId}-provider-error` : undefined}
                             />
-                            <FieldError message={state.fieldErrors?.provider} />
+                            <FieldError id={`${formId}-provider-error`} message={state.fieldErrors?.provider} />
                         </div>
                     </div>
 
@@ -88,8 +92,10 @@ export function EnrollTrainingForm({ authorization, initialState }: EnrollTraini
                                 name="startDate"
                                 type="date"
                                 defaultValue={state.values.startDate}
+                                aria-invalid={Boolean(state.fieldErrors?.startDate)}
+                                aria-describedby={state.fieldErrors?.startDate ? `${formId}-start-error` : undefined}
                             />
-                            <FieldError message={state.fieldErrors?.startDate} />
+                            <FieldError id={`${formId}-start-error`} message={state.fieldErrors?.startDate} />
                         </div>
 
                         <div className="space-y-2">

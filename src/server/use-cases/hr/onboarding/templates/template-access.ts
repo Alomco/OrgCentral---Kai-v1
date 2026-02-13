@@ -1,7 +1,7 @@
 import { AuthorizationError } from '@/server/errors';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 
-const TEMPLATE_MANAGER_ROLES = new Set(['orgAdmin', 'owner', 'hr']);
+const TEMPLATE_MANAGER_ROLES = new Set(['orgAdmin', 'owner', 'hrAdmin']);
 
 export function assertChecklistTemplateManager(
     authorization: RepositoryAuthorizationContext,

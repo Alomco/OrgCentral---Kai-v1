@@ -4,10 +4,13 @@ import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { IHRSettingsRepository } from '@/server/repositories/contracts/hr/settings/hr-settings-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { HRSettings } from '@/server/types/hr-ops-types';
 import { buildHrSettingsServiceDependencies } from '@/server/repositories/providers/hr/hr-settings-service-dependencies';
 import { getHrSettings } from './get-hr-settings';
 import { registerHrSettingsCacheTag } from './cache-helpers';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetHrSettingsCachedInput {
     authorization: RepositoryAuthorizationContext;
@@ -23,6 +26,12 @@ function resolveHrSettingsRepository(): IHRSettingsRepository {
 }
 
 export async function getHrSettingsForUi(input: GetHrSettingsCachedInput): Promise<GetHrSettingsCachedResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.HR_SETTINGS,
+        resourceId: input.orgId,
+    });
     async function getHrSettingsCached(
         cachedInput: GetHrSettingsCachedInput,
     ): Promise<GetHrSettingsCachedResult> {

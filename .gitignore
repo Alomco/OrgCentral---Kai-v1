@@ -42,3 +42,7 @@ next-env.d.ts
 
 # eslint cache
 .eslintcache*
+
+# local test account artifacts
+.codex/test-accounts/*.local.json
+.codex/test-accounts/*.local.md

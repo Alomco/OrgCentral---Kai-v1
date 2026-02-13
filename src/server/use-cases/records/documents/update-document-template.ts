@@ -4,6 +4,7 @@ import type { DocumentType } from '@/server/types/records/document-vault';
 import type { DocumentTemplateRecord } from '@/server/types/records/document-templates';
 import type { JsonValue } from '@/server/types/json';
 import { assertOnboardingConfigManager } from '@/server/use-cases/hr/onboarding/config/onboarding-config-access';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
 
 export interface UpdateDocumentTemplateInput {
     authorization: RepositoryAuthorizationContext;
@@ -30,7 +31,11 @@ export async function updateDocumentTemplate(
     deps: UpdateDocumentTemplateDependencies,
     input: UpdateDocumentTemplateInput,
 ): Promise<UpdateDocumentTemplateResult> {
-    assertOnboardingConfigManager(input.authorization);
+    await assertOnboardingConfigManager({
+        authorization: input.authorization,
+        action: HR_ACTION.UPDATE,
+        resourceAttributes: { templateId: input.templateId },
+    });
 
     const template = await deps.documentTemplateRepository.updateTemplate(
         input.authorization.orgId,

@@ -37,6 +37,15 @@ export function assertTimeEntryReader(request: HrGuardRequest): Promise<Reposito
     });
 }
 
+export function assertTimeEntryLister(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
+    return assertHrAccess(request.authorization, {
+        action: HR_ACTION.LIST,
+        resourceType: HR_RESOURCE_TYPE.TIME_ENTRY,
+        resourceAttributes: request.resourceAttributes,
+        requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_LIST,
+    });
+}
+
 export function assertTimeEntryCreator(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
     return assertHrAccess(request.authorization, {
         action: HR_ACTION.CREATE,
@@ -52,6 +61,15 @@ export function assertTimeEntryUpdater(request: HrGuardRequest): Promise<Reposit
         resourceType: HR_RESOURCE_TYPE.TIME_ENTRY,
         resourceAttributes: request.resourceAttributes,
         requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_UPDATE,
+    });
+}
+
+export function assertTimeEntryDeleter(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
+    return assertHrAccess(request.authorization, {
+        action: HR_ACTION.DELETE,
+        resourceType: HR_RESOURCE_TYPE.TIME_ENTRY,
+        resourceAttributes: request.resourceAttributes,
+        requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_DELETE,
     });
 }
 

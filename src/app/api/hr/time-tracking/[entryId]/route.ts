@@ -5,6 +5,7 @@ import {
     getTimeEntryRouteController,
     updateTimeEntryRouteController,
 } from '@/server/api-adapters/hr/time-tracking/time-tracking-route-controllers';
+import { enforceCsrfOriginGuard } from '@/server/security/guards/csrf-origin-guard';
 
 interface RouteParams {
     params: Promise<{
@@ -14,7 +15,7 @@ interface RouteParams {
 
 export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-            const resolvedParams = await params;
+        const resolvedParams = await params;
         const result = await getTimeEntryRouteController(request, resolvedParams.entryId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {
@@ -24,7 +25,11 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
 
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-            const resolvedParams = await params;
+        const guardResponse = await enforceCsrfOriginGuard(request);
+        if (guardResponse) {
+            return guardResponse;
+        }
+        const resolvedParams = await params;
         const result = await updateTimeEntryRouteController(request, resolvedParams.entryId);
         return NextResponse.json(result, { status: 200 });
     } catch (error) {

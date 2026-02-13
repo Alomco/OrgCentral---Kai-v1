@@ -1,13 +1,16 @@
 'use client';
 
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useId, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { approveTimeEntryAction, getPendingTimeEntriesAction, rejectTimeEntryAction } from '../actions';
 import type { PendingTimeEntry } from '../pending-entries';
 
@@ -21,9 +24,12 @@ export function TimeEntryApprovalPanel({
     entries?: PendingTimeEntry[];
 }) {
     const queryClient = useQueryClient();
-    const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+    const [pendingEntryIds, setPendingEntryIds] = useState<Set<string>>(() => new Set());
 
-    const { data: pendingEntries = entries } = useQuery({
+    const {
+        data: pendingEntries = entries,
+        isError,
+    } = useQuery({
         queryKey: pendingEntriesQueryKey,
         queryFn: getPendingTimeEntriesAction,
         initialData: entries,
@@ -33,13 +39,22 @@ export function TimeEntryApprovalPanel({
         mutationFn: async ({
             entryId,
             decision,
+            comments,
         }: {
             entryId: string;
             decision: 'approve' | 'reject';
+            comments?: string;
         }) => {
             const action = decision === 'approve' ? approveTimeEntryAction : rejectTimeEntryAction;
-            await action(entryId);
+            await action(entryId, comments);
             return entryId;
+        },
+        onMutate: ({ entryId }) => {
+            setPendingEntryIds((current) => {
+                const next = new Set(current);
+                next.add(entryId);
+                return next;
+            });
         },
         onSuccess: (entryId) => {
             queryClient.setQueryData<PendingTimeEntry[]>(
@@ -48,19 +63,19 @@ export function TimeEntryApprovalPanel({
             );
             void queryClient.invalidateQueries({ queryKey: pendingEntriesQueryKey }).catch(() => null);
         },
+        onSettled: (_result, _error, variables) => {
+            setPendingEntryIds((current) => {
+                const next = new Set(current);
+                next.delete(variables.entryId);
+                return next;
+            });
+        },
     });
 
     const handleDecision = useCallback(
-        (entryId: string, decision: 'approve' | 'reject') => {
-            setActiveEntryId(entryId);
-            decisionMutation.mutate(
-                { entryId, decision },
-                {
-                    onSettled: () => {
-                        setActiveEntryId(null);
-                    },
-                },
-            );
+        (entryId: string, decision: 'approve' | 'reject', comments?: string) => {
+            decisionMutation.reset();
+            decisionMutation.mutate({ entryId, decision, comments });
         },
         [decisionMutation],
     );
@@ -87,17 +102,30 @@ export function TimeEntryApprovalPanel({
                 {pendingEntries.length > 0 ? <Badge variant="secondary">{pendingEntries.length}</Badge> : null}
             </CardHeader>
             <CardContent className="space-y-3">
-                {pendingEntries.length > 0 ? (
+                {isError ? (
+                    <Alert variant="destructive">
+                        <AlertDescription>
+                            Unable to load pending time entries. Please try again.
+                        </AlertDescription>
+                    </Alert>
+                ) : null}
+                {decisionMutation.isError ? (
+                    <Alert variant="destructive">
+                        <AlertDescription>
+                            Unable to update this time entry. Please try again.
+                        </AlertDescription>
+                    </Alert>
+                ) : null}
+                {!isError && pendingEntries.length > 0 ? (
                     pendingEntries.map((entry) => (
                         <TimeEntryApprovalRow
                             key={entry.id}
                             entry={entry}
-                            isPending={decisionMutation.isPending}
-                            activeEntryId={activeEntryId}
+                            isPending={pendingEntryIds.has(entry.id)}
                             onDecision={handleDecision}
                         />
                     ))
-                ) : (
+                ) : !isError ? (
                     <div className="flex flex-col items-center justify-center py-6 text-center">
                         <CheckCircle className="h-8 w-8 text-success mb-2" />
                         <p className="text-sm font-medium">No pending entries</p>
@@ -105,7 +133,7 @@ export function TimeEntryApprovalPanel({
                             Completed time entries will appear here for approval.
                         </p>
                     </div>
-                )}
+                ) : null}
             </CardContent>
         </Card>
     );
@@ -114,57 +142,79 @@ export function TimeEntryApprovalPanel({
 interface TimeEntryApprovalRowProps {
     entry: PendingTimeEntry;
     isPending: boolean;
-    activeEntryId: string | null;
-    onDecision: (entryId: string, decision: 'approve' | 'reject') => void;
+    onDecision: (entryId: string, decision: 'approve' | 'reject', comments?: string) => void;
 }
 
 const TimeEntryApprovalRow = memo(function TimeEntryApprovalRow({
     entry,
     isPending,
-    activeEntryId,
     onDecision,
 }: TimeEntryApprovalRowProps) {
+    const commentId = useId();
+    const [comments, setComments] = useState('');
+    const trimmedComments = comments.trim();
+
     return (
-        <div className="flex items-start justify-between gap-3 rounded-lg border p-3">
-            <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 min-w-0">
-                    <p className="font-medium text-sm truncate">{entry.employeeName}</p>
-                    {entry.project ? (
-                        <Badge variant="outline" className="text-xs max-w-40 truncate">
-                            {entry.project}
-                        </Badge>
-                    ) : null}
+        <div className="flex flex-col gap-3 rounded-lg border p-3" aria-busy={isPending}>
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <p className="font-medium text-sm truncate">{entry.employeeName}</p>
+                        {entry.project ? (
+                            <Badge variant="outline" className="text-xs max-w-40 truncate">
+                                {entry.project}
+                            </Badge>
+                        ) : null}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        <span suppressHydrationWarning>
+                            {DATE_FORMATTER.format(entry.date)}
+                        </span>
+                        {entry.totalHours ? ` | ${entry.totalHours.toFixed(2)}h` : ''}
+                    </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                    <span suppressHydrationWarning>
-                        {DATE_FORMATTER.format(entry.date)}
-                    </span>
-                    {entry.totalHours ? ` | ${entry.totalHours.toFixed(2)}h` : ''}
-                </p>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={isPending}
+                        onClick={() => onDecision(entry.id, 'reject', trimmedComments || undefined)}
+                        aria-label="Reject time entry"
+                        title="Reject time entry"
+                    >
+                        {isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        ) : (
+                            <XCircle className="h-4 w-4 text-destructive" />
+                        )}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={isPending}
+                        onClick={() => onDecision(entry.id, 'approve', trimmedComments || undefined)}
+                        aria-label="Approve time entry"
+                        title="Approve time entry"
+                    >
+                        {isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        ) : (
+                            <CheckCircle className="h-4 w-4 text-success" />
+                        )}
+                    </Button>
+                </div>
             </div>
-            <div className="flex items-center gap-2">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={isPending && activeEntryId === entry.id}
-                    onClick={() => onDecision(entry.id, 'reject')}
-                    aria-label="Reject time entry"
-                    title="Reject time entry"
-                >
-                    <XCircle className="h-4 w-4 text-destructive" />
-                </Button>
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={isPending && activeEntryId === entry.id}
-                    onClick={() => onDecision(entry.id, 'approve')}
-                    aria-label="Approve time entry"
-                    title="Approve time entry"
-                >
-                    <CheckCircle className="h-4 w-4 text-success" />
-                </Button>
+            <div className="space-y-2">
+                <Label htmlFor={commentId} className="text-xs">Approval note (optional)</Label>
+                <Textarea
+                    id={commentId}
+                    rows={2}
+                    value={comments}
+                    onChange={(event) => setComments(event.target.value)}
+                    placeholder="Add context for the decision"
+                />
             </div>
         </div>
     );

@@ -4,7 +4,6 @@ import { headers } from 'next/headers';
 import { z } from 'zod';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { getRoleService } from '@/server/services/org';
-import type { Role } from '@/server/types/hr-types';
 import { initialRoleCreateState, type InlineRoleActionState, type RoleCreateState } from './actions.state';
 
 const createRoleSchema = z.object({
@@ -86,7 +85,7 @@ export async function updateRoleInlineAction(
 
     const permissionsParseResult = parsed.data.permissionsText
         ? parsePermissionsText(parsed.data.permissionsText)
-        : { ok: true as const, value: undefined as Role['permissions'] | undefined };
+        : { ok: true as const, value: undefined as Record<string, string[]> | undefined };
 
     if (!permissionsParseResult.ok) {
         return { status: 'error', message: permissionsParseResult.error };
@@ -158,7 +157,7 @@ export async function deleteRoleInlineAction(
 }
 
 function parsePermissionsText(input: string):
-    | { ok: true; value: Role['permissions'] }
+    | { ok: true; value: Record<string, string[]> }
     | { ok: false; error: string } {
     const trimmed = input.trim();
     if (!trimmed) {

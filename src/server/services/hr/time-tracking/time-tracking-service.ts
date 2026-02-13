@@ -46,7 +46,7 @@ export class TimeTrackingService extends AbstractHrService {
 
     async listTimeEntries(input: ListTimeEntriesInput): Promise<ListTimeEntriesResult> {
         await this.ensureOrgAccess(input.authorization, {
-            action: HR_ACTION.READ,
+            action: HR_ACTION.LIST,
             resourceType: HR_RESOURCE.TIME_ENTRY,
             resourceAttributes: { filters: input.filters },
         });
@@ -112,10 +112,20 @@ export class TimeTrackingService extends AbstractHrService {
     }
 
     async approveTimeEntry(input: ApproveTimeEntryInput): Promise<ApproveTimeEntryResult> {
+        const existingEntry = await this.dependencies.timeEntryRepository.getTimeEntry(
+            input.authorization.orgId,
+            input.entryId,
+        );
+        const resourceAttributes = {
+            entryId: input.entryId,
+            status: input.payload.status,
+            targetUserId: existingEntry?.userId ?? null,
+            entryStatus: existingEntry?.status ?? null,
+        };
         await this.ensureOrgAccess(input.authorization, {
             action: HR_ACTION.APPROVE,
             resourceType: HR_RESOURCE.TIME_ENTRY,
-            resourceAttributes: { entryId: input.entryId, status: input.payload.status },
+            resourceAttributes,
         });
 
         return this.runOperation(

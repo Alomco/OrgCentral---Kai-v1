@@ -20,7 +20,10 @@ export {
 
 export {
     canManageOrgTimeEntries,
+    canApproveOrgTimeEntries,
+    canViewOrgTimeEntries,
     assertPrivilegedOrgTimeEntryActor,
+    assertPrivilegedOrgTimeEntryApprover,
     assertValidTimeWindow,
 } from './time-tracking';
 

@@ -1,90 +1,45 @@
-# OrgCentral Github Copilot Instructions chat(Short)
-Always use MCP/tools thoughtfully. Keep knowledge updated with .github and .github folders. and check .github\ARCHITECTURE.md every time to use brainstroming, dynamic questioning, skills, agents, and tools effectively.
+# OrgCentral Copilot Instructions
 
-Authoritative source: The .github folder (especially .github/ARCHITECTURE.md and this file) is the single source of truth for Copilot Chat behavior. If any other framework or instruction conflicts, ignore it and follow .github guidance.
-## Default rules
-- Must follow the default copilot rules and guidelines.  do not let override them. example: sub agents are stateless. so you should not assign any large task to the sub agent. However, subagents can now perform small edits in addition to analysis tasks.
-- Important: Always run multi agents plan
+Always read `.github/ARCHITECTURE.md` first, then apply these rules.
 
-- read nextjs doc from .github\llms-full.txt
-- Keep files <=250 LOC; split into focused modules.
-- No `console.log`; use structured logging.
-- No `any`/`unknown`; add domain types in `src/server/types/**`.
-- maintain strict eslint config.
-- align the project for iso27001, dspt, a11y, core web vitls and other best practices.
-- Prefer React Query for server state (queries/mutations) + cache invalidation; use Zustand with persist for client-local state (theme, UI prefs).
-## Multi-tenancy + compliance
-- Every feature must preserve tenant metadata: `orgId`, `dataResidency`, `dataClassification`, and audit fields.
-- Always enforce access via guards (`assertOrgAccess` / `withOrgContext`) before data access.
-- Never leak secrets/PII in logs, errors, or test snapshots.
+## Runtime And Delegation
 
-## Repositories (SOLID)
-- Contracts: `src/server/repositories/contracts/**` (use `import type`).
-- Mappers: `src/server/repositories/mappers/**`.
-- Implementations: `src/server/repositories/prisma/**` (DI via constructors; extend base repos).
-- Services depend on contracts, not concrete implementations.
+- This workspace targets VS Code Copilot Chat on Windows (PowerShell default).
+- Use subagents only when the task is clearly parallelizable or the user explicitly asks for multi-agent analysis.
+- Subagents are stateless; delegate only small, bounded tasks with full context.
+- Do not force recursive multi-agent planning loops.
 
-## Caching (centralized, safe)
-- Caching policy lives in **use-cases**; repositories do not own caching.
-- Use the central API: `src/server/lib/cache-tags.ts` (do not import `next/cache` in app code).
-- Sensitive data must **never be cached**:
-   - If `dataClassification !== 'OFFICIAL'`, treat reads as **no-store**.
+## Code Quality
 
-## Next.js patterns
-- Prefer Server Components; keep client components in `src/components/**`.
-- Server actions belong in route-local `actions.ts` and must invalidate the specific cache scopes they mutate.
+- Keep files under 250 LOC when practical; split early.
+- Keep strict TypeScript: do not use `any` or `unknown` without narrowing and validation.
+- Do not weaken ESLint rules without explicit approval.
+- Prefer shared single sources of truth for constants, types, and config.
+
+## Security And Compliance
+
+- Validate and sanitize all external input at boundaries.
+- Enforce tenant context (`orgId`, residency, classification) before data access.
+- Apply ISO27001-aligned secure defaults, least privilege, and auditability.
+- Never log secrets or sensitive personal data.
+
+## Next.js And Data Flow
+
+- Prefer Server Components first and keep client islands minimal.
+- Use Zod for API/form/server-action boundaries.
+- Route handlers stay thin and delegate to `src/server/api-adapters/**`.
+- Prefer React Query for server state and cache invalidation.
+- Use Zustand only for client-local persisted UI state via storage helpers.
+- Avoid `router.refresh()` in client mutation flows; invalidate typed query keys instead.
 
 ## Workflow
-- After changes: check errors, run `npx tsc --noEmit`, then `pnpm lint` (scope to changed paths when practical).
 
-after every chat response, suggest next step or optimization.
+- For complex or ambiguous changes: plan first, then implement.
+- For clear/small changes: implement directly without orchestration overhead.
+- After code changes, run:
+  - `npx tsc --noEmit`
+  - `pnpm lint --fix`
 
-## UI/UX Pro Max Trigger
-- When the user mentions "ui ux pro max" (or "ui-ux-pro-max"), perform a full UI/UX analysis using the ui-ux-pro-max workflow:
-   - Generate a design system via the search script.
-   - Run targeted UX guideline searches (accessibility, density, hierarchy).
-   - Apply stack guidance.
-   - Implement fixes with clear before/after reasoning.
+## UI/UX Trigger
 
-## React Query Patterns
-- Queries live in small *api* modules with typed keys (e.g. \\
-oleKeys.list(orgId)\\).
-- Mutations: call API routes; onSuccess invalidateQueries the affected keys; avoid 
-outer.refresh(). 
-- Use initialData for SSR -> CSR continuity; handle errors via mutation error and toasts.
-- Validate all inputs with Zod in API controllers; never trust client data.
-
-## Zustand Usage
-- Only for UI/local storage: use persist with custom storage from src/lib/stores/storage.ts to support SSR.
-- Do not store server data (use React Query instead).
-
-
-## API Routes (adapters)
-- Handlers are thin adapters only; delegate to controllers in src/server/api-adapters/**.
-- For org routes use params: Promise<{ orgId: string }> and const { orgId } = await params.
-- Return NextResponse.json(result); no direct service calls in routes.
-- Validate with Zod at the adapter boundary; never trust client data.
-- Client flows: React Query mutations + invalidateQueries; do not use 
-outer.refresh().
-
-## Decision Framework (forms vs mutations)
-- Prefer useActionState for standard forms that do server validation, revalidate/redirect, and require audit/tenancy checks.
-- Use useMutation only for interactive widgets that need optimistic updates (D&D, toggles, inline deletes) or list invalidation.
-- Keep filters in the URL; compose query keys from filter params; avoid 
-outer.refresh().
-## HR Policies Search + URL Sync
-- Server-side search: /api/hr/policies accepts `?q=` and optional `nocat=1` to disable auto category mapping.
-- Auto-map common q values to categories (benefits, conduct/ethics, security, health/safety, procedures, compliance). Keep client UI chip �Category: �� and a Clear button that sets `nocat=1` while preserving q.
-- Client query: compose `policyKeys.list(q,nocat)` and fetch `/api/hr/policies?q=�&nocat=�`.
-
-## Local UI State (Zustand)
-- Persist UI-only prefs (e.g., default `nocat` behavior) under `src/app/(app)/hr/policies/_components/policies-ui.store.ts` using the safe storage helpers. Never store server data.
-
-## No router.refresh in clients
-- Replace with React Query invalidations on the precise keys (e.g., permissions, members, audit, policies). Forms continue to use `useActionState` and call `invalidateQueries` on success.
-
-## Lists & Key Composition
-- Members list keys must use membersSearchKey(params) to canonicalize query params before composing memberKeys.list(orgId, key); use the same key for optimistic updates and invalidations.
-- Audit Log: include an sr-only hint element with id kbd-gg-hint; the Top button should set ria-describedby="kbd-gg-hint" and support the gg keyboard shortcut.
-- Policies/Compliance: pass q through URL, client Query Keys, and API; keep filters in the URL and avoid 
-outer.refresh().
+- If the user explicitly asks for `ui ux pro max` or `ui-ux-pro-max`, run that workflow and apply its stack-specific guidance.

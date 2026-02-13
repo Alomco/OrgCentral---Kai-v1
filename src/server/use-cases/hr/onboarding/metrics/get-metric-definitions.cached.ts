@@ -9,6 +9,9 @@ import type { OnboardingMetricDefinitionRecord } from '@/server/types/hr/onboard
 import { CACHE_SCOPE_ONBOARDING_METRICS } from '@/server/repositories/cache-scopes';
 import { buildOnboardingMetricsDependencies } from '@/server/repositories/providers/hr/onboarding-metrics-repository-dependencies';
 import { listMetricDefinitions } from './list-metric-definitions';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetMetricDefinitionsForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -40,6 +43,14 @@ async function loadDefinitions(
 export async function getMetricDefinitionsForUi(
     input: GetMetricDefinitionsForUiInput,
 ): Promise<GetMetricDefinitionsForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.ONBOARDING_METRIC_DEFINITION,
+        payload: {
+            isActive: input.isActive ?? null,
+        },
+    });
     async function getDefinitionsCached(
         cachedInput: GetMetricDefinitionsForUiInput,
     ): Promise<GetMetricDefinitionsForUiResult> {

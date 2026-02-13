@@ -1,57 +1,50 @@
 # Copilot Chat Guide (OrgCentral)
 
-Use this guide to work with the Copilot Chat assets in .github.
+Use this guide to keep workspace instructions aligned with VS Code Copilot Chat on Windows.
 
-## Where to look first
+## Source Of Truth
 
-- Agents: .github/agents/
-- Skills: .github/skills/
-- Workflows: .github/workflows/
-- Prompts: .github/prompts/
-- Rules: .github/rules/copilot-chat.md
+- Architecture: `.github/ARCHITECTURE.md`
+- Always-on instructions: `.github/copilot-instructions.md`
+- Global rules: `.github/rules/copilot-chat.md`
+- Agents: `.github/agents/*.agent.md`
+- Skills: `.github/skills/<skill>/SKILL.md`
+- Prompt commands: `.github/prompts/*.prompt.md`
+- Workflow runbooks (reference): `.github/workflows/*.md`
 
-## Current Copilot Chat format (Feb 2026)
+## Windows Baseline
 
-- Always-on instructions: .github/copilot-instructions.md
-- Optional instructions: .github/instructions/*.instructions.md (applyTo patterns)
-- Agents: .github/agents/*.md (custom agents; .agent.md is supported but not required)
-- Prompt files: .github/prompts/*.prompt.md
-- Skills: .github/skills/<skill>/SKILL.md
+- Default shell: PowerShell.
+- Quote paths that include spaces.
+- Prefer workspace-relative paths with `/` in docs (works on Windows and cross-platform).
 
-## How to use agents
+## Agent Files
 
-- Pick the closest agent file for the task domain.
-- Read its front matter and referenced skills.
-- Follow the skill instructions before editing code.
+- Use `*.agent.md` for custom agents.
+- Put YAML front matter at the very top of each file.
+- Keep `name`, `description`, `tools`, and `skills` accurate.
+- Keep delegated subagent tasks small and scoped because subagents are stateless.
 
-## Diagnostics and settings to verify
+## Skills
 
-- Diagnostics: Chat view > right-click > Diagnostics (lists loaded agents, prompts, instructions, skills)
-- Required settings: github.copilot.chat.codeGeneration.useInstructionFiles, chat.useAgentsMdFile, chat.useAgentSkills
-- Optional settings: chat.useNestedAgentsMdFiles, chat.promptFilesLocations, chat.agentFilesLocations, chat.agentSkillsLocations
-- If instructions do not apply: enable chat.includeApplyingInstructions and chat.includeReferencedInstructions
+- Load only matching skills.
+- Read `SKILL.md` first, then only relevant referenced sections.
+- Use referenced scripts under `.github/skills/<skill>/scripts/` when needed.
 
-## How to use skills
+## Workflows
 
-- Skills load on demand when the task matches the skill description.
-- Read SKILL.md first, then only the relevant sections.
-- Run the referenced scripts via .github/skills/<skill>/scripts/ when needed.
+- Prompt files in `.github/prompts/*.prompt.md` are what Copilot loads for command-style workflows.
+- `.github/workflows/*.md` is retained as reference documentation and runbook detail.
+- Use `/plan` for ambiguous or multi-file work.
+- Use `/orchestrate` only when work is genuinely multi-domain.
+- For straightforward tasks, execute directly without forced orchestration.
 
-## How to use workflows
+## Diagnostics
 
-- Workflows are runbook-style instructions.
-- Follow the workflow steps in order.
-- For planning, create a {task-slug}.md in the project root.
+- In Copilot Chat, use Diagnostics to verify loaded instructions, agents, prompts, and skills.
+- If instructions are not applying, verify agent mode and instruction files are enabled in VS Code settings.
 
-## Orchestration basics
+## Validation
 
-- Use the orchestrator for multi-domain tasks.
-- Run at least three specialist passes for complex work.
-- Synthesize into one plan with validation steps.
-- Allow subagents to perform small edits in addition to analysis tasks.
-
-## Verification
-
-- Core checks: python .github/scripts/checklist.py .
-- Full suite: python .github/scripts/verify_all.py . --url http://localhost:3000
-
+- Core checks: `python .github/scripts/checklist.py .`
+- Full suite: `python .github/scripts/verify_all.py . --url http://localhost:3000`

@@ -1,8 +1,7 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,41 +16,13 @@ import { FieldError } from '../../_components/field-error';
 import { inviteEmployeeAction } from '../actions';
 import type { OnboardingInviteFormState } from '../form-state';
 import { useInviteEmployeeToast } from './invite-employee-toast';
+import { generateNextEmployeeId } from '../actions/generate-employee-id';
+import { InviteEmployeeFeedback } from './invite-employee-feedback';
 
 export interface InviteEmployeeFormProps {
     initialState: OnboardingInviteFormState;
     templates: ChecklistTemplate[];
     canManageTemplates: boolean;
-}
-
-interface InviteEmployeeFeedbackProps {
-    state: OnboardingInviteFormState;
-    feedbackReference: React.RefObject<HTMLDivElement | null>;
-}
-
-function InviteEmployeeFeedback({ state, feedbackReference }: InviteEmployeeFeedbackProps) {
-    if (state.status === 'idle') {
-        return null;
-    }
-
-    const isSuccess = state.status === 'success';
-
-    return (
-        <div ref={feedbackReference} tabIndex={-1} role="status" aria-live="polite" aria-atomic="true">
-            <Alert variant={isSuccess ? 'default' : 'destructive'}>
-                <AlertTitle>{isSuccess ? 'Success' : 'Error'}</AlertTitle>
-                <AlertDescription>
-                    {state.message ?? 'Something went wrong.'}
-                    {isSuccess && state.token ? (
-                        <div className="mt-2 space-y-2">
-                            <div className="text-xs font-medium text-muted-foreground">Invitation token</div>
-                            <Input readOnly value={state.token} aria-label="Invitation token" />
-                        </div>
-                    ) : null}
-                </AlertDescription>
-            </Alert>
-        </div>
-    );
 }
 
 export function InviteEmployeeForm({ initialState, templates, canManageTemplates }: InviteEmployeeFormProps) {
@@ -65,7 +36,10 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
 
     const feedbackReference = useRef<HTMLDivElement | null>(null);
     const formReference = useRef<HTMLFormElement | null>(null);
+    const employeeNumberInputReference = useRef<HTMLInputElement | null>(null);
     const previousStatus = useRef(state.status);
+    const [isGeneratingEmployeeNumber, startGenerateEmployeeNumber] = useTransition();
+    const [employeeNumberGenerationError, setEmployeeNumberGenerationError] = useState<string | null>(null);
 
     useEffect(() => {
         const priorStatus = previousStatus.current;
@@ -81,10 +55,26 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
 
     useInviteEmployeeToast(state, pending);
 
+    function handleGenerateEmployeeNumber() {
+        startGenerateEmployeeNumber(() => {
+            setEmployeeNumberGenerationError(null);
+            void generateNextEmployeeId()
+                .then((result) => {
+                    if (employeeNumberInputReference.current) {
+                        employeeNumberInputReference.current.value = result.employeeNumber;
+                    }
+                })
+                .catch((error: unknown) => {
+                    setEmployeeNumberGenerationError(error instanceof Error
+                        ? error.message
+                        : 'Unable to generate employee number.');
+                });
+        });
+    }
+
     const [includeTemplate, setIncludeTemplate] = useState<boolean>(() => (
         initialState.values.includeTemplate ?? Boolean(initialState.values.onboardingTemplateId)
     ));
-
 
     const templateOptions = templates;
 
@@ -121,6 +111,7 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
                 <div className="space-y-1.5">
                     <Label htmlFor="employeeNumber">Employee number</Label>
                     <Input
+                        ref={employeeNumberInputReference}
                         id="employeeNumber"
                         name="employeeNumber"
                         autoComplete="off"
@@ -130,6 +121,22 @@ export function InviteEmployeeForm({ initialState, templates, canManageTemplates
                         required
                     />
                     <FieldError id="employeeNumber-error" message={employeeNumberError} />
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateEmployeeNumber}
+                            disabled={pending || isGeneratingEmployeeNumber}
+                        >
+                            {isGeneratingEmployeeNumber ? <Spinner className="mr-2" /> : null}
+                            Generate
+                        </Button>
+                        <p className="text-xs text-muted-foreground">Use auto-generate to avoid duplicate IDs.</p>
+                    </div>
+                    {employeeNumberGenerationError ? (
+                        <p className="text-xs text-destructive">{employeeNumberGenerationError}</p>
+                    ) : null}
                 </div>
                 <div className="space-y-1.5">
                     <Label htmlFor="jobTitle">Job title (optional)</Label>

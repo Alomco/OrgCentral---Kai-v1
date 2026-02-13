@@ -203,6 +203,7 @@ export function buildPrismaWhereFromFilters(filters?: EmployeeProfileFilters): P
                     { personalEmail: { contains: token, mode: 'insensitive' } },
                     { employeeNumber: { contains: token, mode: 'insensitive' } },
                     { jobTitle: { contains: token, mode: 'insensitive' } },
+                    { departmentId: { equals: token } },
                 ],
             });
         }

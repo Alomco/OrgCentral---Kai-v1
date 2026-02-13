@@ -6,6 +6,9 @@ import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/
 import type { PeopleListFilters } from '@/server/types/hr/people';
 import { countEmployeeProfiles } from './count-employee-profiles';
 import { createEmployeeProfileRepository } from '@/server/services/hr/people/people-repository.factory';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface CountEmployeeProfilesForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -23,6 +26,11 @@ function resolveEmployeeProfileRepository() {
 export async function countEmployeeProfilesForUi(
     input: CountEmployeeProfilesForUiInput,
 ): Promise<CountEmployeeProfilesForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.EMPLOYEE_PROFILE,
+    });
     async function countProfilesCached(
         cachedInput: CountEmployeeProfilesForUiInput,
     ): Promise<CountEmployeeProfilesForUiResult> {

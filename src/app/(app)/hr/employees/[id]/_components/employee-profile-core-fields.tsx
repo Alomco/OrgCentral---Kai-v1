@@ -1,5 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { EmployeeLookupField } from '@/app/(app)/hr/_components/employee-lookup-field';
+import type { EmployeeLookupOption } from '@/app/(app)/hr/_components/employee-lookup.types';
 import {
     Select,
     SelectContent,
@@ -23,13 +25,18 @@ interface EmployeeProfileCoreFieldsProps {
     formId: string;
     values: EmployeeProfileFormState['values'];
     fieldErrors?: EmployeeProfileFormState['fieldErrors'];
+    managerOptions: EmployeeLookupOption[];
 }
 
 export function EmployeeProfileCoreFields({
     formId,
     values,
     fieldErrors,
+    managerOptions,
 }: EmployeeProfileCoreFieldsProps) {
+    const managerError = fieldErrors?.managerUserId;
+    const managerErrorId = `${formId}-managerUserId-error`;
+
     return (
         <>
             <section className="space-y-4">
@@ -142,15 +149,19 @@ export function EmployeeProfileCoreFields({
                         />
                         <FieldError message={fieldErrors?.costCenter} />
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor={`${formId}-managerUserId`}>Manager user ID</Label>
-                        <Input
-                            id={`${formId}-managerUserId`}
-                            name="managerUserId"
-                            defaultValue={values.managerUserId}
-                        />
-                        <FieldError message={fieldErrors?.managerUserId} />
-                    </div>
+                    <EmployeeLookupField
+                        id={`${formId}-managerUserId`}
+                        label="Manager"
+                        name="managerUserId"
+                        defaultValue={values.managerUserId}
+                        options={managerOptions}
+                        placeholder="Select manager"
+                        searchPlaceholder="Search manager by name, employee number, or email"
+                        emptyText="No managers available."
+                        helperText="Choose a manager by name to avoid manual ID entry."
+                        error={managerError}
+                        errorId={managerErrorId}
+                    />
                     <div className="space-y-2">
                         <Label htmlFor={`${formId}-employmentType`}>Employment type</Label>
                         <Select name="employmentType" defaultValue={values.employmentType}>

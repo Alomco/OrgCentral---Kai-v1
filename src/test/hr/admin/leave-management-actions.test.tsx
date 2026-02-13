@@ -20,7 +20,13 @@ describe('LeaveManagementActions', () => {
     });
 
     it('disables export when no rows are available', async () => {
-        render(<LeaveManagementActions requests={[]} delegateFor={null} />);
+        render(
+            <LeaveManagementActions
+                requests={[]}
+                delegateFor={null}
+                employeeOptions={[]}
+            />,
+        );
 
         const exportButton = screen.getByRole('button', { name: /export csv/i }) as HTMLButtonElement;
         expect(exportButton.disabled).toBe(true);
@@ -50,7 +56,13 @@ describe('LeaveManagementActions', () => {
             },
         ];
 
-        render(<LeaveManagementActions requests={sampleRows} delegateFor={null} />);
+        render(
+            <LeaveManagementActions
+                requests={sampleRows}
+                delegateFor={null}
+                employeeOptions={[]}
+            />,
+        );
 
         const user = userEvent.setup();
         await user.click(screen.getByRole('button', { name: /export csv/i }));

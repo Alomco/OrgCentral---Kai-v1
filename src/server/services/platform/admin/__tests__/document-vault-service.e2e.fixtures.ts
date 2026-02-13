@@ -156,7 +156,7 @@ export class InMemoryBreakGlassRepository implements IBreakGlassRepository {
 }
 
 export class InMemoryTenantRepository implements IPlatformTenantRepository {
-    constructor(private readonly tenantRecord: PlatformTenantDetail) {}
+    constructor(private readonly tenantRecord: PlatformTenantDetail) { }
 
     async listTenants(): Promise<never> {
         throw new Error('Not implemented');
@@ -176,7 +176,7 @@ export class InMemoryTenantRepository implements IPlatformTenantRepository {
 }
 
 export class InMemoryDocumentVaultRepository implements IDocumentVaultRepository {
-    constructor(private readonly records: DocumentVaultRecord[]) {}
+    constructor(private readonly records: DocumentVaultRecord[]) { }
 
     async findById(id: string): Promise<DocumentVaultRecord | null> {
         return this.records.find((record) => record.id === id) ?? null;

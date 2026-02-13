@@ -4,9 +4,12 @@ import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { EntityNotFoundError } from '@/server/errors';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { LeaveRequest } from '@/server/types/leave-types';
 import type { LeaveRequestReadOptions } from '@/server/repositories/contracts/hr/leave/leave-request-repository-contract';
 import { getLeaveService } from '@/server/services/hr/leave/leave-service.provider';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetLeaveRequestForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -26,6 +29,12 @@ export interface FetchLeaveRequestForUiResult {
 async function executeGetLeaveRequest(
     input: GetLeaveRequestForUiInput,
 ): Promise<GetLeaveRequestForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.LEAVE_REQUEST,
+        resourceId: input.requestId,
+    });
     async function getLeaveRequestCached(
         cachedInput: GetLeaveRequestForUiInput,
     ): Promise<GetLeaveRequestForUiResult> {

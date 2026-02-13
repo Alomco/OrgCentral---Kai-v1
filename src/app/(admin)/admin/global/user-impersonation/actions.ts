@@ -15,6 +15,7 @@ import {
     CACHE_SCOPE_PLATFORM_IMPERSONATION,
 } from '@/server/repositories/cache-scopes';
 import { ValidationError } from '@/server/errors';
+import { appLogger } from '@/server/logging/structured-logger';
 
 export interface ImpersonationActionState {
     status: 'idle' | 'success' | 'error';
@@ -26,6 +27,7 @@ export interface ImpersonationBreakGlassState {
     status: 'idle' | 'success' | 'error';
     message?: string;
     approvalId?: string;
+    code?: 'MFA_REQUIRED';
 }
 
 const INITIAL_STATE: ImpersonationActionState = { status: 'idle' };
@@ -44,6 +46,7 @@ export async function requestImpersonationBreakGlassAction(
             headers: headerStore,
             requiredPermissions: { platformBreakGlass: ['request'] },
             auditSource: 'ui:admin:impersonation:break-glass',
+            disableCookieCache: true,
         },
     );
 
@@ -67,10 +70,22 @@ export async function requestImpersonationBreakGlassAction(
         });
 
         revalidatePath(IMPERSONATION_PATH);
+        appLogger.info('Break-glass approval requested.', {
+            orgId: authorization.orgId,
+            scope: 'impersonation',
+            approvalId: result.id,
+        });
         return { status: 'success', message: 'Break-glass approval requested.', approvalId: result.id };
     } catch (error) {
         const message = error instanceof ValidationError ? error.message : 'Unable to request break-glass approval.';
-        return { status: 'error', message };
+        const code = isMfaRequiredMessage(message) ? 'MFA_REQUIRED' : undefined;
+        if (code === 'MFA_REQUIRED') {
+            appLogger.warn('Break-glass request requires MFA.', {
+                orgId: authorization.orgId,
+                scope: 'impersonation',
+            });
+        }
+        return { status: 'error', message, code };
     }
 }
 

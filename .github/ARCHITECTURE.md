@@ -1,44 +1,68 @@
-# Copilot Chat Architecture
+﻿# Copilot Chat Architecture
 
 > Comprehensive AI Agent Capability Expansion Toolkit
 
 ---
 
-## 📋 Overview
+## ðŸ“‹ Overview
 
 This Copilot Chat toolkit is a modular system consisting of:
 
-- **20 Specialist Agents** - Role-based AI personas
-- **39 Skills** - Domain-specific knowledge modules
-- **11 Workflows** - Slash command procedures
+- **20 Specialist Agents + 1 Orchestration Profile** - Role-based AI personas
+- **43 Skills** - Domain-specific knowledge modules
+- **12 Prompt Commands** - `*.prompt.md` slash-command files
+- **11 Workflows** - Reference runbooks
 
 This .github folder is the source of truth for Copilot Chat alignment.
 
 ## Must-follow Principles
+
+### VS Code Copilot Compatibility Baseline
+
+- Store custom agents as `.github/agents/*.agent.md`.
+- Keep YAML front matter at the top of every agent file.
+- Treat subagents as stateless and delegate only scoped tasks.
+- Use PowerShell-compatible command examples for Windows-first workflows.
 
 
 Start here: [.github/copilot-chat-guide.md](.github/copilot-chat-guide.md)
 
 ---
 
-## 🏗️ Directory Structure
+## ðŸ—ï¸ Directory Structure
 
 ```plaintext
 .github/
-├── ARCHITECTURE.md          # This file
-├── copilot-instructions.md  # Always-on instructions
-├── agents/                  # 20 Specialist Agents
-├── instructions/             # Optional .instructions.md files
-├── prompts/                  # Prompt files (slash commands)
-├── skills/                  # 39 Skills
-├── workflows/               # 11 Slash Commands
-├── rules/                   # Global Rules
-└── scripts/                 # Master Validation Scripts
+â”œâ”€â”€ ARCHITECTURE.md          # This file
+â”œâ”€â”€ copilot-instructions.md  # Always-on instructions
+â”œâ”€â”€ agents/                  # *.agent.md files (20 specialist + 1 orchestration profile)
+â”œâ”€â”€ instructions/             # Optional .instructions.md files
+â”œâ”€â”€ prompts/                  # Prompt files (slash commands)
+â”œâ”€â”€ skills/                  # 43 Skills
+â”œâ”€â”€ workflows/               # 11 reference runbooks
+â”œâ”€â”€ rules/                   # Global Rules
+â””â”€â”€ scripts/                 # Master Validation Scripts
 ```
 
 ---
 
-## 🤖 Agents (20)
+## Test Agent Accounts
+
+Use these files for seeded test-agent personas and credentials:
+
+- `.codex/test-accounts/catalog.local.json` (machine-readable, local-only)
+- `.codex/test-accounts/README.local.md` (human-readable, local-only)
+- `docs/runbooks/test-agent-accounts.md` (usage and verification runbook)
+
+Commands:
+
+- `pnpm seed:test-accounts`
+- `pnpm test-accounts:list`
+- `pnpm test-accounts:verify`
+
+---
+
+## ðŸ¤– Agents (20 + 1 profile)
 
 Specialist AI personas for different domains.
 
@@ -52,7 +76,7 @@ Specialist AI personas for different domains.
 | `mobile-developer` | iOS, Android, RN | mobile-design |
 | `game-developer` | Game logic, mechanics | game-development |
 | `devops-engineer` | CI/CD, Docker | deployment-procedures, server-management |
-| `security-auditor` | Security compliance | vulnerability-scanner, red-team-tactics |
+| `security-auditor` | Security compliance, information-security-manager-iso27001 | vulnerability-scanner, red-team-tactics |
 | `penetration-tester` | Offensive security | red-team-tactics |
 | `test-engineer` | Testing strategies | testing-patterns, tdd-workflow, webapp-testing |
 | `debugger` | Root cause analysis | systematic-debugging |
@@ -67,7 +91,7 @@ Specialist AI personas for different domains.
 
 ---
 
-## 🧩 Skills (39)
+## 🧩 Skills (43)
 
 Modular knowledge domains that agents can load on-demand based on task context.
 
@@ -172,9 +196,9 @@ Modular knowledge domains that agents can load on-demand based on task context.
 
 ---
 
-## 🔄 Workflows (11)
+## 🔄 Prompt Commands (12)
 
-Slash command procedures. Invoke with `/command`.
+Slash commands are loaded from .github/prompts/*.prompt.md.
 
 | Command | Description |
 | ------- | ----------- |
@@ -189,16 +213,17 @@ Slash command procedures. Invoke with `/command`.
 | `/status` | Check project status |
 | `/test` | Run tests |
 | `/ui-ux-pro-max` | Design with 50 styles |
+| `/parallel-agents` | Multi-lens orchestration analysis |
 
 ---
 
-## 🎯 Skill Loading Protocol
+## ðŸŽ¯ Skill Loading Protocol
 
 ```plaintext
-User Request → Skill Description Match → Load SKILL.md
-                                            ↓
+User Request â†’ Skill Description Match â†’ Load SKILL.md
+                                            â†“
                                     Read references/
-                                            ↓
+                                            â†“
                                     Read scripts/
 ```
 
@@ -206,10 +231,10 @@ User Request → Skill Description Match → Load SKILL.md
 
 ```plaintext
 skill-name/
-├── SKILL.md           # (Required) Metadata & instructions
-├── scripts/           # (Optional) Python/Bash scripts
-├── references/        # (Optional) Templates, docs
-└── assets/            # (Optional) Images, logos
+â”œâ”€â”€ SKILL.md           # (Required) Metadata & instructions
+â”œâ”€â”€ scripts/           # (Optional) Python/Bash scripts
+â”œâ”€â”€ references/        # (Optional) Templates, docs
+â””â”€â”€ assets/            # (Optional) Images, logos
 ```
 
 ---
@@ -259,19 +284,20 @@ For details, see [scripts/README.md](scripts/README.md)
 
 ---
 
-## 📊 Statistics
+## ðŸ“Š Statistics
 
 | Metric | Value |
 | ------ | ----- |
 | **Total Agents** | 20 |
-| **Total Skills** | 39 |
-| **Total Workflows** | 11 |
+| **Total Skills** | 43 |
+| **Prompt Commands** | 12 |
+| **Total Workflows** | 11 (reference) |
 | **Total Scripts** | 2 (master) + 18 (skill-level) |
 | **Coverage** | ~90% web/mobile development |
 
 ---
 
-## 🔗 Quick Reference
+## ðŸ”— Quick Reference
 
 | Need | Agent | Skills |
 | ---- | ----- | ------ |
@@ -283,4 +309,6 @@ For details, see [scripts/README.md](scripts/README.md)
 | Testing | `test-engineer` | testing-patterns, webapp-testing |
 | Debug | `debugger` | systematic-debugging |
 | Plan | `project-planner` | brainstorming, plan-writing |
+
+
 

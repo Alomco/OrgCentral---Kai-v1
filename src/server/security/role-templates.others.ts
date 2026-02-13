@@ -63,7 +63,7 @@ export const memberTemplate = {
     'hr.performance.review': ['read', 'list'],
     'hr.performance.goal': ['read', 'list'],
     'hr.policy': ['read', 'list'],
-    'hr.policy.acknowledgment': ['acknowledge'],
+    'hr.policy.acknowledgment': ['read', 'acknowledge'],
     'hr.time.entry': ['read', 'list', 'create', 'update'],
     'hr.time.sheet': ['read', 'list'],
     'hr.training.record': ['read', 'list'],

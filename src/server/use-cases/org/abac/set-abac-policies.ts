@@ -1,11 +1,13 @@
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { IAbacPolicyRepository } from '@/server/repositories/contracts/org/abac/abac-policy-repository-contract';
+import type { IPermissionResourceRepository } from '@/server/repositories/contracts/org/permissions/permission-resource-repository-contract';
 import type { AbacPolicy } from '@/server/security/abac-types';
 import { normalizeAbacPolicies } from '@/server/security/abac-policy-normalizer';
 import { ValidationError } from '@/server/errors';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ABAC_POLICIES } from '@/server/repositories/cache-scopes';
+import { assertAbacPoliciesUseKnownSelectors } from './abac-policy-selector-validator';
 
 // Use-case: set ABAC policies for an organization through ABAC policy repositories with authorization.
 
@@ -13,6 +15,7 @@ const MAX_POLICIES = 200;
 
 export interface SetAbacPoliciesDependencies {
     policyRepository: IAbacPolicyRepository;
+    permissionResourceRepository?: Pick<IPermissionResourceRepository, 'listResources'>;
 }
 
 export interface SetAbacPoliciesInput {
@@ -35,6 +38,11 @@ export async function setAbacPolicies(
     }
 
     const normalized = normalizeAbacPolicies(candidatePolicies, { failOnInvalid: true });
+    await assertAbacPoliciesUseKnownSelectors(
+        input.authorization.orgId,
+        normalized,
+        deps.permissionResourceRepository,
+    );
 
   await deps.policyRepository.setPoliciesForOrg(input.authorization.orgId, normalized);
 

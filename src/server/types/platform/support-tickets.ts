@@ -9,6 +9,7 @@ export type SupportTicketSeverity = (typeof SUPPORT_TICKET_SEVERITIES)[number];
 
 export interface SupportTicket {
     id: string;
+    version: number;
     orgId: string;
     dataResidency: DataResidencyZone;
     dataClassification: DataClassificationLevel;

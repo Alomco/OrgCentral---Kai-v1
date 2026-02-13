@@ -34,6 +34,8 @@ export function LeaveApprovalForm({ requestId }: LeaveApprovalFormProps) {
     const [rejectState, rejectAction, rejectPending] = useActionState(rejectLeaveAction, initialState);
 
     const isPending = approvePending || rejectPending;
+    const reasonInputId = `reason-${requestId}`;
+    const reasonErrorId = `${reasonInputId}-error`;
 
     return (
         <div className="flex flex-col items-end gap-2">
@@ -78,18 +80,22 @@ export function LeaveApprovalForm({ requestId }: LeaveApprovalFormProps) {
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="py-4">
-                                <Label htmlFor="reason">Reason</Label>
+                                <Label htmlFor={reasonInputId}>Reason</Label>
                                 <Input
-                                    id="reason"
+                                    id={reasonInputId}
                                     name="reason"
                                     placeholder="Example: dates overlap with team coverage"
                                     required
                                     minLength={1}
                                     maxLength={500}
+                                    aria-invalid={rejectState.status === 'error'}
+                                    aria-describedby={rejectState.status === 'error' ? reasonErrorId : undefined}
                                     className="mt-1.5"
                                 />
                                 {rejectState.status === 'error' && (
-                                    <p className="mt-2 text-sm text-destructive">{rejectState.message}</p>
+                                    <p id={reasonErrorId} className="mt-2 text-sm text-destructive" role="alert">
+                                        {rejectState.message}
+                                    </p>
                                 )}
                             </div>
                             <DialogFooter>

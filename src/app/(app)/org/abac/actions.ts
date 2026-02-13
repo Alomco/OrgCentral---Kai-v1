@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { PrismaAbacPolicyRepository } from '@/server/repositories/prisma/org/abac/prisma-abac-policy-repository';
+import { PrismaPermissionResourceRepository } from '@/server/repositories/prisma/org/permissions/prisma-permission-resource-repository';
 import { setAbacPolicies } from '@/server/use-cases/org/abac/set-abac-policies';
 import { abacPolicySchema } from '@/server/security/abac-policy-normalizer';
 
@@ -63,7 +64,10 @@ export async function updateAbacPoliciesAction(
 
     try {
         await setAbacPolicies(
-            { policyRepository: new PrismaAbacPolicyRepository() },
+            {
+                policyRepository: new PrismaAbacPolicyRepository(),
+                permissionResourceRepository: new PrismaPermissionResourceRepository(),
+            },
             { authorization, policies: parsedPolicies.data },
         );
         return {

@@ -1,89 +1,53 @@
 ---
-description: Create project plan using project-planner agent. No code writing - only plan file generation.
+description: Create a focused implementation plan for multi-file or ambiguous tasks.
 ---
 
-# /plan - Project Planning Mode
+# /plan - Planning Workflow
 
 $ARGUMENTS
 
----
+## Goal
 
-## 🔴 CRITICAL RULES
+Produce one plan file in the project root (`PLAN-{slug}.md`) with:
 
-1. **NO CODE WRITING** - This command creates plan file only
-2. **Use project-planner agent** - do not rely on any built-in plan mode
-3. **Socratic Gate** - Ask clarifying questions before planning
-4. **Dynamic Naming** - Plan file named based on task
+- Scope and assumptions
+- Task breakdown
+- Risks and constraints
+- Verification checklist
 
----
+## Rules
 
-## Task
+1. Planning only: no code changes in this workflow.
+2. Ask concise clarification questions only when needed.
+3. Prefer `project-planner` for structured breakdowns.
+4. If built-in plan capabilities are available, they can be used to support this workflow.
 
-Use the `project-planner` agent with this context:
+## Context Template
 
-```
+Use the `project-planner` agent with:
+
+```text
 CONTEXT:
 - User Request: $ARGUMENTS
-- Mode: PLANNING ONLY (no code)
-- Output: {task-slug}.md in the project root (dynamic naming)
+- Mode: planning-only
+- Output: PLAN-{slug}.md in project root
 
-NAMING RULES:
-1. Extract 2-3 key words from request
-2. Lowercase, hyphen-separated
-3. Max 30 characters
-4. Example: "e-commerce cart" → PLAN-ecommerce-cart.md
+NAMES:
+- 2-3 key words
+- lowercase, hyphen-separated
+- keep short and clear
 
-RULES:
-1. Follow project-planner.md Phase -1 (Context Check)
-2. Follow project-planner.md Phase 0 (Socratic Gate)
-3. Create PLAN-{slug}.md with task breakdown
-4. DO NOT write any code files
-5. REPORT the exact file name created
+REQUIREMENTS:
+1) capture requirements and assumptions
+2) split into executable tasks
+3) assign owner agent/skill suggestions
+4) define verification commands
+5) do not write implementation code
 ```
 
----
+## Completion Message
 
-## Expected Output
-
-| Deliverable | Location |
-|-------------|----------|
-| Project Plan | `{task-slug}.md` |
-| Task Breakdown | Inside plan file |
-| Agent Assignments | Inside plan file |
-| Verification Checklist | Phase X in plan file |
-
----
-
-## After Planning
-
-Tell user:
-```
-[OK] Plan created: {task-slug}.md
-
-Next steps:
-- Review the plan
-- Run `/create` to start implementation
-- Or modify plan manually
-```
-
----
-
-## Naming Examples
-
-| Request | Plan File |
-|---------|-----------|
-| `/plan e-commerce site with cart` | `ecommerce-cart.md` |
-| `/plan mobile app for fitness` | `fitness-app.md` |
-| `/plan add dark mode feature` | `dark-mode.md` |
-| `/plan fix authentication bug` | `auth-fix.md` |
-| `/plan SaaS dashboard` | `saas-dashboard.md` |
-
----
-
-## Usage
-
-```
-/plan e-commerce site with cart
-/plan mobile app for fitness tracking
-/plan SaaS dashboard with analytics
+```text
+[OK] Plan created: PLAN-{slug}.md
+Next: review and approve, then execute implementation.
 ```

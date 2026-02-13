@@ -4,6 +4,7 @@ import type { DocumentType } from '@/server/types/records/document-vault';
 import type { DocumentTemplateRecord } from '@/server/types/records/document-templates';
 import type { JsonValue } from '@/server/types/json';
 import { assertOnboardingConfigManager } from '@/server/use-cases/hr/onboarding/config/onboarding-config-access';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
 
 export interface CreateDocumentTemplateInput {
     authorization: RepositoryAuthorizationContext;
@@ -26,7 +27,11 @@ export async function createDocumentTemplate(
     deps: CreateDocumentTemplateDependencies,
     input: CreateDocumentTemplateInput,
 ): Promise<CreateDocumentTemplateResult> {
-    assertOnboardingConfigManager(input.authorization);
+    await assertOnboardingConfigManager({
+        authorization: input.authorization,
+        action: HR_ACTION.CREATE,
+        resourceAttributes: { documentType: input.type, templateName: input.name },
+    });
 
     const template = await deps.documentTemplateRepository.createTemplate({
         orgId: input.authorization.orgId,

@@ -8,6 +8,9 @@ import type { PeopleListFilters } from '@/server/types/hr/people';
 import type {
   EmployeeProfileSortInput,
 } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 import { listEmployeeDirectory } from './list-employee-directory';
 import { createEmployeeProfileRepository } from '@/server/services/hr/people/people-repository.factory';
@@ -34,6 +37,15 @@ function resolveEmployeeProfileRepository(): IEmployeeProfileRepository {
 export async function listEmployeeDirectoryForUi(
   input: ListEmployeeDirectoryForUiInput,
 ): Promise<ListEmployeeDirectoryForUiResult> {
+  await recordHrCachedReadAudit({
+    authorization: input.authorization,
+    action: HR_ACTION.LIST,
+    resource: HR_RESOURCE_TYPE.EMPLOYEE_PROFILE,
+    payload: {
+      page: input.page,
+      pageSize: input.pageSize,
+    },
+  });
   async function listDirectoryCached(
     cachedInput: ListEmployeeDirectoryForUiInput,
   ): Promise<ListEmployeeDirectoryForUiResult> {

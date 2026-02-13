@@ -45,10 +45,11 @@ export class RoleServiceProvider {
 
     return {
       roleRepository: dependencies.roleRepository,
+      permissionResourceRepository: dependencies.permissionResourceRepository,
       notificationComposer: dependencies.notificationComposer,
       roleQueue: dependencies.roleQueue,
     };
-  }
+}
 }
 
 const defaultRoleServiceProvider = new RoleServiceProvider();

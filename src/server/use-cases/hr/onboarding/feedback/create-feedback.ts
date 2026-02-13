@@ -2,6 +2,7 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { IOnboardingFeedbackRepository } from '@/server/repositories/contracts/hr/onboarding/onboarding-feedback-repository-contract';
 import type { OnboardingFeedbackRecord } from '@/server/types/hr/onboarding-feedback';
 import { assertOnboardingConfigManager } from '../config/onboarding-config-access';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
 
 export interface CreateOnboardingFeedbackInput {
     authorization: RepositoryAuthorizationContext;
@@ -23,7 +24,11 @@ export async function createOnboardingFeedback(
     deps: CreateOnboardingFeedbackDependencies,
     input: CreateOnboardingFeedbackInput,
 ): Promise<CreateOnboardingFeedbackResult> {
-    assertOnboardingConfigManager(input.authorization);
+    await assertOnboardingConfigManager({
+        authorization: input.authorization,
+        action: HR_ACTION.CREATE,
+        resourceAttributes: { employeeId: input.employeeId },
+    });
 
     const feedback = await deps.feedbackRepository.createFeedback({
         orgId: input.authorization.orgId,

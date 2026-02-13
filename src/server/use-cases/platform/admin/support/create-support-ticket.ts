@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { RepositoryAuthorizationContext } from '@/server/types/repository-authorization';
 import type { ISupportTicketRepository } from '@/server/repositories/contracts/platform/admin/support-ticket-repository-contract';
 import type { IPlatformTenantRepository } from '@/server/repositories/contracts/platform/admin/platform-tenant-repository-contract';
+import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 import type { SupportTicket } from '@/server/types/platform/support-tickets';
 import { enforcePermission } from '@/server/repositories/security';
 import { parseSupportTicketCreate, type SupportTicketCreateInput } from '@/server/validators/platform/admin/support-ticket-validators';
@@ -9,6 +10,8 @@ import { recordAuditEvent } from '@/server/logging/audit-logger';
 import { requireTenantInScope } from '@/server/use-cases/platform/admin/tenants/tenant-scope-guards';
 import { checkAdminRateLimit, buildAdminRateLimitKey } from '@/server/lib/security/admin-rate-limit';
 import { ValidationError } from '@/server/errors';
+import { applySupportTicketSla, evaluateSupportTicketSla } from '@/server/use-cases/platform/admin/support/support-ticket-sla';
+import { sendSupportTicketCreateNotifications } from '@/server/use-cases/platform/admin/support/support-ticket-notifications';
 
 export interface CreateSupportTicketInput {
     authorization: RepositoryAuthorizationContext;
@@ -18,6 +21,7 @@ export interface CreateSupportTicketInput {
 export interface CreateSupportTicketDependencies {
     supportTicketRepository: ISupportTicketRepository;
     tenantRepository: IPlatformTenantRepository;
+    notificationDispatchService?: NotificationDispatchContract;
 }
 
 export async function createSupportTicket(
@@ -50,6 +54,7 @@ export async function createSupportTicket(
 
     const ticket: SupportTicket = {
         id: randomUUID(),
+        version: 1,
         orgId: input.authorization.orgId,
         dataResidency: input.authorization.dataResidency,
         dataClassification: input.authorization.dataClassification,
@@ -69,7 +74,9 @@ export async function createSupportTicket(
         updatedAt: now,
     };
 
-    const created = await deps.supportTicketRepository.createTicket(input.authorization, ticket);
+    const ticketWithSla = applySupportTicketSla(ticket, evaluateSupportTicketSla(ticket), now);
+
+    const created = await deps.supportTicketRepository.createTicket(input.authorization, ticketWithSla);
 
     await recordAuditEvent({
         orgId: input.authorization.orgId,
@@ -83,6 +90,12 @@ export async function createSupportTicket(
         classification: input.authorization.dataClassification,
         auditSource: input.authorization.auditSource,
         auditBatchId: input.authorization.auditBatchId,
+    });
+
+    await sendSupportTicketCreateNotifications({
+        dispatcher: deps.notificationDispatchService,
+        authorization: input.authorization,
+        ticket: created,
     });
 
     return created;

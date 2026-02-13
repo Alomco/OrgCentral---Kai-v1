@@ -132,7 +132,9 @@ export class PeopleServiceOperationRunner {
       resourceAttributes: guardAttributes,
     });
 
-    const scopedAuth = await this.applyGuard(scope, access, authorization, guardAttributes);
+    const scopedAuth = access === 'read'
+      ? await this.applyGuard(scope, access, authorization, guardAttributes)
+      : authorization;
     if (access === 'read') {
       this.registerCache(scope, scopedAuth);
     }

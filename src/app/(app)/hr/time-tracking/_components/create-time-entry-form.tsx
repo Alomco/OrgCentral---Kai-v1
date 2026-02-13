@@ -26,6 +26,10 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
     const isSuccess = state.status === 'success';
     const isError = state.status === 'error';
 
+    const resetKey = state.status === 'success'
+        ? `success:${state.values.date}:${state.values.clockIn}`
+        : 'idle';
+
     return (
         <Card>
             <CardHeader>
@@ -38,7 +42,7 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form action={formAction} className="space-y-4">
+                <form key={resetKey} action={formAction} className="space-y-4">
                     {isSuccess ? (
                         <Alert className="bg-success/10">
                             <CheckCircle2 className="h-4 w-4 text-success" />
@@ -48,7 +52,7 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                         </Alert>
                     ) : null}
 
-                    {isError && state.message && !state.fieldErrors ? (
+                    {isError && state.message ? (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>{state.message}</AlertDescription>
@@ -63,8 +67,10 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                                 name="date"
                                 type="date"
                                 defaultValue={state.values.date}
+                                aria-invalid={Boolean(state.fieldErrors?.date)}
+                                aria-describedby={state.fieldErrors?.date ? `${formId}-date-error` : undefined}
                             />
-                            <FieldError message={state.fieldErrors?.date} />
+                            <FieldError id={`${formId}-date-error`} message={state.fieldErrors?.date} />
                         </div>
 
                         <div className="space-y-2">
@@ -74,8 +80,10 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                                 name="clockIn"
                                 type="time"
                                 defaultValue={state.values.clockIn}
+                                aria-invalid={Boolean(state.fieldErrors?.clockIn)}
+                                aria-describedby={state.fieldErrors?.clockIn ? `${formId}-clockIn-error` : undefined}
                             />
-                            <FieldError message={state.fieldErrors?.clockIn} />
+                            <FieldError id={`${formId}-clockIn-error`} message={state.fieldErrors?.clockIn} />
                         </div>
 
                         <div className="space-y-2">
@@ -85,8 +93,10 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                                 name="clockOut"
                                 type="time"
                                 defaultValue={state.values.clockOut}
+                                aria-invalid={Boolean(state.fieldErrors?.clockOut)}
+                                aria-describedby={state.fieldErrors?.clockOut ? `${formId}-clockOut-error` : undefined}
                             />
-                            <FieldError message={state.fieldErrors?.clockOut} />
+                            <FieldError id={`${formId}-clockOut-error`} message={state.fieldErrors?.clockOut} />
                         </div>
                     </div>
 
@@ -100,7 +110,10 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                                 min="0"
                                 step="0.25"
                                 defaultValue={state.values.breakDuration}
+                                aria-invalid={Boolean(state.fieldErrors?.breakDuration)}
+                                aria-describedby={state.fieldErrors?.breakDuration ? `${formId}-break-error` : undefined}
                             />
+                            <FieldError id={`${formId}-break-error`} message={state.fieldErrors?.breakDuration} />
                         </div>
 
                         <div className="space-y-2">
@@ -122,7 +135,10 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                                 name="projectCode"
                                 placeholder="Budget or cost center"
                                 defaultValue={state.values.projectCode}
+                                aria-invalid={Boolean(state.fieldErrors?.projectCode)}
+                                aria-describedby={state.fieldErrors?.projectCode ? `${formId}-projectCode-error` : undefined}
                             />
+                            <FieldError id={`${formId}-projectCode-error`} message={state.fieldErrors?.projectCode} />
                         </div>
 
                         <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
@@ -154,9 +170,12 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                             id={`${formId}-tasks`}
                             name="tasks"
                             rows={2}
-                            placeholder="Design review, API testing, client sync"
+                            placeholder="Design review, API testing, client sync (comma or new line separated)"
                             defaultValue={state.values.tasks}
+                            aria-invalid={Boolean(state.fieldErrors?.tasks)}
+                            aria-describedby={state.fieldErrors?.tasks ? `${formId}-tasks-error` : undefined}
                         />
+                        <FieldError id={`${formId}-tasks-error`} message={state.fieldErrors?.tasks} />
                     </div>
 
                     <div className="space-y-2">
@@ -167,7 +186,10 @@ export function CreateTimeEntryForm({ initialState }: CreateTimeEntryFormProps) 
                             rows={2}
                             placeholder="Explain overtime if applicable"
                             defaultValue={state.values.overtimeReason}
+                            aria-invalid={Boolean(state.fieldErrors?.overtimeReason)}
+                            aria-describedby={state.fieldErrors?.overtimeReason ? `${formId}-overtimeReason-error` : undefined}
                         />
+                        <FieldError id={`${formId}-overtimeReason-error`} message={state.fieldErrors?.overtimeReason} />
                     </div>
 
                     <div className="space-y-2">

@@ -3,9 +3,12 @@ import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { EmploymentContract } from '@/server/types/hr-types';
 import { getEmploymentContract } from './get-employment-contract';
 import { createEmploymentContractRepository } from '@/server/services/hr/people/people-repository.factory';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetEmploymentContractForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -23,6 +26,12 @@ function resolveEmploymentContractRepository() {
 export async function getEmploymentContractForUi(
     input: GetEmploymentContractForUiInput,
 ): Promise<GetEmploymentContractForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.EMPLOYMENT_CONTRACT,
+        resourceId: input.contractId,
+    });
     async function getContractCached(
         cachedInput: GetEmploymentContractForUiInput,
     ): Promise<GetEmploymentContractForUiResult> {

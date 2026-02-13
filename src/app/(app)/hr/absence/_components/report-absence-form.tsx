@@ -45,6 +45,8 @@ export function ReportAbsenceForm({ authorization, initialState, absenceTypes }:
     const isSuccess = state.status === 'success';
     const isError = state.status === 'error';
     const hasAbsenceTypes = absenceTypes.length > 0;
+    const typeErrorId = `${formId}-type-error`;
+    const durationTypeErrorId = `${formId}-durationType-error`;
 
     const computedHours = useMemo(() => {
         if (durationType !== 'HOURS') {
@@ -116,7 +118,11 @@ export function ReportAbsenceForm({ authorization, initialState, absenceTypes }:
                                 defaultValue={state.values.typeId}
                                 disabled={!hasAbsenceTypes || isPending}
                             >
-                                <SelectTrigger id={`${formId}-type`}>
+                                <SelectTrigger
+                                    id={`${formId}-type`}
+                                    aria-invalid={Boolean(state.fieldErrors?.typeId)}
+                                    aria-describedby={state.fieldErrors?.typeId ? typeErrorId : undefined}
+                                >
                                     <SelectValue placeholder={hasAbsenceTypes ? 'Select type' : 'No types configured'} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -127,7 +133,7 @@ export function ReportAbsenceForm({ authorization, initialState, absenceTypes }:
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <FieldError message={state.fieldErrors?.typeId} />
+                            <FieldError id={typeErrorId} message={state.fieldErrors?.typeId} />
                             {!hasAbsenceTypes ? (
                                 <p className="text-xs text-muted-foreground">
                                     No absence types are configured. Ask an HR admin to add absence types in HR Settings.
@@ -143,7 +149,11 @@ export function ReportAbsenceForm({ authorization, initialState, absenceTypes }:
                                 onValueChange={(value) => setDurationType(value === 'HOURS' ? 'HOURS' : 'DAYS')}
                                 disabled={isPending}
                             >
-                                <SelectTrigger id={`${formId}-duration`}>
+                                <SelectTrigger
+                                    id={`${formId}-duration`}
+                                    aria-invalid={Boolean(state.fieldErrors?.durationType)}
+                                    aria-describedby={state.fieldErrors?.durationType ? durationTypeErrorId : undefined}
+                                >
                                     <SelectValue placeholder="Select duration" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -151,7 +161,7 @@ export function ReportAbsenceForm({ authorization, initialState, absenceTypes }:
                                     <SelectItem value="HOURS">Partial day (hours)</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <FieldError message={state.fieldErrors?.durationType} />
+                            <FieldError id={durationTypeErrorId} message={state.fieldErrors?.durationType} />
                         </div>
                     </div>
 

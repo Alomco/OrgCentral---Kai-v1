@@ -12,6 +12,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
+import type { EmployeeLookupOption } from '@/app/(app)/hr/_components/employee-lookup.types';
 
 import { updateEmployeeProfileAction } from '../../actions';
 import type { EmployeeProfileFormState } from '../../form-state';
@@ -20,9 +21,10 @@ import { EmployeeProfileAdditionalFields } from './employee-profile-additional-f
 
 export interface EmployeeProfileEditCardProps {
     initialState: EmployeeProfileFormState;
+    managerOptions: EmployeeLookupOption[];
 }
 
-export function EmployeeProfileEditCard({ initialState }: EmployeeProfileEditCardProps) {
+export function EmployeeProfileEditCard({ initialState, managerOptions }: EmployeeProfileEditCardProps) {
     const formId = useId();
     const [state, formAction, pending] = useActionState(updateEmployeeProfileAction, initialState);
 
@@ -46,6 +48,7 @@ export function EmployeeProfileEditCard({ initialState }: EmployeeProfileEditCar
                             formId={formId}
                             values={state.values}
                             fieldErrors={state.fieldErrors}
+                            managerOptions={managerOptions}
                         />
                         <EmployeeProfileAdditionalFields
                             formId={formId}

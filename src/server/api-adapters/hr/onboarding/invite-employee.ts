@@ -9,6 +9,7 @@ import { sendInvitationEmail } from '@/server/use-cases/notifications/send-invit
 import { getInvitationEmailDependencies } from '@/server/use-cases/notifications/invitation-email.provider';
 import { buildInvitationRequestSecurityContext } from '@/server/use-cases/shared/request-metadata';
 import { readJson } from '@/server/api-adapters/http/request-utils';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions';
 import {
     resolveOnboardingControllerDependencies,
     type OnboardingControllerDependencies,
@@ -31,10 +32,10 @@ export async function inviteEmployeeController(
 
     const { authorization } = await getSessionContext(resolved.session, {
         headers: request.headers,
-        requiredPermissions: { member: ['invite'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.ONBOARDING_SEND,
         auditSource: 'api:hr:onboarding:invite',
-        action: 'invite',
-        resourceType: 'hr.onboarding',
+        action: HR_ACTION.SEND,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_INVITE,
         resourceAttributes: {
             email: payload.email,
             employeeNumber: payload.employeeNumber,

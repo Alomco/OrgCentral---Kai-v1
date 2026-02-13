@@ -3,9 +3,12 @@ import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { LeaveAttachment } from '@/server/types/leave-types';
 import { getLeaveAttachment } from './get-leave-attachment';
 import { createLeaveAttachmentRepository } from '@/server/services/hr/leave/leave-repository.factory';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetLeaveAttachmentForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -19,6 +22,12 @@ export interface GetLeaveAttachmentForUiResult {
 export async function getLeaveAttachmentForUi(
     input: GetLeaveAttachmentForUiInput,
 ): Promise<GetLeaveAttachmentForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.ABSENCE_ATTACHMENT,
+        resourceId: input.attachmentId,
+    });
     async function getAttachmentCached(
         cachedInput: GetLeaveAttachmentForUiInput,
     ): Promise<GetLeaveAttachmentForUiResult> {

@@ -27,6 +27,18 @@ export class InfrastructureError extends BaseTypedError {
     }
 }
 
+export class ConflictError extends BaseTypedError {
+    constructor(message: string, details?: ErrorDetails) {
+        super(message, 'CONFLICT_ERROR', details);
+    }
+}
+
+export class RateLimitError extends BaseTypedError {
+    constructor(message: string, details?: ErrorDetails) {
+        super(message, 'RATE_LIMIT_EXCEEDED', details);
+    }
+}
+
 export {
     AbsenceAlreadyClosedError,
     AbsenceAnalysisInProgressError,

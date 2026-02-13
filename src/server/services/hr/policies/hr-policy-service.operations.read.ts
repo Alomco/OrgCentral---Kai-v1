@@ -11,7 +11,8 @@ import { getHrPolicy } from '../../../use-cases/hr/policies/get-hr-policy';
 import { getPolicyAcknowledgment } from '../../../use-cases/hr/policies/get-policy-acknowledgment';
 import { listHrPolicies } from '../../../use-cases/hr/policies/list-hr-policies';
 import { listPolicyAcknowledgments } from '../../../use-cases/hr/policies/list-policy-acknowledgments';
-import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
+import { HR_ACTION, HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions';
+import { HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 import type { HrPolicyServiceRuntime } from './hr-policy-service.operations.types';
 
 export async function handleListPolicies(
@@ -76,7 +77,7 @@ export async function handleGetPolicyAcknowledgment(
     const authorization = runtime.coerceAuthorization(input.authorization);
     await runtime.ensureOrgAccess(authorization, {
         action: HR_ACTION.READ,
-        resourceType: HR_RESOURCE.HR_POLICY,
+        resourceType: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
         resourceAttributes: { policyId: input.policyId, userId: input.userId },
     });
 
@@ -110,8 +111,8 @@ export async function handleListPolicyAcknowledgments(
 ): Promise<PolicyAcknowledgment[]> {
     const authorization = runtime.coerceAuthorization(input.authorization);
     await runtime.ensureOrgAccess(authorization, {
-        action: HR_ACTION.READ,
-        resourceType: HR_RESOURCE.HR_POLICY,
+        action: HR_ACTION.LIST,
+        resourceType: HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
         resourceAttributes: { policyId: input.policyId, version: input.version },
     });
 

@@ -3,6 +3,7 @@ import type { IEmailSequenceTemplateRepository } from '@/server/repositories/con
 import type { EmailSequenceTemplateRecord, EmailSequenceTrigger } from '@/server/types/hr/onboarding-email-sequences';
 import type { JsonValue } from '@/server/types/json';
 import { assertOnboardingConfigManager } from '../config/onboarding-config-access';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
 
 export interface UpdateEmailSequenceTemplateInput {
     authorization: RepositoryAuthorizationContext;
@@ -28,7 +29,11 @@ export async function updateEmailSequenceTemplate(
     deps: UpdateEmailSequenceTemplateDependencies,
     input: UpdateEmailSequenceTemplateInput,
 ): Promise<UpdateEmailSequenceTemplateResult> {
-    assertOnboardingConfigManager(input.authorization);
+    await assertOnboardingConfigManager({
+        authorization: input.authorization,
+        action: HR_ACTION.UPDATE,
+        resourceAttributes: { templateId: input.templateId },
+    });
 
     const template = await deps.templateRepository.updateTemplate(
         input.authorization.orgId,

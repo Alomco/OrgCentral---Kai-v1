@@ -1,7 +1,7 @@
 import { AuthorizationError } from '@/server/errors';
 import type { ITimeEntryRepository } from '@/server/repositories/contracts/hr/time-tracking/time-entry-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import { canManageOrgTimeEntries } from '@/server/security/authorization';
+import { canViewOrgTimeEntries } from '@/server/security/authorization';
 import type { TimeEntry } from '@/server/types/hr-ops-types';
 import { registerTimeEntryCache } from './cache-helpers';
 
@@ -37,7 +37,7 @@ export async function getTimeEntry(
 
     if (
         entry.userId !== input.authorization.userId &&
-        !canManageOrgTimeEntries(input.authorization)
+        !canViewOrgTimeEntries(input.authorization)
     ) {
         throw new AuthorizationError('You cannot view time entries for other members.');
     }

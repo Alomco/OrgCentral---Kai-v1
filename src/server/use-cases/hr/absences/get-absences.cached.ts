@@ -3,8 +3,11 @@ import { cacheLife, unstable_noStore as noStore } from 'next/cache';
 import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { UnplannedAbsence } from '@/server/types/hr-ops-types';
 import { getAbsenceService } from '@/server/services/hr/absences/absence-service.provider';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetAbsencesForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -19,6 +22,15 @@ export interface GetAbsencesForUiResult {
 export async function getAbsencesForUi(
     input: GetAbsencesForUiInput,
 ): Promise<GetAbsencesForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.ABSENCE,
+        payload: {
+            userId: input.userId ?? null,
+            includeClosed: input.includeClosed ?? null,
+        },
+    });
     async function getAbsencesCached(
         cachedInput: GetAbsencesForUiInput,
     ): Promise<GetAbsencesForUiResult> {

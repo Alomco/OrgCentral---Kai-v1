@@ -129,34 +129,6 @@ function normalizeRoleKey(value: string): string {
     return value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 }
 
-function inferRoleKeyFromName(normalized: string): OrgRoleKey | null {
-    if (!normalized) {
-        return null;
-    }
-    if (normalized.includes('globaladmin')) {
-        return 'globalAdmin';
-    }
-    if (normalized.includes('orgadmin') || normalized.includes('organizationadmin')) {
-        return 'orgAdmin';
-    }
-    if (normalized.includes('hr') && normalized.includes('admin')) {
-        return 'hrAdmin';
-    }
-    if (normalized.includes('owner')) {
-        return 'owner';
-    }
-    if (normalized.includes('manager')) {
-        return 'manager';
-    }
-    if (normalized.includes('compliance')) {
-        return 'compliance';
-    }
-    if (normalized.includes('member') || normalized.includes('employee') || normalized.includes('staff')) {
-        return 'member';
-    }
-    return null;
-}
-
 function resolveRoleKey(roleName?: string | null): OrgRoleKey | 'custom' {
     if (!roleName) {
         return 'custom';
@@ -169,7 +141,7 @@ function resolveRoleKey(roleName?: string | null): OrgRoleKey | 'custom' {
     if (direct) {
         return direct;
     }
-    return inferRoleKeyFromName(normalized) ?? 'custom';
+    return 'custom';
 }
 
 function extractAuditBatchId(metadata: unknown): string | undefined {

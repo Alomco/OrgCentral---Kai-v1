@@ -4,6 +4,7 @@ import { updateChecklistInstance } from '@/server/use-cases/hr/onboarding/instan
 import type { ChecklistInstance } from '@/server/types/onboarding-types';
 import { parseChecklistInstanceIdentifier } from '@/server/validators/hr/onboarding/checklist-instance-validators';
 import { getChecklistInstanceRepository } from '@/server/services/hr/onboarding/onboarding-controller-dependencies';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions';
 
 interface GetEmployeeChecklistsResult {
     success: true;
@@ -20,18 +21,17 @@ const checklistInstanceRepository = getChecklistInstanceRepository();
 async function authorizeRequest(
     request: Request,
     auditSource: string,
-    action: 'read' | 'update',
+    action: 'list' | 'update',
     resourceAttributes?: Record<string, unknown>,
 ) {
-    // Permission requirement: 'onboarding-checklist:read' or 'onboarding-checklist:write'
-    // But basic employee profile read/write might suffice for now as per previous patterns.
-    // Using 'employeeProfile' permissions as proxy for now or specific if available.
     return getSessionContext({}, {
         headers: request.headers,
-        requiredPermissions: { employeeProfile: [action === 'read' ? 'read' : 'update'] },
+        requiredPermissions: action === 'list'
+            ? HR_PERMISSION_PROFILE.ONBOARDING_CHECKLIST_LIST
+            : HR_PERMISSION_PROFILE.ONBOARDING_CHECKLIST_UPDATE,
         auditSource,
-        action,
-        resourceType: 'checklistInstance',
+        action: action === 'list' ? HR_ACTION.LIST : HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_CHECKLIST,
         resourceAttributes,
     }).then(context => context.authorization);
 }
@@ -53,7 +53,7 @@ export async function getEmployeeChecklistsController(request: Request): Promise
     // However, the route.ts will determine this. Let's assume the controller takes request, extracting query params.
     const employeeIdParameter = url.searchParams.get('employeeId');
 
-    const authorization = await authorizeRequest(request, 'api:hr:onboarding:instances:list', 'read', {
+    const authorization = await authorizeRequest(request, 'api:hr:onboarding:instances:list', 'list', {
         targetEmployeeId: employeeIdParameter,
     });
 

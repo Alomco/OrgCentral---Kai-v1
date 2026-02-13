@@ -1,13 +1,18 @@
-import { EntityNotFoundError, ValidationError } from '@/server/errors';
+import { AuthorizationError, EntityNotFoundError, ValidationError } from '@/server/errors';
 import { toNumber } from '@/server/domain/absences/conversions';
 import type { ITimeEntryRepository } from '@/server/repositories/contracts/hr/time-tracking/time-entry-repository-contract';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
-import { assertPrivilegedOrgTimeEntryActor, assertValidTimeWindow } from '@/server/security/authorization';
+import { assertPrivilegedOrgTimeEntryApprover, assertValidTimeWindow } from '@/server/security/authorization';
 import type { TimeEntry } from '@/server/types/hr-ops-types';
 import type { ApproveTimeEntryPayload } from '@/server/types/hr-time-tracking-schemas';
 import { emitHrNotification } from '@/server/use-cases/hr/notifications/notification-emitter';
+import { appLogger } from '@/server/logging/structured-logger';
+import { recordNotificationFailure } from '@/server/services/security/notification-failure-monitor';
 import { invalidateTimeEntryCache } from './cache-helpers';
 import { appendDecision, calculateTotalHours } from './utils';
+import { recordAuditEvent } from '@/server/logging/audit-logger';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 
 // Use-case: approve a time entry using time-tracking repositories and guard validation.
 
@@ -30,13 +35,17 @@ export async function approveTimeEntry(
     deps: ApproveTimeEntryDependencies,
     input: ApproveTimeEntryInput,
 ): Promise<ApproveTimeEntryResult> {
-    assertPrivilegedOrgTimeEntryActor(input.authorization);
+    assertPrivilegedOrgTimeEntryApprover(input.authorization);
 
     const orgId = input.authorization.orgId;
     const current = await deps.timeEntryRepository.getTimeEntry(orgId, input.entryId);
 
     if (!current) {
         throw new EntityNotFoundError('TimeEntry', { entryId: input.entryId });
+    }
+
+    if (current.userId === input.authorization.userId) {
+        throw new AuthorizationError('You cannot approve or reject your own time entry.');
     }
 
     if (current.status === 'APPROVED' || current.status === 'REJECTED') {
@@ -82,25 +91,63 @@ export async function approveTimeEntry(
         metadata,
     });
 
-    await emitHrNotification(
-        {},
-        {
-            authorization: input.authorization,
-            notification: {
-                userId: current.userId,
-                title: 'Time entry decision',
-                message: `Your time entry on ${current.date.toISOString().slice(0, 10)} was ${decision.toLowerCase()}.`,
-                type: 'time-entry',
-                priority: 'medium',
-                actionUrl: `/hr/time-tracking/${input.entryId}`,
-                metadata: {
-                    entryId: input.entryId,
-                    status: decision,
-                    totalHours,
+    await recordAuditEvent({
+        orgId: input.authorization.orgId,
+        userId: input.authorization.userId,
+        eventType: 'DATA_CHANGE',
+        action: HR_ACTION.APPROVE,
+        resource: HR_RESOURCE_TYPE.TIME_ENTRY,
+        resourceId: input.entryId,
+        residencyZone: input.authorization.dataResidency,
+        classification: input.authorization.dataClassification,
+        auditSource: input.authorization.auditSource,
+        correlationId: input.authorization.correlationId,
+        payload: {
+            targetUserId: current.userId,
+            status: decision,
+            totalHours,
+            ipAddress: input.authorization.ipAddress ?? null,
+            userAgent: input.authorization.userAgent ?? null,
+        },
+    });
+
+    try {
+        await emitHrNotification(
+            {},
+            {
+                authorization: input.authorization,
+                notification: {
+                    userId: current.userId,
+                    title: 'Time entry decision',
+                    message: `Your time entry on ${current.date.toISOString().slice(0, 10)} was ${decision.toLowerCase()}.`,
+                    type: 'time-entry',
+                    priority: 'medium',
+                    actionUrl: `/hr/time-tracking/${input.entryId}`,
+                    metadata: {
+                        entryId: input.entryId,
+                        status: decision,
+                        totalHours,
+                    },
                 },
             },
-        },
-    );
+        );
+    } catch (error) {
+        appLogger.warn('hr.time-tracking.approve.notification.failed', {
+            entryId: input.entryId,
+            orgId: input.authorization.orgId,
+            error: error instanceof Error ? error.message : 'unknown',
+        });
+        await recordNotificationFailure({
+            authorization: input.authorization,
+            eventType: 'hr.time-tracking.notification.failed',
+            description: 'Time tracking notification dispatch failed.',
+            resourceId: input.entryId,
+            metadata: {
+                action: 'approve',
+                error: error instanceof Error ? error.message : 'unknown',
+            },
+        });
+    }
 
     await invalidateTimeEntryCache(input.authorization);
 

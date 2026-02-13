@@ -3,6 +3,7 @@ import type { IOnboardingWorkflowTemplateRepository } from '@/server/repositorie
 import type { OnboardingWorkflowTemplateRecord, WorkflowTemplateType } from '@/server/types/hr/onboarding-workflow-templates';
 import type { JsonValue } from '@/server/types/json';
 import { assertOnboardingConfigManager } from '../config/onboarding-config-access';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
 
 export interface UpdateWorkflowTemplateInput {
     authorization: RepositoryAuthorizationContext;
@@ -29,7 +30,11 @@ export async function updateWorkflowTemplate(
     deps: UpdateWorkflowTemplateDependencies,
     input: UpdateWorkflowTemplateInput,
 ): Promise<UpdateWorkflowTemplateResult> {
-    assertOnboardingConfigManager(input.authorization);
+    await assertOnboardingConfigManager({
+        authorization: input.authorization,
+        action: HR_ACTION.UPDATE,
+        resourceAttributes: { templateId: input.templateId },
+    });
 
     const template = await deps.workflowTemplateRepository.updateTemplate(
         input.authorization.orgId,

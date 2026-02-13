@@ -3,6 +3,10 @@ import { cache } from 'react';
 import { getPeopleService } from '@/server/services/hr/people/people-service.provider';
 import { getTimeTrackingService } from '@/server/services/hr/time-tracking/time-tracking-service.provider';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import {
+    resolveTimeEntryHours,
+    resolveTimeEntryProfileName,
+} from '@/server/use-cases/hr/time-tracking/team-entry-helpers';
 
 export interface PendingTimeEntry {
     id: string;
@@ -21,7 +25,7 @@ export const buildPendingTimeEntries = cache(async (
     const profilesResult = await peopleService.listEmployeeProfiles({
         authorization,
         payload: {},
-    }).catch(() => ({ profiles: [] }));
+    });
 
     const directReports = profilesResult.profiles.filter(
         (profile) => profile.managerUserId === authorization.userId,
@@ -38,13 +42,13 @@ export const buildPendingTimeEntries = cache(async (
     const entriesResult = await timeTrackingService.listTimeEntries({
         authorization,
         filters: { status: 'COMPLETED' },
-    }).catch(() => ({ entries: [] }));
+    });
 
     return entriesResult.entries
         .filter((entry) => profileByUserId.has(entry.userId))
         .map((entry) => {
             const profile = profileByUserId.get(entry.userId);
-            const name = resolveProfileName(profile);
+            const name = resolveTimeEntryProfileName(profile);
 
             return {
                 id: entry.id,
@@ -52,41 +56,8 @@ export const buildPendingTimeEntries = cache(async (
                 date: entry.date,
                 clockIn: entry.clockIn,
                 clockOut: entry.clockOut,
-                totalHours: resolveTotalHours(entry.totalHours),
+                totalHours: resolveTimeEntryHours(entry.totalHours),
                 project: entry.project,
             };
         });
 });
-
-function resolveProfileName(profile?: {
-    displayName?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-}): string {
-    if (!profile) {
-        return 'Employee';
-    }
-    const displayName = profile.displayName?.trim();
-    if (displayName) {
-        return displayName;
-    }
-    const firstName = profile.firstName?.trim() ?? '';
-    const lastName = profile.lastName?.trim() ?? '';
-    const fallback = `${firstName} ${lastName}`.trim();
-    return fallback.length > 0 ? fallback : 'Employee';
-}
-
-function resolveTotalHours(
-    value: number | { toNumber?: () => number } | null | undefined,
-): number | null {
-    if (value === null || value === undefined) {
-        return null;
-    }
-    if (typeof value === 'number') {
-        return value;
-    }
-    if (typeof value === 'object' && typeof value.toNumber === 'function') {
-        return value.toNumber();
-    }
-    return null;
-}

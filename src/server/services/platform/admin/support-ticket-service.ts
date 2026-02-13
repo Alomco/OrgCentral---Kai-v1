@@ -3,6 +3,7 @@ import { AbstractBaseService, type ServiceExecutionContext } from '@/server/serv
 import type { SupportTicket } from '@/server/types/platform/support-tickets';
 import type { ISupportTicketRepository } from '@/server/repositories/contracts/platform/admin/support-ticket-repository-contract';
 import type { IPlatformTenantRepository } from '@/server/repositories/contracts/platform/admin/platform-tenant-repository-contract';
+import type { NotificationDispatchContract } from '@/server/repositories/contracts/notifications/notification-dispatch-contract';
 import {
     buildSupportTicketServiceDependencies,
     type SupportTicketServiceDependencyOptions,
@@ -11,10 +12,12 @@ import { listSupportTickets } from '@/server/use-cases/platform/admin/support/li
 import { createSupportTicket } from '@/server/use-cases/platform/admin/support/create-support-ticket';
 import { updateSupportTicket } from '@/server/use-cases/platform/admin/support/update-support-ticket';
 import type { SupportTicketCreateInput, SupportTicketUpdateInput } from '@/server/validators/platform/admin/support-ticket-validators';
+import { getNotificationService } from '@/server/services/notifications/notification-service.provider';
 
 export interface SupportTicketServiceDependencies {
     supportTicketRepository: ISupportTicketRepository;
     tenantRepository: IPlatformTenantRepository;
+    notificationDispatchService?: NotificationDispatchContract;
 }
 
 export interface SupportTicketServiceContract {
@@ -89,7 +92,11 @@ export class SupportTicketService extends AbstractBaseService implements Support
     }
 }
 
-const sharedDependencies: SupportTicketServiceDependencies = buildSupportTicketServiceDependencies();
+const sharedDependencies: SupportTicketServiceDependencies = buildSupportTicketServiceDependencies({
+    overrides: {
+        notificationDispatchService: getNotificationService(),
+    },
+});
 const sharedService = new SupportTicketService(sharedDependencies);
 
 function resolveDependencies(
@@ -99,9 +106,13 @@ function resolveDependencies(
     if (!overrides && !options) {
         return sharedDependencies;
     }
+    const notificationDispatchService = overrides?.notificationDispatchService ?? getNotificationService();
     return buildSupportTicketServiceDependencies({
         prismaOptions: options?.prismaOptions,
-        overrides,
+        overrides: {
+            ...overrides,
+            notificationDispatchService,
+        },
     });
 }
 

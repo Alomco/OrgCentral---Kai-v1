@@ -11,6 +11,9 @@ import type { ChecklistTemplate, ChecklistTemplateType } from '@/server/types/on
 import { listChecklistTemplates } from './list-checklist-templates';
 import { registerOrgCacheTag } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_CHECKLIST_TEMPLATES } from '@/server/repositories/cache-scopes';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetChecklistTemplatesForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -48,6 +51,14 @@ async function loadChecklistTemplates(
 export async function getChecklistTemplatesForUi(
     input: GetChecklistTemplatesForUiInput,
 ): Promise<GetChecklistTemplatesForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.LIST,
+        resource: HR_RESOURCE_TYPE.CHECKLIST_TEMPLATE,
+        payload: {
+            type: input.type ?? null,
+        },
+    });
     async function getChecklistTemplatesCached(
         cachedInput: GetChecklistTemplatesForUiInput,
     ): Promise<GetChecklistTemplatesForUiResult> {

@@ -24,10 +24,11 @@ export const metadata: Metadata = {
 };
 
 interface DocumentVaultPageProps {
-    searchParams?: Record<string, string | string[] | undefined>;
+    searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function DocumentVaultAdminPage({ searchParams }: DocumentVaultPageProps) {
+    const resolvedSearchParams = searchParams ? await searchParams : undefined;
     const headerStore = await headers();
     const { authorization } = await getSessionContextOrRedirect(
         {},
@@ -38,7 +39,7 @@ export default async function DocumentVaultAdminPage({ searchParams }: DocumentV
         },
     );
 
-    const parsed = parseFilters(searchParams);
+    const parsed = parseFilters(resolvedSearchParams);
     const tenantId = parsed.values.tenantId;
     const breakGlassApprovalId = parsed.values.breakGlassApprovalId;
 

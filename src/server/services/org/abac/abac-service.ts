@@ -1,4 +1,5 @@
 import { buildAbacPolicyServiceDependencies } from '@/server/repositories/providers/org/abac-policy-service-dependencies';
+import { buildPermissionResourceServiceDependencies } from '@/server/repositories/providers/org/permission-resource-service-dependencies';
 import { getAbacPolicies as getAbacPoliciesUseCase } from '@/server/use-cases/org/abac/get-abac-policies';
 import { setAbacPolicies as setAbacPoliciesUseCase } from '@/server/use-cases/org/abac/set-abac-policies';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
@@ -17,5 +18,12 @@ export async function setAbacPolicies(
     policies: AbacPolicyInput[],
 ) {
     const { abacPolicyRepository } = buildAbacPolicyServiceDependencies();
-    return setAbacPoliciesUseCase({ policyRepository: abacPolicyRepository }, { authorization, policies });
+    const { permissionRepository } = buildPermissionResourceServiceDependencies();
+    return setAbacPoliciesUseCase(
+        {
+            policyRepository: abacPolicyRepository,
+            permissionResourceRepository: permissionRepository,
+        },
+        { authorization, policies },
+    );
 }

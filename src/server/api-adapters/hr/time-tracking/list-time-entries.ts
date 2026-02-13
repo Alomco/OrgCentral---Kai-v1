@@ -8,6 +8,7 @@ import {
     type TimeTrackingControllerDependencies,
 } from './common';
 import { HR_ACTION } from '@/server/security/authorization/hr-resource-registry';
+import { HR_PERMISSION_PROFILE } from '@/server/security/authorization/hr-permissions/profiles';
 
 export interface ListTimeEntriesControllerInput {
     headers: Headers | HeadersInit;
@@ -26,9 +27,9 @@ export async function listTimeEntriesController(
 
     const { authorization } = await getSessionContext(resolved.session, {
         headers: controllerInput.headers,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.TIME_ENTRY_LIST,
         auditSource: controllerInput.auditSource,
-        action: HR_ACTION.READ,
+        action: HR_ACTION.LIST,
         resourceType: TIME_ENTRY_RESOURCE,
         resourceAttributes: buildFilterAttributes(filters),
     });

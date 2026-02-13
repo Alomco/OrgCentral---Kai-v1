@@ -4,7 +4,10 @@ import { CACHE_LIFE_SHORT } from '@/server/repositories/cache-profiles';
 import { getLeaveService } from '@/server/services/hr/leave/leave-service.provider';
 import { toCacheSafeAuthorizationContext } from '@/server/repositories/security/cache-authorization';
 import type { RepositoryAuthorizationContext } from '@/server/repositories/security';
+import { HR_ACTION } from '@/server/security/authorization/hr-permissions/actions';
+import { HR_RESOURCE_TYPE } from '@/server/security/authorization/hr-permissions/resources';
 import type { LeaveBalance } from '@/server/types/leave-types';
+import { recordHrCachedReadAudit } from '@/server/use-cases/hr/audit/record-hr-cached-read-audit';
 
 export interface GetLeaveBalanceForUiInput {
     authorization: RepositoryAuthorizationContext;
@@ -21,6 +24,15 @@ export interface GetLeaveBalanceForUiResult {
 export async function getLeaveBalanceForUi(
     input: GetLeaveBalanceForUiInput,
 ): Promise<GetLeaveBalanceForUiResult> {
+    await recordHrCachedReadAudit({
+        authorization: input.authorization,
+        action: HR_ACTION.READ,
+        resource: HR_RESOURCE_TYPE.LEAVE_BALANCE,
+        resourceId: input.employeeId,
+        payload: {
+            year: input.year ?? null,
+        },
+    });
     async function getBalanceCached(
         cachedInput: GetLeaveBalanceForUiInput,
     ): Promise<GetLeaveBalanceForUiResult> {

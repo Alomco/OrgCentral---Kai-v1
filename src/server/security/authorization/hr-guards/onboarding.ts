@@ -32,6 +32,24 @@ export function assertOnboardingReader(request: HrGuardRequest): Promise<Reposit
     });
 }
 
+export function assertOnboardingChecklistReader(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
+    return assertHrAccess(request.authorization, {
+        action: HR_ACTION.READ,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_CHECKLIST,
+        resourceAttributes: request.resourceAttributes,
+        requiredPermissions: HR_PERMISSION_PROFILE.ONBOARDING_CHECKLIST_READ,
+    });
+}
+
+export function assertOnboardingChecklistLister(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
+    return assertHrAccess(request.authorization, {
+        action: HR_ACTION.LIST,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_CHECKLIST,
+        resourceAttributes: request.resourceAttributes,
+        requiredPermissions: HR_PERMISSION_PROFILE.ONBOARDING_CHECKLIST_LIST,
+    });
+}
+
 export function assertOnboardingCreator(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
     return assertHrAccess(request.authorization, {
         action: HR_ACTION.CREATE,
@@ -59,12 +77,30 @@ export function assertOnboardingUpdater(request: HrGuardRequest): Promise<Reposi
     });
 }
 
+export function assertOnboardingChecklistUpdater(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
+    return assertHrAccess(request.authorization, {
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_CHECKLIST,
+        resourceAttributes: request.resourceAttributes,
+        requiredPermissions: HR_PERMISSION_PROFILE.ONBOARDING_CHECKLIST_UPDATE,
+    });
+}
+
 export function assertOnboardingCompleter(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
     return assertHrAccess(request.authorization, {
         action: HR_ACTION.COMPLETE,
         resourceType: HR_RESOURCE_TYPE.ONBOARDING_TASK,
         resourceAttributes: request.resourceAttributes,
         requiredPermissions: HR_PERMISSION_PROFILE.ONBOARDING_COMPLETE,
+    });
+}
+
+export function assertOnboardingChecklistCompleter(request: HrGuardRequest): Promise<RepositoryAuthorizationContext> {
+    return assertHrAccess(request.authorization, {
+        action: HR_ACTION.COMPLETE,
+        resourceType: HR_RESOURCE_TYPE.ONBOARDING_CHECKLIST,
+        resourceAttributes: request.resourceAttributes,
+        requiredPermissions: HR_PERMISSION_PROFILE.ONBOARDING_CHECKLIST_COMPLETE,
     });
 }
 

@@ -9,7 +9,7 @@ description: Multi-agent orchestration patterns. Use when multiple independent t
 
 ## Overview
 
-This skill enables coordinating multiple specialized agents through Copilot Chat subagent tooling. Unlike external scripts, this approach keeps all orchestration within the chat workflow. Always remember to run the multi agent planning first.
+This skill enables coordinating multiple specialized agents through Copilot Chat subagent tooling. Unlike external scripts, this approach keeps all orchestration within the chat workflow.
 
 ## When to Use Orchestration
 
@@ -102,7 +102,6 @@ Agents: security-auditor → penetration-tester → synthesis
 | `devops-engineer` | DevOps | "deploy", "CI/CD", "infrastructure" |
 | `database-architect` | Database | "schema", "Prisma", "migrations" |
 | `mobile-developer` | Mobile | "React Native", "Flutter", "mobile" |
-| `api-designer` | API Design | "REST", "GraphQL", "OpenAPI" |
 | `debugger` | Debugging | "bug", "error", "not working" |
 | `explorer-agent` | Discovery | "explore", "map", "structure" |
 | `documentation-writer` | Documentation | "write docs", "create README", "generate API docs" |
@@ -115,7 +114,7 @@ Agents: security-auditor → penetration-tester → synthesis
 
 ## Copilot Chat Subagents
 
-Copilot Chat supports specialized subagents invoked via `runSubagent`. Always pass full context and constraints because subagents do not share state.
+Copilot Chat supports specialized subagents. Always pass full context and constraints because subagents do not share state.
 Subagents are for very small, read-and-analyze tasks as well as small edits; allow delegation of simple edits and decision making.
 
 ---
@@ -151,7 +150,7 @@ After all agents complete, synthesize:
 
 ## Best Practices
 
-1. **Available agents** - 17 specialized agents can be orchestrated
+1. **Available agents** - Use the current list under `.github/agents/*.agent.md`
 2. **Logical order** - Discovery → Analysis → Implementation → Testing
 3. **Share context** - Pass relevant findings to subsequent agents
 4. **Single synthesis** - One unified report, not separate outputs

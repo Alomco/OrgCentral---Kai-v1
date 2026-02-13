@@ -6,18 +6,21 @@ import type { Role } from '@/server/types/hr-types';
 import { invalidateOrgCache } from '@/server/lib/cache-tags';
 import { CACHE_SCOPE_ROLES } from '@/server/repositories/cache-scopes';
 import { isOrgRoleKey } from '@/server/security/access-control';
+import type { IPermissionResourceRepository } from '@/server/repositories/contracts/org/permissions/permission-resource-repository-contract';
+import { validateRolePermissionsAgainstRegistry } from './role-permission-validator';
 
 export interface CreateRoleInput {
   authorization: RepositoryAuthorizationContext;
   name: string;
   description?: string | null;
-  permissions?: Role['permissions'];
+  permissions?: Record<string, string[]> | null;
   scope?: RoleScope;
   inheritsRoleIds?: string[];
 }
 
 export interface CreateRoleDependencies {
   roleRepository: IRoleRepository;
+  permissionResourceRepository?: Pick<IPermissionResourceRepository, 'listResources'>;
 }
 
 export async function createRole(
@@ -39,12 +42,18 @@ export async function createRole(
     throw new ValidationError('A role with this name already exists.');
   }
 
+  const permissions = await validateRolePermissionsAgainstRegistry(
+    input.authorization.orgId,
+    input.permissions ?? {},
+    deps.permissionResourceRepository,
+  );
+
   await roleRepository.createRole(input.authorization.orgId, {
     orgId: input.authorization.orgId,
     name,
     description: input.description ?? null,
     scope: input.scope ?? RoleScope.ORG,
-    permissions: input.permissions ?? {},
+    permissions,
     inheritsRoleIds: input.inheritsRoleIds ?? [],
   });
 

@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import type { EmployeeLookupOption } from '@/app/(app)/hr/_components/employee-lookup.types';
 
 import { LeaveDelegationControl } from './leave-delegation-control';
 
@@ -18,9 +19,10 @@ interface ExportableRequest {
 interface Props {
     requests: ExportableRequest[];
     delegateFor?: string | null;
+    employeeOptions: EmployeeLookupOption[];
 }
 
-export function LeaveManagementActions({ requests, delegateFor }: Props) {
+export function LeaveManagementActions({ requests, delegateFor, employeeOptions }: Props) {
     const hasRows = requests.length > 0;
 
     return (
@@ -36,7 +38,7 @@ export function LeaveManagementActions({ requests, delegateFor }: Props) {
                 Export CSV
             </Button>
             <Separator orientation="vertical" className="hidden h-6 sm:block" />
-            <LeaveDelegationControl delegateFor={delegateFor} />
+            <LeaveDelegationControl delegateFor={delegateFor} employeeOptions={employeeOptions} />
         </div>
     );
 }

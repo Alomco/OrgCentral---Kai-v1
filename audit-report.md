@@ -4,6 +4,13 @@
 
 This audit compares the old project and the new OrgCentral project across multiple dimensions: onboarding/offboarding features, accessibility compliance (WCAG), ISO 27001 compliance, and development best practices. The analysis reveals significant improvements in the new OrgCentral project, particularly in security, accessibility, and architectural patterns.
 
+## 2026-02-17 Delta Update (vs HEAD)
+
+- Working tree currently contains a broad in-progress hardening set across HR APIs, compliance/policies UI, and authorization/session paths.
+- Current `HEAD` delta footprint: **127 files changed**, **1270 insertions**, **446 deletions**.
+- Focused runtime fixes validated in this cycle include compliance seed-action fail-safe redirect behavior and session-file lint boundary compliance.
+- Temporary QA artifacts in `tmp/` were generated during manual/browser verification and are safe to remove from the working tree.
+
 ## 1. Onboarding/Offboarding Features Analysis
 
 ### 1.1 Old Project Onboarding Features

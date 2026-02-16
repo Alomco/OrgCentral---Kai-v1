@@ -8,7 +8,7 @@
     "start": "next start",
     "lint:md": "node --max-old-space-size=3072 ./node_modules/eslint/bin/eslint.js --cache --cache-location .eslintcache --cache-strategy content --concurrency 2",
     "lint:balanced": "node --max-old-space-size=1024 ./node_modules/eslint/bin/eslint.js --cache --cache-location .eslintcache --cache-strategy content --concurrency 2",
-    "lint:lg": "node --max-old-space-size=3072 ./node_modules/eslint/bin/eslint.js --cache --cache-location .eslintcache --cache-strategy content --concurrency 4",
+    "lint:lg": "node --max-old-space-size=2000 ./node_modules/eslint/bin/eslint.js --cache --cache-location .eslintcache --cache-strategy content --concurrency 4",
     "lint:low-mem": "node --max-old-space-size=1536 ./node_modules/eslint/bin/eslint.js --cache --cache-location .eslintcache --cache-strategy content --concurrency off",
     "lint": "node --max-old-space-size=1536 ./node_modules/eslint/bin/eslint.js --cache --cache-location .eslintcache --cache-strategy content --concurrency off --fix",
     "lint:server:low-mem": "node --max-old-space-size=1536 ./node_modules/eslint/bin/eslint.js --cache --cache-location .eslintcache.server --cache-strategy content --concurrency off src/server",
@@ -22,6 +22,8 @@
     "a11y:scan": "tsx scripts/a11y-scan-simple.ts",
     "test:security:rbac-abac-regression": "vitest run src/server/security/__tests__/guards-core-role-resolution.test.ts src/server/use-cases/hr/people/__tests__/update-employee-profile.test.ts src/server/use-cases/org/roles/__tests__/role-permission-validator.test.ts src/server/use-cases/org/abac/__tests__/abac-policy-selector-validator.test.ts src/server/use-cases/org/roles/__tests__/role-use-cases.integration.test.ts src/server/use-cases/org/abac/__tests__/set-abac-policies.integration.test.ts",
     "seed:test-accounts": "tsx scripts/seed-test-accounts.ts",
+    "seed:test-accounts:realistic": "tsx scripts/seed-test-accounts-realistic.ts",
+    "seed:test-accounts:realistic:reset": "tsx scripts/reset-and-seed-test-accounts-realistic.ts",
     "test-accounts:list": "tsx scripts/list-test-accounts.ts",
     "test-accounts:verify": "tsx scripts/verify-test-accounts.ts"
   },

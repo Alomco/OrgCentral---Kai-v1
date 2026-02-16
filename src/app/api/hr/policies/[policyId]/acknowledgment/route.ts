@@ -1,7 +1,9 @@
+import { unstable_noStore as noStore } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { ValidationError } from '@/server/errors';
 
 import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
+import { buildNoStoreJsonResponse } from '@/server/api-adapters/http/no-store-response';
 import {
     acknowledgeHrPolicyRouteController,
     getPolicyAcknowledgmentRouteController,
@@ -14,14 +16,15 @@ interface RouteParams {
 }
 
 export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
+    noStore();
     try {
-            const resolvedParams = await params;
+        const resolvedParams = await params;
         if (!resolvedParams.policyId) {
             throw new ValidationError('Policy id is required.');
         }
 
         const result = await getPolicyAcknowledgmentRouteController(request, resolvedParams.policyId);
-        return NextResponse.json(result, { status: 200 });
+        return buildNoStoreJsonResponse(result, 200);
     } catch (error) {
         return buildErrorResponse(error);
     }
@@ -29,7 +32,7 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
 
 export async function POST(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-            const resolvedParams = await params;
+        const resolvedParams = await params;
         if (!resolvedParams.policyId) {
             throw new ValidationError('Policy id is required.');
         }

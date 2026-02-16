@@ -1,6 +1,7 @@
 import type { ComplianceTemplate } from '@/server/types/compliance-types';
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { listComplianceTemplates, type ListComplianceTemplatesDependencies } from '@/server/use-cases/hr/compliance/list-compliance-templates';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
 import type { ComplianceControllerDependencies } from './common';
 import { resolveComplianceControllerDependencies } from './common';
 
@@ -17,10 +18,10 @@ export async function listComplianceTemplatesController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredPermissions: { organization: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.COMPLIANCE_TEMPLATE_READ,
         auditSource: 'api:hr:compliance:templates:list',
-        action: 'list',
-        resourceType: 'hr.compliance',
+        action: HR_ACTION.LIST,
+        resourceType: HR_RESOURCE_TYPE.COMPLIANCE_TEMPLATE,
         resourceAttributes: { view: 'templates' },
     });
 
@@ -34,7 +35,7 @@ export async function listComplianceTemplatesController(
         ? all.filter((t) => {
             const hay = `${t.name} ${t.categoryKey ?? ''} ${t.version ?? ''}`.toLowerCase();
             return hay.includes(qRaw);
-          })
+        })
         : all;
 
     return { success: true, templates };

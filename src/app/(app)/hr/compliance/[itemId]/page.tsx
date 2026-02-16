@@ -3,6 +3,7 @@ import { headers as nextHeaders } from 'next/headers';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { z } from 'zod';
 
 import {
     HR_ACTION,
@@ -36,11 +37,16 @@ interface ComplianceItemDetailPageProps {
     searchParams?: Promise<{ userId?: string }>;
 }
 
+const complianceItemIdSchema = z.uuid();
+
 export default async function ComplianceItemDetailPage({
     params,
     searchParams,
 }: ComplianceItemDetailPageProps) {
     const { itemId } = await params;
+    if (!complianceItemIdSchema.safeParse(itemId).success) {
+        notFound();
+    }
     const { userId: requestedUserId } = (await searchParams) ?? {};
     const headerStore = await nextHeaders();
 

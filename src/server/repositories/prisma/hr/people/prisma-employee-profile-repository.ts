@@ -1,6 +1,7 @@
 import type { EmployeeProfile as PrismaEmployeeProfile, Prisma } from '@prisma/client';
 import { BasePrismaRepository, type BasePrismaRepositoryOptions } from '@/server/repositories/prisma/base-prisma-repository';
 import type {
+  EmployeeProfileListOptions,
   EmployeeProfilePagedQuery,
   IEmployeeProfileRepository,
 } from '@/server/repositories/contracts/hr/people/employee-profile-repository-contract';
@@ -34,10 +35,11 @@ export class PrismaEmployeeProfileRepository extends BasePrismaRepository implem
     });
   }
 
-  async findAll(filters?: EmployeeProfileFilters): Promise<PrismaEmployeeProfile[]> {
+  async findAll(filters?: EmployeeProfileFilters, take?: number): Promise<PrismaEmployeeProfile[]> {
     return this.prisma.employeeProfile.findMany({
       where: buildPrismaWhereFromFilters(filters),
       orderBy: { employeeNumber: 'asc' },
+      ...(typeof take === 'number' ? { take } : {}),
     });
   }
 
@@ -79,8 +81,15 @@ export class PrismaEmployeeProfileRepository extends BasePrismaRepository implem
     return mapPrismaEmployeeProfileToDomain(rec);
   }
 
-  async getEmployeeProfilesByOrganization(tenantId: string, filters?: PeopleListFilters): Promise<EmployeeProfileDTO[]> {
-    const recs = await this.findAll({ orgId: tenantId, ...(filters ?? {}) });
+  async getEmployeeProfilesByOrganization(
+    tenantId: string,
+    filters?: PeopleListFilters,
+    options?: EmployeeProfileListOptions,
+  ): Promise<EmployeeProfileDTO[]> {
+    const recs = await this.findAll(
+      { orgId: tenantId, ...(filters ?? {}) },
+      normalizeQueryLimit(options?.limit),
+    );
     return recs.map((r) => mapPrismaEmployeeProfileToDomain(r));
   }
 
@@ -196,4 +205,18 @@ export class PrismaEmployeeProfileRepository extends BasePrismaRepository implem
     }
     return this.assertTenantRecord(rec, tenantId);
   }
+}
+
+function normalizeQueryLimit(limit: number | undefined): number | undefined {
+  if (typeof limit !== 'number') {
+    return undefined;
+  }
+  if (!Number.isFinite(limit)) {
+    return undefined;
+  }
+  const normalized = Math.floor(limit);
+  if (normalized < 1) {
+    return undefined;
+  }
+  return Math.min(normalized, 200);
 }

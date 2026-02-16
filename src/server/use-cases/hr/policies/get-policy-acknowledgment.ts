@@ -3,6 +3,9 @@ import type { IPolicyAcknowledgmentRepository } from '@/server/repositories/cont
 import { RepositoryAuthorizer, type RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { assertPolicyAcknowledgmentActor } from '@/server/security/authorization/hr-policies';
 import type { PolicyAcknowledgment } from '@/server/types/hr-ops-types';
+import { z } from 'zod';
+
+const policyIdSchema = z.uuid();
 
 export interface GetPolicyAcknowledgmentDependencies {
     policyRepository: IHRPolicyRepository;
@@ -20,6 +23,11 @@ export async function getPolicyAcknowledgment(
     input: GetPolicyAcknowledgmentInput,
 ): Promise<PolicyAcknowledgment | null> {
     assertPolicyAcknowledgmentActor(input.authorization, input.userId);
+
+    const parsedPolicyId = policyIdSchema.safeParse(input.policyId);
+    if (!parsedPolicyId.success) {
+        return null;
+    }
 
     const policy = await deps.policyRepository.getPolicy(input.authorization.orgId, input.policyId);
     if (!policy) {

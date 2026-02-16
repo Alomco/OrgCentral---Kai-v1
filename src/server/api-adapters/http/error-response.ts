@@ -116,7 +116,10 @@ function buildAuthorizationDescriptor(error: AuthorizationError): ErrorDescripto
         error.details && typeof error.details.reason === 'string'
             ? error.details.reason
             : null;
-    const status = reason === 'unauthenticated' || reason === 'session_expired'
+    const status =
+        reason === 'unauthenticated' ||
+            reason === 'session_expired' ||
+            reason === 'invalid_session_identity'
         ? 401
         : 403;
     return buildSimpleDescriptor(status, error);

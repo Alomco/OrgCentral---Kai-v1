@@ -57,8 +57,16 @@ Use these files for seeded test-agent personas and credentials:
 Commands:
 
 - `pnpm seed:test-accounts`
+- `pnpm seed:test-accounts:realistic`
+- `pnpm seed:test-accounts:realistic:reset`
 - `pnpm test-accounts:list`
 - `pnpm test-accounts:verify`
+
+Recommended QA order:
+
+1. `pnpm seed:test-accounts:realistic:reset`
+2. `pnpm test-accounts:verify`
+3. Select personas from `.codex/test-accounts/catalog.local.json` by `state`, `roleKey`, and `organizationSlug`.
 
 ---
 

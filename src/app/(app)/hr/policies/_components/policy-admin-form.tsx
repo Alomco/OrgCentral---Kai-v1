@@ -14,9 +14,10 @@ import { buildInitialPolicyAdminState } from './policy-admin-form.state';
 
 interface PolicyAdminFormProps {
     policyCategories: readonly string[];
+    orgId: string;
 }
 
-export function PolicyAdminForm({ policyCategories }: PolicyAdminFormProps) {
+export function PolicyAdminForm({ policyCategories, orgId }: PolicyAdminFormProps) {
     const queryClient = useQueryClient();
     const initialState = useMemo<PolicyAdminCreateState>(
         () => buildInitialPolicyAdminState(policyCategories),
@@ -28,10 +29,10 @@ export function PolicyAdminForm({ policyCategories }: PolicyAdminFormProps) {
 
     useEffect(() => {
         if (!pending && state.status === 'success') {
-            queryClient.invalidateQueries({ queryKey: policyKeys.list() }).catch(() => null);
+            queryClient.invalidateQueries({ queryKey: policyKeys.all(orgId) }).catch(() => null);
             formReference.current?.reset();
         }
-    }, [pending, queryClient, state.status]);
+    }, [orgId, pending, queryClient, state.status]);
 
     const message =
         state.status === 'error'

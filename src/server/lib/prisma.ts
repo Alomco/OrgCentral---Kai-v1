@@ -56,7 +56,7 @@ function createPrismaClient(): PrismaClientInstance {
 
     client.$on('warn', (event) => {
         appLogger.warn('prisma.warn', {
-            message: event.message,
+            message: normalizePrismaLogMessage(event.message),
             target: event.target,
             timestamp: event.timestamp,
         });
@@ -64,7 +64,7 @@ function createPrismaClient(): PrismaClientInstance {
 
     client.$on('error', (event) => {
         appLogger.error('prisma.error', {
-            message: event.message,
+            message: normalizePrismaLogMessage(event.message),
             target: event.target,
             timestamp: event.timestamp,
         });
@@ -103,6 +103,22 @@ function createPrismaClient(): PrismaClientInstance {
             },
         },
     }) as PrismaClientInstance;
+}
+
+function normalizePrismaLogMessage(message: unknown): string {
+    if (typeof message === 'string') {
+        return message;
+    }
+
+    if (message instanceof Error) {
+        return message.message;
+    }
+
+    try {
+        return JSON.stringify(message);
+    } catch {
+        return String(message);
+    }
 }
 
 function enforceOrgScope(

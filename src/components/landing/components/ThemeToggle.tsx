@@ -2,19 +2,12 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useMemo, useSyncExternalStore } from "react";
-
-function useIsClient(): boolean {
-    return useSyncExternalStore(
-        () => () => undefined,
-        () => true,
-        () => false,
-    );
-}
+import { useMemo } from "react";
+import { useHydrated } from "@/components/theme/theme-ssot";
 
 export function ThemeToggle() {
     const { resolvedTheme, setTheme } = useTheme();
-    const mounted = useIsClient();
+    const mounted = useHydrated();
 
     const activeTheme = useMemo(() => {
         return resolvedTheme === "dark" || resolvedTheme === "light" ? resolvedTheme : null;

@@ -1,6 +1,9 @@
 import type { IHRPolicyRepository } from '@/server/repositories/contracts/hr/policies/hr-policy-repository-contract';
 import { RepositoryAuthorizer, type RepositoryAuthorizationContext } from '@/server/repositories/security';
 import type { HRPolicy } from '@/server/types/hr-ops-types';
+import { z } from 'zod';
+
+const policyIdSchema = z.uuid();
 
 export interface GetHrPolicyDependencies {
     policyRepository: IHRPolicyRepository;
@@ -15,6 +18,11 @@ export async function getHrPolicy(
     deps: GetHrPolicyDependencies,
     input: GetHrPolicyInput,
 ): Promise<HRPolicy | null> {
+    const parsedPolicyId = policyIdSchema.safeParse(input.policyId);
+    if (!parsedPolicyId.success) {
+        return null;
+    }
+
     const policy = await deps.policyRepository.getPolicy(input.authorization.orgId, input.policyId);
     if (!policy) {
         return null;

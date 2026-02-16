@@ -87,18 +87,20 @@ export function createPeopleProfileReadOperations(context: PeopleProfileOperatio
       input: PeopleServiceInput<ListEmployeeProfilesPayload>,
     ): Promise<ListEmployeeProfilesResult> {
       const filters = input.payload.filters;
+      const limit = input.payload.limit;
       const correlationId = sanitizeCorrelationId(input.correlationId);
 
       return runner.runProfileReadOperation(
         'hr.people.profiles.list',
         input.authorization,
-        { filterCount: Object.keys(filters ?? {}).length, filters },
+        { filterCount: Object.keys(filters ?? {}).length, filters, limit },
         correlationId,
         async (authorization: RepositoryAuthorizationContext): Promise<ListEmployeeProfilesResult> => {
           const listResult: { profiles: EmployeeProfile[] } = unwrapOrThrow(
             await listEmployeeProfiles({
               authorization,
               filters,
+              limit,
               repositories: { profileRepo: dependencies.profileRepo },
             }),
           );

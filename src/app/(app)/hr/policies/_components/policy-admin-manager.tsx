@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import type { HRPolicy } from '@/server/types/hr-ops-types';
-import { listPoliciesQuery } from './policies.api';
+import { listPoliciesWithContentQuery } from './policies.api';
 
 import { PolicyAdminForm } from './policy-admin-form';
 import { PolicyAdminRow } from './policy-admin-row';
@@ -10,12 +10,16 @@ import { PolicyAdminRow } from './policy-admin-row';
 export function PolicyAdminManager(props: {
     policies: HRPolicy[];
     policyCategories: readonly string[];
+    orgId: string;
 }) {
-    const { data: policies = props.policies } = useQuery({ ...listPoliciesQuery(), initialData: props.policies });
+    const { data: policies = props.policies } = useQuery({
+        ...listPoliciesWithContentQuery(props.orgId),
+        initialData: props.policies,
+    });
 
     return (
         <div className="space-y-6">
-            <PolicyAdminForm policyCategories={props.policyCategories} />
+            <PolicyAdminForm policyCategories={props.policyCategories} orgId={props.orgId} />
 
             <div className="text-sm font-medium">Existing policies</div>
             {policies.length === 0 ? (
@@ -28,6 +32,7 @@ export function PolicyAdminManager(props: {
                             policy={policy}
                             policyCategories={props.policyCategories}
                             statusOptions={['draft', 'active']}
+                            orgId={props.orgId}
                         />
                     ))}
                 </div>

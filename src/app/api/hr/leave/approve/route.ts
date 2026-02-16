@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { approveLeaveRequestController } from '@/server/api-adapters/hr/leave/approve-leave-request';
 import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
+import { enforceCsrfOriginGuard } from '@/server/security/guards/csrf-origin-guard';
 
 const approveBodySchema = z.object({
     requestId: z.uuid(),
@@ -9,6 +10,10 @@ const approveBodySchema = z.object({
 
 export async function POST(request: Request): Promise<NextResponse> {
     try {
+        const guardResponse = await enforceCsrfOriginGuard(request);
+        if (guardResponse) {
+            return guardResponse;
+        }
         const parsed = approveBodySchema.parse(await request.clone().json());
         const result = await approveLeaveRequestController({ request, requestId: parsed.requestId });
         return NextResponse.json(result, { status: 200 });

@@ -10,10 +10,14 @@ import {
 } from '@/server/ui/auth/role-redirect';
 import { getAuthOrganizationBridgeService } from '@/server/services/auth/auth-organization-bridge-service.provider';
 import { MembershipStatus } from '@/server/types/prisma';
+import { resolveWorkspaceSetupState } from '@/server/use-cases/auth/sessions/workspace-setup-state';
 
 const DEFAULT_NEXT_PATH = '/dashboard';
 const LOGIN_PATH = '/login';
 const NOT_INVITED_PATH = '/not-invited';
+const ACCESS_DENIED_PATH = '/access-denied';
+const MFA_SETUP_PATH = '/two-factor/setup';
+const PROFILE_SETUP_PATH = '/hr/profile';
 const DEFAULT_MEMBERSHIP_DATE = new Date(0);
 
 interface SafeNextPath {
@@ -23,6 +27,7 @@ interface SafeNextPath {
 
 interface MembershipLookupRecord {
     orgId: string;
+    status: MembershipStatus;
     activatedAt: Date | null;
     invitedAt: Date | null;
 }
@@ -39,7 +44,6 @@ export interface PostLoginInput {
     headers: Headers;
     requestUrl: URL;
 }
-
 export interface PostLoginResult {
     redirectUrl: URL;
     setActiveHeaders?: Headers;
@@ -60,13 +64,15 @@ export async function handlePostLogin(
     const currentActiveOrgId = session.session.activeOrganizationId;
 
     let desiredOrgId: string | null = null;
+    let scopedMemberships: MembershipLookupRecord[] | null = null;
+    let allMemberships: MembershipLookupRecord[] | null = null;
 
     if (desiredOrgSlug) {
-        const memberships = await listActiveMembershipsForUser(
+        scopedMemberships = await listMembershipsForUser(
             session.user.id,
             desiredOrgSlug,
         );
-        desiredOrgId = selectLatestMembershipOrgId(memberships);
+        desiredOrgId = selectLatestActiveMembershipOrgId(scopedMemberships);
     }
 
     desiredOrgId ??= currentActiveOrgId ?? null;
@@ -75,11 +81,15 @@ export async function handlePostLogin(
         if (isInvitationAcceptancePath(nextPath)) {
             return { redirectUrl: new URL(nextPath, input.requestUrl.origin) };
         }
-        const memberships = await listActiveMembershipsForUser(session.user.id);
-        desiredOrgId = selectLatestMembershipOrgId(memberships);
+        allMemberships = await listMembershipsForUser(session.user.id);
+        desiredOrgId = selectLatestActiveMembershipOrgId(allMemberships);
     }
 
     if (desiredOrgId === null) {
+        const membershipsForStatus = scopedMemberships ?? allMemberships ?? [];
+        if (hasInactiveMembership(membershipsForStatus)) {
+            return { redirectUrl: buildMembershipInactiveRedirect(input.requestUrl, nextPath) };
+        }
         return { redirectUrl: buildNotInvitedRedirect(input.requestUrl, nextPath) };
     }
 
@@ -94,6 +104,21 @@ export async function handlePostLogin(
     });
 
     const dashboardRole = resolveRoleDashboard(membershipSnapshot);
+    const workspaceSetup = await resolveWorkspaceSetupState({
+        authUserId: session.user.id,
+        orgId: desiredOrgId,
+        userId: session.user.id,
+        roleKey: dashboardRole,
+    });
+
+    if (workspaceSetup.requiresPasswordSetup) {
+        return { redirectUrl: buildSetupRedirect(input.requestUrl, MFA_SETUP_PATH, nextPath) };
+    }
+
+    if (workspaceSetup.requiresProfileSetup) {
+        return { redirectUrl: buildSetupRedirect(input.requestUrl, PROFILE_SETUP_PATH, nextPath) };
+    }
+
     const redirectPath = isExplicit
         ? resolveRoleRedirectPath(dashboardRole, nextPath)
         : ROLE_DASHBOARD_PATHS[dashboardRole];
@@ -139,9 +164,7 @@ function resolveSafeNextPath(requestUrl: URL): SafeNextPath {
 
 function resolveOptionalOrgSlug(requestUrl: URL): string | null {
     const candidate = requestUrl.searchParams.get('org');
-    if (typeof candidate !== 'string') {
-        return null;
-    }
+    if (typeof candidate !== 'string') {return null;}
     const trimmed = candidate.trim();
     return trimmed.length > 0 ? trimmed : null;
 }
@@ -163,42 +186,60 @@ function buildNotInvitedRedirect(requestUrl: URL, nextPath: string): URL {
     return new URL(`${NOT_INVITED_PATH}?next=${encodeURIComponent(nextPath)}`, requestUrl.origin);
 }
 
-async function listActiveMembershipsForUser(
+function buildMembershipInactiveRedirect(requestUrl: URL, nextPath: string): URL {
+    const redirectUrl = new URL(ACCESS_DENIED_PATH, requestUrl.origin);
+    redirectUrl.searchParams.set('reason', 'membership_inactive');
+    redirectUrl.searchParams.set('next', nextPath);
+    return redirectUrl;
+}
+
+function buildSetupRedirect(requestUrl: URL, path: string, nextPath: string): URL {
+    const redirectUrl = new URL(path, requestUrl.origin);
+    redirectUrl.searchParams.set('next', nextPath);
+    return redirectUrl;
+}
+
+async function listMembershipsForUser(
     userId: string,
     orgSlug?: string,
 ): Promise<MembershipLookupRecord[]> {
     return prisma.membership.findMany({
         where: {
             userId,
-            status: MembershipStatus.ACTIVE,
             org: orgSlug ? { slug: orgSlug } : undefined,
         },
         select: {
             orgId: true,
+            status: true,
             activatedAt: true,
             invitedAt: true,
         },
     });
 }
 
-function selectLatestMembershipOrgId(
+function hasInactiveMembership(memberships: MembershipLookupRecord[]): boolean {
+    return memberships.some((membership) =>
+        membership.status === MembershipStatus.SUSPENDED
+        || membership.status === MembershipStatus.DEACTIVATED,
+    );
+}
+
+function selectLatestActiveMembershipOrgId(
     memberships: MembershipLookupRecord[],
 ): string | null {
-    if (memberships.length === 0) {
-        return null;
-    }
+    const activeMemberships = memberships.filter((membership) => membership.status === MembershipStatus.ACTIVE);
+    if (activeMemberships.length === 0) {return null;}
 
-    let latest = memberships[0];
+    let latest = activeMemberships[0];
     let latestTimestamp = resolveMembershipTimestamp(latest);
 
-    for (const membership of memberships.slice(1)) {
+    for (const membership of activeMemberships.slice(1)) {
         const timestamp = resolveMembershipTimestamp(membership);
         if (timestamp > latestTimestamp) {
             latest = membership;
             latestTimestamp = timestamp;
         }
     }
-
     return latest.orgId;
 }
 

@@ -5,6 +5,7 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 import type { SessionAccessRequest } from '@/server/security/authorization';
 import { requireSessionAuthorization } from '@/server/security/authorization';
 import { auth, type AuthSession } from '@/server/lib/auth';
+import { prisma } from '@/server/lib/prisma';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
 import { buildMetadata as buildJsonMetadata } from '@/server/use-cases/shared';
 import { loadOrgSettings } from '@/server/services/org/settings/org-settings-store';
@@ -36,7 +37,6 @@ export interface GetSessionResult {
     session: NonNullable<AuthSession>;
     authorization: RepositoryAuthorizationContext;
 }
-
 export async function getSessionContext(
     deps: GetSessionDependencies,
     input: GetSessionInput,
@@ -76,7 +76,6 @@ export async function getSessionContext(
             deps.userSessionRepository,
             authorization.orgId,
             session,
-            headers,
             error,
             input.ipAddress,
             input.userAgent,
@@ -92,7 +91,6 @@ export async function getSessionContext(
 
     return { session, authorization };
 }
-
 function extractAccessRequest(input: GetSessionInput): SessionAccessRequest {
     return {
         orgId: input.orgId,
@@ -107,14 +105,12 @@ function extractAccessRequest(input: GetSessionInput): SessionAccessRequest {
         resourceAttributes: input.resourceAttributes,
     };
 }
-
 interface SessionMetadataInput {
     ipAddress?: string;
     userAgent?: string;
     dataResidency: DataResidencyZone;
     dataClassification: DataClassificationLevel;
 }
-
 async function syncUserSessionRecord(
     repository: SessionRepositoryContract | undefined,
     tenantId: string,
@@ -159,7 +155,6 @@ async function syncUserSessionRecord(
         metadata,
     });
 }
-
 function buildMetadata(
     session: NonNullable<AuthSession>,
     metadataInput: SessionMetadataInput,
@@ -187,12 +182,10 @@ function coalesceUpdateValue<TValue extends string | null | undefined>(
     const candidate = preferred ?? fallback;
     return typeof candidate === 'string' ? candidate : undefined;
 }
-
 async function revokeExpiredSession(
     repository: SessionRepositoryContract | undefined,
     orgId: string,
     session: NonNullable<AuthSession>,
-    headers: Headers,
     error: unknown,
     ipAddress?: string,
     userAgent?: string,
@@ -211,16 +204,22 @@ async function revokeExpiredSession(
     await logSessionExpiryEvent(orgId, session.session.userId, policy, ipAddress, userAgent);
 
     try {
-        await auth.api.revokeSession({
-            headers,
-            body: { token },
-        });
+        await expireAuthSessionToken(token);
         await repository?.invalidateUserSession(orgId, token);
     } catch {
         // Best-effort cleanup; authorization error will still be thrown.
     }
 }
-
+async function expireAuthSessionToken(token: string): Promise<void> {
+    const now = new Date();
+    await prisma.authSession.updateMany({
+        where: { token },
+        data: {
+            expiresAt: now,
+            updatedAt: now,
+        },
+    });
+}
 async function logSessionExpiryEvent(
     orgId: string,
     userId: string,

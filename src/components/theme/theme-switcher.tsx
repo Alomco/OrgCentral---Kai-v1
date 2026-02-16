@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Monitor, Moon, Palette, RotateCcw, Sparkles, Sun } from 'lucide-react';
+import { Moon, Palette, RotateCcw, Sparkles } from 'lucide-react';
 import { useTheme as useNextTheme } from 'next-themes';
 
 import { cn } from '@/lib/utils';
@@ -17,15 +17,10 @@ import { Button } from '@/components/ui/button';
 import { buildSwatchCss, FOCUS_RING_CLASSES } from './theme-switcher.utils';
 import type { ThemeOption } from './theme-switcher.utils';
 import { ColorPanel, ModePanel, StylePanel } from './theme-switcher.panels';
-import type { ModeOption } from './theme-switcher.panels';
-
-const MODE_OPTIONS: ModeOption[] = [
-    { id: 'light', label: 'Light', icon: Sun },
-    { id: 'dark', label: 'Dark', icon: Moon },
-    { id: 'system', label: 'System', icon: Monitor },
-];
+import { THEME_MODE_OPTIONS, resolveThemeModeLabel, useHydrated, type ThemeMode } from './theme-ssot';
 
 export function ThemeSwitcher() {
+    const hydrated = useHydrated();
     const { currentTheme, setTheme: setColorTheme, clearTheme, themes } = useColorTheme();
     const { currentStyle, setStyle, clearStyle, styles } = useUiStyle();
     const { theme: mode, resolvedTheme, setTheme: setMode } = useNextTheme();
@@ -37,15 +32,31 @@ export function ThemeSwitcher() {
         ? themes.find((t) => t.id === currentTheme)?.name ?? 'Org default'
         : 'Org default';
     const selectedStyleLabel = styles.find((s) => s.id === currentStyle)?.name ?? 'Default style';
-    const currentMode: ModeOption['id'] = mode === 'light' || mode === 'dark' ? mode : 'system';
-    const resolvedModeLabel = resolvedTheme === 'dark' ? 'Dark' : resolvedTheme === 'light' ? 'Light' : null;
-    const selectedModeLabel = currentMode === 'system'
-        ? resolvedModeLabel
-            ? `System (${resolvedModeLabel})`
-            : 'System'
-        : MODE_OPTIONS.find((m) => m.id === currentMode)?.label ?? 'System';
+    const currentMode: ThemeMode = mode === 'light' || mode === 'dark' ? mode : 'system';
+    const selectedModeLabel = resolveThemeModeLabel(currentMode, resolvedTheme);
     type ThemeId = Parameters<typeof setColorTheme>[0];
     const currentThemeId: ThemeId | null = currentTheme ?? null;
+
+    if (!hydrated) {
+        return (
+            <Button
+                variant="outline"
+                aria-label="Open theme and style switcher"
+                className={cn(
+                    'flex items-center gap-2 px-3 py-2 rounded-lg',
+                    'bg-muted/50',
+                    'border-border/60',
+                    'hover:bg-muted/70',
+                    'transition-all duration-300',
+                    'text-sm font-medium'
+                )}
+                disabled
+            >
+                <Palette className="h-4 w-4" />
+                <span className="hidden sm:inline">Theme</span>
+            </Button>
+        );
+    }
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -68,7 +79,7 @@ export function ThemeSwitcher() {
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className="w-80 overflow-hidden rounded-xl border border-[oklch(var(--border)/0.6)] bg-popover p-0 text-popover-foreground shadow-[var(--ui-surface-item-shadow)]"
+                className="w-80 overflow-hidden rounded-xl border border-[oklch(var(--border)/0.6)] bg-popover p-0 text-popover-foreground shadow-(--ui-surface-item-shadow)"
                 align="start"
                 sideOffset={10}
             >
@@ -99,7 +110,7 @@ export function ThemeSwitcher() {
 
                     <TabsContent value="mode" className="m-0 p-0">
                         <ModePanel
-                            modeOptions={MODE_OPTIONS}
+                            modeOptions={THEME_MODE_OPTIONS}
                             currentMode={currentMode}
                             onSelect={setMode}
                             setOpen={setOpen}

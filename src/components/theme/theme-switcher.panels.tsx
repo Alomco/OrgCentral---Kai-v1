@@ -6,8 +6,9 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ThemeOption, KeyNavList } from './theme-switcher.utils';
 import { FOCUS_RING_CLASSES, handleRadioKeyDown } from './theme-switcher.utils';
+import type { ThemeMode } from './theme-ssot';
 
-export interface ModeOption { id: 'light' | 'dark' | 'system'; label: string; icon: LucideIcon; }
+export interface ModeOption { id: ThemeMode; label: string; icon: LucideIcon; }
 
 interface ModePanelProps {
     modeOptions: readonly ModeOption[];
@@ -101,12 +102,12 @@ export function ColorPanel<TThemeId extends string = string>({
                                 setOpen(false);
                             }}
                             onKeyDown={(event) => handleRadioKeyDown(event, navItems, activeThemeId, onSelect)}
-                        className={cn(
-                            'group relative w-full rounded-lg border p-3 text-left transition-all duration-200',
-                            'hover:scale-[1.02]',
-                            'border-[oklch(var(--ring)/0.55)] bg-[oklch(var(--sidebar-accent)/0.82)] shadow-[0_0_0_1px_oklch(var(--ring)/0.2)]',
-                            FOCUS_RING_CLASSES,
-                        )}
+                            className={cn(
+                                'group relative w-full rounded-lg border p-3 text-left transition-all duration-200',
+                                'hover:scale-[1.02]',
+                                'border-[oklch(var(--ring)/0.55)] bg-[oklch(var(--sidebar-accent)/0.82)] shadow-[0_0_0_1px_oklch(var(--ring)/0.2)]',
+                                FOCUS_RING_CLASSES,
+                            )}
                         >
                             <div className="orgcentral-theme-swatch mb-2 h-10 w-full rounded-md" data-theme-id={theme.id} />
                             <div className="flex items-center justify-between">

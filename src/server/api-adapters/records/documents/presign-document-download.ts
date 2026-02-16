@@ -4,6 +4,7 @@ import { hasPermission } from '@/lib/security/permission-check';
 import { getDocumentVaultStorageConfig } from '@/server/config/storage';
 import { presignAzureBlobRead } from '@/server/lib/storage/azure-blob-presigner';
 import { recordAuditEvent } from '@/server/logging/audit-logger';
+import { AuthorizationError, EntityNotFoundError, InfrastructureError } from '@/server/errors';
 
 export interface PresignDocumentDownloadResponse {
     downloadUrl: string;
@@ -29,29 +30,38 @@ export async function presignDocumentDownloadController(
 
     const document = await getDocumentService(authorization, documentId);
     if (!document) {
-        throw new Error('Document not found.');
+        throw new EntityNotFoundError('Document', { documentId });
     }
 
     const canReadAll = hasPermission(authorization.permissions, 'organization', 'read');
     if (document.ownerUserId && document.ownerUserId !== authorization.userId && !canReadAll) {
-        throw new Error('Not authorized to access this document.');
+        throw new AuthorizationError('Not authorized to access this document.', {
+            reason: 'forbidden',
+            documentId,
+        });
     }
 
-    let downloadUrl = document.blobPointer;
-    let expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    if (!document.blobPointer.startsWith('http')) {
+        throw new InfrastructureError('Document storage pointer is invalid.', {
+            documentId,
+        });
+    }
 
-    if (document.blobPointer.startsWith('http')) {
-        try {
-            const config = getDocumentVaultStorageConfig();
-            const presigned = presignAzureBlobRead(config, {
-                blobUrl: document.blobPointer,
-                contentType: document.mimeType ?? undefined,
-            });
-            downloadUrl = presigned.downloadUrl;
-            expiresAt = presigned.expiresAt;
-        } catch {
-            downloadUrl = document.blobPointer;
-        }
+    let downloadUrl: string;
+    let expiresAt: string;
+
+    try {
+        const config = getDocumentVaultStorageConfig();
+        const presigned = presignAzureBlobRead(config, {
+            blobUrl: document.blobPointer,
+            contentType: document.mimeType ?? undefined,
+        });
+        downloadUrl = presigned.downloadUrl;
+        expiresAt = presigned.expiresAt;
+    } catch {
+        throw new InfrastructureError('Unable to generate secure download URL.', {
+            documentId,
+        });
     }
 
     await recordAuditEvent({

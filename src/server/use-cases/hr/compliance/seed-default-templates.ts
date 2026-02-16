@@ -5,6 +5,7 @@ import type { RepositoryAuthorizationContext } from '@/server/repositories/secur
 
 const DEFAULT_SEED_KEY = 'uk-employment';
 const DEFAULT_SEED_VERSION = '1';
+const activeSeedLocks = new Map<string, Promise<void>>();
 
 export interface SeedDefaultComplianceTemplatesInput {
     authorization: RepositoryAuthorizationContext;
@@ -26,87 +27,113 @@ export async function seedDefaultComplianceTemplates(
     deps: SeedDefaultComplianceTemplatesDependencies,
     input: SeedDefaultComplianceTemplatesInput,
 ): Promise<SeedDefaultComplianceTemplatesResult> {
-    const existing = await deps.complianceTemplateRepository
-        .listTemplates(input.authorization.orgId)
-        .then((templates) =>
-            templates.find((template) => {
-                const metadata = template.metadata as unknown;
-                if (!metadata || typeof metadata !== 'object') {
-                    return false;
-                }
+    return withSeedLock(input.authorization.orgId, async () => {
+        const existing = await deps.complianceTemplateRepository
+            .listTemplates(input.authorization.orgId)
+            .then((templates) =>
+                templates.find((template) => {
+                    const metadata = template.metadata as unknown;
+                    if (!metadata || typeof metadata !== 'object') {
+                        return false;
+                    }
 
-                const seedKey = (metadata as { seedKey?: unknown }).seedKey;
-                const seedVersion = (metadata as { seedVersion?: unknown }).seedVersion;
+                    const seedKey = (metadata as { seedKey?: unknown }).seedKey;
+                    const seedVersion = (metadata as { seedVersion?: unknown }).seedVersion;
 
-                return seedKey === DEFAULT_SEED_KEY && seedVersion === DEFAULT_SEED_VERSION;
-            }),
-        );
+                    return seedKey === DEFAULT_SEED_KEY && seedVersion === DEFAULT_SEED_VERSION;
+                }),
+            );
 
-    if (existing && !input.force) {
-        if (existing.categoryKey && deps.complianceCategoryRepository) {
+        if (existing && !input.force) {
+            if (existing.categoryKey && deps.complianceCategoryRepository) {
+                await deps.complianceCategoryRepository.upsertCategory({
+                    orgId: input.authorization.orgId,
+                    key: existing.categoryKey,
+                    label: 'UK Employment',
+                    sortOrder: 100,
+                    metadata: { regulatoryRefs: ['UK_GDPR'] },
+                });
+            }
+            return { success: true, created: false, template: existing };
+        }
+
+        const template = await deps.complianceTemplateRepository.createTemplate({
+            orgId: input.authorization.orgId,
+            name: 'UK Employment (Default)',
+            categoryKey: 'uk_employment',
+            version: DEFAULT_SEED_VERSION,
+            metadata: {
+                seedKey: DEFAULT_SEED_KEY,
+                seedVersion: DEFAULT_SEED_VERSION,
+                seededAt: new Date().toISOString(),
+                source: 'orgcentral',
+            },
+            items: [
+                {
+                    id: 'uk_employment.right_to_work',
+                    name: 'Right to work check',
+                    type: 'DOCUMENT',
+                    isMandatory: true,
+                    guidanceText: 'Upload evidence that confirms the employee has the right to work.',
+                    allowedFileTypes: ['pdf', 'jpg', 'png'],
+                    reminderDaysBeforeExpiry: 30,
+                    expiryDurationDays: 365,
+                    regulatoryRefs: ['UK_GDPR'],
+                },
+                {
+                    id: 'uk_employment.contract_signed',
+                    name: 'Signed employment contract',
+                    type: 'DOCUMENT',
+                    isMandatory: true,
+                    guidanceText: 'Upload the signed employment contract.',
+                    allowedFileTypes: ['pdf', 'docx'],
+                    regulatoryRefs: ['UK_GDPR'],
+                },
+                {
+                    id: 'uk_employment.privacy_ack',
+                    name: 'Privacy notice acknowledgement',
+                    type: 'ACKNOWLEDGEMENT',
+                    isMandatory: true,
+                    acknowledgementText: 'I acknowledge that I have read the privacy notice.',
+                    regulatoryRefs: ['UK_GDPR'],
+                },
+            ],
+        });
+
+        if (template.categoryKey && deps.complianceCategoryRepository) {
             await deps.complianceCategoryRepository.upsertCategory({
                 orgId: input.authorization.orgId,
-                key: existing.categoryKey,
+                key: template.categoryKey,
                 label: 'UK Employment',
                 sortOrder: 100,
                 metadata: { regulatoryRefs: ['UK_GDPR'] },
             });
         }
-        return { success: true, created: false, template: existing };
+
+        return { success: true, created: true, template };
+    });
+}
+
+async function withSeedLock<T>(orgId: string, action: () => Promise<T>): Promise<T> {
+    const key = `${orgId}:${DEFAULT_SEED_KEY}:${DEFAULT_SEED_VERSION}`;
+    const currentLock = activeSeedLocks.get(key);
+    if (currentLock) {
+        await currentLock;
     }
 
-    const template = await deps.complianceTemplateRepository.createTemplate({
-        orgId: input.authorization.orgId,
-        name: 'UK Employment (Default)',
-        categoryKey: 'uk_employment',
-        version: DEFAULT_SEED_VERSION,
-        metadata: {
-            seedKey: DEFAULT_SEED_KEY,
-            seedVersion: DEFAULT_SEED_VERSION,
-            seededAt: new Date().toISOString(),
-            source: 'orgcentral',
-        },
-        items: [
-            {
-                id: 'uk_employment.right_to_work',
-                name: 'Right to work check',
-                type: 'DOCUMENT',
-                isMandatory: true,
-                guidanceText: 'Upload evidence that confirms the employee has the right to work.',
-                allowedFileTypes: ['pdf', 'jpg', 'png'],
-                reminderDaysBeforeExpiry: 30,
-                expiryDurationDays: 365,
-                regulatoryRefs: ['UK_GDPR'],
-            },
-            {
-                id: 'uk_employment.contract_signed',
-                name: 'Signed employment contract',
-                type: 'DOCUMENT',
-                isMandatory: true,
-                guidanceText: 'Upload the signed employment contract.',
-                allowedFileTypes: ['pdf', 'docx'],
-                regulatoryRefs: ['UK_GDPR'],
-            },
-            {
-                id: 'uk_employment.privacy_ack',
-                name: 'Privacy notice acknowledgement',
-                type: 'ACKNOWLEDGEMENT',
-                isMandatory: true,
-                acknowledgementText: 'I acknowledge that I have read the privacy notice.',
-                regulatoryRefs: ['UK_GDPR'],
-            },
-        ],
+    let releaseLock: () => void = () => undefined;
+    const pendingLock = new Promise<void>((resolve) => {
+        releaseLock = resolve;
     });
 
-    if (template.categoryKey && deps.complianceCategoryRepository) {
-        await deps.complianceCategoryRepository.upsertCategory({
-            orgId: input.authorization.orgId,
-            key: template.categoryKey,
-            label: 'UK Employment',
-            sortOrder: 100,
-            metadata: { regulatoryRefs: ['UK_GDPR'] },
-        });
-    }
+    activeSeedLocks.set(key, pendingLock);
 
-    return { success: true, created: true, template };
+    try {
+        return await action();
+    } finally {
+        if (activeSeedLocks.get(key) === pendingLock) {
+            activeSeedLocks.delete(key);
+        }
+        releaseLock();
+    }
 }

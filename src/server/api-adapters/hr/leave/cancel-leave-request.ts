@@ -42,7 +42,7 @@ export async function cancelLeaveRequestController(
     const result = await service.cancelLeaveRequest({
         authorization,
         requestId,
-        cancelledBy: payload.cancelledBy ?? userId,
+        cancelledBy: userId,
         reason: payload.reason,
     });
 

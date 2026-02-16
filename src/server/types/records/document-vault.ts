@@ -54,6 +54,27 @@ export interface DocumentVaultRecord {
     createdAt: Date;
 }
 
+export interface DocumentVaultListItem {
+    id: string;
+    orgId: string;
+    ownerOrgId?: string | null;
+    ownerUserId?: string | null;
+    type: DocumentType;
+    classification: SecurityClassification;
+    retentionPolicy: RetentionPolicy;
+    retentionExpires?: Date | null;
+    mimeType?: string | null;
+    sizeBytes?: number | null;
+    fileName: string;
+    version: number;
+    latestVersionId?: string | null;
+    encrypted: boolean;
+    sensitivityLevel: number;
+    dataCategory?: string | null;
+    lawfulBasis?: string | null;
+    createdAt: Date;
+}
+
 export interface DocumentVaultFilters {
     orgId?: string;
     ownerUserId?: string;

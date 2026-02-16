@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 
@@ -24,6 +24,12 @@ export const metadata: Metadata = {
   description: "Unified organization management for HR, operations, and compliance.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,4 +48,3 @@ export default function RootLayout({
     </html>
   );
 }
-

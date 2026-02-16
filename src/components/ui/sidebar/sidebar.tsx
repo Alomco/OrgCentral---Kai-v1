@@ -50,7 +50,7 @@ export function Sidebar({
                     data-slot="sidebar"
                     data-mobile="true"
                     className={cn(
-                        "bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden",
+                        "bg-sidebar text-sidebar-foreground w-[var(--sidebar-width,18rem)] max-w-[85vw] min-h-[100vh] p-0 [&>button]:hidden",
                         className
                     )}
                     side={side}

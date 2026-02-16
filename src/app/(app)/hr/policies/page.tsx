@@ -19,12 +19,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { listHrPoliciesForUi } from '@/server/use-cases/hr/policies/list-hr-policies.cached';
 import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
 import { getHrSessionContextOrRedirect, getOptionalHrAuthorization } from '@/server/ui/auth/hr-session';
-import type { HRPolicy } from '@/server/types/hr-ops-types';
+import type { HRPolicyListItem } from '@/server/types/hr-ops-types';
 
 import { HrPageHeader } from '../_components/hr-page-header';
 import { PolicyAdminPanel } from './_components/policy-admin-panel';
 
-function sortPoliciesByEffectiveDateDescending(policies: HRPolicy[]): HRPolicy[] {
+function sortPoliciesByEffectiveDateDescending(policies: HRPolicyListItem[]): HRPolicyListItem[] {
     return policies.toSorted((left, right) => right.effectiveDate.getTime() - left.effectiveDate.getTime());
 }
 
@@ -87,7 +87,7 @@ async function PoliciesPageContent() {
                     description="Review and acknowledge organization policies."
                     icon={<FileText className="h-5 w-5" />}
                 />
-                <PoliciesHeaderClient />
+                <PoliciesHeaderClient orgId={authorization.orgId} />
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -100,7 +100,7 @@ async function PoliciesPageContent() {
                     <CardDescription>Latest effective policies appear first.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <PoliciesTableClient initial={sortedPolicies} />
+                    <PoliciesTableClient initial={sortedPolicies} orgId={authorization.orgId} />
                 </CardContent>
             </Card>
 

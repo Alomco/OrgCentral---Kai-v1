@@ -1,19 +1,14 @@
 "use client";
 
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { THEME_MODE_OPTIONS, useHydrated } from '@/components/theme/theme-ssot';
 
 export function ThemeTogglePanel() {
     const { theme, setTheme, resolvedTheme } = useTheme();
-    const isMounted = typeof window !== 'undefined';
+    const isMounted = useHydrated();
     const currentTheme = isMounted ? (resolvedTheme ?? theme ?? 'system') : null;
-
-    const themes = [
-        { id: 'light', label: 'Light', icon: Sun },
-        { id: 'dark', label: 'Dark', icon: Moon },
-        { id: 'system', label: 'System', icon: Monitor },
-    ] as const;
 
     return (
         <article
@@ -34,7 +29,7 @@ export function ThemeTogglePanel() {
 
             {/* Pill buttons - no borders, use shadows */}
             <div className="mt-4 flex flex-wrap gap-2">
-                {themes.map(({ id, label, icon: Icon }) => (
+                {THEME_MODE_OPTIONS.map(({ id, label, icon: Icon }) => (
                     <button
                         key={id}
                         onClick={() => setTheme(id)}

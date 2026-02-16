@@ -121,6 +121,7 @@ export const listHrPoliciesPayloadSchema = z.object({
             category: z.enum(POLICY_CATEGORY_VALUES, CATEGORY_INVALID_MESSAGE).optional(),
         })
         .optional(),
+    includeContent: z.boolean().optional(),
 });
 
 export const getHrPolicyPayloadSchema = z.object({

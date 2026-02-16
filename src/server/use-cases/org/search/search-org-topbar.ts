@@ -13,6 +13,9 @@ interface SearchOrgTopbarInput {
     limit: number;
 }
 
+const TOPBAR_SOURCE_LIMIT_MULTIPLIER = 5;
+const TOPBAR_SOURCE_LIMIT_CAP = 100;
+
 function normalizeText(value: string | null | undefined): string {
     return (value ?? '').trim();
 }
@@ -90,12 +93,14 @@ export async function searchOrgTopbar(
     input: SearchOrgTopbarInput,
 ): Promise<TopbarSearchResponse> {
     const normalizedQuery = input.query.toLowerCase();
+    const sourceLimit = resolveSourceLimit(input.limit);
     const result = await dependencies.peopleService.listEmployeeProfiles({
         authorization: input.authorization,
         payload: {
             filters: {
                 search: input.query,
             },
+            limit: sourceLimit,
         },
     });
 
@@ -111,4 +116,11 @@ export async function searchOrgTopbar(
         .slice(0, input.limit);
 
     return { results: employeeResults };
+}
+
+function resolveSourceLimit(limit: number): number {
+    const normalizedLimit = Number.isFinite(limit) ? Math.floor(limit) : 1;
+    const safeLimit = normalizedLimit < 1 ? 1 : normalizedLimit;
+    const expandedLimit = safeLimit * TOPBAR_SOURCE_LIMIT_MULTIPLIER;
+    return expandedLimit > TOPBAR_SOURCE_LIMIT_CAP ? TOPBAR_SOURCE_LIMIT_CAP : expandedLimit;
 }

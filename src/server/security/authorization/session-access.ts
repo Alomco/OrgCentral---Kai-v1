@@ -2,12 +2,24 @@ import type { AuthSession } from '@/server/lib/auth';
 import type { OrgPermissionMap } from '../access-control';
 import type { OrgAccessInput } from '../guards';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
+import { AuthorizationError } from '@/server/errors';
+import { appLogger } from '@/server/logging/structured-logger';
 import {
     RepositoryAuthorizer,
     type RepositoryAuthorizationContext,
     type RepositoryAuthorizationHandler,
     withRepositoryAuthorization,
 } from '@/server/repositories/security';
+import { z } from 'zod';
+
+const uuidSchema = z.uuid();
+
+type SessionIdentifierField = 'userId' | 'orgId';
+
+interface SessionIdentifierCandidate {
+    source: string;
+    value?: string;
+}
 
 export interface SessionAccessRequest {
     orgId?: string;
@@ -26,8 +38,11 @@ export function buildOrgAccessInputFromSession(
     session: AuthSession | null,
     request: SessionAccessRequest,
 ): OrgAccessInput {
-    const userId = extractUserId(session);
-    const orgId = extractOrgId(session, request.orgId);
+    const userIdCandidate = resolveUserIdCandidate(session);
+    const orgIdCandidate = resolveOrgIdCandidate(session, request.orgId);
+
+    const userId = extractUuidIdentifier(userIdCandidate, 'userId');
+    const orgId = extractUuidIdentifier(orgIdCandidate, 'orgId');
 
     return {
         orgId,
@@ -63,29 +78,82 @@ export async function requireSessionAuthorization(
     return authorizer.authorize(input, (context) => Promise.resolve(context));
 }
 
-function extractUserId(session: AuthSession | null): string {
-    const userId =
-        (session as { user?: { id?: string } } | null)?.user?.id ??
-        (session as { session?: { user?: { id?: string } } } | null)?.session?.user?.id;
-
-    if (!userId) {
-        throw new Error('Better Auth session is missing a user id.');
+function resolveUserIdCandidate(session: AuthSession | null): SessionIdentifierCandidate {
+    const direct = (session as { user?: { id?: string } } | null)?.user?.id;
+    if (typeof direct === 'string' && direct.length > 0) {
+        return { value: direct, source: 'session.user.id' };
     }
 
-    return userId;
+    const sessionUserId = (session as { session?: { userId?: string } } | null)?.session?.userId;
+    if (typeof sessionUserId === 'string' && sessionUserId.length > 0) {
+        return { value: sessionUserId, source: 'session.session.userId' };
+    }
+
+    const nested = (session as { session?: { user?: { id?: string } } } | null)?.session?.user?.id;
+    if (typeof nested === 'string' && nested.length > 0) {
+        return { value: nested, source: 'session.session.user.id' };
+    }
+
+    return { source: 'missing' };
 }
 
-function extractOrgId(session: AuthSession | null, provided?: string): string {
-    const orgId =
-        provided ??
-        (session as { session?: { activeOrganizationId?: string; organizationId?: string } } | null)
-            ?.session?.activeOrganizationId ??
-        (session as { session?: { activeOrganizationId?: string; organizationId?: string } } | null)
-            ?.session?.organizationId;
-
-    if (!orgId) {
-        throw new Error('Organization id was not provided and is not available on the session.');
+function resolveOrgIdCandidate(session: AuthSession | null, provided?: string): SessionIdentifierCandidate {
+    if (typeof provided === 'string' && provided.length > 0) {
+        return { value: provided, source: 'request.orgId' };
     }
 
-    return orgId;
+    const activeOrgId =
+        (session as { session?: { activeOrganizationId?: string } } | null)?.session?.activeOrganizationId;
+    if (typeof activeOrgId === 'string' && activeOrgId.length > 0) {
+        return { value: activeOrgId, source: 'session.session.activeOrganizationId' };
+    }
+
+    const fallbackOrgId =
+        (session as { session?: { organizationId?: string } } | null)?.session?.organizationId;
+    if (typeof fallbackOrgId === 'string' && fallbackOrgId.length > 0) {
+        return { value: fallbackOrgId, source: 'session.session.organizationId' };
+    }
+
+    return { source: 'missing' };
+}
+
+function extractUuidIdentifier(
+    candidate: SessionIdentifierCandidate,
+    field: SessionIdentifierField,
+): string {
+    const raw = normalizeIdentifier(candidate.value);
+    if (!raw) {
+        logInvalidIdentifier(field, candidate.source, false);
+        throw new AuthorizationError(
+            `Authenticated session is missing a ${field}.`,
+            { reason: 'unauthenticated', field, source: candidate.source },
+        );
+    }
+
+    const parsed = uuidSchema.safeParse(raw);
+    if (!parsed.success) {
+        logInvalidIdentifier(field, candidate.source, true);
+        throw new AuthorizationError(
+            `Authenticated session contains an invalid ${field}.`,
+            { reason: 'invalid_session_identity', field, source: candidate.source },
+        );
+    }
+
+    return parsed.data;
+}
+
+function normalizeIdentifier(value: string | undefined): string | null {
+    if (typeof value !== 'string') {
+        return null;
+    }
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+}
+
+function logInvalidIdentifier(field: SessionIdentifierField, source: string, hasValue: boolean): void {
+    appLogger.warn('auth.session.invalid_identifier', {
+        field,
+        source,
+        hasValue,
+    });
 }

@@ -20,13 +20,16 @@ export class ComplianceAssignmentService extends AbstractHrService {
     }
 
     async assignCompliancePack(input: AssignComplianceInput): Promise<void> {
+        const userIds = [...new Set(input.userIds)];
+        const templateItemIds = [...new Set(input.templateItemIds)];
+
         await this.ensureOrgAccess(input.authorization, {
             action: HR_ACTION.ASSIGN,
             resourceType: HR_RESOURCE.HR_COMPLIANCE,
             resourceAttributes: {
                 templateId: input.templateId,
-                userIds: input.userIds,
-                itemCount: input.templateItemIds.length,
+                userIds,
+                itemCount: templateItemIds.length,
             },
         });
 
@@ -34,19 +37,19 @@ export class ComplianceAssignmentService extends AbstractHrService {
             metadata: {
                 auditSource: 'service:hr:compliance.assign-pack',
                 templateId: input.templateId,
-                userCount: input.userIds.length,
-                itemCount: input.templateItemIds.length,
+                userCount: userIds.length,
+                itemCount: templateItemIds.length,
             },
         });
 
         return this.executeInServiceContext(context, 'hr.compliance.assign-pack', async () => {
             await Promise.all(
-                input.userIds.map((userId) =>
+                userIds.map((userId) =>
                     this.dependencies.complianceItemRepository.assignItems({
                         orgId: input.authorization.orgId,
                         userId,
                         templateId: input.templateId,
-                        templateItemIds: input.templateItemIds,
+                        templateItemIds,
                         assignedBy: input.authorization.userId,
                     }),
                 ),

@@ -1,6 +1,6 @@
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
 import { listHrPoliciesPayloadSchema } from '@/server/services/hr/policies/hr-policy-schemas';
-import type { HRPolicy } from '@/server/types/hr-ops-types';
+import type { HRPolicy, HRPolicyListItem } from '@/server/types/hr-ops-types';
 
 import {
     defaultHrPolicyControllerDependencies,
@@ -19,7 +19,25 @@ export interface ListHrPoliciesControllerInput {
 
 export interface ListHrPoliciesControllerResult {
     success: true;
-    policies: HRPolicy[];
+    policies: HRPolicyListItem[] | HRPolicy[];
+}
+
+function toPolicyListItem(policy: HRPolicy): HRPolicyListItem {
+    return {
+        id: policy.id,
+        orgId: policy.orgId,
+        title: policy.title,
+        category: policy.category,
+        version: policy.version,
+        effectiveDate: policy.effectiveDate,
+        expiryDate: policy.expiryDate,
+        requiresAcknowledgment: policy.requiresAcknowledgment,
+        status: policy.status,
+        dataClassification: policy.dataClassification,
+        residencyTag: policy.residencyTag,
+        createdAt: policy.createdAt,
+        updatedAt: policy.updatedAt,
+    };
 }
 
 export async function listHrPoliciesController(
@@ -47,7 +65,26 @@ export async function listHrPoliciesController(
 
     const payload = listHrPoliciesPayloadSchema.parse(controllerInput.input);
 
+    if (payload.includeContent === true) {
+        await getSessionContext(resolved.session, {
+            headers: controllerInput.headers,
+            requiredPermissions: { organization: ['update'] },
+            auditSource: `${controllerInput.auditSource}:include-content`,
+            action: 'read',
+            resourceType: HR_POLICY_RESOURCE_POLICY,
+            resourceAttributes: {
+                category: rawCategory,
+                status: rawStatus,
+                includeContent: true,
+            },
+        });
+    }
+
     const policies = await resolved.service.listPolicies({ authorization, filters: payload.filters });
-    return { success: true, policies };
+    if (payload.includeContent === true) {
+        return { success: true, policies };
+    }
+
+    return { success: true, policies: policies.map(toPolicyListItem) };
 }
 // API adapter: Use-case: list HR policies for an organization using HR policy repositories with filters.

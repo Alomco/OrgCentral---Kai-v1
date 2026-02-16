@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { headers as nextHeaders } from 'next/headers';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { z } from 'zod';
 
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,6 +21,8 @@ import { getHrSessionContextOrRedirect } from '@/server/ui/auth/hr-session';
 
 import { formatHumanDateTime } from '../../../_components/format-date';
 
+const policyIdSchema = z.uuid();
+
 function formatUserId(value: string): string {
     const trimmed = value.trim();
     if (trimmed.length <= 12) {
@@ -27,7 +31,12 @@ function formatUserId(value: string): string {
     return `${trimmed.slice(0, 8)}…${trimmed.slice(-4)}`;
 }
 
-export default function HrPolicyAcknowledgmentsPage({ params }: { params: { policyId: string } }) {
+export default async function HrPolicyAcknowledgmentsPage({ params }: { params: Promise<{ policyId: string }> }) {
+    const { policyId } = await params;
+    if (!policyIdSchema.safeParse(policyId).success) {
+        notFound();
+    }
+
     return (
         <div className="space-y-6">
             <Breadcrumb>
@@ -46,7 +55,7 @@ export default function HrPolicyAcknowledgmentsPage({ params }: { params: { poli
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
-                            <Link href={`/hr/policies/${params.policyId}`}>Policy</Link>
+                            <Link href={`/hr/policies/${policyId}`}>Policy</Link>
                         </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
@@ -63,13 +72,13 @@ export default function HrPolicyAcknowledgmentsPage({ params }: { params: { poli
                         Admin view of who has acknowledged this policy.
                     </p>
                 </div>
-                <Link className="text-sm font-semibold underline underline-offset-4" href={`/hr/policies/${params.policyId}`}>
+                <Link className="text-sm font-semibold underline underline-offset-4" href={`/hr/policies/${policyId}`}>
                     Back to policy
                 </Link>
             </div>
 
             <Suspense fallback={<AcknowledgmentsSkeleton />}>
-                <AcknowledgmentsCard policyId={params.policyId} />
+                <AcknowledgmentsCard policyId={policyId} />
             </Suspense>
         </div>
     );

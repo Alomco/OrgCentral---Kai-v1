@@ -19,6 +19,10 @@ export interface EmployeeProfilePagedQuery {
   sort?: EmployeeProfileSortInput;
 }
 
+export interface EmployeeProfileListOptions {
+  limit?: number;
+}
+
 export interface IEmployeeProfileRepository {
   /**
    * Create a new employee profile
@@ -58,7 +62,8 @@ export interface IEmployeeProfileRepository {
    */
   getEmployeeProfilesByOrganization(
     tenantId: string,
-    filters?: PeopleListFilters
+    filters?: PeopleListFilters,
+    options?: EmployeeProfileListOptions
   ): Promise<EmployeeProfileDTO[]>;
 
   /**

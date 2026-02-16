@@ -3,21 +3,21 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
-import type { HRPolicy } from '@/server/types/hr-ops-types';
+import type { HRPolicyListItem } from '@/server/types/hr-ops-types';
 import { listPoliciesQuery } from './policies.api';
 import { Badge } from '@/components/ui/badge';
 import { formatHumanDate } from '../../_components/format-date';
 import { usePoliciesUiStore } from './policies-ui.store';
 
-function sortByEffectiveDateDesc(policies: HRPolicy[]): HRPolicy[] {
+function sortByEffectiveDateDesc(policies: HRPolicyListItem[]): HRPolicyListItem[] {
   return [...policies].sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
 }
 
-export function PoliciesTableClient({ initial }: { initial: HRPolicy[] }) {
+export function PoliciesTableClient({ initial, orgId }: { initial: HRPolicyListItem[]; orgId: string }) {
   const searchParams = useSearchParams();
   const q = (searchParams.get('q') ?? '').trim();
   const nocat = ((searchParams.get('nocat') ?? '').toLowerCase() === '1' || (searchParams.get('nocat') ?? '').toLowerCase() === 'true');
-  const { data = initial } = useQuery({ ...listPoliciesQuery(q || undefined, nocat), initialData: initial });
+  const { data = initial } = useQuery({ ...listPoliciesQuery(orgId, q || undefined, nocat), initialData: initial });
   const policies = sortByEffectiveDateDesc(data);
   const density = usePoliciesUiStore((s) => s.density);
   const rowPad = density === 'compact' ? 'py-1' : 'py-2';

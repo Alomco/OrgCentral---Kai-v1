@@ -2,13 +2,13 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { DocumentVaultRecord } from '@/server/types/records/document-vault';
+import type { DocumentVaultListItem } from '@/server/types/records/document-vault';
 import { documentVaultKeys, listDocumentVaultRecords } from '../document-vault.api';
 import { DocumentVaultUploadForm } from './document-vault-upload-form';
 import { DocumentVaultTable } from './document-vault-table';
 
 interface DocumentVaultPanelProps {
-    initialDocuments: DocumentVaultRecord[];
+    initialDocuments: DocumentVaultListItem[];
 }
 
 export function DocumentVaultPanel({ initialDocuments }: DocumentVaultPanelProps) {

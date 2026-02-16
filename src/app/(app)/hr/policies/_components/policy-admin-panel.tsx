@@ -15,7 +15,11 @@ export async function PolicyAdminPanel(props: { authorization: RepositoryAuthori
                 <CardDescription>Create, edit, and publish HR policies for the organization.</CardDescription>
             </CardHeader>
             <CardContent>
-                <PolicyAdminManager policies={policies} policyCategories={POLICY_CATEGORY_VALUES} />
+                <PolicyAdminManager
+                    policies={policies}
+                    policyCategories={POLICY_CATEGORY_VALUES}
+                    orgId={props.authorization.orgId}
+                />
             </CardContent>
         </Card>
     );

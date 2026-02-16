@@ -5,6 +5,7 @@ import {
 } from '@/server/use-cases/hr/compliance/update-compliance-item';
 import type { UpdateComplianceItemInput } from '@/server/use-cases/hr/compliance/update-compliance-item';
 import { updateComplianceItemSchema } from '@/server/types/hr-compliance-schemas';
+import { HR_ACTION, HR_ANY_PERMISSION_PROFILE, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
 import type { ComplianceControllerDependencies } from './common';
 import { resolveComplianceControllerDependencies, readJson } from './common';
 
@@ -22,10 +23,10 @@ export async function updateComplianceItemController(
 
     const baseAccess = await getSessionContext(session, {
         headers: request.headers,
-        requiredPermissions: { employeeProfile: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.COMPLIANCE_UPDATE,
         auditSource: 'api:hr:compliance:update',
-        action: 'update',
-        resourceType: 'hr.compliance',
+        action: HR_ACTION.UPDATE,
+        resourceType: HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
         resourceAttributes: {
             itemId: payload.itemId,
             targetUserId: payload.userId,
@@ -38,10 +39,10 @@ export async function updateComplianceItemController(
     if (payload.userId !== authorization.userId) {
         const elevated = await getSessionContext(session, {
             headers: request.headers,
-            requiredPermissions: { organization: ['update'] },
+            requiredAnyPermissions: HR_ANY_PERMISSION_PROFILE.COMPLIANCE_MANAGEMENT,
             auditSource: 'api:hr:compliance:update.elevated',
-            action: 'update',
-            resourceType: 'hr.compliance',
+            action: HR_ACTION.UPDATE,
+            resourceType: HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
             resourceAttributes: {
                 itemId: payload.itemId,
                 targetUserId: payload.userId,

@@ -1,5 +1,5 @@
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
-import type { DocumentVaultRecord } from '@/server/types/records/document-vault';
+import type { DocumentVaultListItem, DocumentVaultRecord } from '@/server/types/records/document-vault';
 import {
     documentVaultListQuerySchema,
     type DocumentVaultListQuery,
@@ -8,7 +8,30 @@ import { listDocumentsService } from '@/server/services/records/document-vault-s
 
 export interface ListDocumentsControllerResult {
     success: true;
-    documents: DocumentVaultRecord[];
+    documents: DocumentVaultListItem[];
+}
+
+function toListItem(document: DocumentVaultRecord): DocumentVaultListItem {
+    return {
+        id: document.id,
+        orgId: document.orgId,
+        ownerOrgId: document.ownerOrgId,
+        ownerUserId: document.ownerUserId,
+        type: document.type,
+        classification: document.classification,
+        retentionPolicy: document.retentionPolicy,
+        retentionExpires: document.retentionExpires,
+        mimeType: document.mimeType,
+        sizeBytes: document.sizeBytes,
+        fileName: document.fileName,
+        version: document.version,
+        latestVersionId: document.latestVersionId,
+        encrypted: document.encrypted,
+        sensitivityLevel: document.sensitivityLevel,
+        dataCategory: document.dataCategory,
+        lawfulBasis: document.lawfulBasis,
+        createdAt: document.createdAt,
+    };
 }
 
 function parseQuery(request: Request): DocumentVaultListQuery {
@@ -39,5 +62,5 @@ export async function listDocumentsController(request: Request): Promise<ListDoc
 
     const documents = await listDocumentsService(authorization, query);
 
-    return { success: true, documents };
+    return { success: true, documents: documents.map(toListItem) };
 }

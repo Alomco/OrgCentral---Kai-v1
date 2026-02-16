@@ -158,6 +158,30 @@ export interface HRPolicy {
   updatedAt: Date;
 }
 
+export interface HRPolicyListItem {
+  id: string;
+  orgId: string;
+  title: string;
+  category:
+  | 'HR_POLICIES'
+  | 'CODE_OF_CONDUCT'
+  | 'HEALTH_SAFETY'
+  | 'IT_SECURITY'
+  | 'BENEFITS'
+  | 'PROCEDURES'
+  | 'COMPLIANCE'
+  | 'OTHER';
+  version: string;
+  effectiveDate: Date;
+  expiryDate?: Date | null;
+  requiresAcknowledgment: boolean;
+  status: string;
+  dataClassification: DataClassificationLevel;
+  residencyTag: DataResidencyZone;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface PolicyAcknowledgment {
   id: string;
   orgId: string;

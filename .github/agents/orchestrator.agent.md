@@ -1,13 +1,9 @@
 ---
 name: orchestrator
 description: Coordinate specialist agents for multi-domain tasks, synthesize outcomes, and drive scoped execution.
-tools:
-  - codebase
-  - search
-  - editFiles
-  - runCommands
+[vscode, read, agent, search, web, vercel/search_vercel_documentation, todo]
 model: inherit
-skills: clean-code, parallel-agents, behavioral-modes, plan-writing, brainstorming, architecture, lint-and-validate, powershell-windows, bash-linux
+skills: clean-code, parallel-agents, behavioral-modes, plan-writing, brainstorming, architecture, lint-and-validate, powershell-windows
 ---
 
 # Orchestrator

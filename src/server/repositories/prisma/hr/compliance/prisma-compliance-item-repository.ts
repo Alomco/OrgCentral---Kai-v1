@@ -21,11 +21,13 @@ import { CACHE_SCOPE_COMPLIANCE_ITEMS } from '@/server/repositories/cache-scopes
 import { RepositoryAuthorizationError } from '@/server/repositories/security';
 import { complianceAttachmentsSchema } from '@/server/validators/hr/compliance/compliance-validators';
 import type { DataClassificationLevel, DataResidencyZone } from '@/server/types/tenant';
+import { z } from 'zod';
 
 type ComplianceLogRecord = PrismaComplianceLogItem;
 type ComplianceLogCreateData = Prisma.ComplianceLogItemUncheckedCreateInput;
 type ComplianceLogUpdateData = Prisma.ComplianceLogItemUncheckedUpdateInput;
 type ComplianceLogFindManyArguments = Prisma.ComplianceLogItemFindManyArgs;
+const complianceItemIdSchema = z.uuid();
 
 export class PrismaComplianceItemRepository
     extends BasePrismaRepository
@@ -47,6 +49,9 @@ export class PrismaComplianceItemRepository
     }
 
     private async ensureItemScope(itemId: string, orgId: string, userId: string): Promise<ComplianceLogRecord> {
+        if (!complianceItemIdSchema.safeParse(itemId).success) {
+            throw new RepositoryAuthorizationError('Compliance item not found for this user/organization.');
+        }
         const record = await this.complianceLog.findUnique({ where: { id: itemId } });
         const { orgId: recordOrgId, userId: recordUserId } = (record ?? {}) as { orgId?: string; userId?: string };
         if (!record || recordOrgId !== orgId || recordUserId !== userId) {
@@ -86,6 +91,9 @@ export class PrismaComplianceItemRepository
     }
 
     async getItem(orgId: string, userId: string, itemId: string): Promise<ComplianceLogItem | null> {
+        if (!complianceItemIdSchema.safeParse(itemId).success) {
+            return null;
+        }
         const record = await this.complianceLog.findUnique({ where: { id: itemId } });
         if (!record) { return null; }
         const { orgId: recordOrgId, userId: recordUserId } = record as { orgId?: string; userId?: string };

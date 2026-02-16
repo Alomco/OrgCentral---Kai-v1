@@ -6,22 +6,23 @@
  * @module abac-policies/compliance
  */
 import type { AbacPolicy } from '../abac-types';
+import { HR_RESOURCE_TYPE } from '../authorization/hr-permissions/resources';
 
 /** Resources compliance officers can read. */
 const COMPLIANCE_READ_RESOURCES = [
-    'hr.compliance.item',
-    'hr.compliance.template',
-    'hr.compliance.review',
-    'hr.policy',
-    'hr.policy.acknowledgment',
-    'employeeProfile',
+    HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
+    HR_RESOURCE_TYPE.COMPLIANCE_TEMPLATE,
+    HR_RESOURCE_TYPE.COMPLIANCE_REVIEW,
+    HR_RESOURCE_TYPE.POLICY,
+    HR_RESOURCE_TYPE.POLICY_ACKNOWLEDGMENT,
+    HR_RESOURCE_TYPE.EMPLOYEE_PROFILE,
 ];
 
 /** Resources compliance officers can fully manage. */
 const COMPLIANCE_MANAGE_RESOURCES = [
-    'hr.compliance.item',
-    'hr.compliance.template',
-    'hr.compliance.review',
+    HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
+    HR_RESOURCE_TYPE.COMPLIANCE_TEMPLATE,
+    HR_RESOURCE_TYPE.COMPLIANCE_REVIEW,
 ];
 
 /**

@@ -22,7 +22,7 @@ export async function ComplianceTemplatesPanel({ authorization }: ComplianceTemp
                 <CardDescription>Default packs and organization templates.</CardDescription>
             </CardHeader>
             <CardContent>
-                <ComplianceTemplatesManager templates={templates} />
+                <ComplianceTemplatesManager templates={templates} orgId={authorization.orgId} />
             </CardContent>
         </Card>
     );

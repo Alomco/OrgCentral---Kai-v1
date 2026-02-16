@@ -28,6 +28,7 @@ export const getEmployeeProfileByUserPayloadSchema = z.object({
 
 export const listEmployeeProfilesPayloadSchema = z.object({
   filters: peopleListFiltersSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
 });
 
 export const countEmployeeProfilesPayloadSchema = listEmployeeProfilesPayloadSchema;

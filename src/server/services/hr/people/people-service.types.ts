@@ -33,6 +33,7 @@ export interface GetEmployeeProfileByUserPayload extends PeopleServicePayload {
 
 export interface ListEmployeeProfilesPayload extends PeopleServicePayload {
   filters?: PeopleListFilters;
+  limit?: number;
 }
 
 export interface CountEmployeeProfilesPayload extends PeopleServicePayload {

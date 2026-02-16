@@ -42,7 +42,7 @@ export async function approveLeaveRequestController(
     const result = await service.approveLeaveRequest({
         authorization,
         requestId,
-        approverId: payload.approverId ?? userId,
+        approverId: userId,
         comments: payload.comments,
     });
 

@@ -1,4 +1,4 @@
-import type { DocumentVaultRecord } from '@/server/types/records/document-vault';
+import type { DocumentVaultListItem, DocumentVaultRecord } from '@/server/types/records/document-vault';
 import type { DocumentVaultListQuery, DocumentVaultStorePayload } from '@/server/types/records/document-vault-schemas';
 
 export const documentVaultKeys = {
@@ -7,7 +7,7 @@ export const documentVaultKeys = {
 
 export async function listDocumentVaultRecords(
     filters?: DocumentVaultListQuery,
-): Promise<DocumentVaultRecord[]> {
+): Promise<DocumentVaultListItem[]> {
     const params = new URLSearchParams();
     if (filters?.ownerUserId) { params.set('ownerUserId', filters.ownerUserId); }
     if (filters?.type) { params.set('type', filters.type); }
@@ -21,7 +21,7 @@ export async function listDocumentVaultRecords(
         const errorText = await response.text();
         throw new Error(errorText || 'Unable to fetch documents.');
     }
-    const payload = (await response.json()) as { documents: DocumentVaultRecord[] };
+    const payload = (await response.json()) as { documents: DocumentVaultListItem[] };
     return payload.documents;
 }
 

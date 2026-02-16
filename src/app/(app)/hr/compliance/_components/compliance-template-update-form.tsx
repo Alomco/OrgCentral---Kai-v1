@@ -17,7 +17,7 @@ import { ComplianceTemplateItemsBuilder } from './compliance-template-items-buil
 
 const initialInlineState: ComplianceTemplateInlineState = { status: 'idle' };
 
-export function ComplianceTemplateUpdateForm(props: { template: ComplianceTemplate }) {
+export function ComplianceTemplateUpdateForm(props: { template: ComplianceTemplate; orgId: string }) {
     const queryClient = useQueryClient();
     const searchParams = useSearchParams();
     const qNormalized = (searchParams.get('q') ?? '').trim().toLowerCase();
@@ -25,9 +25,9 @@ export function ComplianceTemplateUpdateForm(props: { template: ComplianceTempla
 
     useEffect(() => {
         if (state.status === 'success') {
-            void queryClient.invalidateQueries({ queryKey: templatesKey.list(qNormalized) }).catch(() => null);
+            void queryClient.invalidateQueries({ queryKey: templatesKey.list(props.orgId, qNormalized) }).catch(() => null);
         }
-    }, [qNormalized, queryClient, state.status]);
+    }, [props.orgId, qNormalized, queryClient, state.status]);
 
     const message = state.status === 'idle' ? null : state.message;
 

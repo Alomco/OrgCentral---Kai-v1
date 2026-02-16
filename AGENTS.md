@@ -34,6 +34,13 @@ Provide project-specific rules for Codex to preserve coding conventions, securit
 - important: never delete the lint cache
 - Check for side effects and ensure related actions, notifications, workers, and error handling are implemented.
 
+## Agent QA Accounts (Mandatory for app testing)
+- For login/auth/role/org-scoped testing, always use seeded personas from `.codex/test-accounts/catalog.local.json`.
+- Before QA runs, prepare realistic data with `pnpm seed:test-accounts:realistic:reset` (preferred) or `pnpm seed:test-accounts:realistic`.
+- Validate account readiness with `pnpm test-accounts:verify` before testing flows.
+- Do not invent credentials; select personas by `state`, `roleKey`, and `organizationSlug` from the local catalog.
+- For setup-gate coverage, include these states in test passes: `mfa_setup_required`, `profile_setup_required`, `suspended`, `no_membership`.
+
 ## Security and quality
 - Validate all external data; sanitize and normalize at boundaries.
 - Use explicit allowlists for tenant-scoped queries.

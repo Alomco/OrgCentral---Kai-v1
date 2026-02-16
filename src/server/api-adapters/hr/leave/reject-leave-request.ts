@@ -43,7 +43,7 @@ export async function rejectLeaveRequestController(
     const result = await service.rejectLeaveRequest({
         authorization,
         requestId,
-        rejectedBy: payload.rejectedBy ?? userId,
+        rejectedBy: userId,
         reason: payload.reason,
         comments: payload.comments,
     });

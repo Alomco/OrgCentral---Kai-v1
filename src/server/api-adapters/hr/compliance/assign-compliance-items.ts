@@ -4,6 +4,7 @@ import {
     type AssignComplianceItemsDependencies,
 } from '@/server/use-cases/hr/compliance/assign-compliance-items';
 import { assignComplianceItemsSchema } from '@/server/types/hr-compliance-schemas';
+import { HR_ACTION, HR_ANY_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
 import type { ComplianceControllerDependencies } from './common';
 import { resolveComplianceControllerDependencies, readJson } from './common';
 
@@ -22,10 +23,10 @@ export async function assignComplianceItemsController(
 
     const { authorization } = await getSessionContext(session, {
         headers: request.headers,
-        requiredPermissions: { organization: ['update'] },
+        requiredAnyPermissions: HR_ANY_PERMISSION_PROFILE.COMPLIANCE_MANAGEMENT,
         auditSource: 'api:hr:compliance:assign',
-        action: 'assign',
-        resourceType: 'hr.compliance',
+        action: HR_ACTION.ASSIGN,
+        resourceType: HR_RESOURCE_TYPE.COMPLIANCE_ITEM,
         resourceAttributes: {
             templateId: payload.templateId,
             userIds: payload.userIds,

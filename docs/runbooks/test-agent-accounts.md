@@ -14,6 +14,18 @@ This runbook defines how to seed and use behavior-faithful test accounts for age
 pnpm seed:test-accounts
 ```
 
+For realistic app testing data (recommended), run:
+
+```bash
+pnpm seed:test-accounts:realistic:reset
+```
+
+Alternative (without reset):
+
+```bash
+pnpm seed:test-accounts:realistic
+```
+
 This creates/updates:
 
 - auth identity records (`authUser`, `authAccount`, `authOrgMember`)
@@ -53,6 +65,7 @@ Validation checks include:
 - profile completeness state
 - RBAC/ABAC foundation records for each seeded org
 - org security settings required for MFA gate testing
+- realistic org-linked coverage for QA paths (employees, absences, training, notifications, compliance)
 
 ## List Accounts
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { ValidationError } from '@/server/errors';
 import { approveLeaveRequestController } from '@/server/api-adapters/hr/leave/approve-leave-request';
 import { buildErrorResponse } from '@/server/api-adapters/http/error-response';
+import { enforceCsrfOriginGuard } from '@/server/security/guards/csrf-origin-guard';
 
 interface RouteParams {
     params: Promise<{
@@ -11,7 +12,11 @@ interface RouteParams {
 
 export async function POST(request: Request, { params }: RouteParams): Promise<NextResponse> {
     try {
-            const resolvedParams = await params;
+        const guardResponse = await enforceCsrfOriginGuard(request);
+        if (guardResponse) {
+            return guardResponse;
+        }
+        const resolvedParams = await params;
         if (!resolvedParams.requestId) {
             throw new ValidationError('Leave request id is required.');
         }

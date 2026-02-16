@@ -42,7 +42,8 @@ interface AppSidebarProps {
 
 export function AppSidebar({ authorization, organizationLabel }: AppSidebarProps) {
     const pathname = usePathname();
-    const { open } = useSidebar();
+    const { open, isMobile } = useSidebar();
+    const isExpanded = isMobile ? true : open;
 
     const isAdmin = hasPermission(authorization.permissions, 'organization', 'update');
 
@@ -54,12 +55,12 @@ export function AppSidebar({ authorization, organizationLabel }: AppSidebarProps
         >
             <nav aria-label="Primary" className="flex h-full flex-col">
                 <SidebarHeader className={styles.sidebarHeader} data-ui-surface="container">
-                    <div className={styles.headerInner} data-collapsed={!open}>
+                    <div className={styles.headerInner} data-collapsed={!isExpanded}>
                         <SidebarTrigger className={styles.sidebarTrigger} />
                         <Link
                             href="/dashboard"
                             className={styles.logoLink}
-                            data-collapsed={!open}
+                            data-collapsed={!isExpanded}
                         >
                             <span className={styles.logoText}>
                                 {organizationLabel ?? 'OrgCentral'}
@@ -73,7 +74,7 @@ export function AppSidebar({ authorization, organizationLabel }: AppSidebarProps
                         <SidebarMenu className="space-y-1">
                             {navItems.map((item) => (
                                 <SidebarMenuItem key={item.href}>
-                                    <AppSidebarNavItem item={item} pathname={pathname} open={open} />
+                                    <AppSidebarNavItem item={item} pathname={pathname} open={isExpanded} />
                                 </SidebarMenuItem>
                             ))}
                         </SidebarMenu>
@@ -93,7 +94,7 @@ export function AppSidebar({ authorization, organizationLabel }: AppSidebarProps
                                             <div className={styles.tenantIcon}>
                                                 <Building className="h-5 w-5" />
                                             </div>
-                                            <div className={styles.tenantInfo} data-collapsed={!open}>
+                                            <div className={styles.tenantInfo} data-collapsed={!isExpanded}>
                                                 <span className={styles.tenantName}>
                                                     {organizationLabel ?? 'Organization'}
                                                 </span>
@@ -108,7 +109,7 @@ export function AppSidebar({ authorization, organizationLabel }: AppSidebarProps
                                 <DropdownMenuContent
                                     className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
                                     align="start"
-                                    side={open ? 'bottom' : 'right'}
+                                    side={isExpanded ? 'bottom' : 'right'}
                                     sideOffset={4}
                                 >
                                     <DropdownMenuItem className="gap-2" asChild>

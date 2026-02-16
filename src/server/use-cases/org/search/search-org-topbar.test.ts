@@ -73,6 +73,12 @@ describe('searchOrgTopbar', () => {
             },
         );
 
+        expect(listEmployeeProfiles).toHaveBeenCalledWith(
+            expect.objectContaining({
+                authorization,
+                payload: { filters: { search: 'ada' }, limit: 40 },
+            }),
+        );
         expect(result.results).toHaveLength(1);
         expect(result.results[0]).toMatchObject({
             title: 'Ada Lovelace',

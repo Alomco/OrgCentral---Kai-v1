@@ -8,6 +8,7 @@ export function PolicyAdminRow(props: {
     policy: HRPolicy;
     policyCategories: readonly string[];
     statusOptions: readonly string[];
+    orgId: string;
 }) {
     return (
         <div className="space-y-3 rounded-lg border p-3">
@@ -15,6 +16,7 @@ export function PolicyAdminRow(props: {
                 policy={props.policy}
                 policyCategories={props.policyCategories}
                 statusOptions={props.statusOptions}
+                orgId={props.orgId}
             />
         </div>
     );

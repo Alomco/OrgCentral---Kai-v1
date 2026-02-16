@@ -4,6 +4,7 @@ import {
     type SeedDefaultComplianceTemplatesDependencies,
 } from '@/server/use-cases/hr/compliance/seed-default-templates';
 import { seedComplianceTemplatesQuerySchema } from '@/server/types/hr-compliance-schemas';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
 import { resolveComplianceControllerDependencies } from './common';
 
 export interface SeedComplianceTemplatesControllerResult {
@@ -22,10 +23,10 @@ export async function seedComplianceTemplatesController(request: Request): Promi
         {},
         {
             headers: request.headers,
-            requiredPermissions: { organization: ['update'] },
+            requiredPermissions: HR_PERMISSION_PROFILE.COMPLIANCE_TEMPLATE_MANAGE,
             auditSource: 'api:hr:compliance:templates:seed',
-            action: 'create',
-            resourceType: 'hr.compliance',
+            action: HR_ACTION.CREATE,
+            resourceType: HR_RESOURCE_TYPE.COMPLIANCE_TEMPLATE,
             resourceAttributes: { seedKey: 'uk-employment', force: query.force ?? false },
         },
     );

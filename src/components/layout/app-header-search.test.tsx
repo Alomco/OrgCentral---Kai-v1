@@ -9,6 +9,72 @@ import { AppHeaderSearch } from './app-header-search';
 
 const pushMock = vi.fn();
 
+vi.mock('@/components/ui/popover', async () => {
+    const React = await import('react');
+
+    interface PopoverContextValue {
+        open: boolean;
+        onOpenChange: (open: boolean) => void;
+    }
+
+    const PopoverContext = React.createContext<PopoverContextValue | null>(null);
+
+    function Popover({
+        open,
+        onOpenChange,
+        children,
+    }: {
+        open: boolean;
+        onOpenChange: (open: boolean) => void;
+        children: React.ReactNode;
+    }) {
+        return <PopoverContext.Provider value={{ open, onOpenChange }}>{children}</PopoverContext.Provider>;
+    }
+
+    function PopoverTrigger({
+        asChild,
+        children,
+    }: {
+        asChild?: boolean;
+        children: React.ReactNode;
+    }) {
+        const context = React.useContext(PopoverContext);
+        if (!context) {
+            return null;
+        }
+
+        if (asChild && React.isValidElement(children)) {
+            const trigger = children as React.ReactElement<{
+                onClick?: React.MouseEventHandler<HTMLElement>;
+            }>;
+            const existingOnClick = trigger.props.onClick;
+
+            return React.cloneElement(trigger, {
+                onClick: (event: React.MouseEvent<HTMLElement>) => {
+                    existingOnClick?.(event);
+                    context.onOpenChange(true);
+                },
+            });
+        }
+
+        return (
+            <button type="button" onClick={() => context.onOpenChange(true)}>
+                {children}
+            </button>
+        );
+    }
+
+    function PopoverContent({ children }: { children: React.ReactNode }) {
+        const context = React.useContext(PopoverContext);
+        if (!context?.open) {
+            return null;
+        }
+        return <div>{children}</div>;
+    }
+
+    return { Popover, PopoverTrigger, PopoverContent };
+});
+
 vi.mock('next/navigation', () => ({
     useRouter: () => ({
         push: pushMock,

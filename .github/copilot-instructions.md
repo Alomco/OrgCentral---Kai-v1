@@ -36,6 +36,8 @@ Always read `.github/ARCHITECTURE.md` first, then apply these rules.
 
 - For complex or ambiguous changes: plan first, then implement.
 - For clear/small changes: implement directly without orchestration overhead.
+- For app QA/login testing: use seeded personas from `.codex/test-accounts/catalog.local.json` and run `pnpm seed:test-accounts:realistic:reset` before deep flow validation.
+- Verify account states with `pnpm test-accounts:verify` and select personas by intended gate/state (ready, MFA-required, profile-required, suspended, no-membership).
 - After code changes, run:
   - `npx tsc --noEmit`
   - `pnpm lint --fix`

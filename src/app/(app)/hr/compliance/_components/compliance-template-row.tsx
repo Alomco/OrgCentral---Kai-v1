@@ -9,7 +9,7 @@ import { formatCategoryLabel, formatVersionLabel } from '../compliance-template-
 import { ComplianceTemplateDeleteForm } from './compliance-template-delete-form';
 import { ComplianceTemplateUpdateForm } from './compliance-template-update-form';
 
-export function ComplianceTemplateRow(props: { template: ComplianceTemplate }) {
+export function ComplianceTemplateRow(props: { template: ComplianceTemplate; orgId: string }) {
     const { template } = props;
     const itemCount = template.items.length;
     const categoryLabel = formatCategoryLabel(template.categoryKey);
@@ -44,8 +44,8 @@ export function ComplianceTemplateRow(props: { template: ComplianceTemplate }) {
                 </summary>
 
                 <div className="mt-4 space-y-3">
-                    <ComplianceTemplateUpdateForm template={template} />
-                    <ComplianceTemplateDeleteForm templateId={template.id} />
+                    <ComplianceTemplateUpdateForm template={template} orgId={props.orgId} />
+                    <ComplianceTemplateDeleteForm templateId={template.id} orgId={props.orgId} />
                 </div>
             </details>
         </div>

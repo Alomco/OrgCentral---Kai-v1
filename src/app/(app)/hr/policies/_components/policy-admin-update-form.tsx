@@ -51,6 +51,7 @@ export function PolicyAdminUpdateForm(props: {
     policy: HRPolicy;
     policyCategories: readonly string[];
     statusOptions: readonly string[];
+    orgId: string;
 }) {
     const queryClient = useQueryClient();
     const [state, action, pending] = useActionState(updatePolicyAdminAction, initialInlineState);
@@ -61,9 +62,9 @@ export function PolicyAdminUpdateForm(props: {
 
     useEffect(() => {
         if (state.status === 'success') {
-            queryClient.invalidateQueries({ queryKey: policyKeys.list() }).catch(() => null);
+            queryClient.invalidateQueries({ queryKey: policyKeys.all(props.orgId) }).catch(() => null);
         }
-    }, [queryClient, state.status]);
+    }, [props.orgId, queryClient, state.status]);
 
     const message = state.status === 'idle' ? null : state.message;
 

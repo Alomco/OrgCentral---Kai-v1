@@ -5,6 +5,7 @@ import {
     type ListPendingReviewComplianceItemsDependencies,
 } from '@/server/use-cases/hr/compliance/list-pending-review-items';
 import { listPendingReviewComplianceItemsQuerySchema } from '@/server/types/hr-compliance-schemas';
+import { HR_ACTION, HR_PERMISSION_PROFILE, HR_RESOURCE_TYPE } from '@/server/security/authorization';
 import type { ComplianceControllerDependencies } from './common';
 import { resolveComplianceControllerDependencies } from './common';
 
@@ -26,10 +27,10 @@ export async function listPendingReviewComplianceItemsController(
 
     const access = await getSessionContext(session, {
         headers: request.headers,
-        requiredPermissions: { organization: ['read'] },
+        requiredPermissions: HR_PERMISSION_PROFILE.COMPLIANCE_REVIEW,
         auditSource: 'api:hr:compliance:review-queue:list',
-        action: 'list',
-        resourceType: 'hr.compliance',
+        action: HR_ACTION.LIST,
+        resourceType: HR_RESOURCE_TYPE.COMPLIANCE_REVIEW,
         resourceAttributes: { view: 'review-queue' },
     });
 

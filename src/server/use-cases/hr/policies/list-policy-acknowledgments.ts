@@ -4,6 +4,9 @@ import type { IPolicyAcknowledgmentRepository } from '@/server/repositories/cont
 import { RepositoryAuthorizer, type RepositoryAuthorizationContext } from '@/server/repositories/security';
 import { assertPrivilegedOrgPolicyActor } from '@/server/security/authorization/hr-policies';
 import type { PolicyAcknowledgment } from '@/server/types/hr-ops-types';
+import { z } from 'zod';
+
+const policyIdSchema = z.uuid();
 
 export interface ListPolicyAcknowledgmentsDependencies {
     policyRepository: IHRPolicyRepository;
@@ -21,6 +24,11 @@ export async function listPolicyAcknowledgments(
     input: ListPolicyAcknowledgmentsInput,
 ): Promise<PolicyAcknowledgment[]> {
     assertPrivilegedOrgPolicyActor(input.authorization);
+
+    const parsedPolicyId = policyIdSchema.safeParse(input.policyId);
+    if (!parsedPolicyId.success) {
+        throw new EntityNotFoundError('HRPolicy', { policyId: input.policyId });
+    }
 
     const policy = await deps.policyRepository.getPolicy(input.authorization.orgId, input.policyId);
     if (!policy) {

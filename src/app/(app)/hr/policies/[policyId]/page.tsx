@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { headers as nextHeaders } from 'next/headers';
 import { notFound } from 'next/navigation';
+import { z } from 'zod';
 
 import { Badge } from '@/components/ui/badge';
 import {
@@ -24,6 +25,8 @@ import { hasPermission } from '@/lib/security/permission-check';
 import { formatHumanDate, formatHumanDateTime } from '../../_components/format-date';
 import { AcknowledgePolicyForm } from '../_components/acknowledge-policy-form';
 
+const policyIdSchema = z.uuid();
+
 function getAcknowledgmentDisplay(policyVersion: string, acknowledgment: PolicyAcknowledgment | null): {
     isAcknowledged: boolean;
     description: string;
@@ -45,10 +48,15 @@ function getAcknowledgmentDisplay(policyVersion: string, acknowledgment: PolicyA
     };
 }
 
-export default function HrPolicyPage({ params }: { params: { policyId: string } }) {
+export default async function HrPolicyPage({ params }: { params: Promise<{ policyId: string }> }) {
+    const { policyId } = await params;
+    if (!policyIdSchema.safeParse(policyId).success) {
+        notFound();
+    }
+
     return (
         <Suspense fallback={<PolicyPageSkeleton />}>
-            <PolicyPageContent policyId={params.policyId} />
+            <PolicyPageContent policyId={policyId} />
         </Suspense>
     );
 }

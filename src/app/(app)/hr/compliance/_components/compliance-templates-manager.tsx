@@ -23,7 +23,7 @@ import { listTemplatesQuery, templatesKey } from '../compliance-templates.api';
 import { initialCreateState } from './compliance-templates-manager.state';
 import { buildTemplatesSummary } from './compliance-templates-manager.utils';
 
-export function ComplianceTemplatesManager(props: { templates: ComplianceTemplate[] }) {
+export function ComplianceTemplatesManager(props: { templates: ComplianceTemplate[]; orgId: string }) {
     const queryClient = useQueryClient();
     const router = useRouter();
     const pathname = usePathname();
@@ -35,7 +35,7 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
         initialCreateState,
     );
     const { data: templatesData = { templates: props.templates } } = useQuery({
-        ...listTemplatesQuery(qNormalized),
+        ...listTemplatesQuery(props.orgId, qNormalized),
         initialData: { templates: props.templates },
     });
     const templates = templatesData.templates;
@@ -43,10 +43,10 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
 
     useEffect(() => {
         if (!pending && state.status === 'success') {
-            void queryClient.invalidateQueries({ queryKey: templatesKey.list(qNormalized) }).catch(() => null);
+            void queryClient.invalidateQueries({ queryKey: templatesKey.list(props.orgId, qNormalized) }).catch(() => null);
             formReference.current?.reset();
         }
-    }, [pending, queryClient, qNormalized, state.status]);
+    }, [pending, props.orgId, queryClient, qNormalized, state.status]);
 
     useEffect(() => {
         formReference.current?.setAttribute('aria-busy', pending ? 'true' : 'false');
@@ -212,7 +212,7 @@ export function ComplianceTemplatesManager(props: { templates: ComplianceTemplat
                     ) : (
                         <div className="space-y-4">
                             {templates.map((template) => (
-                                <ComplianceTemplateRow key={template.id} template={template} />
+                                <ComplianceTemplateRow key={template.id} template={template} orgId={props.orgId} />
                             ))}
                         </div>
                     )}

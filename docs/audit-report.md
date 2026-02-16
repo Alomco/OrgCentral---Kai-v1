@@ -4,6 +4,13 @@
 
 This report presents the findings of an audit conducted on the OrgCentral application to assess compliance with key industry standards: ISO/IEC 27001 (Information Security Management), ISO/IEC 27701 (Privacy Information Management), ISO/IEC 27034 (Application Security), WCAG 2.2 (Web Content Accessibility Guidelines), FHIR (Fast Healthcare Interoperability Resources), and DSPT (Data Protection and Privacy Technology).
 
+## 2026-02-17 Delta Update (vs HEAD)
+
+- Since `HEAD`, the repository is in an active hardening state with **127 changed files** (`+1270 / -446`).
+- Security-sensitive changes are concentrated in HR API routes, session authorization flow, compliance assignment/update paths, and policy/document adapters.
+- Manual runtime validation in this cycle confirms compliance list/update/assign/template seed paths are operational under authenticated browser flow.
+- Additional untracked temporary runtime artifacts were produced under `tmp/` and are cleanup candidates.
+
 ## TL;DR Ratings
 
 | Standard | Rating (out of 10) | Status |

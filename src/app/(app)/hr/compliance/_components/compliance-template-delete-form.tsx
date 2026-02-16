@@ -24,7 +24,7 @@ import { templatesKey } from '../compliance-templates.api';
 
 const initialInlineState: ComplianceTemplateInlineState = { status: 'idle' };
 
-export function ComplianceTemplateDeleteForm(props: { templateId: string }) {
+export function ComplianceTemplateDeleteForm(props: { templateId: string; orgId: string }) {
     const queryClient = useQueryClient();
     const searchParams = useSearchParams();
     const qNormalized = (searchParams.get('q') ?? '').trim().toLowerCase();
@@ -34,9 +34,9 @@ export function ComplianceTemplateDeleteForm(props: { templateId: string }) {
 
     useEffect(() => {
         if (state.status === 'success') {
-            void queryClient.invalidateQueries({ queryKey: templatesKey.list(qNormalized) }).catch(() => null);
+            void queryClient.invalidateQueries({ queryKey: templatesKey.list(props.orgId, qNormalized) }).catch(() => null);
         }
-    }, [qNormalized, queryClient, state.status]);
+    }, [props.orgId, qNormalized, queryClient, state.status]);
 
     return (
         <form

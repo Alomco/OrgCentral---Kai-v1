@@ -61,13 +61,15 @@ export function listHrPoliciesRouteController(request: Request) {
     const categoryRaw = url.searchParams.get("category") ?? undefined;
     const q = url.searchParams.get("q") ?? undefined;
     const noCat = (url.searchParams.get("nocat") ?? "").toLowerCase();
+    const includeContentFlag = (url.searchParams.get("includeContent") ?? "").toLowerCase();
+    const includeContent = includeContentFlag === "1" || includeContentFlag === "true";
     const disableAutoCategory = noCat === "1" || noCat === "true";
     const category = categoryRaw ?? (disableAutoCategory ? undefined : normalizeCategoryQuery(q));
     const filters = status || category || q ? { status, category, q } : undefined;
 
     return listHrPoliciesController({
         headers: request.headers,
-        input: { filters },
+        input: { filters, includeContent },
         auditSource: "api:hr:policies:list",
     });
 }

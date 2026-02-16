@@ -98,7 +98,7 @@ describe('listOrgTopbarSearchController', () => {
         expect(listEmployeeProfiles).toHaveBeenCalledWith(
             expect.objectContaining({
                 authorization,
-                payload: { filters: { search: 'Ada' } },
+                payload: { filters: { search: 'Ada' }, limit: 25 },
             }),
         );
         expect(result.results).toHaveLength(1);

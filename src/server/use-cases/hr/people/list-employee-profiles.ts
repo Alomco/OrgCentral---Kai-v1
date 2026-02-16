@@ -12,6 +12,7 @@ import { HR_ACTION } from '@/server/security/authorization/hr-resource-registry'
 export interface ListEmployeeProfilesInput {
   authorization: RepositoryAuthorizationContext;
   filters?: PeopleListFilters;
+  limit?: number;
 }
 
 export interface ListEmployeeProfilesResult {
@@ -27,12 +28,14 @@ export async function listEmployeeProfiles(
   input: ListEmployeeProfilesInput,
 ): Promise<ListEmployeeProfilesResult> {
   const normalizedFilters = normalizeProfileFilters(input.filters);
+  const normalizedLimit = normalizeListLimit(input.limit);
 
   await assertPeopleProfileReader({
     authorization: input.authorization,
     action: HR_ACTION.READ,
     resourceAttributes: {
       orgId: input.authorization.orgId,
+      limit: normalizedLimit,
       filterCount: Object.keys(normalizedFilters ?? {}).length,
       filters: normalizedFilters,
     },
@@ -40,7 +43,8 @@ export async function listEmployeeProfiles(
 
   const profiles = await dependencies.employeeProfileRepository.getEmployeeProfilesByOrganization(
     input.authorization.orgId,
-    normalizedFilters
+    normalizedFilters,
+    normalizedLimit ? { limit: normalizedLimit } : undefined,
   );
 
   registerProfilesCache(input.authorization);
@@ -52,4 +56,15 @@ export async function listEmployeeProfiles(
       dataClassification: profile.dataClassification ?? input.authorization.dataClassification,
     })),
   };
+}
+
+function normalizeListLimit(limit: number | undefined): number | undefined {
+  if (typeof limit !== 'number' || !Number.isFinite(limit)) {
+    return undefined;
+  }
+  const normalized = Math.floor(limit);
+  if (normalized < 1) {
+    return undefined;
+  }
+  return Math.min(normalized, 200);
 }

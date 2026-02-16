@@ -27,7 +27,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   BENEFITS: 'Benefits', CODE_OF_CONDUCT: 'Code of Conduct', IT_SECURITY: 'IT Security', HEALTH_SAFETY: 'Health & Safety', HR_POLICIES: 'HR Policies', PROCEDURES: 'Procedures', COMPLIANCE: 'Compliance', OTHER: 'Other'
 };
 
-export function PoliciesHeaderClient() {
+export function PoliciesHeaderClient({ orgId }: { orgId: string }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const q = (searchParams.get('q') ?? '').trim();
@@ -36,7 +36,7 @@ export function PoliciesHeaderClient() {
   const nocat = nocatParameter === '1' || nocatParameter === 'true' || (nocatParameter === '' && nocatPref);
   const autoCategory = !nocat ? normalizeCategoryQuery(q) : undefined;
   const queryClient = useQueryClient();
-  const { data = [] } = useQuery(listPoliciesQuery(q || undefined, nocat));
+  const { data = [] } = useQuery(listPoliciesQuery(orgId, q || undefined, nocat));
   const density = usePoliciesUiStore((s) => s.density);
   const setDensity = usePoliciesUiStore((s) => s.setDensity);
   const nextDensity = density === 'comfortable' ? 'compact' : 'comfortable';
@@ -61,7 +61,7 @@ export function PoliciesHeaderClient() {
   }, []);
 
   const onRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: policyKeys.list(q || undefined, nocat) }).catch(() => null);
+    queryClient.invalidateQueries({ queryKey: policyKeys.list(orgId, q || undefined, nocat) }).catch(() => null);
   };
   const onClearCategoryMap = () => {
     const next = new URLSearchParams(searchParams.toString());

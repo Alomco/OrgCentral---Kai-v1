@@ -1,11 +1,11 @@
 import Link from 'next/link';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { DocumentVaultRecord } from '@/server/types/records/document-vault';
+import type { DocumentVaultListItem } from '@/server/types/records/document-vault';
 import { formatHumanDate } from '../../_components/format-date';
 
 interface DocumentVaultTableProps {
-    documents: DocumentVaultRecord[];
+    documents: DocumentVaultListItem[];
 }
 
 function formatBytes(value?: number | null): string {
@@ -55,7 +55,7 @@ export function DocumentVaultTable({ documents }: DocumentVaultTableProps) {
                 <TableBody>
                     {documents.map((document_) => (
                         <TableRow key={document_.id}>
-                            <TableCell className="font-medium max-w-[240px]">
+                            <TableCell className="font-medium max-w-60">
                                 <span className="truncate" title={document_.fileName}>{document_.fileName}</span>
                             </TableCell>
                             <TableCell>{document_.type}</TableCell>

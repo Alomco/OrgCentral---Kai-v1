@@ -57,6 +57,7 @@ export function getEmployeeProfileByUser(params: {
 export function listEmployeeProfiles(params: {
   authorization: RepositoryAuthorizationContext;
   filters?: PeopleListFilters;
+  limit?: number;
   repositories: ProfileRepositoryDeps;
 }): ResultAsync<{ profiles: EmployeeProfile[] }, Error> {
   return ResultAsync.fromPromise(
@@ -65,6 +66,7 @@ export function listEmployeeProfiles(params: {
       {
         authorization: params.authorization,
         filters: params.filters,
+        limit: params.limit,
       },
     ),
     toError,

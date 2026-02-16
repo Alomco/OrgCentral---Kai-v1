@@ -9,10 +9,33 @@ const complianceStatusValues = [...COMPLIANCE_ITEM_STATUSES] as [
     ...(typeof COMPLIANCE_ITEM_STATUSES)[number][],
 ];
 
+const MAX_COMPLIANCE_ASSIGN_USERS = 500;
+const MAX_COMPLIANCE_TEMPLATE_ITEMS = 200;
+
+function hasDuplicateIds(values: readonly string[]): boolean {
+    return new Set(values).size !== values.length;
+}
+
 export const assignComplianceItemsSchema = z.object({
-    userIds: z.array(z.uuid()).min(1),
+    userIds: z.array(z.uuid()).min(1).max(MAX_COMPLIANCE_ASSIGN_USERS),
     templateId: z.uuid(),
-    templateItemIds: z.array(z.string().min(1)).min(1),
+    templateItemIds: z.array(z.string().min(1)).min(1).max(MAX_COMPLIANCE_TEMPLATE_ITEMS),
+}).superRefine((value, context) => {
+    if (hasDuplicateIds(value.userIds)) {
+        context.addIssue({
+            code: 'custom',
+            path: ['userIds'],
+            message: 'userIds must not contain duplicates.',
+        });
+    }
+
+    if (hasDuplicateIds(value.templateItemIds)) {
+        context.addIssue({
+            code: 'custom',
+            path: ['templateItemIds'],
+            message: 'templateItemIds must not contain duplicates.',
+        });
+    }
 });
 
 export type AssignComplianceItemsPayload = z.infer<typeof assignComplianceItemsSchema>;
@@ -38,7 +61,7 @@ export const updateComplianceItemSchema = z.object({
 export type UpdateComplianceItemPayload = z.infer<typeof updateComplianceItemSchema>;
 
 export const listComplianceItemsQuerySchema = z.object({
-    userId: z.uuid(),
+    userId: z.uuid().optional(),
 });
 
 export type ListComplianceItemsQuery = z.infer<typeof listComplianceItemsQuerySchema>;

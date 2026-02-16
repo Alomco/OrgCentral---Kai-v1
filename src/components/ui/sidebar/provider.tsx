@@ -6,9 +6,12 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { subscribeGlobalEventListener } from "@/lib/dom/global-event-listeners"
+import { isMobileViewport } from "@/lib/dom/viewport"
 
 import { SIDEBAR_COOKIE_MAX_AGE, SIDEBAR_COOKIE_NAME, SIDEBAR_KEYBOARD_SHORTCUT } from "./constants"
 import { SidebarContext, type SidebarContextProps } from "./context"
+
+const MOBILE_BREAKPOINT = 768
 
 export function SidebarProvider({
     defaultOpen = true,
@@ -43,7 +46,12 @@ export function SidebarProvider({
     )
 
     const toggleSidebar = React.useCallback(() => {
-        return isMobile ? setOpenMobile((current) => !current) : setOpen((current) => !current)
+        const isCompactViewport =
+            typeof window !== "undefined" ? isMobileViewport(MOBILE_BREAKPOINT) : isMobile
+        const shouldUseMobileDrawer = isMobile || isCompactViewport
+        return shouldUseMobileDrawer
+            ? setOpenMobile((current) => !current)
+            : setOpen((current) => !current)
     }, [isMobile, setOpen, setOpenMobile])
 
     React.useEffect(() => {

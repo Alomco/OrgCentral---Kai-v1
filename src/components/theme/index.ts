@@ -10,6 +10,7 @@
 // Theme System
 export { ThemeProvider, useTheme, THEME_PRESETS, type ThemeId } from './theme-provider';
 export { ThemeSwitcher } from './theme-switcher';
+export { THEME_MODE_OPTIONS, resolveThemeModeLabel, useHydrated, type ThemeMode } from './theme-ssot';
 
 // Primitives - Surfaces
 export {

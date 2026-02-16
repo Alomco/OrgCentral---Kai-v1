@@ -31,4 +31,11 @@ describe("policy-route-controllers q mapping", () => {
     const call = (listHrPoliciesController as any).mock.calls[0][0];
     expect(call.input.filters.category).toBe("IT_SECURITY");
   });
+
+  it("passes includeContent=true when query flag is set", async () => {
+    (listHrPoliciesController as any).mockClear();
+    await listHrPoliciesRouteController(makeRequest("https://example.com/api/hr/policies?includeContent=1"));
+    const call = (listHrPoliciesController as any).mock.calls[0][0];
+    expect(call.input.includeContent).toBe(true);
+  });
 });

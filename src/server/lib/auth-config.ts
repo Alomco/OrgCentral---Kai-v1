@@ -77,7 +77,7 @@ export function createAuth(baseURL: string, deps: AuthConfigDependencies = {}) {
                 ac: orgAccessControl,
                 roles: orgRoles,
                 enforceUniqueSlug: true,
-                allowUserToCreateOrganization: (user) => user.email.endsWith('.gov.uk'),
+                allowUserToCreateOrganization: () => true,
                 schema: {
                     organization: {
                         modelName: 'authOrganization',

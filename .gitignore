@@ -64,3 +64,4 @@ tailwindcss-*.log
 temp_patch.diff
 tscFiles.txt
 tscOut.txt
+.github

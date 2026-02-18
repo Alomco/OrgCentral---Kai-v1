@@ -2,6 +2,8 @@ import { Readable } from 'node:stream';
 import { headers } from 'next/headers';
 
 import { getSessionContext } from '@/server/use-cases/auth/sessions/get-session';
+
+export const dynamic = 'force-dynamic';
 import { HR_ACTION, HR_RESOURCE } from '@/server/security/authorization/hr-resource-registry';
 import { runPeopleSarExportJob } from '@/server/services/hr/people/sar/people-sar.jobs';
 import type { PeopleSarExportOptions, SarExportFormat } from '@/server/services/hr/people/sar/people-sar-exporter.types';

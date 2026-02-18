@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
+  cacheComponents: false,
   serverExternalPackages: ['pino', 'thread-stream'],
   images: {
     remotePatterns: [

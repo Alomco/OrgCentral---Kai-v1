@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "postinstall": "prisma generate || echo 'Prisma generate failed, continuing anyway'",
+    "postinstall": "if [ -z \"$VERCEL\" ]; then prisma generate || echo 'Prisma generate failed'; fi",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
